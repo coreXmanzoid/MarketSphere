@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+</head>
+
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 0;">
+        <tr>
+            <td align="center">
+
+                <table width="600" cellpadding="0" cellspacing="0"
+                    style="background:#ffffff;border-radius:10px;overflow:hidden;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background:#9D6638;padding:30px;">
+
+                            <h1 style="margin:0;color:#F7F1DE;font-size:30px;">
+                                MarketSphere
+                            </h1>
+
+                            <p style="margin-top:10px;color:#F7F1DE;">
+                                Your Marketplace. Your Community.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:40px;color:#333;">
+
+                            <h2 style="margin-top:0;color:#4E220F;">
+                                Welcome, {{ user.first_name|default:user.username }}!
+                            </h2>
+
+                            <p>
+                                Thank you for creating your MarketSphere account.
+                            </p>
+
+                            <p>
+                                Before you start shopping, please verify your email address.
+                            </p>
+
+                            <p style="text-align:center;margin:40px 0;">
+
+                                <a href="{{ activate_url }}" style="
+                                background-color: #9D6638 !important;
+                                color: #F7F1DE !important;
+                                border: var(--button-border) solid #9D6638 !important;
+                                border-radius: var(--border-radius) !important;
+                                padding: 10px;
+                                text-decoration: none;">
+                                    Verify My Email
+                                </a>
+
+                            </p>
+
+                            <p>
+                                Once verified you'll be able to:
+                            </p>
+
+                            <ul>
+                                <li> Place Orders</li>
+                                <li> Track Deliveries</li>
+                                <li> Save Items to Wishlist</li>
+                                <li> Become a Seller</li>
+                                <li> Enjoy the complete MarketSphere experience</li>
+                            </ul>
+
+                            <hr style="margin:40px 0;border:none;border-top:1px solid #ddd;">
+
+                            <p style="font-size:13px;color:#666;">
+                                If the button doesn't work, copy and paste this link into your browser:
+                            </p>
+
+                            <p style="word-break:break-all;font-size:13px;">
+                                {{ activate_url }}
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="background:#f8f8f8;padding:25px;color:#777;font-size:13px;">
+
+                            © 2026 MarketSphere
+
+                            <br><br>
+
+                            This email was sent because an account was created using this email address.
+
+                            <br><br>
+
+                            If you didn't create this account, you can safely ignore this email.
+
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+</html>

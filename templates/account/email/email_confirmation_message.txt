@@ -1,0 +1,23 @@
+Hi {{ user.first_name|default:user.username }},
+
+Welcome to MarketSphere!
+
+Thank you for creating your account.
+
+To verify your email address, click the link below:
+
+{{ activate_url }}
+
+Once your email is verified, you'll be able to:
+
+• Place orders
+• Track your purchases
+• Save products to your wishlist
+• Become a seller
+• Access all MarketSphere features
+
+If you didn't create this account, you can safely ignore this email.
+
+Thank you,
+
+The MarketSphere Team

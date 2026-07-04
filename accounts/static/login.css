@@ -1,0 +1,103 @@
+body {
+    background-color: #F7F1DE;
+}
+
+.container {
+    max-width: 1250px !important;
+    margin: 0 auto;
+
+}
+
+.card {
+    border: 2px solid #9D6638 !important;
+    border-radius: var(--border-radius) !important;
+}
+
+.card-header {
+    padding: 0px;
+    p{
+        background-color: #9D6638 !important;
+        color: #F7F1DE;
+        padding: 0px 10px 10px;
+        margin: 0;
+    }
+}
+
+.card-header h3 {
+    background-color: #9D6638;
+    color: #F7F1DE;
+    font-weight: 500;
+    margin: 0px;
+    padding: 13px 10px;
+    width: auto;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.divider hr {
+    flex: 1;
+    margin: 0;
+    border: none;
+    border-top: 2px solid #f97000;
+}
+
+.divider span {
+    color: #B0BA99;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.continue-button a {
+    width: 100% !important;
+    font-size: 15px !important;
+    padding: 6px 6px !important;
+    background-color: #9D6638 !important;
+    color: #F7F1DE;
+    border: var(--button-border) solid #9D6638;
+    border-radius: var(--border-radius);
+    text-align: center;
+
+    i {
+        background-color: #9D6638;
+        color: #F7F1DE;
+    }
+    transition: 0.25 ease;
+}
+
+.continue-button a:hover {
+    background-color: #F7F1DE !important;
+    color: #B0BA99;
+    border: var(--button-border) solid #9D6638;
+    i {
+        color: #9D6638;
+        background-color: #F7F1DE;
+    }
+}
+
+progress {
+    width: 100%;
+    height: 20px;
+    border: none;
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+/* Background */
+progress::-webkit-progress-bar {
+    background-color: #F7F1DE;
+    border: 1.4px solid #9D6638;
+    border-radius: 1px;
+}
+
+/* Filled Portion */
+progress::-webkit-progress-value {
+    background-color: #9D6638;
+    border-radius: 1px;
+    transition: width 0.35s ease;
+    border-radius: 1px;
+}
