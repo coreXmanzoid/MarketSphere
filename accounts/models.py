@@ -15,6 +15,8 @@ class User(AbstractUser):
 
     address = models.TextField(blank=True)
 
+    profile_image_url = models.URLField(blank=True,null=True,max_length=500)
+    
     account_status = models.CharField(
         max_length=20,
         choices=AccountStatus.choices,
@@ -43,19 +45,3 @@ class Seller(models.Model):
     )
     def __str__(self):
         return self.store_name
-
-# will be shifted to products app later
-class Category(models.Model):
-    name = models.CharField(max_length=100)
-
-    parent = models.ForeignKey(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="children"
-    )
-
-    slug = models.SlugField(unique=True)
-
-    icon = models.CharField(max_length=50, blank=True)

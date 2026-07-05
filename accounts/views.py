@@ -15,7 +15,7 @@ from . import services
 
 def login_view(request):
     if request.method == "POST":
-        identifier = request.POST.get("identifier")
+        identifier = request.POST.get("identifier").lower()
         password = request.POST.get("password")
         remember_me = request.POST.get("remember")
 
@@ -52,8 +52,8 @@ def signup_view(request):
         user = {
             "first_name": request.POST.get("first_name"),
             "last_name": request.POST.get("last_name"),
-            "email": request.POST.get("email"),
-            "username": request.POST.get("username"),
+            "email": request.POST.get("email").lower(),
+            "username": request.POST.get("username").lower(),
             "contact": request.POST.get("contact"),
             "password": request.POST.get("password"),
         }

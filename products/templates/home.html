@@ -1,1 +1,652 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}MarketSphere • Shop Smarter{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ================= HERO SECTION ================= -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 col-12 hero-text">
+                <span class="hero-badge"><i class="bi bi-stars"></i> New Season Arrivals</span>
+                <h1 class="hero-title">Everything You Need, <span>All In One Place</span></h1>
+                <p class="hero-subtitle">
+                    Discover thousands of products from trusted sellers around the world.
+                    Quality guaranteed, delivered fast, priced right.
+                </p>
+                <div class="hero-actions guest-buttons">
+                    <a href="#featured-products" class="btn btn-hero-primary">
+                        Shop Now <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="#categories" class="btn btn-hero-secondary">
+                        Browse Categories
+                    </a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <h3>10K+</h3>
+                        <p>Products</p>
+                    </div>
+                    <div class="hero-stat">
+                        <h3>2K+</h3>
+                        <p>Sellers</p>
+                    </div>
+                    <div class="hero-stat">
+                        <h3>50K+</h3>
+                        <p>Happy Customers</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-12 hero-visual">
+                <div class="hero-image-placeholder" id="heroVisual">
+                    <div class="hero-shape hero-shape-1"></div>
+                    <div class="hero-shape hero-shape-2"></div>
+                    <div class="hero-image-icon">
+                        <img src="{% static 'images/logo.png' %}" class="img-fluid">
+                    </div>
+                    <div class="floating-card floating-card-1">
+                        <i class="bi bi-truck"></i>
+                        <span>Fast Delivery</span>
+                    </div>
+                    <div class="floating-card floating-card-2">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Secure Payment</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= FEATURED CATEGORIES ================= -->
+<section class="categories-section" id="categories">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">Explore</span>
+            <h2>Featured Categories</h2>
+            <p>Shop popular categories loved by thousands of customers</p>
+        </div>
+
+        <div class="row g-4 category-grid">
+            <!-- Category cards will be rendered here -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="#" class="category-card">
+                    <div class="category-card-icon">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h6>Electronics</h6>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="#" class="category-card">
+                    <div class="category-card-icon">
+                        <i class="bi bi-handbag"></i>
+                    </div>
+                    <h6>Fashion</h6>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="#" class="category-card">
+                    <div class="category-card-icon">
+                        <i class="bi bi-house-heart"></i>
+                    </div>
+                    <h6>Home &amp; Living</h6>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="#" class="category-card">
+                    <div class="category-card-icon">
+                        <i class="bi bi-flower2"></i>
+                    </div>
+                    <h6>Beauty</h6>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="#" class="category-card">
+                    <div class="category-card-icon">
+                        <i class="bi bi-controller"></i>
+                    </div>
+                    <h6>Sports</h6>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="#" class="category-card">
+                    <div class="category-card-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <h6>Books</h6>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= FEATURED PRODUCTS ================= -->
+<section class="products-section" id="featured-products">
+    <div class="container">
+        <div class="section-heading section-heading-row">
+            <div>
+                <span class="section-label">Handpicked</span>
+                <h2>Featured Products</h2>
+                <p>Our top picks selected just for you</p>
+            </div>
+            <a href="#" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="row g-4">
+            <!-- Featured products will be rendered here -->
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-discount">-20%</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-headphones"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">SoundWave</span>
+                        <h6 class="product-name">Wireless Over-Ear Headphones</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                            <span>(214)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 6,399</span>
+                            <span class="price-original">Rs. 7,999</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-discount">-15%</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-smartwatch"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">TimeTech</span>
+                        <h6 class="product-name">Fitness Smart Watch Pro</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                            <span>(98)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 8,499</span>
+                            <span class="price-original">Rs. 9,999</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-bag"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">UrbanCarry</span>
+                        <h6 class="product-name">Leather Laptop Backpack</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <span>(340)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 4,199</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-discount">-30%</span>
+                        <button class="wishlist-btn active" type="button" aria-label="Remove from wishlist">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-laptop"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">NovaTech</span>
+                        <h6 class="product-name">Ultra-Slim Notebook 14"</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                            <span>(76)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 89,999</span>
+                            <span class="price-original">Rs. 1,28,000</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-cup-hot"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">HomeCraft</span>
+                        <h6 class="product-name">Ceramic Coffee Mug Set (4pc)</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <span>(512)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 1,499</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-discount">-10%</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">PixelPro</span>
+                        <h6 class="product-name">Compact Mirrorless Camera</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                            <span>(159)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 54,999</span>
+                            <span class="price-original">Rs. 61,000</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-bicycle"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">TrailRider</span>
+                        <h6 class="product-name">Mountain Bike 21-Speed</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                            <span>(64)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 32,500</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-discount">-25%</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-lamp"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">GlowHome</span>
+                        <h6 class="product-name">Minimalist Table Lamp</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <span>(203)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 2,249</span>
+                            <span class="price-original">Rs. 2,999</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================= PROMOTIONAL BANNER ================= -->
+<section class="promo-banner">
+    <div class="container">
+        <div class="promo-banner-inner">
+            <div class="promo-banner-text guest-buttons">
+                <span class="section-label section-label-light">Limited Time</span>
+                <h2>Season End Sale — Up to 50% Off</h2>
+                <p>Grab your favorite items before they're gone. New deals added every day.</p>
+                <a href="#featured-products" class="btn btn-hero-primary">Shop The Sale</a>
+            </div>
+            <div class="promo-banner-visual">
+                {% comment %} <i class="bi bi-bag-check-fill"></i> {% endcomment %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= NEW ARRIVALS ================= -->
+<section class="products-section">
+    <div class="container">
+        <div class="section-heading section-heading-row">
+            <div>
+                <span class="section-label">Just In</span>
+                <h2>New Arrivals</h2>
+                <p>Freshly added products from our trusted sellers</p>
+            </div>
+            <a href="#" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="row g-4">
+            <!-- New arrival products will be rendered here -->
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-new">New</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-earbuds"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">SoundWave</span>
+                        <h6 class="product-name">True Wireless Earbuds X2</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                            <span>(12)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 3,999</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-new">New</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-tv"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">VisionMax</span>
+                        <h6 class="product-name">43" 4K Smart LED TV</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <span>(31)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 62,999</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-new">New</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-shoe-print"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">StrideFit</span>
+                        <h6 class="product-name">Running Sneakers Air Flex</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <span>(8)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 5,299</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <div class="product-card-media">
+                        <span class="badge-new">New</span>
+                        <button class="wishlist-btn" type="button" aria-label="Add to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-droplet"></i>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">PureGlow</span>
+                        <h6 class="product-name">Vitamin C Face Serum</h6>
+                        <div class="product-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <span>(47)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="price-current">Rs. 1,899</span>
+                        </div>
+                        <button class="btn add-to-cart-btn w-100">
+                            <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================= WHY CHOOSE US ================= -->
+<section class="why-us-section">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">Our Promise</span>
+            <h2>Why Choose MarketSphere</h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6 col-12">
+                <div class="why-us-card">
+                    <div class="why-us-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <h5>Fast Delivery</h5>
+                    <p>Get your orders delivered to your doorstep in record time, every time.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-12">
+                <div class="why-us-card">
+                    <div class="why-us-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5>Secure Payment</h5>
+                    <p>Shop with confidence using our fully encrypted, trusted payment gateways.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-12">
+                <div class="why-us-card">
+                    <div class="why-us-icon">
+                        <i class="bi bi-patch-check"></i>
+                    </div>
+                    <h5>Quality Products</h5>
+                    <p>Every product is verified for quality before it reaches your cart.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-12">
+                <div class="why-us-card">
+                    <div class="why-us-icon">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h5>24/7 Support</h5>
+                    <p>Our support team is always available to help, day or night.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= NEWSLETTER ================= -->
+<section class="newsletter-section">
+    <div class="container">
+        <div class="newsletter-inner">
+            <div class="newsletter-icon">
+                <i class="bi bi-envelope-heart"></i>
+            </div>
+            <h2>Subscribe to Our Newsletter</h2>
+            <p>Get the latest deals, new arrivals and exclusive offers straight to your inbox.</p>
+
+            <form id="newsletterForm" class="newsletter-form" novalidate>
+                <div class="newsletter-input-wrap">
+                    <input type="email" id="newsletterEmail" class="form-control" placeholder="Enter your email address" required>
+                    <button type="submit" class="btn newsletter-btn">Subscribe</button>
+                </div>
+                <small class="newsletter-feedback" id="newsletterFeedback"></small>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ================= BACK TO TOP ================= -->
+<button id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'home.js' %}"></script>
+{% endblock %}
