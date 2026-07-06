@@ -1,0 +1,639 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Search Results • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/search_results.css' %}" />
+{% endblock %}
+
+{% block content %}
+  {% comment %} <!-- ================= SEARCH HERO ================= -->
+  <section class="search-hero-section">
+    <div class="container text-center">
+      <h1 class="search-page-title">Search Results</h1>
+      <p class="search-results-meta">
+        <!-- Dynamic result count and query will be rendered here by Django -->
+        Showing <strong>24</strong> results for <span class="search-query-highlight">&quot;iPhone&quot;</span>
+      </p>
+    </div>
+  </section> {% endcomment %}
+
+  <!-- ================= SEARCH RESULTS BODY ================= -->
+  <section class="search-results-section">
+    <div class="container-fluid">
+      <div class="row gx-4">
+        <!-- ================= MOBILE FILTER TRIGGER ================= -->
+        <div class="col-12 d-lg-none mb-3">
+          <button class="btn filter-toggle-btn w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas" aria-controls="filterOffcanvas"><i class="bi bi-funnel"></i> Filters</button>
+        </div>
+
+        <!-- ================= SIDEBAR (DESKTOP) ================= -->
+        <aside class="col-lg-3 d-none d-lg-block filters-sidebar">
+          <div class="filter-card card mb-3">
+            <div class="card-header">
+              <h6><i class="bi bi-grid"></i> Categories</h6>
+            </div>
+            <div class="card-body">
+              <!-- Category filter checkboxes will be rendered here -->
+              {% for category in categories %}
+                <div class="form-check filter-check">
+                  <input class="form-check-input" type="checkbox" id="cat-{{ category.slug }}" />
+                  <label class="form-check-label" for="cat-{{ category.slug }}">{{ category.name }}</label>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="filter-card card mb-3">
+            <div class="card-header">
+              <h6><i class="bi bi-tags"></i> Brand</h6>
+            </div>
+            <div class="card-body">
+              <!-- Brand filter checkboxes will be rendered here -->
+               {% for brand in brands %}
+               <div class="form-check filter-check">
+                   <input class="form-check-input" type="checkbox" id="brand-{{ brand.slug }}" />
+                   <label class="form-check-label" for="{{ brand.slug }}">{{ brand.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+          </div>
+
+          <div class="filter-card card mb-3">
+            <div class="card-header">
+              <h6><i class="bi bi-cash-coin"></i> Price Range</h6>
+            </div>
+            <div class="card-body">
+              <!-- Price range will be wired to backend filtering later -->
+              <input type="range" class="form-range price-range-slider" min="0" max="150000" value="75000" id="priceRange" />
+              <div class="price-range-values d-flex justify-content-between">
+                <span id="priceMinLabel">Rs. 0</span>
+                <span id="priceMaxLabel">Rs. 75,000</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-card card mb-3">
+            <div class="card-header">
+              <h6><i class="bi bi-box-seam"></i> Availability</h6>
+            </div>
+            <div class="card-body">
+              <div class="form-check filter-check">
+                <input class="form-check-input" type="checkbox" id="avail-in-stock" />
+                <label class="form-check-label" for="avail-in-stock">In Stock</label>
+              </div>
+              <div class="form-check filter-check">
+                <input class="form-check-input" type="checkbox" id="avail-out-stock" />
+                <label class="form-check-label" for="avail-out-stock">Out of Stock</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-card card mb-3">
+            <div class="card-header">
+              <h6><i class="bi bi-star"></i> Rating</h6>
+            </div>
+            <div class="card-body">
+              <!-- Rating filter options will be rendered here -->
+              <div class="form-check filter-check rating-check">
+                <input class="form-check-input" type="checkbox" id="rating-4" />
+                <label class="form-check-label" for="rating-4">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                  &amp; Up
+                </label>
+              </div>
+              <div class="form-check filter-check rating-check">
+                <input class="form-check-input" type="checkbox" id="rating-3" />
+                <label class="form-check-label" for="rating-3">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                  &amp; Up
+                </label>
+              </div>
+              <div class="form-check filter-check rating-check">
+                <input class="form-check-input" type="checkbox" id="rating-2" />
+                <label class="form-check-label" for="rating-2">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                  &amp; Up
+                </label>
+              </div>
+              <div class="form-check filter-check rating-check">
+                <input class="form-check-input" type="checkbox" id="rating-1" />
+                <label class="form-check-label" for="rating-1">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                  &amp; Up
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn clear-filters-btn w-100" id="clearFiltersDesktop"><i class="bi bi-x-circle"></i> Clear Filters</button>
+        </aside>
+
+        <!-- ================= PRODUCT RESULTS ================= -->
+        <div class="col-lg-9">
+          <!-- Sorting Row -->
+          <div class="sorting-row d-flex flex-wrap align-items-center justify-content-between mb-4">
+            <span class="results-count">
+              <!-- Total result count will be rendered here by Django -->
+              <strong>24</strong> Products Found for <strong class="fs-6">"Iphone"</strong>
+            </span>
+
+            <div class="sort-by-wrap d-flex align-items-center gap-2">
+              <label for="sortBy" class="mb-0 sort-label">Sort By</label>
+              <select class="form-select sort-select" id="sortBy" name="sort">
+                <option value="newest" selected>Newest</option>
+                <option value="price_low_high">Price: Low to High</option>
+                <option value="price_high_low">Price: High to Low</option>
+                <option value="popularity">Popularity</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Product Grid -->
+          <div class="row g-4 search-product-grid" id="searchResultsGrid">
+            <!-- Search result product cards will be rendered here by Django -->
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Electronics</span>
+                  <span class="badge-discount">-20%</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-headphones"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">SoundWave</span>
+                  <h6 class="product-name">Wireless Over-Ear Headphones</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                    <span>(214)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 6,399</span>
+                    <span class="price-original">Rs. 7,999</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Wearables</span>
+                  <span class="badge-discount">-15%</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-smartwatch"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">Apple</span>
+                  <h6 class="product-name">Fitness Smart Watch Pro</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                    <span>(98)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 8,499</span>
+                    <span class="price-original">Rs. 9,999</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Fashion</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-bag"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">UrbanCarry</span>
+                  <h6 class="product-name">Leather Laptop Backpack</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <span>(340)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 4,199</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Electronics</span>
+                  <span class="badge-discount">-30%</span>
+                  <button class="wishlist-btn active" type="button" aria-label="Remove from wishlist"><i class="bi bi-heart-fill"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-laptop"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">NovaTech</span>
+                  <h6 class="product-name">Ultra-Slim Notebook 14"</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                    <span>(76)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 89,999</span>
+                    <span class="price-original">Rs. 1,28,000</span>
+                  </div>
+                  <span class="stock-badge low-stock">Only 3 left</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Home &amp; Living</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-cup-hot"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">HomeCraft</span>
+                  <h6 class="product-name">Ceramic Coffee Mug Set (4pc)</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <span>(512)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 1,499</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Electronics</span>
+                  <span class="badge-discount">-10%</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-camera"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">PixelPro</span>
+                  <h6 class="product-name">Compact Mirrorless Camera</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                    <span>(159)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 54,999</span>
+                    <span class="price-original">Rs. 61,000</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Sports</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-bicycle"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">TrailRider</span>
+                  <h6 class="product-name">Mountain Bike 21-Speed</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                    <span>(64)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 32,500</span>
+                  </div>
+                  <span class="stock-badge out-of-stock">Out of Stock</span>
+                  <button class="btn add-to-cart-btn w-100" disabled><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Home &amp; Living</span>
+                  <span class="badge-discount">-25%</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-lamp"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">GlowHome</span>
+                  <h6 class="product-name">Minimalist Table Lamp</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <span>(203)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 2,249</span>
+                    <span class="price-original">Rs. 2,999</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Electronics</span>
+                  <span class="badge-new">New</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-earbuds"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">SoundWave</span>
+                  <h6 class="product-name">True Wireless Earbuds X2</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                    <span>(12)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 3,999</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Electronics</span>
+                  <span class="badge-new">New</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-tv"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">VisionMax</span>
+                  <h6 class="product-name">43" 4K Smart LED TV</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <span>(31)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 62,999</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Fashion</span>
+                  <span class="badge-new">New</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-shoe-print"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">StrideFit</span>
+                  <h6 class="product-name">Running Sneakers Air Flex</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                    <span>(8)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 5,299</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <span class="product-category-badge">Beauty</span>
+                  <span class="badge-new">New</span>
+                  <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+                  <div class="product-image-placeholder">
+                    <i class="bi bi-droplet"></i>
+                  </div>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-brand">PureGlow</span>
+                  <h6 class="product-name">Vitamin C Face Serum</h6>
+                  <div class="product-rating">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <span>(47)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="price-current">Rs. 1,899</span>
+                  </div>
+                  <span class="stock-badge in-stock">In Stock</span>
+                  <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End Product Grid -->
+
+          <!-- ================= NO RESULTS (hidden, shown by Django when queryset is empty) ================= -->
+          <div class="no-results-section d-none" id="noResultsSection">
+            <div class="no-results-icon">
+              <i class="bi bi-search"></i>
+            </div>
+            <h3>No Products Found</h3>
+            <p>We couldn't find anything matching your search. Try another keyword.</p>
+            <a href="{% url 'home' %}" class="btn btn-hero-primary">Continue Shopping</a>
+          </div>
+
+          <!-- ================= PAGINATION ================= -->
+          <nav aria-label="Search results pagination" class="search-pagination-wrap">
+            <ul class="pagination justify-content-center">
+              <!-- Pagination links will be rendered here by Django -->
+              <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i> Previous</a>
+              </li>
+              <li class="page-item active" aria-current="page">
+                <a class="page-link" href="#">1</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#">2</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#">3</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#">Next <i class="bi bi-chevron-right"></i></a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MOBILE FILTER OFFCANVAS ================= -->
+  <div class="offcanvas offcanvas-start filter-offcanvas" tabindex="-1" id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filterOffcanvasLabel"><i class="bi bi-funnel"></i> Filters</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="filter-card card mb-3">
+        <div class="card-header">
+          <h6><i class="bi bi-grid"></i> Categories</h6>
+        </div>
+        <div class="card-body">
+          <!-- Category filter checkboxes will be rendered here -->
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-cat-electronics" />
+            <label class="form-check-label" for="m-cat-electronics">Electronics</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-cat-fashion" />
+            <label class="form-check-label" for="m-cat-fashion">Fashion</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-cat-home" />
+            <label class="form-check-label" for="m-cat-home">Home &amp; Living</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-cat-beauty" />
+            <label class="form-check-label" for="m-cat-beauty">Beauty</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-cat-sports" />
+            <label class="form-check-label" for="m-cat-sports">Sports</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-cat-books" />
+            <label class="form-check-label" for="m-cat-books">Books</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-card card mb-3">
+        <div class="card-header">
+          <h6><i class="bi bi-tags"></i> Brand</h6>
+        </div>
+        <div class="card-body">
+          <!-- Brand filter checkboxes will be rendered here -->
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-brand-soundwave" />
+            <label class="form-check-label" for="m-brand-soundwave">SoundWave</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-brand-timetech" />
+            <label class="form-check-label" for="m-brand-timetech">TimeTech</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-brand-urbancarry" />
+            <label class="form-check-label" for="m-brand-urbancarry">UrbanCarry</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-brand-novatech" />
+            <label class="form-check-label" for="m-brand-novatech">NovaTech</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-card card mb-3">
+        <div class="card-header">
+          <h6><i class="bi bi-cash-coin"></i> Price Range</h6>
+        </div>
+        <div class="card-body">
+          <input type="range" class="form-range price-range-slider" min="0" max="150000" value="75000" id="priceRangeMobile" />
+          <div class="price-range-values d-flex justify-content-between">
+            <span id="priceMinLabelMobile">Rs. 0</span>
+            <span id="priceMaxLabelMobile">Rs. 75,000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-card card mb-3">
+        <div class="card-header">
+          <h6><i class="bi bi-box-seam"></i> Availability</h6>
+        </div>
+        <div class="card-body">
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-avail-in-stock" />
+            <label class="form-check-label" for="m-avail-in-stock">In Stock</label>
+          </div>
+          <div class="form-check filter-check">
+            <input class="form-check-input" type="checkbox" id="m-avail-out-stock" />
+            <label class="form-check-label" for="m-avail-out-stock">Out of Stock</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-card card mb-3">
+        <div class="card-header">
+          <h6><i class="bi bi-star"></i> Rating</h6>
+        </div>
+        <div class="card-body">
+          <div class="form-check filter-check rating-check">
+            <input class="form-check-input" type="checkbox" id="m-rating-4" />
+            <label class="form-check-label" for="m-rating-4">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+              &amp; Up
+            </label>
+          </div>
+          <div class="form-check filter-check rating-check">
+            <input class="form-check-input" type="checkbox" id="m-rating-3" />
+            <label class="form-check-label" for="m-rating-3">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+              &amp; Up
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn clear-filters-btn w-100 mb-2" id="clearFiltersMobile"><i class="bi bi-x-circle"></i> Clear Filters</button>
+      <button type="button" class="btn btn-hero-primary w-100" data-bs-dismiss="offcanvas">Apply Filters</button>
+    </div>
+  </div>
+
+  <!-- ================= BACK TO TOP ================= -->
+  <button id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/search_results.js' %}"></script>
+{% endblock %}

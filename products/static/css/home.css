@@ -284,6 +284,11 @@
     border-color: #9D6638;
 }
 
+.brand-logo-img img{
+    width: auto;
+    max-width: 130px;
+    height: 50px !important;
+}
 .category-card-icon {
     width: 60px;
     height: 60px;
@@ -372,6 +377,51 @@
     z-index: 2;
 }
 
+.product-category-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background-color: #4E220F;
+    color: #F7F1DE;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 2;
+}
+
+
+.stock-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+.stock-badge.in-stock {
+    background-color: rgba(79, 125, 84, 0.14);
+    color: #4f7d54;
+}
+
+.stock-badge.low-stock {
+    background-color: rgba(183, 128, 43, 0.16);
+    color: #b7802b;
+}
+
+.stock-badge.out-of-stock {
+    background-color: rgba(181, 75, 59, 0.14);
+    color: #b54b3b;
+}
+
+.add-to-cart-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .badge-new {
     background-color: #4f7d54;
 }
@@ -412,6 +462,7 @@
     flex-grow: 1;
 }
 
+.product-category,
 .product-brand {
     font-size: 12px;
     font-weight: 600;
@@ -491,7 +542,7 @@
 .promo-banner-inner {
     background: linear-gradient(120deg, #4E220F, #9D6638);
     background-image: url("/static/images/hi.png");
-    
+
 
     /* Repeat or not */
     background-repeat: no-repeat;
@@ -540,7 +591,8 @@
     background-color: transparent;
     margin-bottom: 24px;
 }
-*{
+
+* {
     background-color: transparent;
 }
 

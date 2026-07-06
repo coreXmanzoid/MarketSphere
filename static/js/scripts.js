@@ -16,20 +16,61 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-document.querySelectorAll(".category-item").forEach(item => {
+function clearActiveMenuState() {
+    document.querySelectorAll(".category-item, .child-item").forEach((item) => {
+        item.classList.remove("is-active");
+    });
+}
 
+function setActiveCategoryBySubmenu(submenu) {
+    if (!submenu || !submenu.id) {
+        return;
+    }
+
+    const categoryItem = document.querySelector(`.category-item[data-target="${submenu.id}"]`);
+    if (categoryItem) {
+        categoryItem.classList.add("is-active");
+    }
+}
+
+function activateChildPath(childItem) {
+    if (!childItem) {
+        return;
+    }
+
+    clearActiveMenuState();
+
+    const submenu = childItem.closest(".submenu");
+    setActiveCategoryBySubmenu(submenu);
+    childItem.classList.add("is-active");
+}
+
+document.querySelectorAll(".category-item").forEach(item => {
     item.addEventListener("mouseenter", function () {
+        clearActiveMenuState();
+        this.classList.add("is-active");
 
         document.querySelectorAll(".submenu").forEach(menu => {
             menu.classList.add("d-none");
         });
 
-        document
-            .getElementById(this.dataset.target)
-            .classList.remove("d-none");
-
+        const submenu = document.getElementById(this.dataset.target);
+        if (submenu) {
+            submenu.classList.remove("d-none");
+        }
     });
+});
 
+document.querySelectorAll(".child-item").forEach((item) => {
+    item.addEventListener("mouseenter", function () {
+        activateChildPath(this);
+    });
+});
+
+document.querySelectorAll(".grandchild-item").forEach((item) => {
+    item.addEventListener("mouseenter", function () {
+        activateChildPath(this.closest(".child-item"));
+    });
 });
 
 const headerMainRow = document.querySelector(".header-main-row");

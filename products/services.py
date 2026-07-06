@@ -1,4 +1,4 @@
-from .models import Category
+from .models import Category, Brand
 from django.db.models import Prefetch
 
 
@@ -16,3 +16,7 @@ def get_all_categories():
         )
     )
     return categories
+
+def get_all_brands():
+    brands = Brand.objects.filter(is_active=True)
+    return brands
