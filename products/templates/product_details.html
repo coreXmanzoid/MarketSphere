@@ -1,0 +1,963 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {{ product.name|default:'Product Details' }} • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/product_details.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="pd-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          <!-- Category breadcrumb will be rendered here by Django, e.g. {{ product.category.name }} -->
+          <li class="breadcrumb-item">
+            <a href="{{ product.category.slug }}">{{ product.category.name }}</a>
+          </li>
+          <!-- Product name breadcrumb will be rendered here by Django -->
+          <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= MAIN PRODUCT SECTION ================= -->
+  <section class="pd-main-section">
+    <div class="container">
+      <div class="row g-4 g-lg-5">
+        <!-- ================= LEFT: GALLERY ================= -->
+        <div class="col-lg-6 col-12">
+          <div class="pd-gallery" id="pdGallery">
+            <div class="pd-gallery-main" id="pdGalleryMain">
+              <!-- Product badges will be rendered here by Django based on product state -->
+              <span class="badge-discount pd-gallery-badge">-20%</span>
+              <span class="badge-new pd-gallery-badge pd-gallery-badge-secondary d-none">New</span>
+
+              <button type="button" class="pd-zoom-btn" id="pdFullscreenBtn" aria-label="View fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+
+              <div class="pd-gallery-image-wrap" id="pdImageWrap">
+                <!-- Main product image will be rendered here by Django -->
+                <img src="{% static 'images/logo-icon.png' %}" alt="Product image placeholder" id="pdMainImage" class="pd-main-image" />
+              </div>
+
+              <button type="button" class="pd-nav-btn pd-nav-prev" id="pdPrevBtn" aria-label="Previous image"><i class="bi bi-chevron-left"></i></button>
+              <button type="button" class="pd-nav-btn pd-nav-next" id="pdNextBtn" aria-label="Next image"><i class="bi bi-chevron-right"></i></button>
+
+              <span class="pd-image-counter" id="pdImageCounter">1 / 5</span>
+            </div>
+
+            <!-- Thumbnail Strip -->
+            <div class="pd-thumb-strip" id="pdThumbStrip" role="listbox" aria-label="Product thumbnails">
+              <!-- Thumbnails will be rendered here by Django from product.images -->
+              <button type="button" class="pd-thumb is-active" data-index="0" aria-label="View image 1"><i class="bi bi-headphones"></i></button>
+              <button type="button" class="pd-thumb" data-index="1" aria-label="View image 2"><i class="bi bi-headphones"></i></button>
+              <button type="button" class="pd-thumb" data-index="2" aria-label="View image 3"><i class="bi bi-soundwave"></i></button>
+              <button type="button" class="pd-thumb" data-index="3" aria-label="View image 4"><i class="bi bi-box-seam"></i></button>
+              <button type="button" class="pd-thumb" data-index="4" aria-label="View image 5"><i class="bi bi-tag"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= RIGHT: PRODUCT INFO ================= -->
+        <div class="col-lg-6 col-12">
+          <div class="pd-info" id="pdInfo">
+            <!-- Category & Brand -->
+            <div class="pd-info-meta">
+              <!-- Category will be rendered here by Django -->
+              <span class="product-category-badge pd-inline-badge">{{ product.category.name }}</span>
+              <!-- Brand will be rendered here by Django -->
+              <span class="product-brand pd-brand-text">{{ product.brand.name }}</span>
+            </div>
+
+            <!-- Product Title -->
+            <!-- Product name will be rendered here by Django -->
+            <h1 class="pd-title">{{ product.name }}</h1>
+
+            <!-- Rating -->
+            <div class="pd-rating">
+              <span class="pd-stars">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+              </span>
+              <!-- Review count will be rendered here by Django -->
+              <a href="#pdReviews" class="pd-rating-count">(214 reviews)</a>
+              {% if product.sku %}
+                <span class="pd-rating-divider">|</span>
+                <span class="pd-sku-inline"><!-- SKU will be rendered here by Django -->SKU: {{ product.sku }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Price -->
+            <div class="pd-price-block">
+              <!-- Discounted / current price will be rendered here by Django -->
+              <span class="pd-price-current">Rs. {{ product.price }}</span>
+              <!-- Original price will be rendered here by Django (if discount_price set) -->
+              {% if product.discount_price %}
+                <span class="pd-price-original">Rs. {{ product.discount_price }}</span>
+                {% widthratio product.price product.discount_price 100 as current_percent %}
+                <span class="pd-discount-badge">Save {{ 100|add:"-"|add:current_percent }}%</span>
+              {% endif %}
+            </div>
+
+            <!-- Availability -->
+            <div class="pd-availability">
+              <!-- Stock status will be rendered here by Django based on stock_quantity -->
+              {% if product.stock_quantity == 0 %}
+                <i class="bi bi-exclamation-circle text-error"></i>
+                <span class="pd-stock-note"> Oops! We are <strong>Out of Stock</strong></span>
+              {% elif product.stock_quantity <= 80 %}
+                <i class="bi bi-exclamation-circle text-warning"></i>
+                <span class="pd-stock-note">Only <strong>{{ product.stock_quantity }}</strong> left — order soon</span>
+              {% endif %}
+            </div>
+
+            <!-- Short Description -->
+            <!-- Short description will be rendered here by Django -->
+            <p class="pd-short-desc">{{ product.short_description }}</p>
+
+            <hr class="pd-divider" />
+
+            <!-- Quantity + Actions -->
+            <div class="pd-purchase-controls">
+              <div class="pd-quantity-selector" role="group" aria-label="Product quantity">
+                <button type="button" class="pd-qty-btn" id="pdQtyMinus" aria-label="Decrease quantity"><i class="bi bi-dash"></i></button>
+                <input type="number" class="pd-qty-input" id="pdQtyInput" value="1" min="1" max="4" aria-label="Quantity" />
+                <button type="button" class="pd-qty-btn" id="pdQtyPlus" aria-label="Increase quantity"><i class="bi bi-plus"></i></button>
+              </div>
+
+              <div class="pd-action-buttons">
+                <!-- Add to Cart: Django will wire this to cart logic -->
+                <button type="button" class="btn pd-btn-add-cart" id="pdAddToCartBtn"><i class="bi bi-cart4"></i> Add to Cart</button>
+                <!-- Buy Now: Django will wire this to checkout logic -->
+                <button type="button" class="btn pd-btn-buy-now" id="pdBuyNowBtn"><i class="bi bi-lightning-charge-fill"></i> Buy Now</button>
+              </div>
+
+              <div class="pd-secondary-actions">
+                <!-- Wishlist toggle: Django will persist wishlist state -->
+                <button type="button" class="pd-icon-btn pd-wishlist-btn" id="pdWishlistBtn" aria-label="Add to wishlist"><i class="bi bi-heart"></i> <span>Wishlist</span></button>
+
+                <div class="pd-share-wrap">
+                  <button type="button" class="pd-icon-btn pd-share-btn" id="pdShareBtn" aria-label="Share this product" aria-expanded="false"><i class="bi bi-share"></i> <span>Share</span></button>
+
+                  <div class="pd-share-popover" id="pdSharePopover">
+                    <a href="#" class="pd-share-option pd-share-facebook" aria-label="Share on Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="pd-share-option pd-share-twitter" aria-label="Share on X"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="pd-share-option pd-share-whatsapp" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                    <a href="#" class="pd-share-option pd-share-linkedin" aria-label="Share on LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    <button type="button" class="pd-share-option pd-share-copy" id="pdCopyLinkBtn" aria-label="Copy product link"><i class="bi bi-link-45deg"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr class="pd-divider" />
+
+            <!-- Delivery Estimator -->
+            <div class="pd-delivery-card">
+              <div class="pd-delivery-row">
+                <i class="bi bi-geo-alt"></i>
+                <div>
+                  <strong>Deliver to:</strong>
+                  <!-- User's delivery location will be rendered here by Django -->
+                  {% if request.user.is_authenticated %}
+                    {% if request.user.address %}
+                      <span class="pd-delivery-location">{{ request.user.address }}</span>
+                      <a href="#" class="pd-delivery-change">Change</a>
+                    {% else %}
+                      <a href="#" class="pd-delivery-change">Add Your Address</a>
+                    {% endif %}
+                  {% else %}
+                    <a href="{% url 'login' %}" class="pd-delivery-change">Login to Add</a>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="pd-delivery-row">
+                <i class="bi bi-truck"></i>
+                <div>
+                  <strong>Estimated Delivery:</strong>
+                  <!-- Estimated delivery date will be rendered here by Django -->
+                  <span>3 – 5 business days</span>
+                </div>
+              </div>
+              <div class="pd-delivery-row">
+                <i class="bi bi-cash-coin"></i>
+                <div>
+                  <strong>Shipping Cost:</strong>
+                  <!-- Shipping cost will be rendered here by Django -->
+                  <span>Rs. 250 · Free over Rs. 5,000</span>
+                </div>
+              </div>
+              <div class="pd-delivery-row">
+                <i class="bi bi-wallet2"></i>
+                <div>
+                  <strong>Cash on Delivery:</strong>
+                  <!-- COD availability flag will be rendered here by Django -->
+                  <span class="pd-delivery-available">Available</span>
+                </div>
+              </div>
+              <div class="pd-delivery-row">
+                <i class="bi bi-arrow-return-left"></i>
+                <div>
+                  <strong>Return Policy:</strong>
+                  <span>7-day easy returns</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trust Row -->
+            <div class="pd-trust-row">
+              <span><i class="bi bi-shield-check"></i> Secure Payment</span>
+              <span><i class="bi bi-patch-check"></i> Authentic Product</span>
+              <span><i class="bi bi-arrow-repeat"></i> Easy Returns</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SELLER INFORMATION CARD ================= -->
+      <div class="container mt-4">
+        <!-- Seller Card: will render product.shop / seller queryset -->
+        <div class="pdp-seller-card">
+          <div class="pdp-seller-avatar">
+            <i class="bi bi-shop"></i>
+          </div>
+
+          <div class="pdp-seller-details">
+            <div class="pdp-seller-name-row">
+              <h5>UrbanTech Electronics</h5>
+              <span class="pdp-verified-badge"><i class="bi bi-patch-check-fill"></i> Verified Seller</span>
+            </div>
+
+            <div class="pdp-seller-meta">
+              <span><strong>4.8</strong> ★ Seller Rating</span>
+              <span><strong>320+</strong> Products</span>
+              <span><strong>&lt; 1 hr</strong> Response Time</span>
+              <span>Member since <strong>2023</strong></span>
+            </div>
+          </div>
+
+          <div class="pdp-seller-actions">
+            <a href="#" class="btn pdp-btn-outline">Visit Store</a>
+            <a href="#" class="btn pdp-btn-cart"><i class="bi bi-chat-dots"></i> Contact Seller</a>
+          </div>
+        </div>
+
+        <!-- Empty state: shown when a product has no seller data yet -->
+        <div class="pdp-empty-state" id="pdpNoSeller">
+          <i class="bi bi-shop"></i>
+          <h6>Seller information unavailable</h6>
+          <p>We couldn't find store details for this listing right now.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRODUCT FEATURES ================= -->
+  <section class="pdp-section pdp-features-section">
+    <div class="container mt-4">
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6 col-6">
+          <div class="pdp-feature-card">
+            <div class="pdp-feature-icon">
+              <i class="bi bi-gem"></i>
+            </div>
+            <h6>Premium Quality</h6>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-6">
+          <div class="pdp-feature-card">
+            <div class="pdp-feature-icon">
+              <i class="bi bi-leaf"></i>
+            </div>
+            <h6>Eco Friendly</h6>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-6">
+          <div class="pdp-feature-card">
+            <div class="pdp-feature-icon">
+              <i class="bi bi-award"></i>
+            </div>
+            <h6>Official Warranty</h6>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-6">
+          <div class="pdp-feature-card">
+            <div class="pdp-feature-icon">
+              <i class="bi bi-truck"></i>
+            </div>
+            <h6>Free Shipping</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRODUCT TABS ================= -->
+  <section class="pdp-section pdp-tabs-section" id="pdpTabsSection">
+    <div class="container">
+      <div class="pdp-tabs">
+        <ul class="nav nav-tabs" id="pdpTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pdp-tab-description-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-description" type="button" role="tab" aria-controls="pdp-tab-description" aria-selected="true">Description</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pdp-tab-specs-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-specs" type="button" role="tab" aria-controls="pdp-tab-specs" aria-selected="false">Specifications</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pdp-tab-reviews-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-reviews" type="button" role="tab" aria-controls="pdp-tab-reviews" aria-selected="false">Reviews (214)</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pdp-tab-shipping-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-shipping" type="button" role="tab" aria-controls="pdp-tab-shipping" aria-selected="false">Shipping &amp; Returns</button>
+          </li>
+        </ul>
+
+        <div class="tab-content pdp-tab-content" id="pdpTabsContent">
+          <!-- ============ DESCRIPTION ============ -->
+          <div class="tab-pane fade show active" id="pdp-tab-description" role="tabpanel" aria-labelledby="pdp-tab-description-btn">
+            <!-- Full Description: will render product.description -->
+            <h5>Product Description</h5>
+            <p>{{ product.description }}</p>
+            <p>A 30-hour battery life, quick-charge support, and seamless Bluetooth 5.3 pairing make them a reliable companion for commutes, workouts, and work-from-home calls alike.</p>
+            <ul>
+              <li>Active Noise Cancellation (ANC) with Ambient Mode</li>
+              <li>30-hour battery life, 10-minute quick charge for 3 hours playback</li>
+              <li>Bluetooth 5.3 with multipoint pairing</li>
+              <li>Built-in mic for hands-free calls</li>
+            </ul>
+          </div>
+
+          <!-- ============ SPECIFICATIONS ============ -->
+          <div class="tab-pane fade" id="pdp-tab-specs" role="tabpanel" aria-labelledby="pdp-tab-specs-btn">
+            <h5>Technical Specifications</h5>
+            <!-- Specification Table: values will render from product attributes / spec model -->
+            <table class="pdp-spec-table">
+              <tbody>
+                <tr>
+                  <td>Brand</td>
+                  <td>{{ product.brand.name }}</td>
+                </tr>
+                <tr>
+                  <td>Category</td>
+                  <td>{{ product.category.name }}</td>
+                </tr>
+                <tr>
+                  <td>Model</td>
+                  <td>SW-HP-2201</td>
+                </tr>
+                <tr>
+                  <td>Color</td>
+                  <td>Matte Black</td>
+                </tr>
+                <tr>
+                  <td>Material</td>
+                  <td>Aluminum, Memory Foam, ABS</td>
+                </tr>
+                <tr>
+                  <td>Weight</td>
+                  <td>{{ product.weight }} kg</td>
+                </tr>
+                <tr>
+                  <td>Dimensions</td>
+                  <td>18 x 16 x 8 cm</td>
+                </tr>
+                <tr>
+                  <td>Warranty</td>
+                  <td>1 Year Official Warranty</td>
+                </tr>
+                <tr>
+                  <td>Country of Origin</td>
+                  <td>Imported</td>
+                </tr>
+                <tr>
+                  <td>SKU</td>
+                  <td>{{ product.sku }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ============ REVIEWS ============ -->
+          <div class="tab-pane fade" id="pdp-tab-reviews" role="tabpanel" aria-labelledby="pdp-tab-reviews-btn">
+            <div class="pdp-reviews-summary">
+              <!-- Average Rating: will render product.average_rating -->
+              <div class="pdp-reviews-score">
+                <h2>4.6</h2>
+                <div class="pdp-rating">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-half"></i>
+                </div>
+                <p>Based on 214 reviews</p>
+              </div>
+
+              <!-- Rating Distribution: will render aggregated review counts per star -->
+              <div class="pdp-reviews-distribution">
+                <div class="pdp-dist-row">
+                  <span>5 ★</span>
+                  <div class="progress">
+                    <div class="progress-bar" style="width: 72%"></div>
+                  </div>
+                  <span>154</span>
+                </div>
+                <div class="pdp-dist-row">
+                  <span>4 ★</span>
+                  <div class="progress">
+                    <div class="progress-bar" style="width: 16%"></div>
+                  </div>
+                  <span>34</span>
+                </div>
+                <div class="pdp-dist-row">
+                  <span>3 ★</span>
+                  <div class="progress">
+                    <div class="progress-bar" style="width: 7%"></div>
+                  </div>
+                  <span>15</span>
+                </div>
+                <div class="pdp-dist-row">
+                  <span>2 ★</span>
+                  <div class="progress">
+                    <div class="progress-bar" style="width: 3%"></div>
+                  </div>
+                  <span>7</span>
+                </div>
+                <div class="pdp-dist-row">
+                  <span>1 ★</span>
+                  <div class="progress">
+                    <div class="progress-bar" style="width: 2%"></div>
+                  </div>
+                  <span>4</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Cards: will render from product.reviews queryset -->
+            <div class="pdp-reviews-list">
+              <div class="pdp-review-card">
+                <div class="pdp-review-head">
+                  <div class="pdp-review-avatar">A</div>
+                  <div>
+                    <div class="pdp-review-name">
+                      <strong>Ayesha K.</strong>
+                      <span class="pdp-verified-purchase"><i class="bi bi-patch-check-fill"></i> Verified Purchase</span>
+                    </div>
+                    <span class="pdp-review-date">June 18, 2026</span>
+                  </div>
+                </div>
+                <div class="pdp-rating">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                </div>
+                <h6 class="pdp-review-title">Best headphones I've owned</h6>
+                <p class="pdp-review-text">The noise cancellation is fantastic for my daily commute and the battery genuinely lasts close to a week of moderate use. Very comfortable too.</p>
+                <div class="pdp-review-actions">
+                  <button class="pdp-review-helpful" type="button"><i class="bi bi-hand-thumbs-up"></i> Helpful (<span data-count="24">24</span>)</button>
+                  <button type="button"><i class="bi bi-flag"></i> Report</button>
+                </div>
+              </div>
+
+              <div class="pdp-review-card">
+                <div class="pdp-review-head">
+                  <div class="pdp-review-avatar">M</div>
+                  <div>
+                    <div class="pdp-review-name">
+                      <strong>Moiz R.</strong>
+                      <span class="pdp-verified-purchase"><i class="bi bi-patch-check-fill"></i> Verified Purchase</span>
+                    </div>
+                    <span class="pdp-review-date">June 3, 2026</span>
+                  </div>
+                </div>
+                <div class="pdp-rating">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star"></i>
+                </div>
+                <h6 class="pdp-review-title">Great sound, slightly tight fit</h6>
+                <p class="pdp-review-text">Sound quality is excellent and the case is sturdy. They feel a little snug on the first few wears but loosen up nicely after a week.</p>
+                <div class="pdp-review-actions">
+                  <button class="pdp-review-helpful" type="button"><i class="bi bi-hand-thumbs-up"></i> Helpful (<span data-count="9">9</span>)</button>
+                  <button type="button"><i class="bi bi-flag"></i> Report</button>
+                </div>
+              </div>
+
+              <div class="pdp-review-card">
+                <div class="pdp-review-head">
+                  <div class="pdp-review-avatar">S</div>
+                  <div>
+                    <div class="pdp-review-name">
+                      <strong>Sara N.</strong>
+                      <span class="pdp-verified-purchase"><i class="bi bi-patch-check-fill"></i> Verified Purchase</span>
+                    </div>
+                    <span class="pdp-review-date">May 27, 2026</span>
+                  </div>
+                </div>
+                <div class="pdp-rating">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                </div>
+                <h6 class="pdp-review-title">Worth every rupee</h6>
+                <p class="pdp-review-text">Delivery was quick and the packaging felt premium. Bass is punchy without overpowering vocals. Highly recommend for the price range.</p>
+                <div class="pdp-review-actions">
+                  <button class="pdp-review-helpful" type="button"><i class="bi bi-hand-thumbs-up"></i> Helpful (<span data-count="41">41</span>)</button>
+                  <button type="button"><i class="bi bi-flag"></i> Report</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state: shown when a product has zero reviews -->
+            <div class="pdp-empty-state" id="pdpNoReviews">
+              <i class="bi bi-chat-square-text"></i>
+              <h6>No reviews yet</h6>
+              <p>Be the first to share what you think about this product.</p>
+            </div>
+
+            <!-- Pagination placeholder: will render from review queryset page_obj -->
+            <div class="pdp-reviews-pagination">
+              <button class="active" type="button" aria-label="Page 1">1</button>
+              <button type="button" aria-label="Page 2">2</button>
+              <button type="button" aria-label="Page 3">3</button>
+              <button type="button" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
+            </div>
+          </div>
+
+          <!-- ============ SHIPPING & RETURNS ============ -->
+          <div class="tab-pane fade" id="pdp-tab-shipping" role="tabpanel" aria-labelledby="pdp-tab-shipping-btn">
+            <h5>Shipping &amp; Returns</h5>
+            <p>Orders are processed within 24 hours and shipped via our trusted courier partners. Standard delivery takes 2–4 business days across major cities.</p>
+            <ul>
+              <li>Free shipping on orders over Rs. 5,000</li>
+              <li>Cash on Delivery available nationwide</li>
+              <li>7-day return window from the date of delivery</li>
+              <li>Items must be unused and in original packaging for returns</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FREQUENTLY BOUGHT TOGETHER ================= -->
+  <section class="products-section pd-fbt-section">
+    <div class="container">
+      <div class="section-heading section-heading-row">
+        <div>
+          <span class="section-label">Bundle &amp; Save</span>
+          <h2>Frequently Bought Together</h2>
+        </div>
+      </div>
+
+      <div class="pd-fbt-wrap">
+        <!-- Frequently-bought-together items will be rendered here by Django -->
+        <div class="pd-fbt-item">
+          <div class="form-check pd-fbt-check">
+            <input class="form-check-input" type="checkbox" id="fbt-1" checked disabled />
+          </div>
+          <div class="pd-fbt-image">
+            <i class="bi bi-headphones"></i>
+          </div>
+          <div class="pd-fbt-info">
+            <span class="pd-fbt-label">This item</span>
+            <p class="pd-fbt-name">Wireless Over-Ear Headphones</p>
+            <span class="pd-fbt-price" data-price="6399">Rs. 6,399</span>
+          </div>
+        </div>
+
+        <span class="pd-fbt-plus"><i class="bi bi-plus-lg"></i></span>
+
+        <div class="pd-fbt-item">
+          <div class="form-check pd-fbt-check">
+            <input class="form-check-input" type="checkbox" id="fbt-2" checked />
+          </div>
+          <div class="pd-fbt-image">
+            <i class="bi bi-usb-c"></i>
+          </div>
+          <div class="pd-fbt-info">
+            <label for="fbt-2" class="pd-fbt-label-link">Braided USB-C Charging Cable</label>
+            <span class="pd-fbt-price" data-price="899">Rs. 899</span>
+          </div>
+        </div>
+
+        <span class="pd-fbt-plus"><i class="bi bi-plus-lg"></i></span>
+
+        <div class="pd-fbt-item">
+          <div class="form-check pd-fbt-check">
+            <input class="form-check-input" type="checkbox" id="fbt-3" />
+          </div>
+          <div class="pd-fbt-image">
+            <i class="bi bi-bag"></i>
+          </div>
+          <div class="pd-fbt-info">
+            <label for="fbt-3" class="pd-fbt-label-link">Protective Carry Case</label>
+            <span class="pd-fbt-price" data-price="1299">Rs. 1,299</span>
+          </div>
+        </div>
+
+        <div class="pd-fbt-summary">
+          <span class="pd-fbt-total-label">Total for selected items</span>
+          <!-- Bundle total is recalculated on the frontend and confirmed by Django on checkout -->
+          <span class="pd-fbt-total-price" id="pdFbtTotal">Rs. 7,298</span>
+          <button type="button" class="btn pd-btn-add-cart pd-fbt-add-all" id="pdFbtAddAll"><i class="bi bi-cart-plus"></i> Add All to Cart</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ================= RELATED PRODUCTS ================= -->
+  <section class="products-section">
+    <div class="container">
+      <div class="section-heading section-heading-row">
+        <div>
+          <span class="section-label">You May Also Like</span>
+          <h2>Related Products</h2>
+        </div>
+        <a href="#" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
+      </div>
+
+      <div class="row g-4">
+        <!-- Related products will be rendered here by Django, filtered by category/brand -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+          <div class="product-card">
+            <div class="product-card-media">
+              <span class="badge-discount">-15%</span>
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <span class="product-category-badge">Electronics</span>
+              <div class="product-image-placeholder">
+                <i class="bi bi-earbuds"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">SoundWave</span>
+              <h6 class="product-name">True Wireless Earbuds X2</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                <span>(12)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 3,399</span>
+                <span class="price-original">Rs. 3,999</span>
+              </div>
+              <span class="stock-badge in-stock">In Stock</span>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+          <div class="product-card">
+            <div class="product-card-media">
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <span class="product-category-badge">Wearables</span>
+              <div class="product-image-placeholder">
+                <i class="bi bi-smartwatch"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">TimeTech</span>
+              <h6 class="product-name">Fitness Smart Watch Pro</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                <span>(98)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 8,499</span>
+                <span class="price-original">Rs. 9,999</span>
+              </div>
+              <span class="stock-badge low-stock">Only 3 left</span>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+          <div class="product-card">
+            <div class="product-card-media">
+              <span class="badge-new">New</span>
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <span class="product-category-badge">Electronics</span>
+              <div class="product-image-placeholder">
+                <i class="bi bi-speaker"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">SoundWave</span>
+              <h6 class="product-name">Portable Bluetooth Speaker</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                <span>(56)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 4,999</span>
+              </div>
+              <span class="stock-badge in-stock">In Stock</span>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+          <div class="product-card">
+            <div class="product-card-media">
+              <span class="badge-discount">-10%</span>
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <span class="product-category-badge">Electronics</span>
+              <div class="product-image-placeholder">
+                <i class="bi bi-mic"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">VoxPro</span>
+              <h6 class="product-name">USB Condenser Microphone</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                <span>(87)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 7,199</span>
+                <span class="price-original">Rs. 7,999</span>
+              </div>
+              <span class="stock-badge in-stock">In Stock</span>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state: shown by Django when no related products exist (hidden by default) -->
+      <div class="pd-empty-state d-none" id="pdNoRelatedState">
+        <i class="bi bi-grid"></i>
+        <p>No related products found right now.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RECENTLY VIEWED ================= -->
+  <section class="products-section pd-recently-viewed-section">
+    <div class="container">
+      <div class="section-heading section-heading-row">
+        <div>
+          <span class="section-label">Your History</span>
+          <h2>Recently Viewed</h2>
+        </div>
+        <div class="pd-slider-controls">
+          <button type="button" class="pd-slider-btn" id="pdRecentPrev" aria-label="Scroll recently viewed left"><i class="bi bi-chevron-left"></i></button>
+          <button type="button" class="pd-slider-btn" id="pdRecentNext" aria-label="Scroll recently viewed right"><i class="bi bi-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <div class="pd-recent-slider" id="pdRecentSlider">
+        <!-- Recently viewed products will be rendered here by Django from session/user history -->
+
+        <div class="pd-recent-slide">
+          <div class="product-card">
+            <div class="product-card-media">
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <div class="product-image-placeholder">
+                <i class="bi bi-laptop"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">NovaTech</span>
+              <h6 class="product-name">Ultra-Slim Notebook 14"</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                <span>(76)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 89,999</span>
+              </div>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pd-recent-slide">
+          <div class="product-card">
+            <div class="product-card-media">
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <div class="product-image-placeholder">
+                <i class="bi bi-camera"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">PixelPro</span>
+              <h6 class="product-name">Compact Mirrorless Camera</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                <span>(159)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 54,999</span>
+                <span class="price-original">Rs. 61,000</span>
+              </div>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pd-recent-slide">
+          <div class="product-card">
+            <div class="product-card-media">
+              <span class="badge-new">New</span>
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <div class="product-image-placeholder">
+                <i class="bi bi-lamp"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">GlowHome</span>
+              <h6 class="product-name">Minimalist Table Lamp</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                <span>(203)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 2,249</span>
+                <span class="price-original">Rs. 2,999</span>
+              </div>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pd-recent-slide">
+          <div class="product-card">
+            <div class="product-card-media">
+              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
+              <div class="product-image-placeholder">
+                <i class="bi bi-bicycle"></i>
+              </div>
+            </div>
+            <div class="product-card-body">
+              <span class="product-brand">TrailRider</span>
+              <h6 class="product-name">Mountain Bike 21-Speed</h6>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                <span>(64)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-current">Rs. 32,500</span>
+              </div>
+              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state: shown by Django when user has no browsing history (hidden by default) -->
+      <div class="pd-empty-state d-none" id="pdNoRecentState">
+        <i class="bi bi-clock-history"></i>
+        <p>You haven't viewed any other products yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SELLER GUARANTEE ================= -->
+  <section class="pdp-section why-us-section">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-label">Our Promise</span>
+        <h2>Shop With Confidence</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-2-4 col-lg-3 col-md-6 col-12">
+          <div class="why-us-card">
+            <div class="why-us-icon">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <h5>Secure Payment</h5>
+            <p>Fully encrypted checkout with trusted payment gateways.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12">
+          <div class="why-us-card">
+            <div class="why-us-icon">
+              <i class="bi bi-truck"></i>
+            </div>
+            <h5>Fast Shipping</h5>
+            <p>Reliable courier partners get orders to you quickly.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12">
+          <div class="why-us-card">
+            <div class="why-us-icon">
+              <i class="bi bi-arrow-repeat"></i>
+            </div>
+            <h5>Easy Returns</h5>
+            <p>Hassle-free 7-day returns on eligible products.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12">
+          <div class="why-us-card">
+            <div class="why-us-icon">
+              <i class="bi bi-patch-check"></i>
+            </div>
+            <h5>Authentic Products</h5>
+            <p>Every listing is verified before it reaches your cart.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NEWSLETTER (reused from homepage) ================= -->
+  <section class="newsletter-section">
+    <div class="container">
+      <div class="newsletter-inner">
+        <div class="newsletter-icon">
+          <i class="bi bi-envelope-heart"></i>
+        </div>
+        <h2>Subscribe to Our Newsletter</h2>
+        <p>Get the latest deals, new arrivals and exclusive offers straight to your inbox.</p>
+
+        <form id="newsletterForm" class="newsletter-form" novalidate>
+          <div class="newsletter-input-wrap">
+            <input type="email" id="newsletterEmail" class="form-control" placeholder="Enter your email address" required />
+            <button type="submit" class="btn newsletter-btn">Subscribe</button>
+          </div>
+          <small class="newsletter-feedback" id="newsletterFeedback"></small>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STICKY MOBILE PURCHASE BAR ================= -->
+  <div class="pdp-mobile-bar" id="pdpMobileBar">
+    <div class="pdp-mobile-bar-price">
+      <strong>Rs. 6,399</strong>
+      <span>Rs. 7,999</span>
+    </div>
+    <div class="pdp-action-buttons">
+      <button class="btn pdp-btn-cart" id="pdpMobileCartBtn" type="button"><i class="bi bi-cart4"></i> Add</button>
+      <button class="btn pdp-btn-buy" type="button"><i class="bi bi-lightning-charge-fill"></i> Buy Now</button>
+    </div>
+  </div>
+
+  <!-- ================= BACK TO TOP ================= -->
+  <button id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'js/product_details.js' %}"></script>
+{% endblock %}

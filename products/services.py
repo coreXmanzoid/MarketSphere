@@ -1,5 +1,6 @@
-from .models import Category, Brand
+from .models import Category, Brand, Product
 from django.db.models import Prefetch
+from django.shortcuts import get_object_or_404
 
 
 def get_all_categories():
@@ -20,3 +21,15 @@ def get_all_categories():
 def get_all_brands():
     brands = Brand.objects.filter(is_active=True)
     return brands
+
+def get_product_by_slug(product_slug):
+    return get_object_or_404(
+        Product.objects.select_related(
+            "category",
+            "brand"
+        ).prefetch_related(
+            "images"
+        ),
+        slug=product_slug,
+        is_active=True
+    )
