@@ -175,50 +175,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ================= WISHLIST TOGGLE (main product) ================= */
-    const pdWishlistBtn = document.getElementById('pdWishlistBtn');
-
-    if (pdWishlistBtn) {
-        pdWishlistBtn.addEventListener('click', function () {
-            const icon = pdWishlistBtn.querySelector('i');
-            const label = pdWishlistBtn.querySelector('span');
-            pdWishlistBtn.classList.toggle('active');
-
-            const isActive = pdWishlistBtn.classList.contains('active');
-
-            if (icon) {
-                icon.classList.toggle('bi-heart', !isActive);
-                icon.classList.toggle('bi-heart-fill', isActive);
-            }
-
-            if (label) {
-                label.textContent = isActive ? 'Wishlisted' : 'Wishlist';
-            }
-
-            pdWishlistBtn.setAttribute('aria-label', isActive ? 'Remove from wishlist' : 'Add to wishlist');
-        });
-    }
-
-    /* ================= WISHLIST TOGGLE (product cards) ================= */
-    document.querySelectorAll('.wishlist-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const icon = btn.querySelector('i');
-            btn.classList.toggle('active');
-
-            if (!icon) return;
-
-            if (btn.classList.contains('active')) {
-                icon.classList.remove('bi-heart');
-                icon.classList.add('bi-heart-fill');
-                btn.setAttribute('aria-label', 'Remove from wishlist');
-            } else {
-                icon.classList.remove('bi-heart-fill');
-                icon.classList.add('bi-heart');
-                btn.setAttribute('aria-label', 'Add to wishlist');
-            }
-        });
-    });
-
     /* ================= SHARE POPOVER ================= */
     const shareBtn = document.getElementById('pdShareBtn');
     const sharePopover = document.getElementById('pdSharePopover');

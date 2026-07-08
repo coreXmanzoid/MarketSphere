@@ -21,24 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ================= WISHLIST TOGGLE ================= */
-    document.querySelectorAll('.wishlist-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const icon = btn.querySelector('i');
-            btn.classList.toggle('active');
-
-            if (btn.classList.contains('active')) {
-                icon.classList.remove('bi-heart');
-                icon.classList.add('bi-heart-fill');
-                btn.setAttribute('aria-label', 'Remove from wishlist');
-            } else {
-                icon.classList.remove('bi-heart-fill');
-                icon.classList.add('bi-heart');
-                btn.setAttribute('aria-label', 'Add to wishlist');
-            }
-        });
-    });
-
     /* ================= ADD TO CART FEEDBACK ================= */
     document.querySelectorAll('.add-to-cart-btn').forEach(function (btn) {
         const originalHTML = btn.innerHTML;

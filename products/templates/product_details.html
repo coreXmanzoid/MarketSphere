@@ -107,7 +107,7 @@
               {% if product.discount_price %}
                 <span class="pd-price-original">Rs. {{ product.discount_price }}</span>
                 {% widthratio product.price product.discount_price 100 as current_percent %}
-                <span class="pd-discount-badge">Save {{ 100|add:"-"|add:current_percent }}%</span>
+                <span class="pd-discount-badge">Save {{ 100|add:'-'|add:current_percent }}%</span>
               {% endif %}
             </div>
 
@@ -116,10 +116,13 @@
               <!-- Stock status will be rendered here by Django based on stock_quantity -->
               {% if product.stock_quantity == 0 %}
                 <i class="bi bi-exclamation-circle text-error"></i>
-                <span class="pd-stock-note"> Oops! We are <strong>Out of Stock</strong></span>
+                <span class="pd-stock-note">Oops! We are <strong>Out of Stock</strong></span>
               {% elif product.stock_quantity <= 80 %}
                 <i class="bi bi-exclamation-circle text-warning"></i>
                 <span class="pd-stock-note">Only <strong>{{ product.stock_quantity }}</strong> left — order soon</span>
+              {% else %}
+                <i class="bi bi-exclamation-circle text-success"></i>
+                <span class="pd-stock-note">In stock</span>
               {% endif %}
             </div>
 
@@ -146,7 +149,7 @@
 
               <div class="pd-secondary-actions">
                 <!-- Wishlist toggle: Django will persist wishlist state -->
-                <button type="button" class="pd-icon-btn pd-wishlist-btn" id="pdWishlistBtn" aria-label="Add to wishlist"><i class="bi bi-heart"></i> <span>Wishlist</span></button>
+                <button type="button" class="pd-icon-btn pd-wishlist-btn" id="pdWishlistBtn" data-product-slug="{{ product.slug }}" aria-label="Add to wishlist"><i class="bi bi-heart"></i> <span>Wishlist</span></button>
 
                 <div class="pd-share-wrap">
                   <button type="button" class="pd-icon-btn pd-share-btn" id="pdShareBtn" aria-label="Share this product" aria-expanded="false"><i class="bi bi-share"></i> <span>Share</span></button>

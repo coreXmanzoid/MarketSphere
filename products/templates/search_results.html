@@ -11,16 +11,24 @@
 {% endblock %}
 
 {% block content %}
-  {% comment %} <!-- ================= SEARCH HERO ================= -->
-  <section class="search-hero-section">
-    <div class="container text-center">
-      <h1 class="search-page-title">Search Results</h1>
-      <p class="search-results-meta">
-        <!-- Dynamic result count and query will be rendered here by Django -->
-        Showing <strong>24</strong> results for <span class="search-query-highlight">&quot;iPhone&quot;</span>
-      </p>
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="pd-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          <!-- Category breadcrumb will be rendered here by Django, e.g. {{ product.category.name }} -->
+          <li class="breadcrumb-item">
+            <a href="">Search</a>
+          </li>
+          <!-- Product name breadcrumb will be rendered here by Django -->
+          <li class="breadcrumb-item active" aria-current="page">Iphone</li>
+        </ol>
+      </nav>
     </div>
-  </section> {% endcomment %}
+  </section>
 
   <!-- ================= SEARCH RESULTS BODY ================= -->
   <section class="search-results-section">
@@ -54,12 +62,12 @@
             </div>
             <div class="card-body">
               <!-- Brand filter checkboxes will be rendered here -->
-               {% for brand in brands %}
-               <div class="form-check filter-check">
-                   <input class="form-check-input" type="checkbox" id="brand-{{ brand.slug }}" />
-                   <label class="form-check-label" for="{{ brand.slug }}">{{ brand.name }}</label>
+              {% for brand in brands %}
+                <div class="form-check filter-check">
+                  <input class="form-check-input" type="checkbox" id="brand-{{ brand.slug }}" />
+                  <label class="form-check-label" for="{{ brand.slug }}">{{ brand.name }}</label>
                 </div>
-                {% endfor %}
+              {% endfor %}
             </div>
           </div>
 

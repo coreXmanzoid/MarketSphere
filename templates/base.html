@@ -54,11 +54,17 @@
               <!-- Logged In -->
               <div class="col-lg-3 col-md-3 col-12">
                 <div class="d-flex justify-content-lg-end justify-content-center align-items-center">
+                  <!-- Wishlist -->
+                  <a href="{% url "wishlist" %}" class="btn position-relative me-1">
+                    <i class="bi bi-heart-half"></i>
+                    
+                    <span id="wishlistCounter" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ wishlist_count }}</span>
+                  </a>
                   <!-- Cart -->
-                  <a href="#" class="btn position-relative me-3">
+                  <a href="{% url "cart" %}" class="btn position-relative me-3">
                     <i class="bi bi-cart4"></i>
 
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">2</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_count }}</span>
                   </a>
 
                   <!-- Profile -->
@@ -81,10 +87,6 @@
 
                       <li>
                         <a class="dropdown-item" href="#">My Orders</a>
-                      </li>
-
-                      <li>
-                        <a class="dropdown-item" href="#">Wishlist</a>
                       </li>
 
                       <li>
@@ -119,7 +121,7 @@
                     <!-- Level 1 -->
                     <div class="list-group rounded-0 border-end">
                       {% for category in categories %}
-                        <a href="http://search/{{category.slug}}" class="list-group-item list-group-item-action category-item" data-target="category-{{ category.id }}">
+                        <a href="http://search/category/{{ category.slug }}" class="list-group-item list-group-item-action category-item" data-target="category-{{ category.id }}">
                           {% if category.icon %}
                             <i class="{{ category.icon }} me-2"></i>
                           {% endif %}
@@ -136,12 +138,12 @@
 
                         {% for child in category.children.all %}
                           <div class="child-item mb-1">
-                            <a href="" class="dropdown-item fw-bold child-item__link">{{ child.name }}</a>
+                            <a href="https://search/category/{{ child.slug}}" class="dropdown-item fw-bold child-item__link">{{ child.name }}</a>
 
                             {% if child.children.all %}
                               <div class="child-grandchildren p-2 shadow-sm">
                                 {% for grandchild in child.children.all %}
-                                  <a href="" class="dropdown-item d-inline-flex align-items-center grandchild-item">
+                                  <a href="https://search/category/{{ grandchild.slug }}" class="dropdown-item d-inline-flex align-items-center grandchild-item">
                                     <i class="bi bi-arrow-right-short"></i>
                                     <span>{{ grandchild.name }}</span>
                                   </a>
