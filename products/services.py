@@ -23,6 +23,17 @@ def get_all_brands():
     brands = Brand.objects.filter(is_active=True)
     return brands
 
+def get_featured_products():
+    return Product.objects.select_related(
+        "category",
+        "brand"
+    ).prefetch_related(
+        "images"
+    ).filter(
+        is_active=True,
+        is_featured=True
+    )
+
 def get_product_by_slug(product_slug):
     return get_object_or_404(
         Product.objects.select_related(
@@ -38,18 +49,44 @@ def get_product_by_slug(product_slug):
 
 # search logic
 
-def get_search_product(q):
+from django.db.models import Q
+
+def get_search_products(q):
     if not q:
         return Product.objects.none()
 
-    return Product.objects.select_related(
-        "category",
-        "brand"
-    ).prefetch_related(
-        "images"
-    ).filter(
-        title__icontains=q,
-        is_active=True
+    return (
+        Product.objects.select_related(
+            "category",
+            "brand",
+        )
+        .prefetch_related("images")
+        .filter(
+            Q(name__icontains=q)
+            | Q(short_description__icontains=q)
+            | Q(description__icontains=q),
+            is_active=True,
+        )
+    )
+
+
+def get_search_categories(products):
+    return (
+        Category.objects.filter(
+            products__in=products,
+            is_active=True,
+        )
+        .distinct()[:5]
+    )
+
+
+def get_search_brands(products):
+    return (
+        Brand.objects.filter(
+            products__in=products,
+            is_active=True,
+        )
+        .distinct()[:5]
     )
 
 def get_brand_products(brand_slug):
@@ -76,7 +113,6 @@ def get_category_products(category_slug):
 # wishlist logic
 def add_to_wishlist(user, product_slug):
     product = get_object_or_404(Product, slug=product_slug, is_active=True)
-
     wishlist_item, created = WishlistItem.objects.get_or_create(
         user=user,
         product=product
@@ -116,6 +152,17 @@ def is_in_wishlist(user, product_slug):
         product__slug=product_slug
     ).exists()
 
+
+def get_wishlist_ids(user):
+    wishlist_ids = set()
+
+    if user.is_authenticated:
+        wishlist_ids = set(
+            WishlistItem.objects.filter(user=user)
+            .values_list("product_id", flat=True)
+        )
+        return wishlist_ids
+    return None
 
 def get_user_wishlist(user):
     if not getattr(user, "is_authenticated", False):

@@ -111,14 +111,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
         return tokenInput ? tokenInput.value : "";
     }
-
     function slugify(value) {
         return String(value || "")
             .toLowerCase()
-            .replace(/["']/g, "")
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "");
+            .replace(/["'()\/]/g, "")        // remove quotes, parentheses, and slashes
+            .replace(/[^a-z0-9]+/g, "-")     // replace other non-alphanumerics with hyphen
+            .replace(/^-+|-+$/g, "");        // trim leading/trailing hyphens
     }
+
 
     function resolveProductSlug(button) {
         if (!button) {
@@ -314,6 +314,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (response) {
+            if (response.status === 200){
+                return "Product Successfully Added to Wishlist."
+            }
             if (response.status === 403) {
                 return "Please sign in to save items to your wishlist.";
             }
@@ -464,3 +467,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     syncInitialWishlistButtons();
 });
+function getCookie(name) {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}

@@ -73,7 +73,7 @@
         <!-- Category cards will be rendered here -->
         {% for category in categories %}
           <div class="col-lg-2 col-md-4 col-6">
-            <a href="#" class="category-card">
+            <a href="#" class="category-card" style="--bg-image: url('{% if category.image %}{{ category.image.url }}{% endif %}');">
               <div class="category-card-icon">
                 <i class="{{ category.icon }}"></i>
               </div>
@@ -100,123 +100,57 @@
       <div class="row g-4">
         <!-- Featured products will be rendered here -->
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-discount">-20%</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <span class="product-category-badge">(Electronics)</span>
-              <div class="product-image-placeholder">
-                <i class="bi bi-headphones"></i>
+        {% for product in featured_products %}
+          <div class="col-lg-3 col-md-4 col-6">
+            <div class="product-card">
+              <div class="product-card-media">
+                {% if product.discount_price %}
+                  {% widthratio product.discount_price product.price 100 as discount_percent %}
+                  <span class="badge-discount">-{{ 100|add:'-'|add:discount_percent }}%</span>
+                {% endif %}
+                <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}" type="button" aria-label="{% if product.id in wishlist_ids %} Remove from wishlist {% else %}Add to wishlist{% endif %}"><i class="bi bi-heart"></i></button>
+                <span class="product-category-badge">({{ product.category.name }})</span>
+                <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
+                  <i class="bi bi-headphones"></i>
+                </div>
               </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">SoundWave</span>
-              <h6 class="product-name">Wireless Over-Ear Headphones</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-half"></i>
-                <span>(214)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 6,399</span>
-                <span class="price-original">Rs. 7,999</span>
-              </div>
-              <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
+              <div class="product-card-body">
+                {% if product.brand %}
+                <span class="product-brand">{{ product.brand.name }}</span>
+                {% else %}
+                <span class="product-brand">NO BRAND</span>
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-discount">-15%</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-smartwatch"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">TimeTech</span>
-              <h6 class="product-name">Fitness Smart Watch Pro</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <span>(98)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 8,499</span>
-                <span class="price-original">Rs. 9,999</span>
-              </div>
-              <span class="stock-badge low-stock">Only 3 left</span>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
+                {% endif %}
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-bag"></i>
+                <h6 class="product-name" onclick="window.location.href='{% url 'product' product.slug %}'">{{ product.name }}</h6>
+                <div class="product-rating">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-half"></i>
+                  <span>({{ product.review_count|default:'0' }})</span>
+                </div>
+                <div class="product-price">
+                  {% if product.discount_price %}
+                    <span class="price-current">Rs. {{ product.discount_price }}</span>
+                    <span class="price-original">Rs. {{ product.price }}</span>
+                  {% else %}
+                    <span class="price-current">Rs. {{ product.price }}</span>
+                  {% endif %}
+                </div>
+                {% if product.stock_quantity <= 0 %}
+                <span class="stock-badge out-of-stock">Out of Stock</span>
+                {% elif product.stock_quantity <= 80 %}
+                <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
+                {% else %}
+                <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                {% endif %}
+                <button class="btn add-to-cart-btn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">UrbanCarry</span>
-              <h6 class="product-name">Leather Laptop Backpack</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(340)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 4,199</span>
-              </div>
-              <span class="stock-badge out-of-stock">Out of Stock</span>
-              <button class="btn add-to-cart-btn w-100" disabled><i class="bi bi-cart4"></i> Add to Cart</button>
             </div>
           </div>
-        </div>
-
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-discount">-30%</span>
-              <button class="wishlist-btn active" type="button" aria-label="Remove from wishlist"><i class="bi bi-heart-fill"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-laptop"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">NovaTech</span>
-              <h6 class="product-name">Ultra-Slim Notebook 14"</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <span>(76)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 89,999</span>
-                <span class="price-original">Rs. 1,28,000</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
+        {% endfor %}
 
         <div class="col-lg-3 col-md-4 col-6">
           <div class="product-card">
@@ -491,19 +425,24 @@
 
       <div class="row g-4 category-grid">
         {% for brand in brands %}
-          <div class="col-lg-2 col-md-4 col-6">
-            <a href="{{ brand.website }}" target="_blank" class="category-card pb-2">
-              <div class="brand-logo-img">
-                {% if brand.logo %}
-                  <img src="{{ brand.logo.url }}" alt="{{ brand.name }} logo" />
-                {% else %}
-                  <img src="{% static 'images/logo-icon.png' %}" alt="{{ brand.name }} logo" />
-                {% endif %}
-              </div>
-              <h5>{{ brand.name }}</h5>
-            </a>
-          </div>
-        {% endfor %}
+        <div class="col-lg-2 col-md-4 col-6">
+    <a href="{{ brand.website|default:'#' }}"
+       target="_blank"
+       class="category-card brand-card">
+
+        <div class="brand-logo-img">
+            {% if brand.logo %}
+                <img src="{{ brand.logo.url }}" alt="{{ brand.name }} logo">
+            {% else %}
+                <img src="{% static 'images/logo-icon.png' %}" alt="{{ brand.name }} logo">
+            {% endif %}
+        </div>
+
+        <h6>{{ brand.name }}</h6>
+
+    </a>
+</div>
+{% endfor %}
       </div>
     </div>
   </section>

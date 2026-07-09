@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Shopping Cart • MarketSphere
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}" />
+<link rel="stylesheet" href="{% static 'css/cart.css' %}" />
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<!-- ================= BREADCRUMB ================= -->
+<section class="cart-breadcrumb-wrap">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item">
+          <a href="{% url 'home' %}">Home</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Shopping Cart</li>
+      </ol>
+    </nav>
+  </div>
+</section>
+
+<!-- ================= CART SECTION ================= -->
+<section class="cart-section" id="cartRoot"
+  data-cart-url="{% url 'cart_data' %}"
+  data-clear-cart-url="{% url "clear_cart" %}">
+  <div class="container">
+    <!-- Page Heading -->
+    <div class="cart-heading-row">
+      <div>
+        <h1 class="cart-page-title"><i class="bi bi-cart4"></i> Shopping Cart</h1>
+        <!-- Item count will be recalculated live by cart.js; initial value rendered by Django -->
+        <p class="cart-item-count" id="cartItemCount">
+          <!-- e.g. {{ cart_items|length }} item(s) in your cart -->
+          <span id="cartItemCountValue">{{ cart_count }}</span> item(s) in your cart
+        </p>
+      </div>
+      <a href="{% url 'home' %}" class="view-all-link cart-continue-link"><i class="bi bi-arrow-left"></i> Continue
+        Shopping</a>
+    </div>
+
+    <!-- ================= CART LAYOUT ================= -->
+    <div class="row g-4 cart-layout" id="cartLayout">
+      <!-- ================= LEFT: CART ITEMS ================= -->
+      <div class="col-lg-8 col-12">
+        <div class="cart-items-toolbar">
+          <span class="cart-items-toolbar-label"><i class="bi bi-bag-check"></i> <span id="cartToolbarCount">{{ cart_count }}</span> Products</span>
+          <button type="button" class="cart-clear-btn" id="cartClearBtn"><i class="bi bi-trash3"></i> Clear
+            Cart</button>
+        </div>
+
+        <div class="cart-items-list" id="cartItemsList">
+          {% for item in cart.items.all %}
+          <!-- ================= CART ITEM: individual product row rendered from cart.items queryset by Django ================= -->
+          <div class="cart-item-card" data-cart-item data-item-id="{{ item.id }}" data-product-slug="{% url 'product' item.product.slug %}"
+            data-unit-price="{{ item.product.discount_price|default:item.product.price }}" data-quantity="{{ item.quantity }}" data-max-quantity="{{ item.product.stock_quantity }}"
+            data-update-url="{% url 'update_quantity' item.product.slug %}"
+            data-increment-url="{% url 'increment_quantity' item.product.slug %}"
+            data-decrement-url="{% url 'decrement_quantity' item.product.slug %}"
+            data-remove-url="{% url 'remove_from_cart' item.product.slug %}">
+            <div class="cart-item-media">
+              <a href="{% url "product" item.product.slug %}" class="cart-item-image-link" aria-label="View Wireless Over-Ear Headphones">
+                <!-- Product image will be rendered here by Django from item.product.images -->
+                <div class="product-image-placeholder cart-item-image-placeholder">
+                  <i class="bi bi-headphones"></i>
+                </div>
+              </a>
+            </div>
+
+            <div class="cart-item-body">
+              <div class="cart-item-top-row">
+                <div class="cart-item-info">
+                  <span class="product-category cart-item-category">{{ item.product.category }}</span>
+                  <a href="{% url "product" item.product.slug %}" class="cart-item-name-link">
+                    <!-- Product name will be rendered here by Django -->
+                    <h6 class="cart-item-name">{{ item.product.name }}</h6>
+                  </a>
+                  <span class="product-brand cart-item-brand">{{ item.product.brand }}</span>
+                  {% if item.product.stock_quantity == 0 %}
+                  <span class="stock-badge in-stock cart-item-stock">Out of stock</span>
+                  {% elif item.product.stock_quantity <= 80 %}
+                  <span class="stock-badge in-stock cart-item-stock">Only <strong>{{ item.product.stock_quantity }}</strong> left</span>
+                  {% else %}
+                  <span class="stock-badge in-stock cart-item-stock">In Stock</span>
+              {% endif %}
+                </div>
+
+                <button type="button" class="cart-remove-btn"
+                  aria-label="Remove {{ item.product.name }} from cart"><i class="bi bi-trash3"></i></button>
+              </div>
+
+              <div class="cart-item-bottom-row">
+                <div class="cart-item-price-block">
+                  {% if item.product.discount_price %}
+                  <span class="cart-item-price-current">Rs. {{ item.product.discount_price }}</span>
+                  <span class="cart-item-price-original">Rs. {{ item.product.price }}</span>
+                  {% else %}
+                  <span class="cart-item-price-current">Rs. {{ item.product.price }}</span>
+                  <span class="cart-item-price-original">Rs. {{ item.product.price|add:1 }}</span>
+                  {% endif %}
+                </div>
+
+                <div class="cart-qty-selector" role="group" aria-label="Quantity for Wireless Over-Ear Headphones">
+                  <button type="button" class="cart-qty-btn cart-qty-decrement" aria-label="Decrease quantity"><i
+                      class="bi bi-dash"></i></button>
+                  <input type="number" class="cart-qty-input" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}" aria-label="Quantity" />
+                  <button type="button" class="cart-qty-btn cart-qty-increment" aria-label="Increase quantity"><i
+                      class="bi bi-plus"></i></button>
+                </div>
+
+                <div class="cart-item-subtotal">
+                  <span class="cart-item-subtotal-label">Subtotal</span>
+                  <!-- Item subtotal will be recalculated live by cart.js; initial value rendered by Django -->
+                  <span class="cart-item-subtotal-value">Rs. {{ item.product.price }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          <!-- ================= END CART ITEMS ================= -->
+        </div>
+
+        <!-- ================= EMPTY CART (hidden, shown by JS/Django when cart has no items) ================= -->
+        <div class="cart-empty-state d-none" id="cartEmptyState">
+          <div class="cart-empty-icon">
+            <i class="bi bi-cart-x"></i>
+          </div>
+          <h3>Your Cart is Empty</h3>
+          <p>Looks like you haven't added anything to your cart yet. Start exploring our products and find something you
+            love.</p>
+          <a href="{% url 'home' %}" class="btn btn-hero-primary"><i class="bi bi-bag"></i> Continue Shopping</a>
+        </div>
+      </div>
+
+      <!-- ================= RIGHT: ORDER SUMMARY ================= -->
+      <div class="col-lg-4 col-12">
+        <aside class="cart-summary-card" id="cartSummary">
+          <h5 class="cart-summary-title"><i class="bi bi-receipt"></i> Order Summary</h5>
+
+          <div class="cart-summary-row">
+            <span>Subtotal</span>
+            <!-- Subtotal will be recalculated live by cart.js; initial value rendered by Django -->
+            <span id="summarySubtotal">Rs. {{ subtotal }}</span>
+          </div>
+
+          <div class="cart-summary-row">
+            <span>Shipping</span>
+            <span id="summaryShipping">Rs. 0</span>
+          </div>
+
+          <div class="cart-summary-row">
+            <span>Tax</span>
+            <span id="summaryTax">Rs. 0</span>
+          </div>
+
+          <div class="cart-summary-row cart-summary-discount d-none" id="summaryDiscountRow">
+            <span>Discount</span>
+            <span id="summaryDiscount">- Rs. 0</span>
+          </div>
+
+          <hr class="cart-summary-divider" />
+
+          <div class="cart-summary-row cart-summary-total-row">
+            <span>Estimated Total</span>
+            <span id="summaryTotal">Rs. {{ total }}</span>
+          </div>
+
+          <!-- Promo code: kept minimal, Django will validate and apply the coupon -->
+          <form class="cart-promo-form" id="cartPromoForm"
+            data-apply-promo-url="{# URL to apply a promo/coupon code, e.g. /cart/apply-promo/ #}">
+            <label for="cartPromoInput" class="form-label">Promo Code</label>
+            <div class="cart-promo-input-wrap">
+              <input type="text" id="cartPromoInput" class="form-control" placeholder="Enter code" />
+              <button type="submit" class="btn cart-promo-btn">Apply</button>
+            </div>
+          </form>
+
+          <button type="button" class="btn btn-hero-primary cart-checkout-btn" id="cartCheckoutBtn"><i
+              class="bi bi-lock"></i> Proceed to Checkout</button>
+          <a href="{% url 'home' %}" class="cart-continue-shopping-link">Continue Shopping</a>
+
+          <div class="cart-trust-row">
+            <span><i class="bi bi-shield-check"></i> Secure Payment</span>
+            <span><i class="bi bi-arrow-repeat"></i> Easy Returns</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOAST CONTAINER (for cart error/success messages) ================= -->
+<div class="cart-toast-container" id="cartToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/home.js' %}"></script>
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

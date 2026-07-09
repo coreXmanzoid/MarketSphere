@@ -118,9 +118,11 @@
 
                   <!-- Price: current / original will be rendered here by Django -->
                   <div class="product-price">
+                    {% if item.product.discount_price %}
+                    <span class="price-current">Rs. {{ item.product.discount_price }}</span>
+                    <span class="price-origional">Rs. {{ item.product.price }}</span>
+                    {% else  %}
                     <span class="price-current">Rs. {{ item.product.price }}</span>
-                    {% if product.discount_price %}
-                      <span class="price-original">Rs. {{ item.product.discount_price }}</span>
                     {% endif %}
                   </div>
 

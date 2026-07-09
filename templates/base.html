@@ -20,6 +20,7 @@
   </head>
 
   <body>
+    {% csrf_token %}
     {% block header %}
       <header class="site-header shadow-sm bg-white p-0">
         <div class="container-fluid py-3 header-main-row">
@@ -64,7 +65,7 @@
                   <a href="{% url "cart" %}" class="btn position-relative me-3">
                     <i class="bi bi-cart4"></i>
 
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_count }}</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCounter">{{ cart_count }}</span>
                   </a>
 
                   <!-- Profile -->

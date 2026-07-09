@@ -8,22 +8,37 @@ from django.http import JsonResponse
 def home(request):
     categories = services.get_all_categories()
     brands = services.get_all_brands()
+    featured_products = services.get_featured_products()
     context = {
         "categories": categories,
         "brands": brands,
+        "featured_products": featured_products,
+        "wishlist_ids": services.get_wishlist_ids(request.user),
     }
     return render(request, "home.html", context)
 
 
 def search(request):
-    q = request.GET.get("q")
-    print(q)
-    categories = services.get_all_categories()
-    brands = services.get_all_brands()
-    return render(
-        request, "search_results.html", {"categories": categories, "brands": brands}
-    )
+    q = request.GET.get("q", "").strip()
 
+    products = services.get_search_products(q)
+
+    categories = services.get_search_categories(products)
+
+    brands = services.get_search_brands(products)
+
+    context = {
+        "q": q,
+        "products": products,
+        "categories": categories,
+        "brands": brands,
+    }
+
+    return render(
+        request,
+        "search_results.html",
+        context,
+    )
 
 def category_search(request, category_slug):
     category_products = services.get_category_products(category_slug)
@@ -48,7 +63,15 @@ def brand_search(request, brand_slug):
 
 def product(request, product_slug):
     product = services.get_product_by_slug(product_slug)
-    return render(request, "product_details.html", {"product": product})
+    context = {
+        "product": product,
+        "is_in_wishlist": (
+            services.is_in_wishlist(request.user, product.slug)
+            if request.user.is_authenticated
+            else False
+        ),
+    }
+    return render(request, "product_details.html", context)
 
 
 @login_required
@@ -76,9 +99,6 @@ def toggle_wishlist(request, product_slug):
     )
 
 
-
-
-
 @login_required
 def cart(request):
     cart = services.get_user_cart(request.user)
@@ -97,39 +117,46 @@ def cart(request):
 def add_to_cart(request, product_slug):
     cart_item = services.add_to_cart(request.user, product_slug)
 
-    return JsonResponse({
-        "success": True,
-        "quantity": cart_item.quantity,
-        "cart_count": services.cart_count(request.user),
-        "subtotal": str(services.cart_subtotal(request.user)),
-        "total": str(services.cart_total(request.user)),
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "quantity": cart_item.quantity,
+            "cart_count": services.cart_count(request.user),
+            "subtotal": str(services.cart_subtotal(request.user)),
+            "total": str(services.cart_total(request.user)),
+        }
+    )
 
 
 @login_required
 def remove_from_cart(request, product_slug):
     success = services.remove_from_cart(request.user, product_slug)
 
-    return JsonResponse({
-        "success": success,
-        "cart_count": services.cart_count(request.user),
-        "subtotal": str(services.cart_subtotal(request.user)),
-        "total": str(services.cart_total(request.user)),
-    })
+    return JsonResponse(
+        {
+            "success": success,
+            "cart_count": services.cart_count(request.user),
+            "subtotal": str(services.cart_subtotal(request.user)),
+            "total": str(services.cart_total(request.user)),
+        }
+    )
 
 
 @login_required
 def increment_quantity(request, product_slug):
+    print("esssss")
     cart_item = services.increment_quantity(request.user, product_slug)
 
-    return JsonResponse({
-        "success": True,
-        "quantity": cart_item.quantity,
-        "item_subtotal": str(cart_item.subtotal),
-        "cart_count": services.cart_count(request.user),
-        "subtotal": str(services.cart_subtotal(request.user)),
-        "total": str(services.cart_total(request.user)),
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "quantity": cart_item.quantity,
+            "item_subtotal": str(cart_item.subtotal),
+            "cart_count": services.cart_count(request.user),
+            "subtotal": str(services.cart_subtotal(request.user)),
+            "total": str(services.cart_total(request.user)),
+        }
+    )
 
 
 @login_required
@@ -137,29 +164,34 @@ def decrement_quantity(request, product_slug):
     cart_item = services.decrement_quantity(request.user, product_slug)
 
     if cart_item is None:
-        return JsonResponse({
+        return JsonResponse(
+            {
+                "success": True,
+                "removed": True,
+                "cart_count": services.cart_count(request.user),
+                "subtotal": str(services.cart_subtotal(request.user)),
+                "total": str(services.cart_total(request.user)),
+            }
+        )
+
+    return JsonResponse(
+        {
             "success": True,
-            "removed": True,
+            "removed": False,
+            "quantity": cart_item.quantity,
+            "item_subtotal": str(cart_item.subtotal),
             "cart_count": services.cart_count(request.user),
             "subtotal": str(services.cart_subtotal(request.user)),
             "total": str(services.cart_total(request.user)),
-        })
-
-    return JsonResponse({
-        "success": True,
-        "removed": False,
-        "quantity": cart_item.quantity,
-        "item_subtotal": str(cart_item.subtotal),
-        "cart_count": services.cart_count(request.user),
-        "subtotal": str(services.cart_subtotal(request.user)),
-        "total": str(services.cart_total(request.user)),
-    })
+        }
+    )
 
 
 @login_required
 def update_quantity(request, product_slug):
-    quantity = request.POST.get("quantity")
+    import json
 
+    quantity = json.loads(request.body or b"{}").get("quantity")
     cart_item = services.update_quantity(
         request.user,
         product_slug,
@@ -167,43 +199,52 @@ def update_quantity(request, product_slug):
     )
 
     if cart_item is None:
-        return JsonResponse({
+        return JsonResponse(
+            {
+                "success": True,
+                "removed": True,
+                "cart_count": services.cart_count(request.user),
+                "subtotal": str(services.cart_subtotal(request.user)),
+                "total": str(services.cart_total(request.user)),
+            }
+        )
+
+    return JsonResponse(
+        {
             "success": True,
-            "removed": True,
+            "removed": False,
+            "quantity": cart_item.quantity,
+            "item_subtotal": str(cart_item.subtotal),
             "cart_count": services.cart_count(request.user),
             "subtotal": str(services.cart_subtotal(request.user)),
             "total": str(services.cart_total(request.user)),
-        })
-
-    return JsonResponse({
-        "success": True,
-        "removed": False,
-        "quantity": cart_item.quantity,
-        "item_subtotal": str(cart_item.subtotal),
-        "cart_count": services.cart_count(request.user),
-        "subtotal": str(services.cart_subtotal(request.user)),
-        "total": str(services.cart_total(request.user)),
-    })
+        }
+    )
 
 
 @login_required
 def clear_cart(request):
     services.clear_cart(request.user)
 
-    return JsonResponse({
-        "success": True,
-        "cart_count": 0,
-        "subtotal": "0.00",
-        "total": "0.00",
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "cart_count": 0,
+            "subtotal": "0.00",
+            "total": "0.00",
+        }
+    )
+
 
 @login_required
 def cart_data(request):
     cart = services.get_user_cart(request.user)
-    
-    return JsonResponse({
-        "cart": cart,
-        "cart_count": services.cart_count(request.user),
-        "subtotal": str(services.cart_subtotal(request.user)),
-        "total": str(services.cart_total(request.user)),
-    })
+
+    return JsonResponse(
+        {
+            "cart": cart,
+            "cart_count": services.cart_count(request.user),
+            "subtotal": str(services.cart_subtotal(request.user)),
+            "total": str(services.cart_total(request.user)),
+        }
+    )

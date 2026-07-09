@@ -22,14 +22,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ================= ADD TO CART FEEDBACK ================= */
-    document.querySelectorAll('.add-to-cart-btn').forEach(function (btn) {
+    document.querySelectorAll(".add-to-cart-btn").forEach((btn) => {
         const originalHTML = btn.innerHTML;
 
-        btn.addEventListener('click', function () {
-            btn.innerHTML = '<i class="bi bi-check2"></i> Added';
-            btn.disabled = true;
+        btn.addEventListener("click", async function () {
+            if (btn.disabled) return;
 
-            setTimeout(function () {
+            btn.disabled = true;
+            try {
+                const response = await fetch(btn.dataset.addUrl, {
+                    method: "G",
+                    headers: {
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    btn.innerHTML = '<i class="bi bi-check2"></i> Added';
+
+                    // Update navbar cart counter
+                    const counter = document.querySelector("#cartCounter");
+                    if (counter) {
+                        counter.textContent = data.cart_count;
+                    }
+                } else {
+                    alert("Unable to add product to cart.");
+                }
+            } catch (error) {
+                console.error("Cart Error:", error);
+                alert("Something went wrong. Please try again.");
+            }
+
+            setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
             }, 1500);
