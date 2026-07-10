@@ -1,7 +1,7 @@
 from .models import Category, Brand, Product, WishlistItem, Cart, CartItem
 from django.db.models import Prefetch, Sum
 from django.shortcuts import get_object_or_404
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 
 def get_all_categories():
@@ -53,7 +53,7 @@ from django.db.models import Q
 
 def get_search_products(q):
     if not q:
-        return Product.objects.none()
+        return Product.objects.all()
 
     return (
         Product.objects.select_related(
@@ -69,6 +69,66 @@ def get_search_products(q):
         )
     )
 
+from django.db.models import Q
+from django.db.models.functions import Coalesce
+from django.core.paginator import Paginator
+
+# ... keep existing imports/functions ...
+
+def filter_products(products, category_slugs=None, brand_slugs=None,
+                     max_price=None, availability=None, discount_only=False):
+    if category_slugs:
+        products = products.filter(category__slug__in=category_slugs)
+
+    if brand_slugs:
+        products = products.filter(brand__slug__in=brand_slugs)
+
+    if max_price:
+        try:
+            max_price = Decimal(max_price)
+            products = products.filter(
+                Q(discount_price__isnull=False, discount_price__lte=max_price)
+                | Q(discount_price__isnull=True, price__lte=max_price)
+            )
+        except (InvalidOperation, TypeError):
+            pass  # ignore malformed price param rather than 500ing
+
+    if availability:
+        avail_q = Q()
+        if "in_stock" in availability:
+            avail_q |= Q(stock_quantity__gt=0)
+        if "out_of_stock" in availability:
+            avail_q |= Q(stock_quantity=0)
+        if avail_q:
+            products = products.filter(avail_q)
+
+    if discount_only:
+        products = products.filter(discount_price__isnull=False)
+
+    # NOTE: rating_min is sent by the frontend but there's no Review/rating
+    # model yet, so it's a no-op for now — add a filter here once one exists.
+
+    return products
+
+
+def sort_products(products, sort_value):
+    effective_price = Coalesce("discount_price", "price")
+
+    if sort_value == "price_low_high":
+        return products.order_by(effective_price)
+    if sort_value == "price_high_low":
+        return products.order_by(effective_price.desc())
+    if sort_value == "popularity":
+        # NOTE: no popularity/sold-count field yet — falls back to newest
+        # until one is added (e.g. an order-count annotation).
+        return products.order_by("-created_at")
+
+    return products.order_by("-created_at")  # "newest" / default
+
+
+def paginate_products(products, page_number, per_page=12):
+    paginator = Paginator(products, per_page)
+    return paginator, paginator.get_page(page_number)
 
 def get_search_categories(products):
     return (

@@ -18,47 +18,71 @@ def home(request):
     return render(request, "home.html", context)
 
 
+from django.shortcuts import render
+from django.http import JsonResponse
+
+from . import services
+
 def search(request):
     q = request.GET.get("q", "").strip()
+    category_slugs = request.GET.getlist("category")
+    brand_slugs = request.GET.getlist("brand")
+    max_price = request.GET.get("max_price")
+    availability = request.GET.getlist("availability")
+    discount_only = request.GET.get("discount") == "1"
+    sort_value = request.GET.get("sort", "newest")
+    page_number = request.GET.get("page", 1)
 
-    products = services.get_search_products(q)
+    # Base set: query only. Sidebar options are computed from THIS,
+    # so the sidebar doesn't shrink as filters are applied.
+    base_products = services.get_search_products(q)
+    categories = services.get_search_categories(base_products)
+    brands = services.get_search_brands(base_products)
 
-    categories = services.get_search_categories(products)
+    # Full set: query + every active filter, for the actual grid.
+    filtered_products = services.filter_products(
+        base_products,
+        category_slugs=category_slugs,
+        brand_slugs=brand_slugs,
+        max_price=max_price,
+        availability=availability,
+        discount_only=discount_only,
+    )
+    filtered_products = services.sort_products(filtered_products, sort_value)
 
-    brands = services.get_search_brands(products)
+    paginator, page_obj = services.paginate_products(filtered_products, page_number)
 
     context = {
         "q": q,
-        "products": products,
+        "products": page_obj,          # Page objects support |length and iteration
+        "page_obj": page_obj,
+        "paginator": paginator,
         "categories": categories,
         "brands": brands,
+        "wishlist_ids": services.get_wishlist_ids(request.user) if request.user.is_authenticated else set(),
     }
 
-    return render(
-        request,
-        "search_results.html",
-        context,
-    )
+    return render(request, "search_results.html", context)
 
-def category_search(request, category_slug):
-    category_products = services.get_category_products(category_slug)
-    brands = services.get_all_brands()
-    return render(
-        request,
-        "search_results.html",
-        {"categories": None, "brnads": brands, "products": category_products},
-    )
+# def category_search(request, category_slug):
+#     category_products = services.get_category_products(category_slug)
+#     brands = services.get_all_brands()
+#     return render(
+#         request,
+#         "search_results.html",
+#         {"categories": None, "brnads": brands, "products": category_products},
+#     )
 
 
-def brand_search(request, brand_slug):
-    brand_products = services.get_brand_products(brand_slug)
-    brands = services.get_all_brands()
-    categories = services.get_all_categories()
-    return render(
-        request,
-        "search_results.html",
-        {"categories": categories, "brnads": None, "products": brand_products},
-    )
+# def brand_search(request, brand_slug):
+#     brand_products = services.get_brand_products(brand_slug)
+#     brands = services.get_all_brands()
+#     categories = services.get_all_categories()
+#     return render(
+#         request,
+#         "search_results.html",
+#         {"categories": categories, "brnads": None, "products": brand_products},
+#     )
 
 
 def product(request, product_slug):

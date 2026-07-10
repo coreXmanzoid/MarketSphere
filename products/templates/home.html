@@ -73,7 +73,7 @@
         <!-- Category cards will be rendered here -->
         {% for category in categories %}
           <div class="col-lg-2 col-md-4 col-6">
-            <a href="#" class="category-card" style="--bg-image: url('{% if category.image %}{{ category.image.url }}{% endif %}');">
+            <a href="{% url "search" %}?category={{category.slug}}" class="category-card" style="--bg-image: url('{% if category.image %}{{ category.image.url }}{% endif %}');">
               <div class="category-card-icon">
                 <i class="{{ category.icon }}"></i>
               </div>
@@ -100,7 +100,7 @@
       <div class="row g-4">
         <!-- Featured products will be rendered here -->
 
-        {% for product in featured_products %}
+        {% for product in featured_products|slice:4 %}
           <div class="col-lg-3 col-md-4 col-6">
             <div class="product-card">
               <div class="product-card-media">
@@ -152,117 +152,6 @@
           </div>
         {% endfor %}
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-cup-hot"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">HomeCraft</span>
-              <h6 class="product-name">Ceramic Coffee Mug Set (4pc)</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(512)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 1,499</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-discount">-10%</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-camera"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">PixelPro</span>
-              <h6 class="product-name">Compact Mirrorless Camera</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-half"></i>
-                <span>(159)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 54,999</span>
-                <span class="price-original">Rs. 61,000</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-bicycle"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">TrailRider</span>
-              <h6 class="product-name">Mountain Bike 21-Speed</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <span>(64)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 32,500</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-discount">-25%</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-lamp"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">GlowHome</span>
-              <h6 class="product-name">Minimalist Table Lamp</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(203)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 2,249</span>
-                <span class="price-original">Rs. 2,999</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -426,8 +315,8 @@
       <div class="row g-4 category-grid">
         {% for brand in brands %}
         <div class="col-lg-2 col-md-4 col-6">
-    <a href="{{ brand.website|default:'#' }}"
-       target="_blank"
+    <a href="{% url "search" %}?brand={{brand.slug}}"
+       ondblclick="window.location.href={{ brand.website|default:"#"}}"
        class="category-card brand-card">
 
         <div class="brand-logo-img">
