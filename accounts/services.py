@@ -1,6 +1,6 @@
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
-
+from .models import Address
 from . import validator
 
 User = get_user_model()
@@ -59,3 +59,56 @@ def send_verification_email(request, user, signup=False):
 
     email_address.send_confirmation(request, signup=signup)
     return True
+
+
+
+from django.shortcuts import get_object_or_404
+
+from .models import Address
+
+
+def save_user_address(user, address_data):
+    address_id = address_data.get("addressId")
+    if address_id == "null":
+        address = Address(
+            user=user,
+        )
+    else:
+        address = get_object_or_404(
+            Address,
+            id=address_id,
+            user=user,
+        )
+
+    address.address_type = address_data["label"]
+    address.full_name = address_data["fullName"]
+    address.phone = address_data["phoneNumber"]
+    address.address_line_1 = address_data["address"]
+    address.city = address_data["city"]
+    address.postal_code = address_data["ptCode"]
+    address.is_default = address_data.get(
+        "isDefault",
+        address.is_default if address_id else False,
+    )
+
+    address.save()
+
+    return address    
+
+def delete_address(user, address_id):
+    address = get_object_or_404(
+        Address,
+        id=address_id,
+        user=user,
+    )
+    address.delete()
+
+
+def get_user_addresses(user):
+    return user.addresses.all()
+
+
+def get_default_address(user):
+    return user.addresses.filter(
+        is_default=True,
+    ).first()

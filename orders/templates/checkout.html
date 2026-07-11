@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Checkout • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/checkout.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="co-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'cart' %}">Cart</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= CHECKOUT HEADER ================= -->
+  <section class="co-header-section">
+    <div class="container">
+      <h1 class="co-page-title">Checkout</h1>
+      <p class="co-page-subtitle">Complete your purchase securely.</p>
+
+      <!-- Checkout progress indicator -->
+      <div class="co-steps" aria-hidden="true">
+        <div class="co-step is-done">
+          <span class="co-step-circle"><i class="bi bi-check-lg"></i></span>
+          <span class="co-step-label">Cart</span>
+        </div>
+        <span class="co-step-line is-done"></span>
+        <div class="co-step is-active">
+          <span class="co-step-circle">2</span>
+          <span class="co-step-label">Checkout</span>
+        </div>
+        <span class="co-step-line"></span>
+        <div class="co-step">
+          <span class="co-step-circle">3</span>
+          <span class="co-step-label">Confirmation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CHECKOUT BODY ================= -->
+  <section class="co-section">
+    <div class="container">
+      <form id="checkoutForm" class="row g-4 co-layout" novalidate data-cart-id="{{cart.id}}">
+        <!-- ================= LEFT COLUMN (~65%) ================= -->
+        <div class="col-lg-8 col-12 co-left-col">
+          <!-- ============ SHIPPING ADDRESS ============ -->
+          <div class="co-card" id="coAddressCard">
+            <div class="co-card-head">
+              <h2 class="co-card-title"><i class="bi bi-geo-alt"></i> Shipping Address</h2>
+              <button type="button" class="co-add-address-btn" id="coAddAddressBtn"><i class="bi bi-plus-lg"></i> Add New Address</button>
+            </div>
+
+            <div class="co-address-list" id="coAddressList">
+              <!-- Address cards will be rendered here by Django from user.addresses queryset -->
+              {% if addresses.count == 0 %}
+                <!-- Empty state: shown by Django when the user has no saved addresses -->
+                <div class="co-empty-state" id="coAddressEmptyState">
+                  <i class="bi bi-geo-alt"></i>
+                  <h6>No saved addresses yet</h6>
+                  <p>Add a delivery address to continue with your order.</p>
+                </div>
+              {% else %}
+                {% for address in addresses %}
+                  <label class="co-address-option {% if address.is_default %}is-selected{% endif %}" data-address-id="{{address.id}}" data-city="{{address.city}}"  data-label="{{ address.address_type }}"> 
+                    <input type="radio" name="shipping_address" value="{{address.id}}"/>
+                    <span class="co-address-radio" aria-hidden="true"></span>
+                    <span class="co-address-body">
+                      <span class="co-address-top-row d-flex">
+                        <span class="co-address-name">{{address.full_name}}</span>
+                        <span class="co-address-tag">{{address.address_type}}</span>
+                        {% if address.is_default %}
+                        <span class="co-address-default-badge"><i class="bi bi-star-fill"></i> Default</span>
+                        {% endif %}
+                        <span class="ms-auto edit-button" data-address-id="{{address.id}}"><i class="bi bi-pencil-square"></i></span>
+                      </span>
+                      <div class="d-flex gap-1">
+                        <span class="co-address-phone"><i class="bi bi-telephone"></i> {{address.phone}}</span>
+                        <span>|</span>
+                        <span class="co-address-ptCode"><i class="bi bi-file-earmark-post-fill"></i> {{address.postal_code}}</span>
+                      </div>
+                      <span class="co-address-line">{{address.address_line_1}}</span>
+                    </span>
+                  </label>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- ============ CONTACT INFORMATION ============ -->
+          <div class="co-card">
+            <div class="co-card-head">
+              <h2 class="co-card-title"><i class="bi bi-person-lines-fill"></i> Contact Information</h2>
+            </div>
+
+            <div class="row g-3 co-contact-grid">
+              <div class="col-md-4 col-12">
+                <label for="coContactName" class="form-label">Full Name</label>
+                <!-- Prefilled with request.user.get_full_name by Django -->
+                <input type="text" class="form-control" id="coContactName" name="full_name" value="{{request.user.first_name}} {{request.user.last_name}}" required />
+              </div>
+
+              <div class="col-md-4 col-12">
+                <label for="coContactEmail" class="form-label">Email Address</label>
+                <!-- Prefilled with request.user.email by Django -->
+                <input type="email" class="form-control" id="coContactEmail" name="email" value="{{ request.user.email }}" required />
+              </div>
+
+              <div class="col-md-4 col-12">
+                <label for="coContactPhone" class="form-label">Phone Number</label>
+                <!-- Prefilled with request.user.contact by Django -->
+                <input type="tel" class="form-control" id="coContactPhone" name="phone" value="{{ request.user.contact }}" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PAYMENT METHOD ============ -->
+          <div class="co-card">
+            <div class="co-card-head">
+              <h2 class="co-card-title"><i class="bi bi-credit-card"></i> Payment Method</h2>
+            </div>
+
+            <div class="co-payment-grid" id="coPaymentGrid">
+              <!-- Cash on Delivery: only selectable option for now -->
+              <label class="co-payment-option is-selected" data-payment="cod">
+                <input type="radio" name="payment_method" value="cod" checked />
+                <span class="co-payment-icon"><i class="bi bi-cash-coin"></i></span>
+                <span class="co-payment-info">
+                  <span class="co-payment-name">Cash on Delivery</span>
+                  <span class="co-payment-desc">Pay with cash when your order arrives</span>
+                </span>
+                <span class="co-payment-check"><i class="bi bi-check-circle-fill"></i></span>
+              </label>
+
+              <!-- Stripe: visually disabled, coming soon -->
+              <label class="co-payment-option is-disabled" data-payment="stripe">
+                <input type="radio" name="payment_method" value="stripe" disabled />
+                <span class="co-payment-icon"><i class="bi bi-stripe"></i></span>
+                <span class="co-payment-info">
+                  <span class="co-payment-name">Credit / Debit Card</span>
+                  <span class="co-payment-desc">Pay securely via Stripe</span>
+                </span>
+                <span class="co-payment-soon-badge">Coming Soon</span>
+              </label>
+
+              <!-- JazzCash: visually disabled, coming soon -->
+              <label class="co-payment-option is-disabled" data-payment="jazzcash">
+                <input type="radio" name="payment_method" value="jazzcash" disabled />
+                <span class="co-payment-icon"><i class="bi bi-phone"></i></span>
+                <span class="co-payment-info">
+                  <span class="co-payment-name">JazzCash</span>
+                  <span class="co-payment-desc">Pay using your JazzCash wallet</span>
+                </span>
+                <span class="co-payment-soon-badge">Coming Soon</span>
+              </label>
+
+              <!-- EasyPaisa: visually disabled, coming soon -->
+              <label class="co-payment-option is-disabled" data-payment="easypaisa">
+                <input type="radio" name="payment_method" value="easypaisa" disabled />
+                <span class="co-payment-icon"><i class="bi bi-wallet2"></i></span>
+                <span class="co-payment-info">
+                  <span class="co-payment-name">EasyPaisa</span>
+                  <span class="co-payment-desc">Pay using your EasyPaisa wallet</span>
+                </span>
+                <span class="co-payment-soon-badge">Coming Soon</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ============ ORDER NOTES ============ -->
+          <div class="co-card">
+            <div class="co-card-head">
+              <h2 class="co-card-title"><i class="bi bi-chat-square-text"></i> Order Notes</h2>
+            </div>
+
+            <textarea class="form-control co-notes-textarea" id="coOrderNotes" name="order_notes" rows="4" placeholder="Write delivery instructions (optional)"></textarea>
+          </div>
+        </div>
+
+        <!-- ================= RIGHT COLUMN (~35%) ================= -->
+        <div class="col-lg-4 col-12 co-right-col">
+          <aside class="co-summary-card" id="coSummaryCard">
+            <h2 class="co-summary-title"><i class="bi bi-receipt"></i> Order Summary</h2>
+
+            <!-- ============ SUMMARY ITEMS ============ -->
+            <div class="co-summary-items" id="coSummaryItems">
+              <!-- Order items will be rendered here by Django from cart.items -->
+              {% for item in cart.items.all %}
+              <div class="co-summary-item">
+                <div class="product-image-placeholder co-summary-item-img">
+                  <i class="bi bi-usb-c"></i>
+                </div>
+                <div class="co-summary-item-info">
+                  <p class="co-summary-item-name">{{ item.product.name }}</p>
+                  <span class="co-summary-item-meta">Qty: {{ item.quantity }}</span>
+                </div>
+                <span class="co-summary-item-price" data-quantity="{{ item.quantity }}" data-unit-price="{% if item.product.discount_price %}{{ item.product.discount_price }}{% else %}{{ item.product.price }}{% endif %}">Rs. {{ item.product.price }}</span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- ============ COUPON ============ -->
+            <form class="co-coupon-form" id="coCouponForm">
+              <label for="coCouponInput" class="form-label">Have a Coupon?</label>
+              <div class="co-coupon-input-wrap">
+                <input type="text" id="coCouponInput" class="form-control" placeholder="Enter coupon code" />
+                <button type="submit" class="btn co-coupon-btn" id="coCouponBtn">Apply</button>
+              </div>
+              <small class="co-coupon-feedback" id="coCouponFeedback"></small>
+            </form>
+
+            <hr class="co-summary-divider" />
+
+            <!-- ============ TOTALS ============ -->
+            <div class="co-summary-totals">
+              <div class="co-summary-row">
+                <span>Subtotal</span>
+                <!-- Subtotal will be rendered here by Django -->
+                <span id="coSummarySubtotal">Rs. {{ subtotal }}</span>
+              </div>
+
+              <div class="co-summary-row">
+                <span>Shipping</span>
+                <!-- Shipping cost will be rendered here by Django -->
+                <span id="coSummaryShipping">Rs. 0</span>
+              </div>
+
+              <div class="co-summary-row co-summary-discount-row d-none" id="coSummaryDiscountRow">
+                <span>Discount</span>
+                <!-- Discount amount will be rendered here by Django once a coupon is applied -->
+                <span id="coSummaryDiscount">- Rs. 0</span>
+              </div>
+
+              <div class="co-summary-row">
+                <span>Tax</span>
+                <!-- Tax amount will be rendered here by Django -->
+                <span id="coSummaryTax">Rs. 0</span>
+              </div>
+            </div>
+
+            <hr class="co-summary-divider" />
+
+            <div class="co-summary-row co-summary-grand-total">
+              <span>Grand Total</span>
+              <!-- Grand total will be rendered here by Django -->
+              <span id="coSummaryGrandTotal">Rs. {{ total }}</span>
+            </div>
+
+            <!-- ============ PLACE ORDER ============ -->
+            <button type="submit" class="btn btn-hero-primary co-place-order-btn" id="coPlaceOrderBtn"><i class="bi bi-lock-fill"></i> <span>Place Order</span></button>
+
+            <!-- ============ TRUST ROW ============ -->
+            <div class="co-trust-row">
+              <span><i class="bi bi-shield-check"></i> Secure Checkout</span>
+              <span><i class="bi bi-patch-check"></i> Safe Payments</span>
+              <span><i class="bi bi-box-seam"></i> Order Protection</span>
+            </div>
+          </aside>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= ADD ADDRESS MODAL (placeholder, no backend) ================= -->
+  <div class="modal fade co-address-modal" id="coAddAddressModal" tabindex="-1" aria-labelledby="coAddAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="coAddAddressModalLabel"><i class="bi bi-geo-alt"></i> Add New Address</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6 col-12">
+              <label for="coNewAddrName" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="coNewAddrName" placeholder="e.g. Hammad Ashraf" />
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="coNewAddrPhone" class="form-label">Phone Number</label>
+              <input type="text" class="form-control" id="coNewAddrPhone" placeholder="e.g. +92 300 1234567" />
+            </div>
+            <div class="col-12">
+              <label for="coNewAddrLine" class="form-label">Full Address</label>
+              <textarea class="form-control" id="coNewAddrLine" rows="3" placeholder="House / Street / City / Province / Postal Code"></textarea>
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="coNewAddrCity" class="form-label">City</label>
+              <input type="text" class="form-control" id="coNewAddrCity" placeholder="e.g. Islamabad" />
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="coNewAddrPtCode" class="form-label">Postal Code</label>
+              <input type="number" class="form-control" id="coNewAddrPtCode" placeholder="e.g. 44000" />
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="coNewAddrTag" class="form-label">Label</label>
+              <select class="form-select" id="coNewAddrTag">
+                <option>Home</option>
+                <option>Office</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <p class="co-modal-note">
+            <i class="bi bi-info-circle"></i> Saving addresses isn't available yet — this form is a preview of what's coming.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn co-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-hero-primary" style="height: 40px !important;" id="coSaveAddressBtn">Save Address</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="co-toast-container" id="coToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/checkout.js' %}"></script>
+{% endblock %}

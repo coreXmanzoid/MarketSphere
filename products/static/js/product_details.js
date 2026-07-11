@@ -97,6 +97,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+
+
     /* ================= FULLSCREEN VIEWER ================= */
     function openFullscreen() {
         if (!fullscreenOverlay) return;
@@ -214,16 +216,47 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ================= ADD TO CART FEEDBACK ================= */
     function bindAddToCartFeedback(btn) {
         if (!btn) return;
+
         const originalHTML = btn.innerHTML;
 
-        btn.addEventListener('click', function () {
-            btn.classList.add('pd-btn-pulse');
-            btn.innerHTML = '<i class="bi bi-check2"></i> Added';
+        btn.addEventListener("click", async function () {
+            if (btn.disabled) return;
 
-            window.setTimeout(function () {
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(btn.dataset.addUrl, {
+                    method: "GET",
+                    headers: {
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    btn.classList.add("pd-btn-pulse");
+                    btn.innerHTML = '<i class="bi bi-check2"></i> Added';
+
+                    // Update navbar cart counter
+                    const counter = document.querySelector("#cartCounter");
+                    if (counter) {
+                        counter.textContent = data.cart_count;
+                    }
+                } else {
+                    alert("Unable to add product to cart.");
+                }
+            } catch (error) {
+                console.error("Cart Error:", error);
+                alert("Something went wrong. Please try again.");
+            }
+
+            setTimeout(() => {
                 btn.innerHTML = originalHTML;
-                btn.classList.remove('pd-btn-pulse');
-            }, 1400);
+                btn.classList.remove("pd-btn-pulse");
+                btn.disabled = false;
+            }, 1500);
         });
     }
 
@@ -251,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         btn.addEventListener('click', function () {
             btn.classList.add('pd-btn-pulse');
+            window.location.href = `/order/checkout`;
             window.setTimeout(function () {
                 btn.classList.remove('pd-btn-pulse');
             }, 400);

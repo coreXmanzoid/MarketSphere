@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Order Confirmed • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static '/css/confirmation.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="cf-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Order Confirmation</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= HEADER / PROGRESS ================= -->
+  <section class="cf-header-section">
+    <div class="container">
+      <!-- Checkout progress indicator: mirrors checkout.html's .co-step markup, all steps completed -->
+      <div class="co-steps" aria-hidden="true">
+        <div class="co-step is-done">
+          <span class="co-step-circle"><i class="bi bi-check-lg"></i></span>
+          <span class="co-step-label">Cart</span>
+        </div>
+        <span class="co-step-line is-done"></span>
+        <div class="co-step is-done">
+          <span class="co-step-circle"><i class="bi bi-check-lg"></i></span>
+          <span class="co-step-label">Checkout</span>
+        </div>
+        <span class="co-step-line is-done"></span>
+        <div class="co-step is-done is-current">
+          <span class="co-step-circle"><i class="bi bi-check-lg"></i></span>
+          <span class="co-step-label">Confirmation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SUCCESS HERO ================= -->
+  <section class="cf-hero-section">
+    <div class="container">
+      <div class="cf-hero-inner">
+        <div class="cf-success-icon" id="cfSuccessIcon">
+          <i class="bi bi-check-lg"></i>
+        </div>
+        <h1 class="cf-hero-title">Order Confirmed!</h1>
+        <p class="cf-hero-message">
+          Thank you for your purchase.<br />
+          Your order has been placed successfully and is now being processed.
+        </p>
+
+        <!-- Order number quick reference -->
+        <div class="cf-order-number-pill">
+          <span>Order No.</span>
+          <!-- Order number will be rendered here by Django -->
+          <strong id="cfOrderNumberValue">{{ order.order_number|default:"—" }}</strong>
+          <button type="button" class="cf-copy-btn" id="cfCopyOrderNumberBtn" data-order-number="{{ order.order_number|default:'' }}" aria-label="Copy order number">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ORDER INFORMATION ================= -->
+  <section class="cf-section cf-section-tight">
+    <div class="container">
+      <div class="cf-card cf-info-card">
+        <div class="cf-info-grid">
+          <div class="cf-info-item">
+            <span class="cf-info-label"><i class="bi bi-hash"></i> Order Number</span>
+            <!-- Order number will be rendered here by Django -->
+            <span class="cf-info-value">{{ order.order_number|default:"—" }}</span>
+          </div>
+
+          <div class="cf-info-item">
+            <span class="cf-info-label"><i class="bi bi-calendar-event"></i> Order Date</span>
+            <!-- Order date will be rendered here by Django -->
+            <span class="cf-info-value">{{ order.created_at|date:"F j, Y — g:i A"|default:"—" }}</span>
+          </div>
+
+          <div class="cf-info-item">
+            <span class="cf-info-label"><i class="bi bi-credit-card"></i> Payment Method</span>
+            <!-- Payment method will be rendered here by Django, e.g. order.get_payment_method_display -->
+            <span class="cf-info-value">{{ order.payment_method|default:"Cash on Delivery" }}</span>
+          </div>
+
+          <div class="cf-info-item">
+            <span class="cf-info-label"><i class="bi bi-wallet2"></i> Payment Status</span>
+            <!-- Payment status will be rendered here by Django -->
+            <span class="cf-status-badge cf-status-{{ order.payment_status|default:'pending'|lower }}">
+              {{ order.get_payment_status_display|default:"Pending" }}
+            </span>
+          </div>
+
+          <div class="cf-info-item">
+            <span class="cf-info-label"><i class="bi bi-box-seam"></i> Order Status</span>
+            <!-- Order status will be rendered here by Django -->
+            <span class="cf-status-badge cf-status-{{ order.status|default:'processing'|lower }}">
+              {{ order.get_status_display|default:"Processing" }}
+            </span>
+          </div>
+
+          <div class="cf-info-item">
+            <span class="cf-info-label"><i class="bi bi-truck"></i> Estimated Delivery</span>
+            <!-- Estimated delivery date will be rendered here by Django -->
+            <span class="cf-info-value">{{ order.estimated_delivery|date:"F j, Y"|default:"3 – 5 business days" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN BODY ================= -->
+  <section class="cf-section">
+    <div class="container">
+      <div class="row g-4 cf-layout">
+
+        <!-- ================= LEFT COLUMN (~65%) ================= -->
+        <div class="col-lg-8 col-12 cf-left-col">
+
+          <!-- ============ SHIPPING INFORMATION ============ -->
+          <div class="cf-card">
+            <div class="cf-card-head">
+              <h2 class="cf-card-title"><i class="bi bi-geo-alt"></i> Shipping Information</h2>
+            </div>
+
+            <div class="cf-shipping-grid">
+              <div class="cf-shipping-item">
+                <span class="cf-shipping-label">Recipient Name</span>
+                <!-- Recipient name will be rendered here by Django -->
+                <span class="cf-shipping-value">{{ order.shipping_name|default:"—" }}</span>
+              </div>
+
+              <div class="cf-shipping-item">
+                <span class="cf-shipping-label">Phone Number</span>
+                <!-- Phone number will be rendered here by Django -->
+                <span class="cf-shipping-value">{{ order.shipping_phone|default:"—" }}</span>
+              </div>
+
+              <div class="cf-shipping-item cf-shipping-item-wide">
+                <span class="cf-shipping-label">Shipping Address</span>
+                <!-- Shipping address will be rendered here by Django -->
+                <span class="cf-shipping-value">{{ order.shipping_address|default:"—" }}</span>
+              </div>
+
+              <div class="cf-shipping-item">
+                <span class="cf-shipping-label">City</span>
+                <!-- City will be rendered here by Django -->
+                <span class="cf-shipping-value">{{ order.shipping_city|default:"—" }}</span>
+              </div>
+
+              <div class="cf-shipping-item">
+                <span class="cf-shipping-label">Postal Code</span>
+                <!-- Postal code will be rendered here by Django -->
+                <span class="cf-shipping-value">{{ order.shipping_postal_code|default:"—" }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ ORDERED ITEMS ============ -->
+          <div class="cf-card">
+            <div class="cf-card-head">
+              <h2 class="cf-card-title"><i class="bi bi-bag-check"></i> Ordered Items</h2>
+              <!-- Item count will be rendered here by Django -->
+              <span class="cf-item-count">{{ order.items.count|default:0 }} item{{ order.items.count|pluralize }}</span>
+            </div>
+
+            <div class="cf-items-list">
+              <!-- Ordered items will be rendered here by Django from order.items -->
+              {% for item in order.items.all %}
+                <div class="cf-order-item">
+                  <div class="product-image-placeholder cf-order-item-img">
+                    {% if item.product.images.first %}
+                      <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" />
+                    {% else %}
+                      <i class="bi bi-box-seam"></i>
+                    {% endif %}
+                  </div>
+
+                  <div class="cf-order-item-info">
+                    <p class="cf-order-item-name">{{ item.product.name }}</p>
+                    <span class="cf-order-item-meta">Qty: {{ item.quantity }} &times; Rs. {{ item.price }}</span>
+                  </div>
+
+                  <span class="cf-order-item-total">Rs. {{ item.total }}</span>
+                </div>
+              {% empty %}
+                <!-- Empty state: should not normally render on a real order -->
+                <div class="cf-empty-state">
+                  <i class="bi bi-bag-x"></i>
+                  <p>No items found for this order.</p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- ============ NEXT STEPS ============ -->
+          <div class="cf-card">
+            <div class="cf-card-head">
+              <h2 class="cf-card-title"><i class="bi bi-signpost-split"></i> What Happens Next</h2>
+            </div>
+
+            <div class="cf-timeline">
+              <div class="cf-timeline-step is-complete">
+                <span class="cf-timeline-icon"><i class="bi bi-check-lg"></i></span>
+                <div class="cf-timeline-body">
+                  <span class="cf-timeline-title">Order Confirmed</span>
+                  <span class="cf-timeline-desc">We've received your order and payment details.</span>
+                </div>
+              </div>
+
+              <div class="cf-timeline-step">
+                <span class="cf-timeline-icon"><i class="bi bi-box-seam"></i></span>
+                <div class="cf-timeline-body">
+                  <span class="cf-timeline-title">Preparing Order</span>
+                  <span class="cf-timeline-desc">Your items are being packed by the seller.</span>
+                </div>
+              </div>
+
+              <div class="cf-timeline-step">
+                <span class="cf-timeline-icon"><i class="bi bi-truck"></i></span>
+                <div class="cf-timeline-body">
+                  <span class="cf-timeline-title">Shipped</span>
+                  <span class="cf-timeline-desc">Your order is on its way to you.</span>
+                </div>
+              </div>
+
+              <div class="cf-timeline-step">
+                <span class="cf-timeline-icon"><i class="bi bi-house-check"></i></span>
+                <div class="cf-timeline-body">
+                  <span class="cf-timeline-title">Delivered</span>
+                  <span class="cf-timeline-desc">Your order arrives at your doorstep.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= RIGHT COLUMN (~35%) ================= -->
+        <div class="col-lg-4 col-12 cf-right-col">
+          <aside class="cf-summary-card" id="cfSummaryCard">
+            <h2 class="cf-summary-title"><i class="bi bi-receipt"></i> Payment Summary</h2>
+
+            <div class="cf-summary-totals">
+              <div class="cf-summary-row">
+                <span>Subtotal</span>
+                <!-- Subtotal will be rendered here by Django -->
+                <span>Rs. {{ order.subtotal|default:"0" }}</span>
+              </div>
+
+              <div class="cf-summary-row">
+                <span>Shipping</span>
+                <!-- Shipping cost will be rendered here by Django -->
+                <span>Rs. {{ order.shipping_cost|default:"0" }}</span>
+              </div>
+
+              {% if order.discount %}
+                <div class="cf-summary-row cf-summary-discount-row">
+                  <span>Discount</span>
+                  <!-- Discount amount will be rendered here by Django -->
+                  <span>- Rs. {{ order.discount }}</span>
+                </div>
+              {% endif %}
+
+              <div class="cf-summary-row">
+                <span>Tax</span>
+                <!-- Tax amount will be rendered here by Django -->
+                <span>Rs. {{ order.tax|default:"0" }}</span>
+              </div>
+            </div>
+
+            <hr class="cf-summary-divider" />
+
+            <div class="cf-summary-row cf-summary-grand-total">
+              <span>Grand Total</span>
+              <!-- Grand total will be rendered here by Django -->
+              <span>Rs. {{ order.total|default:"0" }}</span>
+            </div>
+
+            <!-- ============ ACTION BUTTONS ============ -->
+            <div class="cf-action-buttons">
+              <a href="{% url 'home' %}" class="btn btn-hero-primary cf-primary-action">
+                <i class="bi bi-bag"></i> Continue Shopping
+              </a>
+              {% comment %} <!--
+                "View My Orders" points at the home route for now as a safe
+                fallback — swap {% url 'home' %} for the real orders-list
+                URL name (e.g. {% url 'order_list' %}) once that view exists.
+              --> {% endcomment %}
+              <a href="{% url 'home' %}" class="btn cf-secondary-action">
+                <i class="bi bi-receipt-cutoff"></i> View My Orders
+              </a>
+            </div>
+
+            <!-- ============ SECONDARY ACTIONS ============ -->
+            <div class="cf-extra-actions">
+              <button type="button" class="cf-extra-link" id="cfDownloadInvoiceBtn">
+                <i class="bi bi-download"></i> Download Invoice
+              </button>
+              <a href="#" class="cf-extra-link">
+                <i class="bi bi-headset"></i> Need Help? Contact Support
+              </a>
+            </div>
+
+            <!-- ============ TRUST ROW ============ -->
+            <div class="cf-trust-row">
+              <span><i class="bi bi-shield-check"></i> Secure Checkout</span>
+              <span><i class="bi bi-patch-check"></i> Safe Payments</span>
+              <span><i class="bi bi-box-seam"></i> Order Protection</span>
+            </div>
+          </aside>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="cf-toast-container" id="cfToastContainer" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block js %}
+  <script src="{% static '/js/confirmation.js' %}"></script>
+{% endblock %}

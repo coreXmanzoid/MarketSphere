@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.disabled = true;
             try {
                 const response = await fetch(btn.dataset.addUrl, {
-                    method: "G",
+                    method: "GET",
                     headers: {
                         "X-CSRFToken": getCookie("csrftoken"),
                         "X-Requested-With": "XMLHttpRequest",

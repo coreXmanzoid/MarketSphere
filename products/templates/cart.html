@@ -26,6 +26,7 @@ Shopping Cart • MarketSphere
   </div>
 </section>
 
+
 <!-- ================= CART SECTION ================= -->
 <section class="cart-section" id="cartRoot"
   data-cart-url="{% url 'cart_data' %}"
@@ -44,6 +45,25 @@ Shopping Cart • MarketSphere
       <a href="{% url 'home' %}" class="view-all-link cart-continue-link"><i class="bi bi-arrow-left"></i> Continue
         Shopping</a>
     </div>
+
+          <!-- Checkout progress indicator -->
+      <div class="co-steps my-3" aria-hidden="true">
+        <div class="co-step is-done">
+          <span class="co-step-circle"><i class="bi bi-check-lg"></i></span>
+          <span class="co-step-label">Cart</span>
+        </div>
+        <span class="co-step-line"></span>
+        <div class="co-step">
+          <span class="co-step-circle">2</span>
+          <span class="co-step-label">Checkout</span>
+        </div>
+        <span class="co-step-line"></span>
+        <div class="co-step">
+          <span class="co-step-circle">3</span>
+          <span class="co-step-label">Confirmation</span>
+        </div>
+      </div>
+
 
     <!-- ================= CART LAYOUT ================= -->
     <div class="row g-4 cart-layout" id="cartLayout">
@@ -181,7 +201,7 @@ Shopping Cart • MarketSphere
             </div>
           </form>
 
-          <button type="button" class="btn btn-hero-primary cart-checkout-btn" id="cartCheckoutBtn"><i
+          <button type="button" class="btn btn-hero-primary cart-checkout-btn" id="cartCheckoutBtn" onclick="window.location.href='{% url "checkout" %}'"><i
               class="bi bi-lock"></i> Proceed to Checkout</button>
           <a href="{% url 'home' %}" class="cart-continue-shopping-link">Continue Shopping</a>
 

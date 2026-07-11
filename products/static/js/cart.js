@@ -324,11 +324,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             card.dataset.quantity = String(clampedQuantity);
             qtyInput.value = String(clampedQuantity);
-
             const subtotalValueEl = card.querySelector('.cart-item-subtotal-value');
-            const itemSubtotal = data && 'item_subtotal' in data
-                ? data.item_subtotal
-                : clampedQuantity * parseCurrency(card.dataset.unitPrice);
+            const itemSubtotal = clampedQuantity * parseCurrency(card.dataset.unitPrice);
 
             if (subtotalValueEl) {
                 subtotalValueEl.textContent = formatCurrency(itemSubtotal);

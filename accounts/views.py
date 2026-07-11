@@ -5,7 +5,8 @@ from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-
+import json 
+from django.http import JsonResponse
 User = get_user_model()
 from . import validator
 from . import services
@@ -78,7 +79,22 @@ def signup_view(request):
         return redirect("login")
 
     return render(request, "signup.html")
+import json
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
+@login_required
+def save_user_address(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False}, status=405)
+
+    data = json.loads(request.body)
+    
+    services.save_user_address(request.user, data)
+
+    return JsonResponse({
+        "success": True,
+    })
 
 @login_required
 def logout_user(request):

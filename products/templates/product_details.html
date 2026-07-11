@@ -104,12 +104,12 @@
               <!-- Discounted / current price will be rendered here by Django -->
               <!-- Original price will be rendered here by Django (if discount_price set) -->
               {% if product.discount_price %}
-              <span class="pd-price-current">Rs. {{ product.discount_price }}</span>
-              <span class="pd-price-original">Rs. {{ product.price }}</span>
-              {% widthratio product.price product.discount_price 100 as current_percent %}
-              <span class="pd-discount-badge">Save {{ 100|add:'-'|add:current_percent }}%</span>
+                <span class="pd-price-current">Rs. {{ product.discount_price }}</span>
+                <span class="pd-price-original">Rs. {{ product.price }}</span>
+                {% widthratio product.price product.discount_price 100 as current_percent %}
+                <span class="pd-discount-badge">Save {{ 100|add:'-'|add:current_percent }}%</span>
               {% else %}
-              <span class="pd-price-current">Rs. {{ product.price }}</span>
+                <span class="pd-price-current">Rs. {{ product.price }}</span>
               {% endif %}
             </div>
 
@@ -144,14 +144,23 @@
 
               <div class="pd-action-buttons">
                 <!-- Add to Cart: Django will wire this to cart logic -->
-                <button type="button" class="btn pd-btn-add-cart" id="pdAddToCartBtn"><i class="bi bi-cart4"></i> Add to Cart</button>
-                <!-- Buy Now: Django will wire this to checkout logic -->
+                <button type="button" class="btn pd-btn-add-cart" id="pdAddToCartBtn" data-add-url="{% url 'add_to_cart' product_slug=product.slug %}"><i class="bi bi-cart4"></i> Add to Cart</button> <!-- Buy Now: Django will wire this to checkout logic -->
                 <button type="button" class="btn pd-btn-buy-now" id="pdBuyNowBtn"><i class="bi bi-lightning-charge-fill"></i> Buy Now</button>
               </div>
 
               <div class="pd-secondary-actions">
                 <!-- Wishlist toggle: Django will persist wishlist state -->
-                <button type="button" class="pd-icon-btn pd-wishlist-btn {% if is_in_wishlist %}active{% endif %}" id="pdWishlistBtn" data-product-slug="{{ product.slug }}" aria-label="{% if is_in_wishlist %}Remove from wishlist {% else %}Add to wishlist{% endif %}"><i class="bi bi-heart"></i> <span>Wishlist</span></button>
+                <button type="button"
+                  class="pd-icon-btn pd-wishlist-btn {% if is_in_wishlist %}active{% endif %}"
+                  id="pdWishlistBtn"
+                  data-product-slug="{{ product.slug }}"
+                  aria-label="{% if is_in_wishlist %}
+                    Remove from wishlist
+                  {% else %}
+                    Add to wishlist
+                  {% endif %}">
+                  <i class="bi bi-heart"></i> <span>Wishlist</span>
+                </button>
 
                 <div class="pd-share-wrap">
                   <button type="button" class="pd-icon-btn pd-share-btn" id="pdShareBtn" aria-label="Share this product" aria-expanded="false"><i class="bi bi-share"></i> <span>Share</span></button>

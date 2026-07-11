@@ -328,7 +328,10 @@ def cart_total(user):
     items = CartItem.objects.filter(cart=cart).select_related('product')
     total = Decimal('0.00')
     for item in items:
-        price = getattr(item.product, 'price', None) or Decimal('0.00')
+        price = (
+        getattr(item.product, "discount_price", None)
+        or getattr(item.product, "price", Decimal("0.00"))
+        )
         total += (Decimal(price) * Decimal(item.quantity or 0))
     return total
 
