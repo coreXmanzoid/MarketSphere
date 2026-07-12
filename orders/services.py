@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from accounts.models import Address
 from products.models import CartItem
-
+from django.db.models import Sum
 from .models import Order, OrderItem
 
 
@@ -94,6 +94,15 @@ def place_order(
     cart_items.delete()
 
     return order
+
+def get_user_orders(user):
+    return (
+        Order.objects
+        .filter(user=user)
+        .prefetch_related("items", "items__product")
+        .annotate(total_items=Sum("items__quantity"))
+        .order_by("-created_at")
+    )
 
 def get_user_order(user, order_number):
     order = get_object_or_404(

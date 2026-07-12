@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  My Orders • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/orders.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="mo-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">My Orders</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= PAGE HEADER ================= -->
+  <section class="mo-header-section">
+    <div class="container">
+      <div class="mo-heading-row">
+        <div>
+          <span class="section-label"><i class="bi bi-bag-check"></i> Order History</span>
+          <h1 class="mo-page-title">My Orders</h1>
+          <p class="mo-page-subtitle">View and manage all of your previous purchases.</p>
+        </div>
+
+        <!-- ============ FUTURE: SEARCH / FILTER TOOLBAR ============ -->
+        <!--       
+          Structural space reserved for future search + status filter +
+          date-range controls. Intentionally left unimplemented — no
+          backend/query wiring yet. When added, this should follow the
+          .filter-card / .sort-select patterns already used on
+          search_results.html for visual consistency.
+
+          <div class="mo-toolbar">
+            <input type="search" class="form-control" placeholder="Search by order number or product..." />
+            <select class="form-select mo-status-filter">
+              <option>All Statuses</option>
+            </select>
+          </div>
+               -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ORDERS BODY ================= -->
+  <section class="mo-section">
+    <div class="container">
+      <!-- ================= ORDERS LIST ================= -->
+
+      <div class="mo-orders-list" id="ordersList">
+        {% if orders.count == 0 %}
+          <div class="mo-empty-state" id="ordersEmptyState">
+            <div class="mo-empty-icon">
+              <i class="bi bi-receipt"></i>
+            </div>
+            <h3>No orders yet</h3>
+            <p>You haven't placed any orders yet. Start shopping to see your purchases here.</p>
+            <a href="{% url 'home' %}" class="btn btn-hero-primary"><i class="bi bi-bag"></i> Continue Shopping</a>
+          </div>
+        {% else %}
+          {% for order in orders %}
+            <div class="mo-order-card">
+              <div class="mo-order-card-head">
+                <div class="mo-order-id-block">
+                  <span class="mo-order-number"><!-- order.order_number -->#MS-{{ order.order_number }}</span>
+                  <div class="d-flex gap-1">
+                    <span class="mo-order-date"><i class="bi bi-calendar-event"></i> Placed on {{ order.created_at|date }}</span>
+                    <span class="mo-order-date">|</span>
+                    <span class="mo-order-date">Expected Delievery on <!-- order.ETA|date -->14 July</span>
+                  </div>
+                </div>
+                {% if order.status == 'pending' %}
+                  <span class="mo-status-badge mo-status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+                {% elif order.status == 'confirmed' %}
+                  <span class="mo-status-badge mo-status-confirmed"><i class="bi bi-check-circle"></i> Confirmed</span>
+                {% elif order.status == 'processing' %}
+                  <span class="mo-status-badge mo-status-processing"><i class="bi bi-gear"></i> Processing</span>
+                {% elif order.status == 'shipped' %}
+                  <span class="mo-status-badge mo-status-shipped"><i class="bi bi-truck"></i> Shipped</span>
+                {% elif order.status == 'delivered' %}
+                  <span class="mo-status-badge mo-status-delivered"><i class="bi bi-check2-circle"></i> Delivered</span>
+                {% elif order.status == 'cancelled' %}
+                  <span class="mo-status-badge mo-status-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>
+                {% endif %}
+              </div>
+
+              <div class="mo-order-card-body">
+                <div class="mo-order-preview">
+                  <!-- Product thumbnails will be rendered here by Django from order.items -->
+                  <div class="mo-thumb-strip">
+                    {% for item in order.items.all|slice:3 %}
+                      <span class="mo-order-thumb"><img src="{% static 'images/logo-icon.png' %}" alt="Product thumbnail" /></span>
+                    {% endfor %}
+                    <!-- Overflow count will be rendered here by Django, e.g. order.items.count|add:'-3' -->
+                    {% if order.items.count > 3 %}
+                      <span class="mo-thumb-more">+{{ order.items.count|add:-3 }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="mo-order-summary">
+                  <div class="mo-order-summary-item">
+                    <span class="mo-summary-label">Items</span>
+                    <span class="mo-summary-value">{{ order.total_items }}</span>
+                  </div>
+                  <div class="mo-order-summary-item">
+                    <span class="mo-summary-label">Total</span>
+                    <span class="mo-summary-value mo-summary-total"><!-- order.total -->Rs. {{ order.total|floatformat:0 }}</span>
+                  </div>
+                </div>
+
+                <div class="mo-order-actions">
+                  <!-- View Details: Django will wire this to the order detail / confirmation route -->
+                  <a href="{% url 'order' order_number=order.order_number %}" class="btn btn-hero-primary mo-view-details-btn">View Details <i class="bi bi-arrow-right"></i></a>
+
+                  {% comment %}FUTURE ACTIONS (structural space only, not implemented): - Cancel Order (only for pending/confirmed statuses) - Download Invoice - Reorder - Track Order (opens a tracking timeline component){% endcomment %}
+                </div>
+              </div>
+              <div class="mo-order-actions-secondary mt-3">
+                {% if order.status in 'pending confirmed processing' %}
+                  <a href="#" class="mo-action-link"><i class="bi bi-x-circle"></i> Cancel Order</a>
+                  <span class="mo-order-date">|</span>
+                {% endif %}
+                {% if order.status == 'delivered' %}
+                  <a href="#" class="mo-action-link"><i class="bi bi-arrow-repeat"></i> Reorder</a>
+                  <span class="mo-order-date">|</span>
+                {% endif %}
+                {% if order.status != 'canceled' %}
+                  <a href="#" class="mo-action-link"><i class="bi bi-truck"></i> Track Order</a>
+                {% endif %}
+                <span class="mo-order-date">|</span>
+                <a href="#" class="mo-action-link"><i class="bi bi-download"></i> Download Invoice</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <!-- ================= END ORDERS LIST ================= -->
+
+      <!-- ============ FUTURE: PAGINATION ============ -->
+      <!--        Structural space only — mirrors .search-pagination-wrap /
+           .pagination markup used on search_results.html. Will be wired
+           to a paginated orders queryset once the backend view exists.
+      <nav aria-label="Orders pagination" class="mo-pagination-wrap">
+        <ul class="pagination justify-content-center">
+          <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+          <li class="page-item active"><a class="page-link" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">Next</a></li>
+        </ul>
+      </nav>
+             -->
+    </div>
+  </section>
+{% endblock %}

@@ -8,6 +8,20 @@ import json
 
 # Create your views here.
 
+def orders(request):
+    orders = order_service.get_user_orders(request.user)
+
+    context = {
+        "orders": orders
+    }
+    return render(request, "orders.html", context)
+
+def order(request, order_number):
+    order = order_service.get_user_order(request.user, order_number)
+    context = {
+        "order": order
+    }
+    return render(request,  "order_detail.html", context)
 
 def checkout(request):
     addresses = account_service.get_user_addresses(request.user)

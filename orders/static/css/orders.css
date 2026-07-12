@@ -1,0 +1,453 @@
+/* =========================================================
+   MARKETSPHERE — MY ORDERS PAGE STYLES
+   Builds on global variables (static/css/styles.css) and reuses
+   .btn-hero-primary / .section-label / .product-image-placeholder
+   patterns from home.css. Card, badge and empty-state visual
+   language mirrors orders/checkout.css and orders/confirmation.css
+   (duplicated here, not imported, per project convention — each
+   page only loads its own stylesheet).
+   ========================================================= */
+
+:root {
+    --mo-accent: #9D6638;
+    --mo-accent-dark: #4E220F;
+    --mo-accent-ring: rgba(157, 102, 56, 0.22);
+    --mo-success: #4f7d54;
+    --mo-warning: #b7802b;
+    --mo-danger: #b54b3b;
+    --mo-muted: #B0BA99;
+}
+
+/* ================= BREADCRUMB ================= */
+.mo-breadcrumb-wrap {
+    padding: 18px 0 6px;
+    background-color: var(--background-color);
+}
+
+.mo-breadcrumb-wrap .breadcrumb {
+    background-color: transparent;
+    font-size: 13.5px;
+}
+
+.mo-breadcrumb-wrap .breadcrumb-item a {
+    color: var(--mo-accent);
+}
+
+.mo-breadcrumb-wrap .breadcrumb-item.active {
+    color: var(--mo-muted);
+    font-weight: 500;
+}
+
+.mo-breadcrumb-wrap .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--mo-muted);
+}
+
+/* ================= HEADER ================= */
+.mo-header-section {
+    padding: 10px 0 24px;
+    background-color: var(--background-color);
+}
+
+.mo-heading-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.mo-page-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--headings);
+    margin: 6px 0 6px;
+}
+
+.mo-page-subtitle {
+    font-size: 15px;
+    color: #4f7d54;
+    margin: 0;
+}
+
+/* Reserved for the future search / filter toolbar (see template comment). */
+.mo-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ================= SECTION LAYOUT ================= */
+.mo-section {
+    padding: 6px 0 60px;
+    background-color: var(--background-color);
+}
+
+.mo-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ================= ORDER CARD ================= */
+.mo-order-card {
+    background-color: #F7F1DE;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 22px 24px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.mo-order-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--mo-accent);
+}
+
+.mo-order-card-muted {
+    opacity: 0.85;
+}
+
+/* ---- Card head: order number / date / status ---- */
+.mo-order-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mo-order-id-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mo-order-number {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--mo-accent-dark);
+    letter-spacing: 0.2px;
+}
+
+.mo-order-date {
+    font-size: 13px;
+    color: var(--mo-muted);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mo-order-date i {
+    background-color: transparent;
+    color: var(--mo-accent);
+    font-size: 13px;
+}
+
+/* ---- Status badges ---- */
+.mo-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.mo-status-badge i {
+    background-color: transparent;
+    font-size: 13px;
+}
+
+.mo-status-pending {
+    background-color: rgba(183, 128, 43, 0.16);
+    color: var(--mo-warning);
+}
+
+.mo-status-confirmed {
+    background-color: rgba(157, 102, 56, 0.14);
+    color: var(--mo-accent);
+}
+
+.mo-status-processing {
+    background-color: rgba(176, 186, 153, 0.28);
+    color: #6b7458;
+}
+
+.mo-status-shipped {
+    background-color: rgba(78, 34, 15, 0.12);
+    color: var(--mo-accent-dark);
+}
+
+.mo-status-delivered {
+    background-color: rgba(79, 125, 84, 0.14);
+    color: var(--mo-success);
+}
+
+.mo-status-cancelled {
+    background-color: rgba(181, 75, 59, 0.13);
+    color: var(--mo-danger);
+}
+
+/* ---- Card body ---- */
+.mo-order-card-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+/* ---- Product preview thumbnails ---- */
+.mo-order-preview {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.mo-thumb-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mo-order-thumb {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: linear-gradient(145deg, rgba(157, 102, 56, 0.10), rgba(176, 186, 153, 0.18));
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mo-order-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
+}
+
+.mo-thumb-more {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--mo-accent);
+    background-color: rgba(157, 102, 56, 0.1);
+    padding: 6px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* ---- Summary (items / total) ---- */
+.mo-order-summary {
+    display: flex;
+    gap: 26px;
+    flex: 0 0 auto;
+}
+
+.mo-order-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mo-summary-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--mo-muted);
+}
+
+.mo-summary-value {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--headings);
+}
+
+.mo-summary-total {
+    color: var(--mo-accent-dark);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* ---- Actions ---- */
+.mo-order-actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.mo-view-details-btn {
+    width: auto !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 1px;
+    white-space: nowrap;
+}
+
+/* Reserved for future secondary actions (cancel / invoice / reorder / track) */
+.mo-order-actions-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: flex-end;
+}
+
+.mo-action-link {
+    background: none !important;
+    border: none !important;
+    width: auto !important;
+    padding: 0 !important;
+    color: #9D6638 !important;
+    font-size: 12px !important;
+    font-weight: 650 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s ease;
+}
+
+.mo-action-link:hover {
+    color: var(--mo-accent-dark) !important;
+}
+
+.mo-action-link i {
+    background-color: transparent;
+    font-size: 13px;
+}
+
+/* ================= PAGINATION (reserved) ================= */
+.mo-pagination-wrap {
+    margin-top: 40px;
+}
+
+/* ================= EMPTY STATE ================= */
+.mo-empty-state {
+    text-align: center;
+    padding: 90px 20px;
+    background-color: #F7F1DE;
+    border: 1px dashed var(--border-color);
+    border-radius: 20px;
+}
+
+.mo-empty-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 26px;
+    border-radius: 50%;
+    background-color: rgba(157, 102, 56, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mo-empty-icon i {
+    font-size: 54px;
+    color: var(--mo-accent);
+    background-color: transparent;
+}
+
+.mo-empty-state h3 {
+    color: var(--headings);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.mo-empty-state p {
+    color: #4f7d54;
+    max-width: 420px;
+    margin: 0 auto 26px;
+}
+
+.mo-empty-state .btn {
+    width: auto !important;
+    padding: 12px 28px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 1px;
+    gap: 8px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 991.98px) {
+    .mo-page-title {
+        font-size: 28px;
+    }
+
+    .mo-order-card-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mo-order-summary {
+        justify-content: space-between;
+    }
+
+    .mo-order-actions {
+        align-items: stretch;
+    }
+
+    .mo-view-details-btn {
+        justify-content: center;
+        width: 100% !important;
+    }
+
+    .mo-order-actions-secondary {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .mo-page-title {
+        font-size: 24px;
+    }
+
+    .mo-heading-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .mo-order-card {
+        padding: 18px;
+    }
+
+    .mo-order-card-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mo-order-summary {
+        gap: 18px;
+    }
+
+    .mo-empty-state {
+        padding: 60px 16px;
+    }
+
+    .mo-empty-icon {
+        width: 90px;
+        height: 90px;
+    }
+
+    .mo-empty-icon i {
+        font-size: 40px;
+    }
+}

@@ -5,9 +5,12 @@ from django.db import models
 class Order(models.Model):
 	class Status(models.TextChoices):
 		PENDING = 'pending', 'Pending'
+		CONFIRMED = 'confirmed', 'Confirmed'
 		PROCESSING = 'processing', 'Processing'
-		COMPLETED = 'completed', 'Completed'
+		SHIPPED = 'shipped', 'Shipped'
+		DELIVERED = 'delivered', 'Delivered'
 		CANCELLED = 'cancelled', 'Cancelled'
+
 
 	class PaymentStatus(models.TextChoices):
 		UNPAID = 'unpaid', 'Unpaid'

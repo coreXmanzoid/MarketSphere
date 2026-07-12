@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Order #{{ order.order_number|default:"—" }} • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/order_detail.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="od-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          {% comment %} <!-- Swap for the real orders-list URL name once it exists, e.g. {% url 'order_list' %} --> {% endcomment %}
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">My Orders</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Order #{{ order.order_number|default:"—" }}</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= PAGE HEADER ================= -->
+  <section class="od-header-section">
+    <div class="container">
+      <div class="od-header-row">
+        <div class="od-header-titleblock">
+          <h1 class="od-page-title">
+            <i class="bi bi-receipt"></i> Order #MS-<!-- Order number will be rendered here by Django -->{{ order.order_number|default:"—" }}
+          </h1>
+          <p class="od-page-subtitle">
+            <i class="bi bi-calendar-event"></i>
+            Placed on <!-- Order date will be rendered here by Django -->{{ order.created_at|date:"F j, Y"|default:"—" }}
+          </p>
+        </div>
+
+        <div class="od-header-badges">
+          <div class="od-badge-group">
+            <span class="od-badge-label">Order Status</span>
+            <!-- Order status will be rendered here by Django -->
+            <span class="od-status-badge od-status-{{ order.status|default:'pending'|lower }}">
+              <i class="bi bi-box-seam"></i> {{ order.get_status_display|default:"Pending" }}
+            </span>
+          </div>
+
+          <div class="od-badge-group">
+            <span class="od-badge-label">Payment</span>
+            <!-- Payment status will be rendered here by Django -->
+            <span class="od-status-badge od-status-{{ order.payment_status|default:'unpaid'|lower }}">
+              <i class="bi bi-wallet2"></i> {{ order.get_payment_status_display|default:"Unpaid" }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ORDER PROGRESS TIMELINE ================= -->
+  <section class="od-timeline-section">
+    <div class="container">
+<div class="od-card od-timeline-card">
+    <ol class="od-timeline" aria-label="Order progress">
+
+        <li class="od-timeline-step {% if order.status == 'pending' or order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %}">
+            <span class="od-timeline-icon">
+                <i class="bi bi-check-lg"></i>
+            </span>
+            <span class="od-timeline-text">
+                <span class="od-timeline-title">Order Placed</span>
+                <span class="od-timeline-date">
+                    {{ order.created_at|date:"M j, Y, g:i A" }}
+                </span>
+            </span>
+        </li>
+
+        <li class="od-timeline-step {% if order.status == 'confirmed' %}is-current{% elif order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %}">
+            <span class="od-timeline-icon">
+                <i class="bi bi-patch-check"></i>
+            </span>
+            <span class="od-timeline-text">
+                <span class="od-timeline-title">Confirmed</span>
+            </span>
+        </li>
+
+        <li class="od-timeline-step {% if order.status == 'processing' %}is-current{% elif order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %}">
+            <span class="od-timeline-icon">
+                <i class="bi bi-arrow-repeat"></i>
+            </span>
+            <span class="od-timeline-text">
+                <span class="od-timeline-title">Processing</span>
+            </span>
+        </li>
+
+        <li class="od-timeline-step {% if order.status == 'shipped' %}is-current{% elif order.status == 'delivered' %}is-complete{% endif %}">
+            <span class="od-timeline-icon">
+                <i class="bi bi-truck"></i>
+            </span>
+            <span class="od-timeline-text">
+                <span class="od-timeline-title">Shipped</span>
+            </span>
+        </li>
+
+        <li class="od-timeline-step {% if order.status == 'delivered' %}is-current is-complete{% endif %}">
+            <span class="od-timeline-icon">
+                <i class="bi bi-house-check"></i>
+            </span>
+            <span class="od-timeline-text">
+                <span class="od-timeline-title">Delivered</span>
+            </span>
+        </li>
+
+    </ol>
+
+    {% if order.status == "cancelled" %}
+        <div class="od-cancelled-notice">
+            <i class="bi bi-x-circle-fill"></i>
+            <strong>Order Cancelled</strong>
+            This order was cancelled on
+            {{ order.updated_at|date:"F j, Y, g:i A" }}.
+        </div>
+    {% endif %}
+</div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN BODY ================= -->
+  <section class="od-section">
+    <div class="container">
+      <div class="row g-4 od-layout">
+
+        <!-- ================= LEFT COLUMN (~65%) ================= -->
+        <div class="col-lg-8 col-12 od-left-col">
+
+          <!-- ============ SHIPPING INFORMATION ============ -->
+          <div class="od-card">
+            <div class="od-card-head">
+              <h2 class="od-card-title"><i class="bi bi-geo-alt"></i> Shipping Information</h2>
+            </div>
+
+            <div class="od-shipping-grid">
+              <div class="od-shipping-item">
+                <span class="od-shipping-label">Recipient Name</span>
+                <!-- Recipient name will be rendered here by Django -->
+                <span class="od-shipping-value">{{ order.shipping_name|default:"—" }}</span>
+              </div>
+
+              <div class="od-shipping-item">
+                <span class="od-shipping-label">Phone Number</span>
+                <!-- Phone number will be rendered here by Django -->
+                <span class="od-shipping-value">{{ order.shipping_phone|default:"—" }}</span>
+              </div>
+
+              <div class="od-shipping-item od-shipping-item-wide">
+                <span class="od-shipping-label">Shipping Address</span>
+                <!-- Shipping address will be rendered here by Django -->
+                <span class="od-shipping-value">{{ order.shipping_address|default:"—" }}</span>
+              </div>
+
+              <div class="od-shipping-item">
+                <span class="od-shipping-label">City</span>
+                <!-- City will be rendered here by Django -->
+                <span class="od-shipping-value">{{ order.shipping_city|default:"—" }}</span>
+              </div>
+
+              <div class="od-shipping-item">
+                <span class="od-shipping-label">Postal Code</span>
+                <!-- Postal code will be rendered here by Django -->
+                <span class="od-shipping-value">{{ order.shipping_postal_code|default:"—" }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ ORDER ITEMS ============ -->
+          <div class="od-card">
+            <div class="od-card-head">
+              <h2 class="od-card-title"><i class="bi bi-bag-check"></i> Order Items</h2>
+              <!-- Item count will be rendered here by Django -->
+              <span class="od-item-count">{{ order.items.count|default:0 }} item{{ order.items.count|pluralize }}</span>
+            </div>
+
+            <div class="od-items-list">
+              <!-- Ordered items will be rendered here by Django from order.items -->
+              {% for item in order.items.all %}
+                <div class="od-order-item">
+                  <a href="{% url 'product' item.product.slug %}" class="od-order-item-img-link">
+                    <div class="product-image-placeholder od-order-item-img">
+                      {% if item.product.images.first %}
+                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" />
+                      {% else %}
+                        <i class="bi bi-box-seam"></i>
+                      {% endif %}
+                    </div>
+                  </a>
+
+                  <div class="od-order-item-info">
+                    <a href="{% url 'product' item.product.slug %}" class="text-decoration-none">
+                      <p class="od-order-item-name">{{ item.product.name }}</p>
+                    </a>
+                    {% if item.product.brand %}
+                      <span class="product-brand od-order-item-brand">{{ item.product.brand.name }}</span>
+                    {% endif %}
+                    <span class="od-order-item-qty">Qty: {{ item.quantity }}</span>
+                  </div>
+
+                  <div class="od-order-item-pricing">
+                    <span class="od-order-item-unit-price">Rs. {{ item.price }} <span>each</span></span>
+                    <span class="od-order-item-total">Rs. {{ item.total }}</span>
+                  </div>
+                </div>
+              {% empty %}
+                <!-- Empty state: should not normally render for a real order -->
+                <div class="od-empty-state">
+                  <i class="bi bi-bag-x"></i>
+                  <h6>No items found</h6>
+                  <p>We couldn't find any products associated with this order.</p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- ============ ORDER NOTES ============ -->
+          {% if order.notes %}
+            <div class="od-card od-notes-card">
+              <div class="od-card-head">
+                <h2 class="od-card-title"><i class="bi bi-chat-square-text"></i> Order Notes</h2>
+              </div>
+              <!-- Order notes will be rendered here by Django -->
+              <p class="od-notes-text">{{ order.notes }}</p>
+            </div>
+          {% endif %}
+
+          <!-- ============ ACTIONS (desktop, left column) ============ -->
+          <div class="od-actions-row od-actions-row-desktop">
+            <button type="button" class="btn od-action-btn od-action-cancel" id="odCancelOrderBtn" {% if order.status in 'cancelled delivered shipped' %}disabled{% endif %}>
+              <i class="bi bi-x-circle"></i> Cancel Order
+            </button>
+            <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtn">
+              <i class="bi bi-download"></i> Download Invoice
+            </button>
+            <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtn"{% if order.status != 'delivered' %}disabled{% endif %}>
+              <i class="bi bi-arrow-repeat"></i> Buy Again
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= RIGHT COLUMN (~35%) ================= -->
+        <div class="col-lg-4 col-12 od-right-col">
+          <aside class="od-summary-card" id="odSummaryCard">
+            <h2 class="od-summary-title"><i class="bi bi-receipt-cutoff"></i> Price Summary</h2>
+
+            <div class="od-summary-totals">
+              <div class="od-summary-row">
+                <span>Subtotal</span>
+                <!-- Subtotal will be rendered here by Django -->
+                <span>Rs. {{ order.subtotal|default:"0" }}</span>
+              </div>
+
+              <div class="od-summary-row">
+                <span>Shipping</span>
+                <!-- Shipping cost will be rendered here by Django -->
+                <span>Rs. {{ order.shipping_cost|default:"0" }}</span>
+              </div>
+
+              {% if order.discount %}
+                <div class="od-summary-row od-summary-discount-row">
+                  <span>Discount</span>
+                  <!-- Discount amount will be rendered here by Django -->
+                  <span>- Rs. {{ order.discount }}</span>
+                </div>
+              {% endif %}
+
+              <div class="od-summary-row">
+                <span>Tax</span>
+                <!-- Tax amount will be rendered here by Django -->
+                <span>Rs. {{ order.tax|default:"0" }}</span>
+              </div>
+            </div>
+
+            <hr class="od-summary-divider" />
+
+            <div class="od-summary-row od-summary-grand-total">
+              <span>Grand Total</span>
+              <!-- Grand total will be rendered here by Django -->
+              <span>Rs. {{ order.total|default:"0" }}</span>
+            </div>
+
+            <div class="od-summary-payment-row">
+              <span><i class="bi bi-credit-card"></i> Payment Method</span>
+              <!-- Payment method will be rendered here by Django -->
+              <span>{{ order.payment_method|default:"Cash on Delivery" }}</span>
+            </div>
+
+            <!-- ============ ACTIONS (mobile, inside summary) ============ -->
+            <div class="od-actions-row od-actions-row-mobile">
+              <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtnMobile">
+                <i class="bi bi-arrow-repeat"></i> Buy Again
+              </button>
+              <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtnMobile">
+                <i class="bi bi-download"></i> Download Invoice
+              </button>
+              <button type="button" class="btn od-action-btn od-action-cancel h-25" id="odCancelOrderBtnMobile" {% if order.status == 'cancelled' or order.status == 'completed' %}disabled{% endif %}>
+                <i class="bi bi-x-circle"></i> Cancel Order
+              </button>
+            </div>
+
+            <div class="od-trust-row">
+              <span><i class="bi bi-shield-check"></i> Secure Checkout</span>
+              <span><i class="bi bi-patch-check"></i> Buyer Protection</span>
+            </div>
+
+            <div class="od-support-links">
+              <a href="#"><i class="bi bi-headset"></i> Need Help? Contact Support</a>
+              <!-- Placeholder for future seller-contact link once seller data exists -->
+              <a href="#"><i class="bi bi-shop"></i> View Seller Information</a>
+            </div>
+          </aside>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="od-toast-container" id="odToastContainer" aria-live="polite"></div>
+
+  <!-- ================= CANCEL ORDER MODAL (frontend only) ================= -->
+  <div class="modal fade od-cancel-modal" id="odCancelModal" tabindex="-1" aria-labelledby="odCancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="odCancelModalLabel"><i class="bi bi-exclamation-triangle"></i> Cancel this order?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">Are you sure you want to cancel Order #{{ order.order_number|default:"—" }}? This action cannot be undone once processed.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn od-modal-keep-btn" data-bs-dismiss="modal">Keep Order</button>
+          <button type="button" class="btn od-modal-confirm-cancel-btn" id="odConfirmCancelBtn">Yes, Cancel Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'js/order_detail.js' %}"></script>
+{% endblock %}
