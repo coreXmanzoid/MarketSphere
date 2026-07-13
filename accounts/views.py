@@ -79,6 +79,18 @@ def signup_view(request):
         return redirect("login")
 
     return render(request, "signup.html")
+
+def seller_signup_view(request):
+    print(request.POST)
+    print(request.FILES)
+    if request.method == "POST":
+        seller = services.create_seller_application(
+            request.user,
+            request.POST,
+            request.FILES,
+        )
+        # return redirect("seller-application")
+    return render(request, "seller_signup.html")
 import json
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required

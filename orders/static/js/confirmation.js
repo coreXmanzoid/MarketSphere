@@ -90,16 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* =========================================================
-       DOWNLOAD INVOICE (placeholder — no backend endpoint yet)
-       ========================================================= */
-    const downloadInvoiceBtn = document.getElementById('cfDownloadInvoiceBtn');
-
-    if (downloadInvoiceBtn) {
-        downloadInvoiceBtn.addEventListener('click', function () {
-            showToast('Invoice downloads aren\'t available yet — check back soon.', 'info');
-        });
-    }
 
     /* =========================================================
        BUTTON RIPPLE EFFECT

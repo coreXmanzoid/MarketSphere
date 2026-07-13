@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  MarketSphere • Seller Signup
+{% endblock %}
+{% block css %}
+  <link rel="stylesheet" href="{% static 'login.css' %}" />
+{% endblock %}
+{% block content %}
+  <div class="container">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row justify-content-center pt-5">
+        <div class="col-md-8 px-0">
+          <div class="card">
+            <div class="card-header">
+              <h3>Start Selling Your Products at MarketSphere</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row justify-content-center pb-5">
+        <div class="col-md-4 px-0">
+          <div class="card h-100">
+            <div class="card-header">
+              <h3>Personal Information</h3>
+            </div>
+
+            <div class="card-body">
+              <div class="d-flex gap-2">
+                <div class="mb-3">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" name="fullName" value="{{ request.user.first_name }} {{ request.user.last_name }}" readonly />
+                </div>
+
+                <div class="mb-3 ms-auto">
+                  <label class="form-label">Username</label>
+                  <input type="text" class="form-control" value="{{ request.user.username }}" readonly />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" value="{{ request.user.email }}" readonly />
+              </div>
+
+              <div class="mb-3">
+                <label for="phone" class="form-label">Contact Number</label>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ request.user.contact }}" placeholder="+92 300 1234567" />
+              </div>
+
+              <div class="mb-3">
+                <label for="address_line_1" class="form-label">Bussiness Address</label>
+                <input type="text" class="form-control" id="address_line_1" name="address_line_1" placeholder="House No. 123, Street 4" />
+              </div>
+
+              <div class="d-flex gap-2">
+                <div class="mb-3">
+                  <label for="city" class="form-label">City</label>
+                  <input type="text" class="form-control" id="city" name="city" placeholder="Islamabad" />
+                </div>
+
+                <div class="mb-3 ms-auto">
+                  <label for="postal_code" class="form-label">Postal Code</label>
+                  <input type="text" class="form-control" id="postal_code" name="postal_code" placeholder="63100" />
+                </div>
+              </div>
+
+              {% comment %} <small class="form-text text-muted">This information is used for seller verification and communication. It will not be displayed publicly unless you choose to share it.</small> {% endcomment %}
+              <small class="form-text text-muted">Wanna Go Back? <a href="{% url 'home' %}">Click Here</a></small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 px-0">
+          <div class="card h-100">
+            <div class="card-header">
+              <h3>Store Information</h3>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label for="store_name" class="form-label">Store Name</label>
+                <input type="text" class="form-control" id="store_name" name="store_name" placeholder="Tech World" required />
+              </div>
+              <div class="mb-3 ms-auto">
+                <label for="store_email" class="form-label">Store Email</label>
+                <input type="text" class="form-control" id="store_email" name="store_email" placeholder="support@techworld.com" required />
+              </div>
+              <div class="mb-3">
+                <label for="textarea" class="form-label">Description</label>
+                <textarea name="description" rows="3" class="form-control" id="store-description" placeholder="Tell customers about your store, products, and what makes your shop unique."></textarea>
+              </div>
+              <div class="d-flex gap-3 align-items-end space-saved-uploader">
+                <div class="upload-compact-box">
+                  <label class="form-label d-block mb-2">Store Logo</label>
+                  <label for="store_logo" class="compact-upload-label">
+                    <i class="bi bi-image"></i>
+                    <span class="label-text">Upload Logo</span>
+                    <span id="logo-file-name" class="file-name-pill"></span>
+                  </label>
+                  <input type="file" id="store_logo" name="store_logo" required />
+                </div>
+
+                <div class="upload-compact-box ms-auto">
+                  <label class="form-label d-block mb-2">Store Banner</label>
+                  <label for="store_banner" class="compact-upload-label">
+                    <i class="bi bi-layout-text-window-reverse"></i>
+                    <span class="label-text">Upload Banner</span>
+                    <span id="banner-file-name" class="file-name-pill"></span>
+                  </label>
+                  <input type="file" id="store_banner" name="store_banner" required />
+                </div>
+              </div>
+
+              <div class="my-2">
+                <label for="remember" class="form-check-label" style="font-size: 14px;"><input type="checkbox" class="form-check-input me-1" id="agreement" name="agreement" required/>I agree to the <a href="#">Terms and Conditions</a> & <a href="#">Privacy Policy</a></label>
+              </div>
+
+              <button type="submit" class="btn w-auto mb-2s">Submit Seller Application</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}
+{% block js %}
+  <script src="{% static 'signup.js' %}"></script>
+{% endblock %}

@@ -62,8 +62,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (cancelModal) {
                 cancelModal.show();
-            } else {
-                showToast('Order cancellation isn\'t available yet.', 'info');
             }
         });
     });
@@ -73,7 +71,45 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cancelModal) {
                 cancelModal.hide();
             }
-            showToast('Order cancellation will be available once this is connected to the backend.', 'info');
+            var orderNumber = confirmCancelBtn.dataset.orderNumber;
+
+            if (!orderNumber) {
+                showToast('Unable to cancel order: missing order number.', 'error');
+                return;
+            }
+
+            fetch('/order/cancel-order/' + encodeURIComponent(orderNumber), {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        return {
+                            ok: response.ok,
+                            data: data
+                        };
+                    }).catch(function () {
+                        return {
+                            ok: response.ok,
+                            data: null
+                        };
+                    });
+                })
+                .then(function (result) {
+                    // Changed result.data.success to result.data.status === 'success'
+                    if (result.ok && result.data && result.data.status === 'success') {
+                        window.location.reload();
+                    } else {
+                        var message = (result.data && result.data.message) ? result.data.message : 'Could not cancel order. Please try again.';
+                        showToast(message, 'error');
+                    }
+                })
+                .catch(function () {
+                    showToast('Network error while cancelling order. Please try again.', 'error');
+                });
         });
     }
 
@@ -85,7 +121,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('odDownloadInvoiceBtnMobile')
     ].filter(Boolean).forEach(function (btn) {
         btn.addEventListener('click', function () {
-            showToast('Invoice downloads aren\'t available yet — check back soon.', 'info');
+            let orderNumber = btn.dataset.orderNumber;
+            window.open(`/order/${orderNumber}/invoice/`, "_blank");
         });
     });
 
@@ -97,10 +134,41 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('odReorderBtnMobile')
     ].filter(Boolean).forEach(function (btn) {
         btn.addEventListener('click', function () {
-            showToast('Re-ordering these items will be available soon.', 'info');
+            let orderNumber = btn.dataset.orderNumber;
+            if (!orderNumber) {
+                showToast("missing order number", 'error');
+                return; // Stop execution if order number is missing
+            }
+
+            // Make the fetch request to the reorder endpoint
+            fetch('/order/reorder/' + encodeURIComponent(orderNumber) + '/', {
+                method: 'GET', // Change to 'POST' if you implement CSRF later
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    // Check if backend returned success status
+                    if (data.status === 'success') {
+                        // Redirect directly to the cart page
+                        window.location.href = '/cart/';
+                    } else {
+                        // Show backend error message if available
+                        showToast(data.message || 'Failed to reorder items.', 'error');
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error during reorder:', error);
+                    showToast('A network error occurred. Please try again.', 'error');
+                });
         });
     });
-
     /* =========================================================
        BUTTON RIPPLE EFFECT (matches confirmation.js pattern)
        ========================================================= */

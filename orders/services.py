@@ -3,9 +3,9 @@ from uuid import uuid4
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-
 from accounts.models import Address
-from products.models import CartItem
+from products.services import get_or_create_cart
+from products.models import CartItem, Product
 from django.db.models import Sum
 from .models import Order, OrderItem
 
@@ -110,4 +110,45 @@ def get_user_order(user, order_number):
         order_number=order_number,
         user=user,
     )
+    return order
+
+def cancel_user_order(user, order_number):
+    order = get_user_order(user,order_number)
+    # Check if order exists AND is in a cancelable state
+    if not order or order.status not in [Order.Status.PENDING, Order.Status.CONFIRMED, Order.Status.PROCESSING]:
+        return False
+    
+    order.status = order.Status.CANCELLED
+    order.save()
+    return True
+
+
+def add_to_cart(user, product, quantity=1):
+    cart = get_or_create_cart(user)
+
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        product=product,
+        defaults={"quantity": quantity},
+    )
+
+    if not created:
+        cart_item.quantity += quantity
+        cart_item.save(update_fields=["quantity", "updated_at"])
+
+    return cart_item
+
+
+def reorder_user_order(user, order_number):
+    order = get_user_order(user, order_number)
+
+    if order.status != order.Status.DELIVERED:
+        return None
+    for item in order.items.select_related("product"):
+        add_to_cart(
+            user=user,
+            product=item.product,
+            quantity=item.quantity,
+        )
+
     return order

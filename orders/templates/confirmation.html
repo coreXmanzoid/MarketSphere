@@ -307,9 +307,9 @@
 
             <!-- ============ SECONDARY ACTIONS ============ -->
             <div class="cf-extra-actions">
-              <button type="button" class="cf-extra-link" id="cfDownloadInvoiceBtn">
+              <a href="{% url "download_invoice" order_number=order.order_number %}" target="_blank" class="cf-extra-link">
                 <i class="bi bi-download"></i> Download Invoice
-              </button>
+              </a>
               <a href="#" class="cf-extra-link">
                 <i class="bi bi-headset"></i> Need Help? Contact Support
               </a>

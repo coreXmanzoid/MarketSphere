@@ -85,6 +85,17 @@ form {
         color: #B0BA99;
     }
 
+    textarea {
+        resize: none;
+        background-color: #F7F1DE !important;
+        height: auto !important;
+        min-height: 40px;
+        overflow-y: hidden;
+        color: #B0BA99 !important;
+        border: 1.5px solid #9D6638 !important;
+        border-radius: 1px !important;
+    }
+
     button {
         background-color: #9D6638;
         color: #F7F1DE;
@@ -98,6 +109,65 @@ form {
     .form-check-input {
         accent-color: #9D6638;
     }
+}
+    /* Container adjustments */
+.space-saved-uploader {
+  width: 100%;
+}
+
+.upload-compact-box {
+  flex: 1; /* Forces equal distribution in tight spaces */
+  min-width: 120px; /* Prevents squishing on extra small screens */
+}
+
+/* Hide the default inputs completely */
+.upload-compact-box input[type="file"] {
+  display: none;
+}
+
+/* The compact layout box */
+.compact-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed #B0BA99;
+  border-radius: 6px;
+  padding: 12px 8px;
+  background-color: #F7F1DE;
+  color: #B0BA99;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  width: 100%;
+  height: 85px; /* Fixed small height to preserve vertical space */
+}
+
+.compact-upload-label:hover {
+  border-color: #9D6638;
+  /* color: #9D6638; */
+}
+
+/* Icons styling inside compact boxes */
+.compact-upload-label i {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+/* The filename notification element */
+.file-name-pill {
+  display: none; /* Hidden until file selected */
+  margin-top: 4px;
+  font-size: 0.7rem;
+  background-color: #9D6638;
+  color: #F7F1DE;
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: 95%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .container-fluid {
@@ -144,6 +214,10 @@ form {
             font-size: 15px;
             color: #4E220F !important;
         }
+    }
+    
+    .dropdown-item:focus{
+        background-color: #F7F1DE !important;
     }
 
 

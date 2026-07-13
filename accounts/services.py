@@ -1,6 +1,6 @@
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
-from .models import Address
+from .models import Address, Seller
 from . import validator
 
 User = get_user_model()
@@ -112,3 +112,61 @@ def get_default_address(user):
     return user.addresses.filter(
         is_default=True,
     ).first()
+
+from django.db import transaction
+from django.utils.text import slugify
+
+
+@transaction.atomic
+def create_seller_application(user, data, files):
+    # --------------------------------------------------
+    # Update user contact number (if your User model has it)
+    # --------------------------------------------------
+    if hasattr(user, "contact"):
+        user.contact = data.get("phone", "").strip()
+        user.save(update_fields=["contact"])
+
+    # --------------------------------------------------
+    # Create or Update Business Address
+    # --------------------------------------------------
+    Address.objects.update_or_create(
+        user=user,
+        address_type=Address.BUSINESS,
+        defaults={
+            "full_name": data.get("fullName"),
+            "phone": data.get("phone"),
+            "address_line_1": data.get("address_line_1"),
+            "address_line_2": data.get("address_line_2", ""),
+            "city": data.get("city"),
+            "postal_code": data.get("postal_code"),
+        },
+    )
+
+    # --------------------------------------------------
+    # Create unique slug
+    # --------------------------------------------------
+    base_slug = slugify(data.get("store_name"))
+    slug = base_slug
+    counter = 1
+
+    while Seller.objects.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
+    # --------------------------------------------------
+    # Create Seller
+    # --------------------------------------------------
+    if hasattr(user, "seller_profile"):
+        raise ValueError("Seller profile already exists.")
+    
+    seller = Seller.objects.create(
+        user=user,
+        store_name=data.get("store_name"),
+        slug=slug,
+        store_email=data.get("store_email"),
+        store_description=data.get("description"),
+        store_logo=files.get("store_logo"),
+        store_banner=files.get("store_banner"),
+    )
+
+    return seller

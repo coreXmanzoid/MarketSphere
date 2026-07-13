@@ -130,18 +130,18 @@
               </div>
               <div class="mo-order-actions-secondary mt-3">
                 {% if order.status in 'pending confirmed processing' %}
-                  <a href="#" class="mo-action-link"><i class="bi bi-x-circle"></i> Cancel Order</a>
+                  <a href="{% url "cancel-order" order_number=order.order_number  %}" class="mo-action-link"><i class="bi bi-x-circle"></i> Cancel Order</a>
                   <span class="mo-order-date">|</span>
                 {% endif %}
                 {% if order.status == 'delivered' %}
-                  <a href="#" class="mo-action-link"><i class="bi bi-arrow-repeat"></i> Reorder</a>
+                  <a href="{% url "reorder" order_number=order.order_number %}" class="mo-action-link"><i class="bi bi-arrow-repeat"></i> Reorder</a>
                   <span class="mo-order-date">|</span>
                 {% endif %}
                 {% if order.status != 'canceled' %}
                   <a href="#" class="mo-action-link"><i class="bi bi-truck"></i> Track Order</a>
                 {% endif %}
                 <span class="mo-order-date">|</span>
-                <a href="#" class="mo-action-link"><i class="bi bi-download"></i> Download Invoice</a>
+                <a href="{% url 'download_invoice' order.order_number %}" target="_blank" class="mo-action-link"><i class="bi bi-download"></i> Download Invoice</a>
               </div>
             </div>
           {% endfor %}

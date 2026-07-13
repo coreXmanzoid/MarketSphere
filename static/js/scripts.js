@@ -485,3 +485,28 @@ function getCookie(name) {
 
     return cookieValue;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    function handleCompactUpload(inputId, outputId) {
+        const input = document.getElementById(inputId);
+        const output = document.getElementById(outputId);
+        
+        if (input && output) {
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const filename = this.files[0].name;
+                    output.textContent = filename;
+                    output.style.display = 'inline-block'; // Show filename badge
+                    
+                    // Hide the main prompt text to save spacing
+                    const labelText = this.closest('label').querySelector('.label-text');
+                    if (labelText) labelText.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    // Initialize trackers for both discrete elements
+    handleCompactUpload('store_logo', 'logo-file-name');
+    handleCompactUpload('store_banner', 'banner-file-name');
+});

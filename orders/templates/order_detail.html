@@ -240,10 +240,10 @@
             <button type="button" class="btn od-action-btn od-action-cancel" id="odCancelOrderBtn" {% if order.status in 'cancelled delivered shipped' %}disabled{% endif %}>
               <i class="bi bi-x-circle"></i> Cancel Order
             </button>
-            <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtn">
+            <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtn" data-order-number="{{ order.order_number }}">
               <i class="bi bi-download"></i> Download Invoice
             </button>
-            <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtn"{% if order.status != 'delivered' %}disabled{% endif %}>
+            <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtn" data-order-number="{{ order.order_number }}"{% if order.status != 'delivered' %}disabled{% endif %}>
               <i class="bi bi-arrow-repeat"></i> Buy Again
             </button>
           </div>
@@ -298,10 +298,10 @@
 
             <!-- ============ ACTIONS (mobile, inside summary) ============ -->
             <div class="od-actions-row od-actions-row-mobile">
-              <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtnMobile">
+              <button type="button" class="btn od-action-btn od-action-reorder" data-order-number="{{ order.order_number }}" id="odReorderBtnMobile">
                 <i class="bi bi-arrow-repeat"></i> Buy Again
               </button>
-              <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtnMobile">
+              <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtnMobile" data-order-number="{{ order.order_number }}">
                 <i class="bi bi-download"></i> Download Invoice
               </button>
               <button type="button" class="btn od-action-btn od-action-cancel h-25" id="odCancelOrderBtnMobile" {% if order.status == 'cancelled' or order.status == 'completed' %}disabled{% endif %}>
@@ -342,7 +342,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn od-modal-keep-btn" data-bs-dismiss="modal">Keep Order</button>
-          <button type="button" class="btn od-modal-confirm-cancel-btn" id="odConfirmCancelBtn">Yes, Cancel Order</button>
+          <button type="button" class="btn od-modal-confirm-cancel-btn" id="odConfirmCancelBtn" data-order-number="{{ order.order_number }}">Yes, Cancel Order</button>
         </div>
       </div>
     </div>
