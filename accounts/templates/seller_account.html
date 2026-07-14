@@ -1,0 +1,589 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Seller Account • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'seller_account.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="sa-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">Seller Account</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= PAGE HEADER ================= -->
+  <section class="sa-header-section">
+    <div class="container">
+      <span class="section-label"><i class="bi bi-shop"></i> Seller Account</span>
+      <h1 class="sa-page-title">Seller Account</h1>
+      <p class="sa-page-subtitle">Manage your seller profile and application status.</p>
+    </div>
+  </section>
+
+  <!-- ================= BODY ================= -->
+  <section class="sa-section">
+    <div class="container">
+      <div class="row g-4 sa-layout">
+        <!-- ================= LEFT SIDEBAR (~30%) ================= -->
+        <div class="col-lg-4 col-12 sa-left-col">
+          <aside class="sa-profile-card" id="saProfileCard">
+            <!-- Store Logo -->
+            <div class="sa-store-logo-wrap">
+              {% if seller.store_logo %}
+                <img src="{{ seller.store_logo.url }}" alt="{{ seller.store_name }} logo" class="sa-store-logo img-fluid" />
+              {% else %}
+                <div class="sa-store-logo sa-store-logo-placeholder">
+                  <i class="bi bi-shop"></i>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Store Name / URL / Email -->
+            <h4 class="sa-store-name"><!-- seller.store_name -->{{ seller.store_name|default:'—' }}</h4>
+
+            <div class="sa-store-url-row">
+              <a href="{% url 'home' %}" class="sa-store-url">
+                <i class="bi bi-link-45deg"></i>
+                <!-- seller.slug -->marketsphere.com/store/{{ seller.slug|default:'—' }}
+              </a>
+              <button type="button" class="sa-copy-url-btn" id="saCopyStoreUrlBtn" data-store-url="marketsphere.com/store/{{ seller.slug|default:'' }}" aria-label="Copy store URL"><i class="bi bi-clipboard"></i></button>
+            </div>
+
+            <span class="sa-store-email">
+              <i class="bi bi-envelope"></i>
+              <!-- seller.store_email -->{{ seller.store_email|default:'Not provided' }}
+            </span>
+
+            <!-- Status Badge -->
+            <div class="sa-status-badge-wrap">
+              {% if seller.status == 'pending' %}
+                <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Pending Review</span>
+              {% elif seller.status == 'verified' %}
+                <span class="sa-status-badge sa-status-verified"><i class="bi bi-patch-check-fill"></i> Verified</span>
+              {% elif seller.status == 'rejected' %}
+                <span class="sa-status-badge sa-status-rejected"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+              {% elif seller.status == 'suspended' %}
+                <span class="sa-status-badge sa-status-suspended"><i class="bi bi-exclamation-triangle-fill"></i> Suspended</span>
+              {% elif seller.status == 'blocked' %}
+                <span class="sa-status-badge sa-status-blocked"><i class="bi bi-slash-circle-fill"></i> Blocked</span>
+              {% elif seller.status == 'deactivated' %}
+                <span class="sa-status-badge sa-status-deactivated"><i class="bi bi-power"></i> Deactivated</span>
+              {% else %}
+                <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Pending Review</span>
+              {% endif %}
+            </div>
+
+            <hr class="sa-sidebar-divider" />
+
+            <!-- Quick Info -->
+            <div class="sa-quick-info">
+              <div class="sa-quick-info-row">
+                <span class="sa-quick-info-label"><i class="bi bi-calendar-plus"></i> Application Date</span>
+                <!-- seller.created_at -->
+                <span class="sa-quick-info-value">{{ seller.created_at|date:'M j, Y'|default:'—' }}</span>
+              </div>
+
+              <div class="sa-quick-info-row">
+                <span class="sa-quick-info-label"><i class="bi bi-arrow-repeat"></i> Last Updated</span>
+                <!-- seller.updated_at -->
+                <span class="sa-quick-info-value">{{ seller.updated_at|date:'M j, Y'|default:'—' }}</span>
+              </div>
+
+              <div class="sa-quick-info-row">
+                <span class="sa-quick-info-label"><i class="bi bi-hash"></i> Store Slug</span>
+                <!-- seller.slug -->
+                <span class="sa-quick-info-value">{{ seller.slug|default:'—' }}</span>
+              </div>
+
+              <div class="sa-quick-info-row">
+                <span class="sa-quick-info-label"><i class="bi bi-award"></i> Seller Since</span>
+                <!-- seller.created_at|date:"Y" -->
+                <span class="sa-quick-info-value">{{ seller.created_at|date:'Y'|default:'—' }}</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- ================= MAIN CONTENT (~70%) ================= -->
+        <div class="col-lg-8 col-12 sa-right-col">
+          <!-- ============ SECTION 1: APPLICATION STATUS ============ -->
+          {% if seller.status == 'pending' %}
+            <div class="sa-card sa-status-card sa-status-card-pending">
+              <div class="sa-status-card-icon sa-status-card-icon-pending">
+                <i class="bi bi-hourglass-split"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Application Under Review</h3>
+                <p class="sa-status-card-desc">Your seller application has been submitted successfully. Our team is reviewing your information. You will be notified once your application has been reviewed.</p>
+              </div>
+            </div>
+          {% elif seller.status == 'verified' %}
+            <div class="sa-card sa-status-card sa-status-card-verified">
+              <div class="sa-status-card-icon sa-status-card-icon-verified">
+                <i class="bi bi-patch-check-fill"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Seller Account Verified</h3>
+                <p class="sa-status-card-desc">Congratulations! Your seller account has been verified and is ready to sell.</p>
+                <!-- Links to the future seller dashboard once it exists -->
+                <a href="#" class="btn btn-hero-primary sa-status-card-btn" id="saDashboardBtn"><i class="bi bi-speedometer2"></i> Go to Seller Dashboard</a>
+              </div>
+            </div>
+          {% elif seller.status == 'rejected' %}
+            <div class="sa-card sa-status-card sa-status-card-rejected">
+              <div class="sa-status-card-icon sa-status-card-icon-rejected">
+                <i class="bi bi-x-circle-fill"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Application Rejected</h3>
+                <p class="sa-status-card-desc">Unfortunately your application could not be approved.</p>
+
+                <div class="sa-reason-box sa-reason-box-rejected">
+                  <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason for Rejection</span>
+                  <!-- seller.verification_notes -->
+                  <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
+                </div>
+
+                <a href="{% url 'seller-signup' %}" class="btn btn-hero-primary sa-status-card-btn"><i class="bi bi-pencil-square"></i> Edit &amp; Resubmit Application</a>
+              </div>
+            </div>
+          {% elif seller.status == 'suspended' %}
+            <div class="sa-card sa-status-card sa-status-card-suspended">
+              <div class="sa-status-card-icon sa-status-card-icon-suspended">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Account Suspended</h3>
+                <p class="sa-status-card-desc">Your seller account has been temporarily suspended.</p>
+
+                <div class="sa-reason-box sa-reason-box-suspended">
+                  <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason</span>
+                  <!-- seller.verification_notes -->
+                  <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
+                </div>
+              </div>
+            </div>
+          {% elif seller.status == 'blocked' %}
+            <div class="sa-card sa-status-card sa-status-card-blocked">
+              <div class="sa-status-card-icon sa-status-card-icon-blocked">
+                <i class="bi bi-slash-circle-fill"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Account Blocked</h3>
+                <p class="sa-status-card-desc">Your seller account has been permanently blocked.</p>
+
+                <div class="sa-reason-box sa-reason-box-blocked">
+                  <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason</span>
+                  <!-- seller.verification_notes -->
+                  <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
+                </div>
+              </div>
+            </div>
+          {% elif seller.status == 'deactivated' %}
+            <div class="sa-card sa-status-card sa-status-card-deactivated">
+              <div class="sa-status-card-icon sa-status-card-icon-deactivated">
+                <i class="bi bi-power"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Store Deactivated</h3>
+                <p class="sa-status-card-desc">Your store is currently inactive.</p>
+
+                <button type="button" class="btn btn-hero-primary sa-status-card-btn" id="saReactivateBtn"><i class="bi bi-arrow-clockwise"></i> Reactivate Store</button>
+              </div>
+            </div>
+          {% else %}
+            <div class="sa-card sa-status-card sa-status-card-pending">
+              <div class="sa-status-card-icon sa-status-card-icon-pending">
+                <i class="bi bi-hourglass-split"></i>
+              </div>
+              <div class="sa-status-card-body">
+                <h3 class="sa-status-card-title">Application Under Review</h3>
+                <p class="sa-status-card-desc">Your seller application has been submitted successfully. Our team is reviewing your information.</p>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- ============ SECTION 2: STORE INFORMATION ============ -->
+          <div class="sa-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title"><i class="bi bi-shop-window"></i> Store Information</h2>
+              <button type="button" class="btn sa-edit-btn" id="saEditStoreBtn" data-bs-toggle="modal" data-bs-target="#saEditStoreModal"><i class="bi bi-pencil-square"></i> Edit Store Information</button>
+            </div>
+
+            <div class="sa-info-grid">
+              <div class="sa-info-item">
+                <span class="sa-info-label">Store Name</span>
+                <!-- seller.store_name -->
+                <span class="sa-info-value">{{ seller.store_name|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Store Slug</span>
+                <!-- seller.slug -->
+                <span class="sa-info-value">{{ seller.slug|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Store Email</span>
+                <!-- seller.store_email -->
+                <span class="sa-info-value">{{ seller.store_email|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item sa-info-item-wide">
+                <span class="sa-info-label">Store Description</span>
+                <!-- seller.store_description -->
+                <span class="sa-info-value">{{ seller.store_description|default:'No description provided yet.' }}</span>
+              </div>
+            </div>
+
+            <div class="sa-preview-row">
+              <div class="sa-preview-block">
+                <span class="sa-info-label">Store Logo</span>
+                <div class="sa-logo-preview">
+                  {% if seller.store_logo %}
+                    <img src="{{ seller.store_logo.url }}" alt="Store logo preview" class="img-fluid" />
+                  {% else %}
+                    <i class="bi bi-image"></i>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="sa-preview-block sa-preview-block-wide">
+                <span class="sa-info-label">Store Banner</span>
+                <div class="sa-banner-preview">
+                  {% if seller.store_banner %}
+                    <img src="{{ seller.store_banner.url }}" alt="Store banner preview" class="img-fluid" />
+                  {% else %}
+                    <i class="bi bi-layout-text-window-reverse"></i>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ SECTION 3: BUSINESS ADDRESS ============ -->
+          <div class="sa-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title"><i class="bi bi-geo-alt"></i> Business Address</h2>
+              <button type="button" class="btn sa-edit-btn" id="saEditAddressBtn" data-bs-toggle="modal" data-bs-target="#saEditAddressModal"><i class="bi bi-pencil-square"></i> Update Business Address</button>
+            </div>
+
+            <div class="sa-info-grid">
+              <div class="sa-info-item">
+                <span class="sa-info-label">Business Contact</span>
+                <!-- business_address.full_name -->
+                <span class="sa-info-value">{{ business_address.full_name|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Phone Number</span>
+                <!-- business_address.phone -->
+                <span class="sa-info-value">{{ business_address.phone|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item sa-info-item-wide">
+                <span class="sa-info-label">Business Address</span>
+                <!-- business_address.address_line_1 -->
+                <span class="sa-info-value">{{ business_address.address_line_1|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">City</span>
+                <!-- business_address.city -->
+                <span class="sa-info-value">{{ business_address.city|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Postal Code</span>
+                <!-- business_address.postal_code -->
+                <span class="sa-info-value">{{ business_address.postal_code|default:'—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ SECTION 4: VERIFICATION TIMELINE ============ -->
+          <div class="sa-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title"><i class="bi bi-signpost-split"></i> Verification Timeline</h2>
+            </div>
+
+            <ul class="sa-timeline">
+              <!-- Application Submitted: always complete once a seller record exists -->
+              <li class="sa-timeline-step is-complete">
+                <span class="sa-timeline-icon"><i class="bi bi-send-check"></i></span>
+                <div class="sa-timeline-body">
+                  <span class="sa-timeline-title">Application Submitted</span>
+                  <!-- seller.created_at -->
+                  <span class="sa-timeline-date">{{ seller.created_at|date:'M j, Y, g:i A'|default:'—' }}</span>
+                </div>
+              </li>
+
+              <!-- Review Started: complete once status has moved past pending -->
+              <li class="sa-timeline-step {% if seller.status != 'pending' %}
+                  is-complete
+                {% else %}
+                  is-current
+                {% endif %}">
+                <span class="sa-timeline-icon"><i class="bi bi-search"></i></span>
+                <div class="sa-timeline-body">
+                  <span class="sa-timeline-title">Review Started</span>
+                  <span class="sa-timeline-date">
+                    {% if seller.status != 'pending' %}
+                      <!-- seller.updated_at -->{{ seller.updated_at|date:'M j, Y, g:i A' }}
+                    {% else %}
+                      Pending
+                    {% endif %}
+                  </span>
+                </div>
+              </li>
+
+              {% if seller.status == 'rejected' %}
+                <li class="sa-timeline-step is-complete sa-timeline-step-rejected">
+                  <span class="sa-timeline-icon"><i class="bi bi-x-lg"></i></span>
+                  <div class="sa-timeline-body">
+                    <span class="sa-timeline-title">Rejected</span>
+                    <!-- seller.updated_at -->
+                    <span class="sa-timeline-date">{{ seller.updated_at|date:'M j, Y, g:i A' }}</span>
+                  </div>
+                </li>
+              {% elif seller.status == 'suspended' %}
+                <li class="sa-timeline-step is-complete sa-timeline-step-suspended">
+                  <span class="sa-timeline-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                  <div class="sa-timeline-body">
+                    <span class="sa-timeline-title">Suspended</span>
+                    <!-- seller.updated_at -->
+                    <span class="sa-timeline-date">{{ seller.updated_at|date:'M j, Y, g:i A' }}</span>
+                  </div>
+                </li>
+              {% else %}
+                <li class="sa-timeline-step {% if seller.status == 'verified' %}is-complete{% endif %}">
+                  <span class="sa-timeline-icon"><i class="bi bi-check-lg"></i></span>
+                  <div class="sa-timeline-body">
+                    <span class="sa-timeline-title">Verification Complete</span>
+                    <span class="sa-timeline-date">
+                      {% if seller.status == 'verified' %}
+                        <!-- seller.updated_at -->{{ seller.updated_at|date:'M j, Y, g:i A' }}
+                      {% else %}
+                        Awaiting Review
+                      {% endif %}
+                    </span>
+                  </div>
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+
+          <!-- ============ SECTION 5: MARKETPLACE TIPS ============ -->
+          <div class="sa-card sa-tips-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title"><i class="bi bi-lightbulb"></i> Marketplace Tips</h2>
+            </div>
+
+            <ul class="sa-tips-list">
+              <li>
+                <i class="bi bi-check-circle"></i> Complete your store profile.
+              </li>
+              <li>
+                <i class="bi bi-check-circle"></i> Upload a professional logo.
+              </li>
+              <li>
+                <i class="bi bi-check-circle"></i> Use a high-quality banner.
+              </li>
+              <li>
+                <i class="bi bi-check-circle"></i> Provide accurate product information.
+              </li>
+              <li>
+                <i class="bi bi-check-circle"></i> Maintain excellent customer service.
+              </li>
+            </ul>
+          </div>
+
+          <!-- ============ SECTION 6: FUTURE FEATURES ============ -->
+          <div class="sa-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title"><i class="bi bi-stars"></i> Seller Tools</h2>
+              <span class="sa-item-count">Coming Soon</span>
+            </div>
+
+            <div class="sa-future-grid" id="saFutureToolsGrid">
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Product Management">
+                <i class="bi bi-box-seam"></i>
+                <span>Product Management</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Store Analytics">
+                <i class="bi bi-graph-up"></i>
+                <span>Store Analytics</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Orders">
+                <i class="bi bi-bag-check"></i>
+                <span>Orders</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Customers">
+                <i class="bi bi-people"></i>
+                <span>Customers</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Coupons">
+                <i class="bi bi-ticket-perforated"></i>
+                <span>Coupons</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Reviews">
+                <i class="bi bi-star"></i>
+                <span>Reviews</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Payouts">
+                <i class="bi bi-cash-stack"></i>
+                <span>Payouts</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Store Settings">
+                <i class="bi bi-gear"></i>
+                <span>Store Settings</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+
+              <button type="button" class="sa-future-btn is-disabled" aria-disabled="true" data-feature="Inventory">
+                <i class="bi bi-boxes"></i>
+                <span>Inventory</span>
+                <span class="sa-soon-badge">Coming Soon</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EDIT STORE INFORMATION MODAL (placeholder, no backend) ================= -->
+  <div class="modal fade sa-edit-modal" id="saEditStoreModal" tabindex="-1" aria-labelledby="saEditStoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="saEditStoreModalLabel"><i class="bi bi-shop-window"></i> Edit Store Information</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6 col-12">
+              <label for="saStoreNameInput" class="form-label">Store Name</label>
+              <input type="text" class="form-control" id="saStoreNameInput" value="{{ seller.store_name|default:'' }}" placeholder="e.g. Tech World" />
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="saStoreEmailInput" class="form-label">Store Email</label>
+              <input type="email" class="form-control" id="saStoreEmailInput" value="{{ seller.store_email|default:'' }}" placeholder="support@techworld.com" />
+            </div>
+            <div class="col-12">
+              <label for="saStoreDescriptionInput" class="form-label">Store Description</label>
+              <textarea class="form-control" id="saStoreDescriptionInput" rows="3" placeholder="Tell customers about your store...">{{ seller.store_description|default:'' }}</textarea>
+            </div>
+            <div class="d-flex gap-3 align-items-end space-saved-uploader">
+              <div class="upload-compact-box">
+                <label class="form-label d-block mb-2">Store Logo</label>
+                <label for="store_logo" class="compact-upload-label">
+                  <i class="bi bi-image"></i>
+                  <span class="label-text">Upload Logo</span>
+                  <span id="logo-file-name" class="file-name-pill"></span>
+                </label>
+                <input type="file" id="store_logo" name="store_logo" accept="image/*"/>
+              </div>
+
+              <div class="upload-compact-box ms-auto">
+                <label class="form-label d-block mb-2">Store Banner</label>
+                <label for="store_banner" class="compact-upload-label">
+                  <i class="bi bi-layout-text-window-reverse"></i>
+                  <span class="label-text">Upload Banner</span>
+                  <span id="banner-file-name" class="file-name-pill"></span>
+                </label>
+                <input type="file" id="store_banner" name="store_banner" accept="image/*"/>
+              </div>
+            </div>
+          </div>
+          <p class="sa-modal-note">
+            <i class="bi bi-info-circle"></i> Saving store information isn't available yet — this form is a preview of what's coming.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn sa-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-hero-primary" style="height: 40px !important;" id="saSaveStoreBtn">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= UPDATE BUSINESS ADDRESS MODAL (placeholder, no backend) ================= -->
+  <div class="modal fade sa-edit-modal" id="saEditAddressModal" tabindex="-1" aria-labelledby="saEditAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="saEditAddressModalLabel"><i class="bi bi-geo-alt"></i> Update Business Address</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6 col-12">
+              <label for="saAddrFullNameInput" class="form-label">Business Contact</label>
+              <input type="text" class="form-control" id="saAddrFullNameInput" value="{{ business_address.full_name|default:'' }}" placeholder="e.g. Hammad Ashraf" />
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="saAddrPhoneInput" class="form-label">Phone Number</label>
+              <input type="text" class="form-control" id="saAddrPhoneInput" value="{{ business_address.phone|default:'' }}" placeholder="e.g. +92 300 1234567" />
+            </div>
+            <div class="col-12">
+              <label for="saAddrLineInput" class="form-label">Business Address</label>
+              <textarea class="form-control" id="saAddrLineInput" rows="3" placeholder="House / Street / City / Province / Postal Code">{{ business_address.address_line_1|default:'' }}</textarea>
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="saAddrCityInput" class="form-label">City</label>
+              <input type="text" class="form-control" id="saAddrCityInput" value="{{ business_address.city|default:'' }}" placeholder="e.g. Islamabad" />
+            </div>
+            <div class="col-md-6 col-12">
+              <label for="saAddrPostalInput" class="form-label">Postal Code</label>
+              <input type="text" class="form-control" id="saAddrPostalInput" value="{{ business_address.postal_code|default:'' }}" placeholder="e.g. 44000" />
+            </div>
+          </div>
+          <p class="sa-modal-note">
+            <i class="bi bi-info-circle"></i> Saving the business address isn't available yet — this form is a preview of what's coming.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn sa-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-hero-primary" style="height: 40px !important;" id="saSaveAddressBtn">Save Address</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="sa-toast-container" id="saToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'seller_account.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,898 @@
+/* =========================================================
+   MARKETSPHERE — SELLER DASHBOARD SHELL
+   Reusable layout: sidebar + topbar + content + footer.
+   Shares the storefront's earth-tone palette (see
+   static/css/styles.css) but is a self-contained stylesheet —
+   the seller area is a distinct "product" inside MarketSphere,
+   so nothing here depends on storefront classes.
+
+   Sections:
+     1. Variables
+     2. Reset
+     3. Shell Layout
+     4. Sidebar
+     5. Sidebar Nav
+     6. Topbar
+     7. Flash Messages
+     8. Content / Cards
+     9. Buttons
+    10. Footer
+    11. Scrollbar
+    12. Responsive
+   ========================================================= */
+
+/* ================= 1. VARIABLES ================= */
+:root {
+    /* Brand palette (matches storefront) */
+    --sd-bg: #F7F1DE;
+    --sd-muted: #B0BA99;
+    --sd-accent: #9D6638;
+    --sd-accent-soft: rgba(157, 102, 56, 0.12);
+    --sd-accent-ring: rgba(157, 102, 56, 0.22);
+    --sd-dark: #4E220F;
+    --sd-success: #4f7d54;
+    --sd-warning: #b7802b;
+    --sd-danger: #b54b3b;
+    --sd-border: #E4DCC8;
+
+    /* Surfaces */
+    --sd-surface: #FFFDF8;
+    --sd-surface-raised: #FFFFFF;
+    --sd-sidebar-bg: #3B1B0C;
+    --sd-sidebar-bg-active: #4E220F;
+    --sd-sidebar-text: rgba(247, 241, 222, 0.72);
+    --sd-sidebar-text-strong: #F7F1DE;
+    --sd-sidebar-border: rgba(247, 241, 222, 0.1);
+
+    /* Typography */
+    --sd-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    --sd-heading-color: #3A1B0E;
+    --sd-body-color: #5B5142;
+    --sd-caption-color: #9A9082;
+
+    /* Sizing */
+    --sd-sidebar-width: 264px;
+    --sd-sidebar-width-collapsed: 80px;
+    --sd-topbar-height: 68px;
+    --sd-radius-card: 14px;
+    --sd-radius-control: 10px;
+    --sd-radius-pill: 40px;
+
+    /* Motion */
+    --sd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --sd-transition-fast: 0.18s var(--sd-ease);
+    --sd-transition: 0.28s var(--sd-ease);
+
+    /* Elevation */
+    --sd-shadow-sm: 0 1px 2px rgba(58, 27, 14, 0.06);
+    --sd-shadow-md: 0 8px 24px rgba(58, 27, 14, 0.08);
+    --sd-shadow-lg: 0 18px 46px rgba(58, 27, 14, 0.14);
+}
+
+/* ================= 2. RESET ================= */
+.sd-shell,
+.sd-shell * ,
+.sd-shell *::before,
+.sd-shell *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--sd-font);
+    background-color: var(--sd-bg);
+    color: var(--sd-body-color);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.sd-shell a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.sd-shell ul {
+    list-style: none;
+}
+
+.sd-shell button {
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.sd-shell svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.sd-shell :focus-visible {
+    outline: 2px solid var(--sd-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sd-shell,
+    .sd-shell * {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/* ================= 3. SHELL LAYOUT ================= */
+.sd-shell {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--sd-bg);
+}
+
+.sd-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--sd-sidebar-width);
+    transition: margin-left var(--sd-transition);
+}
+
+.sd-shell.is-collapsed .sd-main {
+    margin-left: var(--sd-sidebar-width-collapsed);
+}
+
+/* ================= 4. SIDEBAR ================= */
+.sd-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sd-sidebar-width);
+    background-color: var(--sd-sidebar-bg);
+    background-image: linear-gradient(180deg, #43200f 0%, #35170a 100%);
+    display: flex;
+    flex-direction: column;
+    z-index: 300;
+    transition: width var(--sd-transition), transform var(--sd-transition);
+    overflow: hidden;
+}
+
+.sd-shell.is-collapsed .sd-sidebar {
+    width: var(--sd-sidebar-width-collapsed);
+}
+
+.sd-sidebar-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 18px;
+    border-bottom: 1px solid var(--sd-sidebar-border);
+    flex-shrink: 0;
+}
+
+.sd-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.sd-brand-mark {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: var(--sd-accent-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sd-brand-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.sd-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity var(--sd-transition-fast);
+}
+
+.sd-brand-text strong {
+    color: var(--sd-sidebar-text-strong);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1px;
+}
+
+.sd-brand-text small {
+    color: var(--sd-accent);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.sd-collapse-btn {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sd-sidebar-text);
+    transition: background-color var(--sd-transition-fast), color var(--sd-transition-fast), transform var(--sd-transition-fast);
+}
+
+.sd-collapse-btn:hover {
+    background-color: rgba(247, 241, 222, 0.08);
+    color: var(--sd-sidebar-text-strong);
+}
+
+.sd-shell.is-collapsed .sd-collapse-btn svg {
+    transform: rotate(180deg);
+}
+
+/* ================= 5. SIDEBAR NAV ================= */
+.sd-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sd-nav-label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(247, 241, 222, 0.35);
+    padding: 14px 12px 6px;
+    white-space: nowrap;
+    transition: opacity var(--sd-transition-fast);
+}
+
+.sd-nav-list:first-of-type + .sd-nav-label,
+.sd-nav > .sd-nav-label:first-child {
+    padding-top: 4px;
+}
+
+.sd-nav-item + .sd-nav-item {
+    margin-top: 2px;
+}
+
+.sd-nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--sd-radius-control);
+    color: var(--sd-sidebar-text);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color var(--sd-transition-fast), color var(--sd-transition-fast);
+}
+
+.sd-nav-link:hover {
+    background-color: rgba(247, 241, 222, 0.07);
+    color: var(--sd-sidebar-text-strong);
+}
+
+.sd-nav-icon {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sd-nav-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Active state */
+.sd-nav-link.is-active {
+    background-color: var(--sd-accent);
+    color: #FFFDF8;
+    box-shadow: var(--sd-shadow-sm);
+}
+
+.sd-nav-link.is-active::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 22px;
+    border-radius: 0 4px 4px 0;
+    background-color: #F7F1DE;
+}
+
+/* Disabled / "Coming Soon" items */
+.sd-nav-link.is-disabled {
+    cursor: not-allowed;
+    color: rgba(247, 241, 222, 0.35);
+    pointer-events: none;
+}
+
+.sd-nav-badge {
+    flex: 0 0 auto;
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background-color: rgba(247, 241, 222, 0.1);
+    color: rgba(247, 241, 222, 0.55);
+    padding: 3px 7px;
+    border-radius: var(--sd-radius-pill);
+    white-space: nowrap;
+}
+
+/* Tooltip shown only while collapsed on desktop */
+.sd-nav-tooltip {
+    display: none;
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--sd-dark);
+    color: #F7F1DE;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: var(--sd-shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--sd-transition-fast), transform var(--sd-transition-fast);
+    z-index: 400;
+}
+
+.sd-shell.is-collapsed .sd-nav-link:hover .sd-nav-tooltip {
+    display: block;
+    opacity: 1;
+    transform: translateY(-50%) translateX(4px);
+}
+
+.sd-shell.is-collapsed .sd-brand-text,
+.sd-shell.is-collapsed .sd-nav-label,
+.sd-shell.is-collapsed .sd-nav-text,
+.sd-shell.is-collapsed .sd-nav-badge,
+.sd-shell.is-collapsed .sd-back-store span:last-child {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sd-shell.is-collapsed .sd-nav-link {
+    justify-content: center;
+}
+
+.sd-shell.is-collapsed .sd-nav-link.is-active::before {
+    left: -12px;
+}
+
+/* ---- Sidebar footer ---- */
+.sd-sidebar-foot {
+    flex-shrink: 0;
+    padding: 14px 12px 18px;
+    border-top: 1px solid var(--sd-sidebar-border);
+}
+
+.sd-back-store {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--sd-radius-control);
+    color: var(--sd-sidebar-text);
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color var(--sd-transition-fast), color var(--sd-transition-fast);
+}
+
+.sd-back-store:hover {
+    background-color: rgba(247, 241, 222, 0.07);
+    color: var(--sd-sidebar-text-strong);
+}
+
+.sd-shell.is-collapsed .sd-back-store {
+    justify-content: center;
+}
+
+/* ================= 6. TOPBAR ================= */
+.sd-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    height: var(--sd-topbar-height);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 24px;
+    background-color: var(--sd-surface-raised);
+    border-bottom: 1px solid var(--sd-border);
+}
+
+.sd-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.sd-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.sd-hamburger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background-color: var(--sd-dark);
+    transition: transform var(--sd-transition-fast), opacity var(--sd-transition-fast);
+    margin: 0 auto;
+}
+
+.sd-hamburger:hover {
+    background-color: var(--sd-accent-soft);
+}
+
+.sd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.sd-breadcrumb-root {
+    color: var(--sd-caption-color);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sd-breadcrumb-sep {
+    color: var(--sd-caption-color);
+}
+
+.sd-breadcrumb-current {
+    color: var(--sd-heading-color);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sd-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.sd-icon-btn {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sd-dark);
+    background-color: transparent;
+    transition: background-color var(--sd-transition-fast), color var(--sd-transition-fast);
+}
+
+.sd-icon-btn:hover {
+    background-color: var(--sd-accent-soft);
+    color: var(--sd-accent);
+}
+
+.sd-notif-dot {
+    position: absolute;
+    top: 8px;
+    right: 9px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--sd-danger);
+    border: 1.5px solid var(--sd-surface-raised);
+}
+
+.sd-topbar-divider {
+    width: 1px;
+    height: 26px;
+    background-color: var(--sd-border);
+}
+
+.sd-seller-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 6px 6px;
+    border-radius: var(--sd-radius-pill);
+    transition: background-color var(--sd-transition-fast);
+}
+
+.sd-seller-chip:hover {
+    background-color: var(--sd-accent-soft);
+    cursor: pointer;
+}
+
+.sd-seller-avatar {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: var(--sd-accent);
+    color: #FFFDF8;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sd-seller-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.sd-seller-name {
+    font-size: 13.5px;
+    color: var(--sd-heading-color);
+    font-weight: 700;
+}
+
+.sd-seller-role {
+    font-size: 11.5px;
+    color: var(--sd-caption-color);
+    font-weight: 500;
+}
+
+.sd-seller-caret {
+    color: var(--sd-caption-color);
+}
+
+/* ================= 7. FLASH MESSAGES ================= */
+.sd-flash-area {
+    padding: 0 24px;
+}
+
+.sd-flash-area:empty {
+    display: none;
+}
+
+.sd-flash {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 12px 16px;
+    background-color: var(--sd-surface);
+    border: 1px solid var(--sd-border);
+    border-left: 4px solid var(--sd-accent);
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--sd-heading-color);
+    box-shadow: var(--sd-shadow-sm);
+}
+
+.sd-flash-success { border-left-color: var(--sd-success); }
+.sd-flash-error { border-left-color: var(--sd-danger); }
+.sd-flash-warning { border-left-color: var(--sd-warning); }
+
+.sd-flash-close {
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: var(--sd-caption-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.sd-flash-close:hover {
+    background-color: var(--sd-accent-soft);
+    color: var(--sd-accent);
+}
+
+/* ================= 8. CONTENT / CARDS ================= */
+.sd-content {
+    flex: 1;
+    padding: 28px 24px 40px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Generic card primitive available to every page that extends this shell */
+.sd-card {
+    background-color: var(--sd-surface-raised);
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius-card);
+    padding: 22px;
+    box-shadow: var(--sd-shadow-sm);
+    transition: box-shadow var(--sd-transition-fast), transform var(--sd-transition-fast);
+}
+
+.sd-card:hover {
+    box-shadow: var(--sd-shadow-md);
+}
+
+.sd-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.sd-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--sd-heading-color);
+}
+
+.sd-card-subtitle {
+    font-size: 12.5px;
+    color: var(--sd-caption-color);
+    margin-top: 2px;
+}
+
+.sd-empty-shell {
+    text-align: center;
+    padding: 70px 20px;
+    color: var(--sd-caption-color);
+}
+
+.sd-empty-shell h2 {
+    color: var(--sd-heading-color);
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.sd-empty-shell p {
+    font-size: 14px;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* ================= 9. BUTTONS ================= */
+.sd-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: var(--sd-radius-control);
+    transition: background-color var(--sd-transition-fast), color var(--sd-transition-fast), border-color var(--sd-transition-fast), transform var(--sd-transition-fast);
+}
+
+.sd-btn:active {
+    transform: scale(0.97);
+}
+
+.sd-btn-primary {
+    background-color: var(--sd-accent);
+    color: #FFFDF8;
+    border: 1.5px solid var(--sd-accent);
+}
+
+.sd-btn-primary:hover {
+    background-color: var(--sd-dark);
+    border-color: var(--sd-dark);
+}
+
+.sd-btn-secondary {
+    background-color: transparent;
+    color: var(--sd-dark);
+    border: 1.5px solid var(--sd-border);
+}
+
+.sd-btn-secondary:hover {
+    border-color: var(--sd-accent);
+    color: var(--sd-accent);
+}
+
+/* ================= 10. FOOTER ================= */
+.sd-footer {
+    padding: 18px 24px 26px;
+    text-align: center;
+    border-top: 1px solid var(--sd-border);
+}
+
+.sd-footer p {
+    font-size: 12.5px;
+    color: var(--sd-caption-color);
+}
+
+.sd-footer-links {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sd-footer-links a {
+    color: var(--sd-caption-color);
+    font-weight: 600;
+    transition: color var(--sd-transition-fast);
+}
+
+.sd-footer-links a:hover {
+    color: var(--sd-accent);
+}
+
+/* ================= 11. SCROLLBAR (sidebar) ================= */
+.sd-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sd-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sd-nav::-webkit-scrollbar-thumb {
+    background: rgba(247, 241, 222, 0.15);
+    border-radius: 10px;
+}
+
+.sd-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(247, 241, 222, 0.25);
+}
+
+/* ================= 12. RESPONSIVE ================= */
+
+/* ---- Sidebar overlay (mobile drawer backdrop) ---- */
+.sd-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(58, 27, 14, 0.45);
+    z-index: 290;
+    opacity: 0;
+    transition: opacity var(--sd-transition);
+}
+
+@media (max-width: 991.98px) {
+    /* Sidebar becomes an off-canvas drawer */
+    .sd-sidebar {
+        transform: translateX(-100%);
+        width: var(--sd-sidebar-width);
+        box-shadow: var(--sd-shadow-lg);
+    }
+
+    .sd-shell.is-mobile-open .sd-sidebar {
+        transform: translateX(0);
+    }
+
+    .sd-shell.is-collapsed .sd-sidebar {
+        width: var(--sd-sidebar-width);
+    }
+
+    .sd-shell.is-collapsed .sd-brand-text,
+    .sd-shell.is-collapsed .sd-nav-label,
+    .sd-shell.is-collapsed .sd-nav-text,
+    .sd-shell.is-collapsed .sd-nav-badge,
+    .sd-shell.is-collapsed .sd-back-store span:last-child {
+        opacity: 1;
+        width: auto;
+    }
+
+    .sd-shell.is-collapsed .sd-nav-link {
+        justify-content: flex-start;
+    }
+
+    .sd-collapse-btn {
+        display: none;
+    }
+
+    .sd-main,
+    .sd-shell.is-collapsed .sd-main {
+        margin-left: 0;
+    }
+
+    .sd-shell.is-mobile-open .sd-sidebar-overlay {
+        display: block;
+        opacity: 1;
+    }
+
+    .sd-hamburger {
+        display: flex;
+    }
+
+    .sd-shell.is-mobile-open .sd-hamburger span:nth-child(1) {
+        transform: translateY(6px) rotate(45deg);
+    }
+
+    .sd-shell.is-mobile-open .sd-hamburger span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .sd-shell.is-mobile-open .sd-hamburger span:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sd-topbar {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .sd-content {
+        padding: 20px 16px 32px;
+    }
+
+    .sd-flash-area {
+        padding: 0 16px;
+    }
+
+    .sd-seller-info {
+        display: none;
+    }
+
+    .sd-seller-caret {
+        display: none;
+    }
+
+    .sd-breadcrumb-root {
+        display: none;
+    }
+
+    .sd-breadcrumb-sep {
+        display: none;
+    }
+
+    .sd-footer {
+        padding: 16px 16px 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sd-topbar-divider {
+        display: none;
+    }
+}

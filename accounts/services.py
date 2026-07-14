@@ -170,3 +170,63 @@ def create_seller_application(user, data, files):
     )
 
     return seller
+
+def update_seller_information(user, data, files):
+    seller = user.seller_profile
+
+    # Update store name and slug if changed
+    store_name = (data.get("store_name") or "").strip()
+    if store_name and store_name != seller.store_name:
+        base_slug = slugify(store_name)
+        slug = base_slug
+        counter = 1
+        while Seller.objects.filter(slug=slug).exclude(pk=seller.pk).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        seller.store_name = store_name
+        seller.slug = slug
+
+    # Update other simple fields
+    store_email = data.get("store_email")
+    if store_email is not None:
+        seller.store_email = store_email
+
+    store_description = data.get("store_description")
+    if store_description is not None:
+        seller.store_description = store_description
+
+    # Update files if provided
+    store_logo = files.get("store_logo")
+    if store_logo:
+        seller.store_logo = store_logo
+
+    store_banner = files.get("store_banner")
+    if store_banner:
+        seller.store_banner = store_banner
+
+    seller.save()
+    return seller
+
+
+def update_seller_address(user, data):
+    seller = user.seller_profile
+    seller_address = get_bussiness_address(seller)
+
+    if seller_address is None:
+        raise ValueError("Business address not found.")
+
+    seller_address.full_name = data.get("fullName", "").strip()
+    seller_address.phone = data.get("phone", "").strip()
+    seller_address.address_line_1 = data.get("address", "").strip()
+    seller_address.city = data.get("city", "").strip()
+    seller_address.postal_code = data.get("postalCode", "").strip()
+
+    seller_address.save()
+
+    return seller_address
+
+def get_bussiness_address(seller):
+    business_address = seller.user.addresses.filter(
+        address_type=Address.BUSINESS
+    ).first()
+    return business_address

@@ -5,8 +5,10 @@ from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-import json 
+import json
+from .decorators import verified_seller, verified_user, only_seller
 from django.http import JsonResponse
+
 User = get_user_model()
 from . import validator
 from . import services
@@ -72,7 +74,8 @@ def signup_view(request):
         user = services.create_user(user)
         services.send_verification_email(request, user, signup=True)
 
-        messages.success(request,
+        messages.success(
+            request,
             "Your account has been created successfully. We've sent a verification email to your inbox. Please verify your email before accessing all features.",
         )
 
@@ -80,6 +83,9 @@ def signup_view(request):
 
     return render(request, "signup.html")
 
+
+@login_required
+@verified_user
 def seller_signup_view(request):
     print(request.POST)
     print(request.FILES)
@@ -89,11 +95,97 @@ def seller_signup_view(request):
             request.POST,
             request.FILES,
         )
-        # return redirect("seller-application")
+        return redirect("seller-account")
     return render(request, "seller_signup.html")
-import json
-from django.http import JsonResponse
+
+
+@only_seller
+def update_seller_info(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request method.",
+            },
+            status=405,
+        )
+    try:
+        services.update_seller_information(
+            request.user,
+            request.POST,
+            request.FILES,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Store information updated successfully.",
+            }
+        )
+
+    except Exception as e:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(e),
+            },
+            status=400,
+        )
+
+
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+from . import services
+from .decorators import only_seller
+
+
+@login_required
+@only_seller
+def update_seller_address(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request method.",
+            },
+            status=405,
+        )
+
+    try:
+        services.update_seller_address(
+            request.user,
+            request.POST,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Business address updated successfully.",
+            }
+        )
+
+    except Exception as e:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(e),
+            },
+            status=400,
+        )
+
+@only_seller
+def seller_account(request):
+    seller = request.user.seller_profile
+    business_address = services.get_bussiness_address(seller)
+
+    context = {
+        "seller": seller,
+        "business_address": business_address,
+    }
+
+    return render(request, "seller_account.html", context)
+
 
 @login_required
 def save_user_address(request):
@@ -101,12 +193,15 @@ def save_user_address(request):
         return JsonResponse({"success": False}, status=405)
 
     data = json.loads(request.body)
-    
+
     services.save_user_address(request.user, data)
 
-    return JsonResponse({
-        "success": True,
-    })
+    return JsonResponse(
+        {
+            "success": True,
+        }
+    )
+
 
 @login_required
 def logout_user(request):
@@ -122,7 +217,9 @@ def resend_verification_email_view(request):
     sent = services.send_verification_email(request, request.user)
 
     if sent:
-        messages.success(request, f"A new verification email has been sent.({request.user.email})")
+        messages.success(
+            request, f"A new verification email has been sent.({request.user.email})"
+        )
     else:
         messages.info(request, "Your email address is already verified.")
 

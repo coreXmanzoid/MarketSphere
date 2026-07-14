@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
     "products",
     "orders",
+    "seller_dashboard"
 ]
 
 
@@ -87,6 +88,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "products.context_processors.categories",
+                "accounts.context_processors.seller_context",
             ],
         },
     },

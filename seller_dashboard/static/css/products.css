@@ -1,0 +1,961 @@
+/* ==========================================================================
+   MarketSphere - Seller Dashboard: products.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. VARIABLES & THEMING
+   -------------------------------------------------------------------------- */
+:root {
+  /* Colors */
+  --pm-primary: #4f46e5;
+  --pm-primary-hover: #4338ca;
+  --pm-primary-light: #e0e7ff;
+  
+  --pm-success: #10b981;
+  --pm-success-bg: #ecfdf5;
+  --pm-success-hover: #059669;
+  
+  --pm-danger: #ef4444;
+  --pm-danger-bg: #fef2f2;
+  --pm-danger-hover: #dc2626;
+  
+  --pm-warning: #f59e0b;
+  --pm-warning-bg: #fffbeb;
+  
+  --pm-muted: #6b7280;
+  --pm-muted-bg: #f3f4f6;
+  
+  --pm-dark: #1f2937;
+  --pm-light: #f9fafb;
+  --pm-border: #e5e7eb;
+  --pm-card-bg: #ffffff;
+  
+  /* Typography */
+  --pm-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* Shadows & Radius */
+  --pm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --pm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --pm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --pm-radius-sm: 6px;
+  --pm-radius-md: 10px;
+  --pm-radius-lg: 16px;
+  
+  /* Animation */
+  --pm-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. REVEAL & CORE PAGE LAYOUT
+   -------------------------------------------------------------------------- */
+.pm-page {
+  font-family: var(--pm-font-sans);
+  color: var(--pm-dark);
+  background-color: var(--pm-light);
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.pm-reveal {
+  animation: pmFadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes pmFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Helper utility for toggle states */
+.pm-hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. BUTTONS
+   -------------------------------------------------------------------------- */
+.pm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  border-radius: var(--pm-radius-sm);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--pm-transition);
+  white-space: nowrap;
+}
+
+.pm-btn-primary {
+  background-color: var(--pm-primary);
+  color: #ffffff;
+}
+
+.pm-btn-primary:hover {
+  background-color: var(--pm-primary-hover);
+}
+
+.pm-btn-secondary {
+  background-color: #ffffff;
+  border-color: var(--pm-border);
+  color: var(--pm-dark);
+}
+
+.pm-btn-secondary:hover {
+  background-color: var(--pm-light);
+}
+
+.pm-btn-ghost {
+  background-color: transparent;
+  color: var(--pm-muted);
+}
+
+.pm-btn-ghost:hover {
+  background-color: var(--pm-muted-bg);
+  color: var(--pm-dark);
+}
+
+.pm-btn-danger {
+  background-color: var(--pm-danger);
+  color: #ffffff;
+}
+
+.pm-btn-danger:hover {
+  background-color: var(--pm-danger-hover);
+}
+
+/* Sizes */
+.pm-btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.pm-btn-lg {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. HEADER SECTION
+   -------------------------------------------------------------------------- */
+.pm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.pm-header-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.pm-header-subtitle {
+  color: var(--pm-muted);
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+  font-size: 0.9375rem;
+}
+
+/* --------------------------------------------------------------------------
+   5. STATISTICS GRID
+   -------------------------------------------------------------------------- */
+.pm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.pm-stat-card {
+  background-color: var(--pm-card-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-md);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--pm-shadow-sm);
+  transition: var(--pm-transition);
+}
+
+.pm-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pm-shadow-md);
+}
+
+.pm-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pm-stat-icon-accent {
+  background-color: var(--pm-primary-light);
+  color: var(--pm-primary);
+}
+
+.pm-stat-icon-success {
+  background-color: var(--pm-success-bg);
+  color: var(--pm-success);
+}
+
+.pm-stat-icon-danger {
+  background-color: var(--pm-danger-bg);
+  color: var(--pm-danger);
+}
+
+.pm-stat-icon-muted {
+  background-color: var(--pm-muted-bg);
+  color: var(--pm-muted);
+}
+
+.pm-stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.pm-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pm-stat-label {
+  font-size: 0.8125rem;
+  color: var(--pm-muted);
+  margin-top: 0.125rem;
+}
+
+/* --------------------------------------------------------------------------
+   6. TOOLBAR & FILTER CARD
+   -------------------------------------------------------------------------- */
+.pm-toolbar-card {
+  background-color: var(--pm-card-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--pm-shadow-sm);
+}
+
+.pm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Search input container styling */
+.pm-search {
+  position: relative;
+  flex: 1;
+  min-width: 280px;
+}
+
+.pm-search svg {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--pm-muted);
+  pointer-events: none;
+}
+
+.pm-search-input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-sm);
+  background-color: var(--pm-light);
+  transition: var(--pm-transition);
+}
+
+.pm-search-input:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--pm-primary);
+  box-shadow: 0 0 0 3px var(--pm-primary-light);
+}
+
+/* Tool filters styling */
+.pm-toolbar-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Custom Styled Select */
+.pm-select-wrap {
+  position: relative;
+}
+
+.pm-select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--pm-muted);
+  pointer-events: none;
+}
+
+.pm-select {
+  appearance: none;
+  background-color: var(--pm-light);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-sm);
+  padding: 0.5rem 2.25rem 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 140px;
+  transition: var(--pm-transition);
+}
+
+.pm-select:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--pm-primary);
+  box-shadow: 0 0 0 3px var(--pm-primary-light);
+}
+
+/* --------------------------------------------------------------------------
+   7. BULK ACTIONS BAR
+   -------------------------------------------------------------------------- */
+.pm-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--pm-primary-light);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: var(--pm-radius-sm);
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  animation: pmFadeInUp 0.2s ease-out;
+}
+
+.pm-bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--pm-primary-hover);
+}
+
+.pm-bulk-count {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.pm-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   8. DROPDOWN COMPONENT (Bulk & Row Actions)
+   -------------------------------------------------------------------------- */
+.pm-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.pm-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 0.375rem;
+  width: 180px;
+  background-color: #ffffff;
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-sm);
+  box-shadow: var(--pm-shadow-lg);
+  z-index: 10;
+  padding: 0.25rem;
+  transform-origin: top right;
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Visible active state toggled via JS */
+.pm-dropdown.pm-active .pm-dropdown-menu {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.pm-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pm-dark);
+  border: none;
+  background: none;
+  text-align: left;
+  border-radius: calc(var(--pm-radius-sm) - 2px);
+  cursor: pointer;
+  transition: var(--pm-transition);
+}
+
+.pm-dropdown-item:hover {
+  background-color: var(--pm-light);
+}
+
+.pm-dropdown-item-danger {
+  color: var(--pm-danger);
+}
+
+.pm-dropdown-item-danger:hover {
+  background-color: var(--pm-danger-bg);
+}
+
+.pm-dropdown-divider {
+  height: 1px;
+  background-color: var(--pm-border);
+  margin: 0.25rem 0;
+}
+
+.pm-dropdown-menu-bulk {
+  width: 200px;
+}
+
+/* --------------------------------------------------------------------------
+   9. CUSTOM STYLISH CHECKBOX
+   -------------------------------------------------------------------------- */
+.pm-checkbox {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pm-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.pm-checkbox-box {
+  height: 18px;
+  width: 18px;
+  background-color: #ffffff;
+  border: 2px solid var(--pm-border);
+  border-radius: 4px;
+  display: block;
+  transition: var(--pm-transition);
+}
+
+.pm-checkbox:hover input ~ .pm-checkbox-box {
+  border-color: var(--pm-primary);
+}
+
+.pm-checkbox input:checked ~ .pm-checkbox-box {
+  background-color: var(--pm-primary);
+  border-color: var(--pm-primary);
+}
+
+.pm-checkbox-box::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 3px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.pm-checkbox input:checked ~ .pm-checkbox-box::after {
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   10. PRODUCTS TABLE SECTION
+   -------------------------------------------------------------------------- */
+.pm-table-card {
+  background-color: var(--pm-card-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-md);
+  box-shadow: var(--pm-shadow-sm);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.pm-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.pm-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pm-table th {
+  background-color: var(--pm-light);
+  padding: 1rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--pm-muted);
+  border-bottom: 1px solid var(--pm-border);
+}
+
+.pm-table tbody tr {
+  border-bottom: 1px solid var(--pm-border);
+  transition: var(--pm-transition);
+}
+
+.pm-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.pm-table tbody tr:hover {
+  background-color: rgba(249, 250, 251, 0.7);
+}
+
+.pm-table td {
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+/* Column sizing */
+.pm-col-checkbox {
+  width: 40px;
+}
+
+.pm-col-image {
+  width: 60px;
+}
+
+.pm-col-actions {
+  width: 50px;
+  text-align: right;
+}
+
+/* Product Thumbnail Layout */
+.pm-product-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pm-radius-sm);
+  background-color: var(--pm-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pm-muted);
+  border: 1px solid var(--pm-border);
+  overflow: hidden;
+}
+
+.pm-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Product Info */
+.pm-product-name {
+  display: block;
+  font-weight: 600;
+  color: var(--pm-dark);
+}
+
+.pm-product-sku {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--pm-muted);
+  margin-top: 0.125rem;
+}
+
+/* Custom Tag and Pricing styles */
+.pm-category-tag {
+  background-color: var(--pm-muted-bg);
+  color: var(--pm-dark);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--pm-radius-sm);
+}
+
+.pm-price {
+  font-weight: 600;
+  color: var(--pm-dark);
+}
+
+/* Stock Indicator tags */
+.pm-stock-low {
+  color: var(--pm-warning);
+  font-weight: 600;
+}
+
+.pm-stock-empty {
+  color: var(--pm-danger);
+  font-weight: 600;
+}
+
+/* Action Icon Button */
+.pm-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--pm-muted);
+  cursor: pointer;
+  transition: var(--pm-transition);
+}
+
+.pm-icon-btn:hover {
+  background-color: var(--pm-light);
+  color: var(--pm-dark);
+}
+
+/* --------------------------------------------------------------------------
+   11. BADGES (Status indicators)
+   -------------------------------------------------------------------------- */
+.pm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.pm-badge::before {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.pm-badge-published {
+  background-color: var(--pm-success-bg);
+  color: var(--pm-success-hover);
+}
+.pm-badge-published::before { background-color: var(--pm-success); }
+
+.pm-badge-out-of-stock {
+  background-color: var(--pm-danger-bg);
+  color: var(--pm-danger-hover);
+}
+.pm-badge-out-of-stock::before { background-color: var(--pm-danger); }
+
+.pm-badge-draft {
+  background-color: var(--pm-muted-bg);
+  color: var(--pm-muted);
+}
+.pm-badge-draft::before { background-color: var(--pm-muted); }
+
+.pm-badge-hidden {
+  background-color: #fff7ed;
+  color: #c2410c;
+}
+.pm-badge-hidden::before { background-color: #ea580c; }
+
+
+/* --------------------------------------------------------------------------
+   12. EMPTY STATE
+   -------------------------------------------------------------------------- */
+.pm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  text-align: center;
+}
+
+.pm-empty-illustration {
+  color: var(--pm-muted);
+  margin-bottom: 1.25rem;
+}
+
+.pm-empty-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.pm-empty-subtitle {
+  color: var(--pm-muted);
+  margin: 0 0 1.5rem 0;
+  max-width: 320px;
+  font-size: 0.875rem;
+}
+
+/* --------------------------------------------------------------------------
+   13. PAGINATION BAR
+   -------------------------------------------------------------------------- */
+.pm-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--pm-border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pm-pagination-count {
+  font-size: 0.875rem;
+  color: var(--pm-muted);
+}
+
+.pm-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pm-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pm-radius-sm);
+  border: 1px solid var(--pm-border);
+  background-color: #ffffff;
+  color: var(--pm-dark);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--pm-transition);
+}
+
+.pm-page-btn:hover:not(:disabled) {
+  border-color: var(--pm-primary);
+  color: var(--pm-primary);
+  background-color: var(--pm-primary-light);
+}
+
+.pm-page-btn.pm-active {
+  background-color: var(--pm-primary);
+  color: #ffffff;
+  border-color: var(--pm-primary);
+}
+
+.pm-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pm-page-ellipsis {
+  color: var(--pm-muted);
+  padding: 0 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   14. MODAL OVERLAY & CARD
+   -------------------------------------------------------------------------- */
+.pm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: opacity 0.2s ease-out;
+}
+
+.pm-modal {
+  background-color: #ffffff;
+  border-radius: var(--pm-radius-lg);
+  padding: 1.75rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--pm-shadow-lg);
+  animation: pmScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+@keyframes pmScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pm-modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--pm-danger-bg);
+  color: var(--pm-danger);
+  margin-bottom: 1.25rem;
+}
+
+.pm-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: var(--pm-dark);
+}
+
+.pm-modal-text {
+  font-size: 0.875rem;
+  color: var(--pm-muted);
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+}
+
+.pm-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.pm-modal-actions .pm-btn {
+  flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   15. RESPONSIVE MEDIA QUERIES (Collapsible Mobile Table)
+   -------------------------------------------------------------------------- */
+@media (max-width: 991px) {
+  .pm-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .pm-header-actions {
+    width: 100%;
+  }
+
+  .pm-header-actions .pm-btn {
+    width: 100%;
+  }
+
+  .pm-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-toolbar-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .pm-select-wrap select {
+    width: 100%;
+  }
+
+  .pm-toolbar-filters .pm-btn {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .pm-table thead {
+    display: none; /* Hide standard headers */
+  }
+
+  .pm-table tbody tr {
+    display: block;
+    padding: 0.75rem 0;
+    position: relative;
+  }
+
+  .pm-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    text-align: right;
+    border: none;
+  }
+
+  .pm-table td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--pm-muted);
+    text-transform: uppercase;
+    text-align: left;
+    margin-right: 1rem;
+  }
+
+  /* Keep checkboxes and action buttons styled normally */
+  .pm-table td[data-label=""]::before {
+    display: none;
+  }
+
+  .pm-table td:has(.pm-checkbox), 
+  .pm-table td:has(.pm-product-thumb) {
+    justify-content: flex-start;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .pm-table td.pm-col-actions {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.5rem;
+    padding: 0;
+  }
+}

@@ -33,7 +33,7 @@
 
             <!-- Search -->
             <div class="col-lg-7 col-md-6 col-12 mb-3 mb-lg-0">
-              <form method="GET" action="{% url "search" %}">
+              <form method="GET" action="{% url 'search' %}">
                 <div class="input-group search-bar">
                   <input type="search" class="form-control" placeholder="Search products, brands or shops..." name="q" />
 
@@ -56,13 +56,13 @@
               <div class="col-lg-3 col-md-3 col-12">
                 <div class="d-flex justify-content-lg-end justify-content-center align-items-center">
                   <!-- Wishlist -->
-                  <a href="{% url "wishlist" %}" class="btn position-relative me-1">
+                  <a href="{% url 'wishlist' %}" class="btn position-relative me-1">
                     <i class="bi bi-heart-half"></i>
-                    
+
                     <span id="wishlistCounter" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ wishlist_count }}</span>
                   </a>
                   <!-- Cart -->
-                  <a href="{% url "cart" %}" class="btn position-relative me-3">
+                  <a href="{% url 'cart' %}" class="btn position-relative me-3">
                     <i class="bi bi-cart4"></i>
 
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCounter">{{ cart_count }}</span>
@@ -75,9 +75,7 @@
                       {% if request.user.profile_image_url %}
                         <img src="{{ request.user.profile_image_url }}" class="rounded-circle" width="40" height="40" alt="Profile" />
                       {% else %}
-                        <span class="rounded-circle d-inline-flex justify-content-center align-items-center" style="width:40px; height:40px; background-color: #9D6638; color:#F7F1DE; font-weight:600;">
-                          {{ request.user.username|slice:":1"|upper }}
-                        </span>
+                        <span class="rounded-circle d-inline-flex justify-content-center align-items-center" style="width:40px; height:40px; background-color: #9D6638; color:#F7F1DE; font-weight:600;">{{ request.user.username|slice:':1'|upper }}</span>
                       {% endif %}
                     </a>
 
@@ -87,16 +85,28 @@
                       </li>
 
                       <li>
-                        <a class="dropdown-item" href="{% url "orders" %}">My Orders</a>
+                        <a class="dropdown-item" href="{% url 'orders' %}">My Orders</a>
                       </li>
 
                       <li>
                         <hr class="dropdown-divider" />
                       </li>
 
-                      <li>
-                        <a class="dropdown-item" href="{% url "seller-signup" %}">Apply for Seller Account</a>
-                      </li>
+                      {% if seller %}
+                        {% if seller.status == 'VERIFIED' %}
+                          <li>
+                            <a class="dropdown-item" href="#">Seller Dashboard</a>
+                          </li>
+                        {% else %}
+                          <li>
+                            <a class="dropdown-item" href="{% url 'seller-account' %}">Seller Account</a>
+                          </li>
+                        {% endif %}
+                      {% else %}
+                        <li>
+                          <a class="dropdown-item" href="{% url 'seller-signup' %}">Apply for Seller Account</a>
+                        </li>
+                      {% endif %}
 
                       <li>
                         <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
@@ -122,7 +132,7 @@
                     <!-- Level 1 -->
                     <div class="list-group rounded-0 border-end">
                       {% for category in categories %}
-                        <a href="{% url "search" %}?category={{category.slug}}" class="list-group-item list-group-item-action category-item" data-target="category-{{ category.id }}">
+                        <a href="{% url 'search' %}?category={{ category.slug }}" class="list-group-item list-group-item-action category-item" data-target="category-{{ category.id }}">
                           {% if category.icon %}
                             <i class="{{ category.icon }} me-2"></i>
                           {% endif %}
@@ -139,7 +149,7 @@
 
                         {% for child in category.children.all %}
                           <div class="child-item mb-1">
-                            <a href="https://search/category/{{ child.slug}}" class="dropdown-item fw-bold child-item__link">{{ child.name }}</a>
+                            <a href="https://search/category/{{ child.slug }}" class="dropdown-item fw-bold child-item__link">{{ child.name }}</a>
 
                             {% if child.children.all %}
                               <div class="child-grandchildren p-2 shadow-sm">
@@ -267,7 +277,7 @@
                 </li>
 
                 <li class="nav-item mt-2">
-                  <a href="{% url "orders" %}" class="nav-link p-0 text-secondary">My Orders</a>
+                  <a href="{% url 'orders' %}" class="nav-link p-0 text-secondary">My Orders</a>
                 </li>
 
                 <li class="nav-item mt-2">
