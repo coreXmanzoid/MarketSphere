@@ -1,9 +1,13 @@
-{% extends "base_dashboard.html" %}
+{% extends 'base_dashboard.html' %}
 {% load static %}
 
-{% block title %}Products{% endblock %}
+{% block title %}
+  Products
+{% endblock %}
 
-{% block active_page %}products{% endblock %}
+{% block active_page %}
+  products
+{% endblock %}
 
 {% block breadcrumb %}
   <span class="sd-breadcrumb-sep">/</span>
@@ -11,13 +15,11 @@
 {% endblock %}
 
 {% block css %}
-  <link rel="stylesheet" href="{% static '/css/products.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/products.css' %}" />
 {% endblock %}
 
 {% block seller_content %}
-
   <div class="pm-page">
-
     <!-- ================= 1. HEADER ================= -->
     <section class="pm-header pm-reveal" aria-label="Products header">
       <div class="pm-header-text">
@@ -26,19 +28,17 @@
       </div>
 
       <div class="pm-header-actions">
-        <button type="button" class="pm-btn pm-btn-primary pm-btn-lg">
+        <button type="button" class="pm-btn pm-btn-primary pm-btn-lg" onclick="window.location.href='{% url "add-product" %}'">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add Product
+          </svg>Add Product
         </button>
       </div>
     </section>
 
     <!-- ================= 2. STATISTICS CARDS ================= -->
     <section class="pm-stats-grid pm-reveal" aria-label="Product statistics">
-
       <div class="pm-stat-card">
         <div class="pm-stat-icon pm-stat-icon-accent" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -49,7 +49,7 @@
         </div>
         <div class="pm-stat-body">
           <!-- Placeholder value; will render seller.products.count from Django -->
-          <span class="pm-stat-value">42</span>
+          <span class="pm-stat-value">{{ dashboard_total_products }}</span>
           <span class="pm-stat-label">Total Products</span>
         </div>
       </div>
@@ -77,7 +77,7 @@
         </div>
         <div class="pm-stat-body">
           <!-- Placeholder value; will render out-of-stock count from Django -->
-          <span class="pm-stat-value">5</span>
+          <span class="pm-stat-value">{{ dashboard_out_of_stock_products.count }}</span>
           <span class="pm-stat-label">Out of Stock</span>
         </div>
       </div>
@@ -97,7 +97,6 @@
           <span class="pm-stat-label">Drafts</span>
         </div>
       </div>
-
     </section>
 
     <!-- ================= 3. TOOLBAR ================= -->
@@ -115,12 +114,9 @@
           <div class="pm-select-wrap">
             <select id="pmCategoryFilter" class="pm-select" aria-label="Filter by category">
               <option value="">All Categories</option>
-              <option value="electronics">Electronics</option>
-              <option value="wearables">Wearables</option>
-              <option value="home-living">Home &amp; Living</option>
-              <option value="fashion">Fashion</option>
-              <option value="beauty">Beauty</option>
-              <option value="sports">Sports</option>
+              {% for category in categories %}
+                <option value="{{ category.name }}">{{ category.name }}</option>
+              {% endfor %}
             </select>
           </div>
 
@@ -146,13 +142,16 @@
           </div>
 
           <button type="button" class="pm-btn pm-btn-primary pm-btn-sm" id="pmApplyFiltersBtn">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-            Filter
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>Filter
           </button>
 
-          <button type="button" class="pm-btn pm-btn-ghost pm-btn-sm" id="pmResetFiltersBtn">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
-            Reset
+          <button type="button" class="pm-btn pm-btn-secondary pm-btn-sm" id="pmResetFiltersBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>Reset
           </button>
         </div>
       </div>
@@ -168,23 +167,29 @@
         <div class="pm-bulk-actions">
           <div class="pm-dropdown" id="pmBulkDropdown">
             <button type="button" class="pm-btn pm-btn-secondary pm-btn-sm pm-dropdown-trigger" id="pmBulkDropdownTrigger" aria-haspopup="true" aria-expanded="false">
-              Bulk Actions
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              Bulk Actions<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
 
             <div class="pm-dropdown-menu pm-dropdown-menu-bulk" role="menu">
               <button type="button" class="pm-dropdown-item" role="menuitem" data-bulk-action="publish">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-                Publish Selected
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>Publish Selected
               </button>
               <button type="button" class="pm-dropdown-item" role="menuitem" data-bulk-action="hide">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                Hide Selected
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>Hide Selected
               </button>
               <div class="pm-dropdown-divider" role="separator"></div>
               <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-bulk-action="delete">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                Delete Selected
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>Delete Selected
               </button>
             </div>
           </div>
@@ -196,7 +201,6 @@
 
     <!-- ================= 4. PRODUCTS TABLE ================= -->
     <section class="pm-table-card pm-reveal" aria-label="Products table">
-
       <div class="pm-table-wrap">
         <table class="pm-table" id="pmProductsTable">
           <thead>
@@ -207,445 +211,149 @@
                   <span class="pm-checkbox-box"></span>
                 </label>
               </th>
-              <th scope="col" class="pm-col-image"><span class="sr-only">Image</span></th>
+              <th scope="col" class="pm-col-image">
+                <span class="sr-only">Image</span>
+              </th>
               <th scope="col">Product Name</th>
               <th scope="col">Category</th>
-              <th scope="col">Price</th>
+              <th scope="col">Price (Rs.)</th>
               <th scope="col">Stock</th>
               <th scope="col">Status</th>
               <th scope="col">Last Updated</th>
-              <th scope="col" class="pm-col-actions"><span class="sr-only">Actions</span></th>
+              <th scope="col" class="pm-col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
 
           <tbody id="pmProductsTableBody">
             <!-- Product rows will be rendered here by Django from seller.products queryset -->
-
-            <tr class="pm-row" data-product-name="wireless over-ear headphones">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Wireless Over-Ear Headphones" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3ZM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Wireless Over-Ear Headphones</span>
-                <span class="pm-product-sku">SKU: MS-WH-101</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Electronics</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 6,399</span></td>
-              <td data-label="Stock"><span class="pm-stock">42</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-published">Published</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 10, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Wireless Over-Ear Headphones">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Wireless Over-Ear Headphones">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
+            {% for product in dashboard_seller_products %}
+              <tr class="pm-row" data-product-name="wireless over-ear headphones">
+                <td data-label="">
+                  <label class="pm-checkbox">
+                    <input type="checkbox" class="pm-row-checkbox" aria-label="Select Wireless Over-Ear Headphones" />
+                    <span class="pm-checkbox-box"></span>
+                  </label>
+                </td>
+                <td data-label="">
+                  <div class="pm-product-thumb">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3ZM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"></path>
+                    </svg>
                   </div>
-                </div>
-              </td>
-            </tr>
+                </td>
+                <td data-label="Product">
+                  <span class="pm-product-name">{{ product.name }}</span>
+                  <span class="pm-product-sku">SKU: {{ product.sku }}</span>
+                </td>
+                <td data-label="Category">
+                  <span class="pm-category-tag">{{ product.category.name }}</span>
+                </td>
+                <td data-label="Price">
+                  <span class="pm-price">
+                    {% if product.discount_price %}
+                      {{ product.discount_price }}
+                    {% else %}
+                      {{ product.price }}
+                    {% endif %}
+                  </span>
+                </td>
+                <td data-label="Stock">
+                  <span class="pm-stock">{{ product.stock_quantity }}</span>
+                </td>
+                <td data-label="Status">
+                  {% if product.status == 'out_of_stock' %}
+                    <span class="pm-badge pm-badge-out-of-stock">Out of Stock</span>
+                  {% elif product.status == 'published' %}
+                  <span class="pm-badge pm-badge-published">Published</span>
+                  {% elif product.status == 'hidden' %}
+                  <span class="pm-badge pm-badge-hidden">Hidden</span>
+                  {% else %}
+                  <span class="pm-badge pm-badge-draft">Draft</span>
+                  {% endif %}
+                </td>
 
-            <tr class="pm-row" data-product-name="smart fitness watch pro">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Smart Fitness Watch Pro" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"></rect><path d="M12 3v2"></path><path d="M12 19v2"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Smart Fitness Watch Pro</span>
-                <span class="pm-product-sku">SKU: MS-SW-204</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Wearables</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 8,499</span></td>
-              <td data-label="Stock"><span class="pm-stock pm-stock-low">15</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-published">Published</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 9, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Smart Fitness Watch Pro">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
+                <td data-label="Updated">
+                  <span class="pm-date">{{ product.updated_at|date:'M d, Y' }}</span>
+                </td>
+                <td data-label="" class="pm-col-actions">
+                  <div class="pm-dropdown pm-row-dropdown">
+                    <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Wireless Over-Ear Headphones">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="5" r="1.5"></circle>
+                        <circle cx="12" cy="12" r="1.5"></circle>
+                        <circle cx="12" cy="19" r="1.5"></circle>
+                      </svg>
                     </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Smart Fitness Watch Pro">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
+                    <div class="pm-dropdown-menu" role="menu">
+                      <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path>
+                        </svg>Edit
+                      </button>
+                      <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>Duplicate
+                      </button>
+                      <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                          <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>Hide
+                      </button>
+                      <div class="pm-dropdown-divider" role="separator"></div>
+                      <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Wireless Over-Ear Headphones">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="pm-row" data-product-name="portable bluetooth speaker">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Portable Bluetooth Speaker" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><circle cx="12" cy="14" r="4"></circle><path d="M9 6h1"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Portable Bluetooth Speaker</span>
-                <span class="pm-product-sku">SKU: MS-SP-118</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Electronics</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 4,999</span></td>
-              <td data-label="Stock"><span class="pm-stock pm-stock-empty">0</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-out-of-stock">Out of Stock</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 8, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Portable Bluetooth Speaker">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Portable Bluetooth Speaker">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="pm-row" data-product-name="minimalist table lamp">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Minimalist Table Lamp" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Minimalist Table Lamp</span>
-                <span class="pm-product-sku">SKU: MS-TL-330</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Home &amp; Living</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 2,249</span></td>
-              <td data-label="Stock"><span class="pm-stock">27</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-published">Published</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 8, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Minimalist Table Lamp">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Minimalist Table Lamp">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="pm-row" data-product-name="usb condenser microphone">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select USB Condenser Microphone" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">USB Condenser Microphone</span>
-                <span class="pm-product-sku">SKU: MS-MC-077</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Electronics</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 7,199</span></td>
-              <td data-label="Stock"><span class="pm-stock pm-stock-low">9</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-published">Published</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 7, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for USB Condenser Microphone">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="USB Condenser Microphone">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="pm-row" data-product-name="running sneakers air flex">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Running Sneakers Air Flex" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h20"></path><path d="M4 18v-3l4-2 3 2 5-3 4 2v4"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Running Sneakers Air Flex</span>
-                <span class="pm-product-sku">SKU: MS-SN-489</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Fashion</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 5,299</span></td>
-              <td data-label="Stock"><span class="pm-stock pm-stock-empty">0</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-out-of-stock">Out of Stock</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 6, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Running Sneakers Air Flex">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Running Sneakers Air Flex">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="pm-row" data-product-name="vitamin c face serum">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Vitamin C Face Serum" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v4"></path><path d="M14 2v4"></path><path d="M7 8h10l-1 12a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2L7 8Z"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Vitamin C Face Serum</span>
-                <span class="pm-product-sku">SKU: MS-FS-262</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Beauty</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 1,899</span></td>
-              <td data-label="Stock"><span class="pm-stock">51</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-draft">Draft</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 5, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Vitamin C Face Serum">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Vitamin C Face Serum">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="pm-row" data-product-name="mountain bike 21-speed">
-              <td data-label="">
-                <label class="pm-checkbox">
-                  <input type="checkbox" class="pm-row-checkbox" aria-label="Select Mountain Bike 21-Speed" />
-                  <span class="pm-checkbox-box"></span>
-                </label>
-              </td>
-              <td data-label="">
-                <div class="pm-product-thumb">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"></path><path d="M12 17.5V14l-3-3 4-3 2 3h4"></path></svg>
-                </div>
-              </td>
-              <td data-label="Product">
-                <span class="pm-product-name">Mountain Bike 21-Speed</span>
-                <span class="pm-product-sku">SKU: MS-BK-512</span>
-              </td>
-              <td data-label="Category"><span class="pm-category-tag">Sports</span></td>
-              <td data-label="Price"><span class="pm-price">Rs. 32,500</span></td>
-              <td data-label="Stock"><span class="pm-stock pm-stock-low">4</span></td>
-              <td data-label="Status"><span class="pm-badge pm-badge-hidden">Hidden</span></td>
-              <td data-label="Updated"><span class="pm-date">Jul 3, 2026</span></td>
-              <td data-label="" class="pm-col-actions">
-                <div class="pm-dropdown pm-row-dropdown">
-                  <button type="button" class="pm-icon-btn pm-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for Mountain Bike 21-Speed">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                  </button>
-                  <div class="pm-dropdown-menu" role="menu">
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="duplicate">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      Duplicate
-                    </button>
-                    <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      Hide
-                    </button>
-                    <div class="pm-dropdown-divider" role="separator"></div>
-                    <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Mountain Bike 21-Speed">
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
+                </td>
+              </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
 
       <!-- ================= 8. EMPTY STATE ================= -->
       <!-- Hidden by default — shown once Django reports zero products for the active filters -->
-      <div class="pm-empty-state pm-hidden" id="pmEmptyState">
-        <div class="pm-empty-illustration" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
-            <path d="M3 8v8l9 5 9-5V8"></path>
-            <path d="M12 13v8"></path>
-            <line x1="3.5" y1="20.5" x2="20.5" y2="3.5"></line>
-          </svg>
+      {% if dashboard_seller_products.count == 0 %}
+        <div class="pm-empty-state" id="pmEmptyState">
+          <div class="pm-empty-illustration" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+              <path d="M3 8v8l9 5 9-5V8"></path>
+              <path d="M12 13v8"></path>
+              <line x1="3.5" y1="20.5" x2="20.5" y2="3.5"></line>
+            </svg>
+          </div>
+          <h3 class="pm-empty-title">No Products Yet</h3>
+          <p class="pm-empty-subtitle">Start by adding your first product.</p>
+          <button type="button" class="pm-btn pm-btn-primary pm-btn-lg" onclick="window.location.href='{% url "add-product" %}'">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>Add Product
+          </button>
         </div>
-        <h3 class="pm-empty-title">No Products Yet</h3>
-        <p class="pm-empty-subtitle">Start by adding your first product.</p>
-        <button type="button" class="pm-btn pm-btn-primary pm-btn-lg">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add Product
-        </button>
-      </div>
+      {% endif %}
 
       <!-- ================= 7. PAGINATION ================= -->
       <div class="pm-pagination-bar">
-        <span class="pm-pagination-count">Showing <strong>1–8</strong> of <strong>42</strong> products</span>
+        <span class="pm-pagination-count">Showing <strong>1–8</strong> of <strong>{{ dashboard_total_products }}</strong> products</span>
 
         <nav class="pm-pagination" aria-label="Products pagination">
-          <button type="button" class="pm-page-btn pm-page-btn-nav" disabled aria-label="Previous page">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          <button type="button" class="pm-page-btn" disabled aria-label="Previous page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
           </button>
           <button type="button" class="pm-page-btn is-active" aria-current="page">1</button>
           <button type="button" class="pm-page-btn">2</button>
@@ -653,21 +361,24 @@
           <button type="button" class="pm-page-btn">4</button>
           <span class="pm-page-ellipsis">&hellip;</span>
           <button type="button" class="pm-page-btn">6</button>
-          <button type="button" class="pm-page-btn pm-page-btn-nav" aria-label="Next page">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+          <button type="button" class="pm-page-btn" aria-label="Next page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
           </button>
         </nav>
       </div>
-
     </section>
-
   </div>
 
   <!-- ================= DELETE CONFIRMATION MODAL (frontend placeholder) ================= -->
   <div class="pm-modal-overlay pm-hidden" id="pmDeleteModalOverlay">
     <div class="pm-modal" role="dialog" aria-modal="true" aria-labelledby="pmDeleteModalTitle">
       <div class="pm-modal-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
       </div>
       <h3 class="pm-modal-title" id="pmDeleteModalTitle">Delete this product?</h3>
       <p class="pm-modal-text" id="pmDeleteModalText">This action cannot be undone. The product will be permanently removed from your store.</p>
@@ -677,9 +388,8 @@
       </div>
     </div>
   </div>
-
 {% endblock %}
 
 {% block js %}
-  <script src="{% static '/js/products.js' %}"></script>
+  <script src="{% static 'js/products.js' %}"></script>
 {% endblock %}

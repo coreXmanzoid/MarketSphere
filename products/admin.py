@@ -67,11 +67,11 @@ class ProductAdmin(admin.ModelAdmin):
         "category",
         "brand",
         "price",
-        "is_active",
+        "status",
     )
 
     list_filter = (
-        "is_active",
+        "status",
         "category",
         "brand",
     )
@@ -86,7 +86,7 @@ class ProductAdmin(admin.ModelAdmin):
     }
 
     list_editable = (
-        "is_active",
+        "status",
     )
 
     ordering = (

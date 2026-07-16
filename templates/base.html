@@ -93,9 +93,9 @@
                       </li>
 
                       {% if seller %}
-                        {% if seller.status == 'VERIFIED' %}
+                        {% if seller.status == 'verified' %}
                           <li>
-                            <a class="dropdown-item" href="#">Seller Dashboard</a>
+                            <a class="dropdown-item" href="{% url "dashboard" %}">Seller Dashboard</a>
                           </li>
                         {% else %}
                           <li>

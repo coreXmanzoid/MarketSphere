@@ -62,6 +62,18 @@ def place_order(
         item_total = price * item.quantity
 
         subtotal += item_total
+        if item.product.stock_quantity < item.quantity:
+            raise ValueError(
+                f"Only {item.product.stock_quantity} units of '{item.product.name}' are available."
+            )
+        item.product.stock_quantity -= item.quantity
+
+        if item.product.stock_quantity == 0:
+            item.product.status = Product.Status.OUT_OF_STOCK
+        else:
+            item.product.status = Product.Status.PUBLISHED
+
+        item.product.save(update_fields=["stock_quantity", "status"])
 
         order_items.append(
             OrderItem(
@@ -95,14 +107,15 @@ def place_order(
 
     return order
 
+
 def get_user_orders(user):
     return (
-        Order.objects
-        .filter(user=user)
+        Order.objects.filter(user=user)
         .prefetch_related("items", "items__product")
         .annotate(total_items=Sum("items__quantity"))
         .order_by("-created_at")
     )
+
 
 def get_user_order(user, order_number):
     order = get_object_or_404(
@@ -112,12 +125,17 @@ def get_user_order(user, order_number):
     )
     return order
 
+
 def cancel_user_order(user, order_number):
-    order = get_user_order(user,order_number)
+    order = get_user_order(user, order_number)
     # Check if order exists AND is in a cancelable state
-    if not order or order.status not in [Order.Status.PENDING, Order.Status.CONFIRMED, Order.Status.PROCESSING]:
+    if not order or order.status not in [
+        Order.Status.PENDING,
+        Order.Status.CONFIRMED,
+        Order.Status.PROCESSING,
+    ]:
         return False
-    
+
     order.status = order.Status.CANCELLED
     order.save()
     return True

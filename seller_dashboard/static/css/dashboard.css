@@ -37,7 +37,7 @@
 
     /* Surfaces */
     --sd-surface: #FFFDF8;
-    --sd-surface-raised: #FFFFFF;
+    --sd-surface-raised: #F7F1DE;
     --sd-sidebar-bg: #3B1B0C;
     --sd-sidebar-bg-active: #4E220F;
     --sd-sidebar-text: rgba(247, 241, 222, 0.72);
@@ -54,9 +54,9 @@
     --sd-sidebar-width: 264px;
     --sd-sidebar-width-collapsed: 80px;
     --sd-topbar-height: 68px;
-    --sd-radius-card: 14px;
-    --sd-radius-control: 10px;
-    --sd-radius-pill: 40px;
+    --sd-radius-card: 10px;
+    --sd-radius-control: 8px;
+    --sd-radius-pill: 30px;
 
     /* Motion */
     --sd-ease: cubic-bezier(0.22, 1, 0.36, 1);

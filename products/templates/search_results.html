@@ -193,15 +193,8 @@ Search Results • MarketSphere
                   {{ product.category.name }}
                 </span>
 
-                <div class="product-image-placeholder"
-                  onclick="window.location.href='{% url 'product' product.slug %}'">
-
-                  {% if product.images.first %}
-                  <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
-                  {% else %}
-                  <i class="bi bi-image"></i>
-                  {% endif %}
-
+                 <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
+                  <img src="{{ product.primary_image.image.url }}" alt="">
                 </div>
 
               </div>

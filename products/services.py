@@ -1,7 +1,9 @@
-from .models import Category, Brand, Product, WishlistItem, Cart, CartItem
+from .models import Category, Brand, Product, WishlistItem, Cart, CartItem, ProductImage
 from django.db.models import Prefetch, Sum
 from django.shortcuts import get_object_or_404
 from decimal import Decimal, InvalidOperation
+from accounts.models import Seller
+import json
 
 
 def get_all_categories():
@@ -30,7 +32,7 @@ def get_featured_products():
     ).prefetch_related(
         "images"
     ).filter(
-        is_active=True,
+        status=Product.Status.PUBLISHED,
         is_featured=True
     )
 
@@ -43,10 +45,94 @@ def get_product_by_slug(product_slug):
             "images"
         ),
         slug=product_slug,
-        is_active=True
+        status=Product.Status.PUBLISHED
     )
 
 
+def create_product(user, post_data, files):
+    """
+    Creates a product along with its images.
+    """
+
+    seller = Seller.objects.get(user=user)
+
+    category = Category.objects.get(slug=post_data.get("category"))
+
+    brand = None
+    brand_slug = post_data.get("brand")
+
+    if brand_slug:
+        brand = Brand.objects.get(slug=brand_slug)
+
+    # Access values that are not yet stored
+    tags = json.loads(post_data.get("tags", "[]"))
+    collections = json.loads(post_data.get("collections", "[]"))
+    dimensions = json.loads(post_data.get("dimensions", "{}"))
+
+    # (Leave these for future implementation)
+    print(tags)
+    print(collections)
+    print(dimensions)
+
+    visibility = post_data.get("visibility")
+
+    status_map = {
+        "draft": Product.Status.DRAFT,
+        "published": Product.Status.PUBLISHED,
+        "hidden": Product.Status.HIDDEN,
+    }
+
+    status = status_map.get(
+        visibility,
+        Product.Status.DRAFT,
+    )
+
+    product = Product.objects.create(
+        seller=seller,
+        category=category,
+        brand=brand,
+
+        name=post_data.get("name"),
+        slug=post_data.get("slug"),
+
+        short_description=post_data.get("short_description"),
+        description=post_data.get("description"),
+
+        sku=post_data.get("sku"),
+        barcode=post_data.get("barcode"),
+
+        price=post_data.get("price"),
+
+        discount_price=(
+            post_data.get("discount_price") or None
+        ),
+
+        stock_quantity=post_data.get("stock_quantity"),
+
+        min_stock_level=post_data.get("min_stock_level"),
+
+        weight=(
+            post_data.get("weight") or None
+        ),
+
+        status=status,
+
+        is_featured=post_data.get("is_featured") == "true",
+    )
+
+    images = files.getlist("images")
+
+    for index, image in enumerate(images):
+
+        ProductImage.objects.create(
+            product=product,
+            image=image,
+            is_primary=(index == 0),
+            display_order=index + 1,
+            alt_text=product.name,
+        )
+
+    return product
 # search logic
 
 from django.db.models import Q
@@ -65,7 +151,7 @@ def get_search_products(q):
             Q(name__icontains=q)
             | Q(short_description__icontains=q)
             | Q(description__icontains=q),
-            is_active=True,
+            status=Product.Status.PUBLISHED,
         )
     )
 
@@ -157,7 +243,7 @@ def get_brand_products(brand_slug):
         "images"
     ).filter(
         brand__slug=brand_slug,
-        is_active=True
+        status=Product.Status.PUBLISHED
     )
 def get_category_products(category_slug):
     return Product.objects.select_related(
@@ -167,12 +253,12 @@ def get_category_products(category_slug):
         "images"
     ).filter(
         category__slug=category_slug,
-        is_active=True
+        status=Product.Status.PUBLISHED
     )
 
 # wishlist logic
 def add_to_wishlist(user, product_slug):
-    product = get_object_or_404(Product, slug=product_slug, is_active=True)
+    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
     wishlist_item, created = WishlistItem.objects.get_or_create(
         user=user,
         product=product
@@ -248,7 +334,7 @@ def get_or_create_cart(user):
     return cart
 
 def add_to_cart(user, product_slug):
-    product = get_object_or_404(Product, slug=product_slug, is_active=True)
+    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
     cart = get_or_create_cart(user)
 
     cart_item, created = CartItem.objects.get_or_create(
@@ -294,7 +380,7 @@ def increment_quantity(user, product_slug):
     cart = get_or_create_cart(user)
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
-        product=get_object_or_404(Product, slug=product_slug, is_active=True),
+        product=get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED),
         defaults={"quantity": 1}
     )
 

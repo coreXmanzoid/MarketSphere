@@ -9,17 +9,14 @@ class TimeStampedModel(models.Model):
     class Meta:
         abstract = True
 
+
 # Create your models here.
 # will be shifted to products app later
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     parent = models.ForeignKey(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="children"
+        "self", null=True, blank=True, on_delete=models.CASCADE, related_name="children"
     )
 
     slug = models.SlugField(unique=True)
@@ -27,16 +24,10 @@ class Category(models.Model):
     description = models.TextField(blank=True)
 
     icon = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text="Bootstrap icon or Font Awesome class"
+        max_length=50, blank=True, help_text="Bootstrap icon or Font Awesome class"
     )
 
-    image = models.ImageField(
-        upload_to="categories/images/",
-        blank=True,
-        null=True
-    )
+    image = models.ImageField(upload_to="categories/images/", blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
 
@@ -53,11 +44,7 @@ class Brand(models.Model):
 
     slug = models.SlugField(unique=True)
 
-    logo = models.ImageField(
-        upload_to="brands/logos/",
-        blank=True,
-        null=True
-    )
+    logo = models.ImageField(upload_to="brands/logos/", blank=True, null=True)
 
     description = models.TextField(blank=True)
 
@@ -65,118 +52,97 @@ class Brand(models.Model):
 
     is_active = models.BooleanField(default=True)
 
-
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
-    
+
 
 class Product(TimeStampedModel):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        PUBLISHED = "published", "Published"
+        HIDDEN = "hidden", "Hidden"
+        OUT_OF_STOCK = "out_of_stock", "Out of Stock"
+        ARCHIVED = "archived", "Archived"
+
     category = models.ForeignKey(
-        Category,
-        on_delete=models.PROTECT,
-        related_name="products"
+        Category, on_delete=models.PROTECT, related_name="products"
     )
 
     brand = models.ForeignKey(
-        Brand,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="products"
+        Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="products"
     )
 
-    # shop = models.ForeignKey(
-    #     "shops.Shop",
-    #     on_delete=models.CASCADE,
-    #     null=True,
-    #     blank=True,
-    #     related_name="products"
-    # )
+    seller = models.ForeignKey(
+        "accounts.Seller",
+        on_delete=models.CASCADE,
+        related_name="products",
+        null=True,
+        blank=True,
+    )
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
 
-    short_description = models.CharField(
-        max_length=300,
-        blank=True
-    )
+    short_description = models.CharField(max_length=300, blank=True)
 
     description = models.TextField()
 
-    sku = models.CharField(
-        max_length=100,
-        unique=True
-    )
+    sku = models.CharField(max_length=100, unique=True)
 
-    barcode = models.CharField(
-        max_length=100,
-        blank=True
-    )
+    barcode = models.CharField(max_length=100, blank=True)
 
-    price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2
-    )
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
     discount_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True
+        max_digits=10, decimal_places=2, null=True, blank=True
     )
 
     stock_quantity = models.PositiveIntegerField(default=0)
 
     min_stock_level = models.PositiveIntegerField(default=5)
 
-    weight = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        null=True,
-        blank=True
+    weight = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
     )
-
-    is_active = models.BooleanField(default=True)
-
     is_featured = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
 
+    @property
+    def primary_image(self):
+        return self.images.filter(is_primary=True).first()  # type: ignore[attr-defined]
+
     def __str__(self):
         return self.name
 
 
-
-
 class ProductImage(TimeStampedModel):
     product = models.ForeignKey(
-        "products.Product",
-        on_delete=models.CASCADE,
-        related_name="images"
+        Product, on_delete=models.CASCADE, related_name="images"
     )
 
-    image = models.ImageField(
-        upload_to="products/images/"
-    )
+    image = models.ImageField(upload_to="products/images/")
 
     alt_text = models.CharField(
         max_length=255,
         blank=True,
-        help_text="Short description of the image for accessibility and SEO."
+        help_text="Short description of the image for accessibility and SEO.",
     )
 
     is_primary = models.BooleanField(
-        default=False,
-        help_text="Used as the main image throughout the website."
+        default=False, help_text="Used as the main image throughout the website."
     )
 
     display_order = models.PositiveSmallIntegerField(
-        default=1,
-        help_text="Lower numbers appear first."
+        default=1, help_text="Lower numbers appear first."
     )
 
     class Meta:
@@ -186,19 +152,17 @@ class ProductImage(TimeStampedModel):
 
     def __str__(self):
         return f"{self.product.name} - Image {self.display_order}"
-    
+
 
 class WishlistItem(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="wishlist_items"
+        related_name="wishlist_items",
     )
 
     product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name="wishlisted_by"
+        Product, on_delete=models.CASCADE, related_name="wishlisted_by"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -208,14 +172,13 @@ class WishlistItem(models.Model):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "product"],
-                name="unique_wishlist_item"
+                fields=["user", "product"], name="unique_wishlist_item"
             )
         ]
 
     def __str__(self):
         return f"{self.user.username} → {self.product.name}"
-    
+
 
 class Cart(models.Model):
     user = models.OneToOneField(
@@ -232,6 +195,7 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Cart"
+
 
 class CartItem(models.Model):
     cart = models.ForeignKey(
@@ -254,7 +218,7 @@ class CartItem(models.Model):
     @property
     def subtotal(self):
         return self.product.price * self.quantity
-    
+
     class Meta:
         ordering = ["-created_at"]
 

@@ -111,7 +111,7 @@
                 <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}" type="button" aria-label="{% if product.id in wishlist_ids %} Remove from wishlist {% else %}Add to wishlist{% endif %}"><i class="bi bi-heart"></i></button>
                 <span class="product-category-badge">({{ product.category.name }})</span>
                 <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
-                  <i class="bi bi-headphones"></i>
+                  <img src="{{ product.primary_image.image.url }}" alt="">
                 </div>
               </div>
               <div class="product-card-body">

@@ -64,26 +64,59 @@ def search(request):
 
     return render(request, "search_results.html", context)
 
-# def category_search(request, category_slug):
-#     category_products = services.get_category_products(category_slug)
-#     brands = services.get_all_brands()
-#     return render(
-#         request,
-#         "search_results.html",
-#         {"categories": None, "brnads": brands, "products": category_products},
-#     )
+
+from products.models import Category
 
 
-# def brand_search(request, brand_slug):
-#     brand_products = services.get_brand_products(brand_slug)
-#     brands = services.get_all_brands()
-#     categories = services.get_all_categories()
-#     return render(
-#         request,
-#         "search_results.html",
-#         {"categories": categories, "brnads": None, "products": brand_products},
-#     )
+def search_categories(request):
 
+    query = request.GET.get("q", "")
+
+    categories = (
+        Category.objects
+        .filter(name__icontains=query)
+        .order_by("name")[:10]
+    )
+
+    return JsonResponse({
+        "categories": [
+            {
+                "name": category.name,
+                "slug": category.slug,
+            }
+            for category in categories
+        ]
+    })
+
+from django.http import JsonResponse
+
+from products.models import Brand
+
+
+def search_brands(request):
+
+    query = request.GET.get("q","")
+
+    brands = Brand.objects.filter(
+        name__icontains=query
+    ).order_by("name")[:10]
+
+    data = []
+
+    for brand in brands:
+
+        data.append({
+
+            "slug":brand.slug,
+            "name":brand.name,
+
+        })
+
+    return JsonResponse({
+
+        "brands":data
+
+    })
 
 def product(request, product_slug):
     product = services.get_product_by_slug(product_slug)

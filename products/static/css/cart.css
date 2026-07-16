@@ -259,8 +259,12 @@
 .cart-item-image-placeholder {
     width: 110px;
     height: 110px;
-    border-radius: 12px;
+    border-radius: 12px !important;
     aspect-ratio: unset;
+}
+.cart-item-image-placeholder img{
+    
+    border-radius: 12px !important;
 }
 
 .cart-item-image-placeholder i {

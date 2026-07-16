@@ -1,403 +1,383 @@
-/**
- * MarketSphere - Seller Dashboard: products.js
- * Handles interactive elements, bulk selections, filters, dropdowns, and modals.
- */
+/* =========================================================================
+   MARKETSPHERE — SELLER DASHBOARD: PRODUCTS
+   Frontend-only interactions for seller_dashboard/templates/products/list.html.
+   No fetch(), no AJAX, no backend calls, no external libraries. Every
+   action here (search, filter, sort, bulk select, row actions, delete
+   confirmation) is a pure DOM / UI simulation until the seller-products
+   backend (views, URLs, models) exists — matching the pattern already
+   used across the rest of the app (see products/static/js/cart.js,
+   orders/static/js/checkout.js).
 
-document.addEventListener('DOMContentLoaded', () => {
-  // --- DOM Elements ---
-  const table = document.getElementById('pmProductsTable');
-  const tableBody = document.getElementById('pmProductsTableBody');
-  const selectAllCheckbox = document.getElementById('pmSelectAll');
-  const rowCheckboxes = document.querySelectorAll('.pm-row-checkbox');
-  const bulkBar = document.getElementById('pmBulkBar');
-  const bulkCount = document.getElementById('pmBulkCount');
-  const clearSelectionBtn = document.getElementById('pmClearSelectionBtn');
-  const emptyState = document.getElementById('pmEmptyState');
+   Sections:
+     1. DOM Cache
+     2. Dropdown Management (row + bulk actions)
+     3. Checkbox Selection / Bulk Bar
+     4. Bulk Actions
+     5. Individual Row Actions
+     6. Delete Confirmation Modal
+     7. Client-Side Search / Filter / Sort
+     8. Empty State
+     9. Init
+   ========================================================================= */
 
-  // Filter & Search Elements
-  const searchInput = document.getElementById('pmSearchInput');
-  const categoryFilter = document.getElementById('pmCategoryFilter');
-  const statusFilter = document.getElementById('pmStatusFilter');
-  const sortFilter = document.getElementById('pmSortFilter');
-  const applyFiltersBtn = document.getElementById('pmApplyFiltersBtn');
-  const resetFiltersBtn = document.getElementById('pmResetFiltersBtn');
+document.addEventListener('DOMContentLoaded', function () {
 
-  // Delete Modal Elements
-  const deleteModalOverlay = document.getElementById('pmDeleteModalOverlay');
-  const deleteModalTitle = document.getElementById('pmDeleteModalTitle');
-  const deleteModalText = document.getElementById('pmDeleteModalText');
-  const deleteModalConfirm = document.getElementById('pmDeleteModalConfirm');
-  const deleteModalCancel = document.getElementById('pmDeleteModalCancel');
+    /* ================= 1. DOM CACHE ================= */
+    const table = document.getElementById('pmProductsTable');
+    const tableBody = document.getElementById('pmProductsTableBody');
+    const selectAllCheckbox = document.getElementById('pmSelectAll');
+    const bulkBar = document.getElementById('pmBulkBar');
+    const bulkCount = document.getElementById('pmBulkCount');
+    const clearSelectionBtn = document.getElementById('pmClearSelectionBtn');
+    const emptyState = document.getElementById('pmEmptyState');
 
-  // Active state variables
-  let rowToDelete = null;
+    const searchInput = document.getElementById('pmSearchInput');
+    const categoryFilter = document.getElementById('pmCategoryFilter');
+    const statusFilter = document.getElementById('pmStatusFilter');
+    const sortFilter = document.getElementById('pmSortFilter');
+    const applyFiltersBtn = document.getElementById('pmApplyFiltersBtn');
+    const resetFiltersBtn = document.getElementById('pmResetFiltersBtn');
 
-  /* ==========================================================================
-     1. DROPDOWN MANAGEMENT (Row actions & Bulk actions)
-     ========================================================================== */
-  
-  // Toggle dropdown visibility using delegation
-  document.addEventListener('click', (e) => {
-    const trigger = e.target.closest('.pm-dropdown-trigger');
-    
-    if (trigger) {
-      e.preventDefault();
-      const dropdown = trigger.closest('.pm-dropdown');
-      const isActive = dropdown.classList.contains('pm-active');
-      
-      // Close all other dropdowns first
-      closeAllDropdowns();
-      
-      // Toggle current
-      if (!isActive) {
-        dropdown.classList.add('pm-active');
-        trigger.setAttribute('aria-expanded', 'true');
-      }
-    } else if (!e.target.closest('.pm-dropdown-menu')) {
-      // Clicked completely outside dropdowns, close them all
-      closeAllDropdowns();
-    }
-  });
+    const deleteModalOverlay = document.getElementById('pmDeleteModalOverlay');
+    const deleteModalTitle = document.getElementById('pmDeleteModalTitle');
+    const deleteModalText = document.getElementById('pmDeleteModalText');
+    const deleteModalConfirm = document.getElementById('pmDeleteModalConfirm');
+    const deleteModalCancel = document.getElementById('pmDeleteModalCancel');
 
-  function closeAllDropdowns() {
-    document.querySelectorAll('.pm-dropdown.pm-active').forEach(dropdown => {
-      dropdown.classList.remove('pm-active');
-      const trigger = dropdown.querySelector('.pm-dropdown-trigger');
-      if (trigger) trigger.setAttribute('aria-expanded', 'false');
-    });
-  }
+    if (!table || !tableBody) return; // nothing to control on this page
 
-  /* ==========================================================================
-     2. CHECKBOX & BULK ACTIONS SELECTION
-     ========================================================================== */
+    let confirmCallback = null;
 
-  // Sync Master checkbox with individual row checkboxes
-  if (selectAllCheckbox) {
-    selectAllCheckbox.addEventListener('change', () => {
-      const isChecked = selectAllCheckbox.checked;
-      getVisibleRows().forEach(row => {
-        const cb = row.querySelector('.pm-row-checkbox');
-        if (cb) {
-          cb.checked = isChecked;
-          toggleRowHighlight(row, isChecked);
-        }
-      });
-      updateBulkBarState();
-    });
-  }
-
-  // Row checkbox changes
-  tableBody.addEventListener('change', (e) => {
-    if (e.target.classList.contains('pm-row-checkbox')) {
-      const row = e.target.closest('.pm-row');
-      toggleRowHighlight(row, e.target.checked);
-      updateBulkBarState();
-    }
-  });
-
-  // Highlight rows that are selected
-  function toggleRowHighlight(row, highlight) {
-    if (highlight) {
-      row.style.backgroundColor = 'var(--pm-primary-light)';
-    } else {
-      row.style.backgroundColor = '';
-    }
-  }
-
-  // Update selection UI and action bar display
-  function updateBulkBarState() {
-    const checkedRows = Array.from(rowCheckboxes).filter(cb => cb.checked);
-    const totalCount = checkedRows.length;
-
-    if (totalCount > 0) {
-      bulkCount.textContent = totalCount;
-      bulkBar.classList.remove('pm-hidden');
-    } else {
-      bulkBar.classList.add('pm-hidden');
+    function getRowCheckboxes() {
+        return Array.from(tableBody.querySelectorAll('.pm-row-checkbox'));
     }
 
-    // Keep Master checkbox status accurate (checked / unchecked / indeterminate)
-    if (selectAllCheckbox) {
-      const visibleCheckboxes = getVisibleRows().map(row => row.querySelector('.pm-row-checkbox')).filter(Boolean);
-      const visibleChecked = visibleCheckboxes.filter(cb => cb.checked);
-
-      if (visibleChecked.length === 0) {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = false;
-      } else if (visibleChecked.length === visibleCheckboxes.length) {
-        selectAllCheckbox.checked = true;
-        selectAllCheckbox.indeterminate = false;
-      } else {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = true;
-      }
-    }
-  }
-
-  // Clear all current selections
-  if (clearSelectionBtn) {
-    clearSelectionBtn.addEventListener('click', () => {
-      rowCheckboxes.forEach(cb => {
-        cb.checked = false;
-        toggleRowHighlight(cb.closest('.pm-row'), false);
-      });
-      if (selectAllCheckbox) {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = false;
-      }
-      updateBulkBarState();
-    });
-  }
-
-  // Helper to retrieve only current non-hidden rows
-  function getVisibleRows() {
-    return Array.from(tableBody.querySelectorAll('.pm-row')).filter(row => !row.classList.contains('pm-hidden'));
-  }
-
-  /* ==========================================================================
-     3. BULK ACTIONS HANDLING
-     ========================================================================== */
-  
-  document.querySelectorAll('[data-bulk-action]').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const action = e.target.closest('[data-bulk-action]').dataset.bulkAction;
-      const selectedIds = Array.from(rowCheckboxes)
-        .filter(cb => cb.checked)
-        .map(cb => {
-           // If utilizing real Django IDs, read them off data attributes (e.g. data-product-id)
-           const row = cb.closest('.pm-row');
-           return row.dataset.productName || 'product';
+    function getVisibleRows() {
+        return Array.from(tableBody.querySelectorAll('.pm-row')).filter(function (row) {
+            return !row.classList.contains('pm-hidden');
         });
+    }
 
-      if (selectedIds.length === 0) return;
+    /* ================= 2. DROPDOWN MANAGEMENT ================= */
+    document.addEventListener('click', function (e) {
+        const trigger = e.target.closest('.pm-dropdown-trigger');
 
-      if (action === 'delete') {
-        // Trigger Delete confirmation for selected items
-        openDeleteModal(`Delete ${selectedIds.length} Products?`, 
-          `Are you sure you want to delete these ${selectedIds.length} selected products? This cannot be undone.`,
-          () => {
-            console.log(`Sending Bulk Delete Request to backend for:`, selectedIds);
-            // Dynamic UI deletion fallback for frontend testing:
-            rowCheckboxes.forEach(cb => {
-              if (cb.checked) cb.closest('.pm-row').remove();
+        if (trigger) {
+            e.preventDefault();
+            const dropdown = trigger.closest('.pm-dropdown');
+            const isActive = dropdown.classList.contains('pm-active');
+
+            closeAllDropdowns();
+
+            if (!isActive) {
+                dropdown.classList.add('pm-active');
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+        } else if (!e.target.closest('.pm-dropdown-menu')) {
+            closeAllDropdowns();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAllDropdowns();
+    });
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.pm-dropdown.pm-active').forEach(function (dropdown) {
+            dropdown.classList.remove('pm-active');
+            const trigger = dropdown.querySelector('.pm-dropdown-trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    /* ================= 3. CHECKBOX SELECTION / BULK BAR ================= */
+    function toggleRowHighlight(row, highlight) {
+        if (!row) return;
+        row.classList.toggle('is-selected', highlight);
+        row.style.backgroundColor = highlight ? 'rgba(157, 102, 56, 0.06)' : '';
+    }
+
+    function updateBulkBarState() {
+        const checkedRows = getRowCheckboxes().filter(function (cb) { return cb.checked; });
+        const totalCount = checkedRows.length;
+
+        if (bulkCount) bulkCount.textContent = String(totalCount);
+        if (bulkBar) bulkBar.classList.toggle('pm-hidden', totalCount === 0);
+
+        if (selectAllCheckbox) {
+            const visibleCheckboxes = getVisibleRows()
+                .map(function (row) { return row.querySelector('.pm-row-checkbox'); })
+                .filter(Boolean);
+            const visibleChecked = visibleCheckboxes.filter(function (cb) { return cb.checked; });
+
+            if (visibleChecked.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (visibleChecked.length === visibleCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function () {
+            const isChecked = selectAllCheckbox.checked;
+            getVisibleRows().forEach(function (row) {
+                const cb = row.querySelector('.pm-row-checkbox');
+                if (cb) {
+                    cb.checked = isChecked;
+                    toggleRowHighlight(row, isChecked);
+                }
             });
             updateBulkBarState();
-            checkAndShowEmptyState();
-          }
-        );
-      } else {
-        // Mock update actions (Publish / Hide)
-        console.log(`Bulk processing [${action}] action for items:`, selectedIds);
-        // Display toast or redirect to your Django view accordingly.
-        alert(`Bulk Action [${action}] successful for ${selectedIds.length} items!`);
-        closeAllDropdowns();
-      }
-    });
-  });
+        });
+    }
 
-  /* ==========================================================================
-     4. INDIVIDUAL ROW ACTIONS
-     ========================================================================== */
-
-  tableBody.addEventListener('click', (e) => {
-    const actionItem = e.target.closest('[data-row-action]');
-    if (!actionItem) return;
-
-    const action = actionItem.dataset.rowAction;
-    const row = actionItem.closest('.pm-row');
-    const productName = row.dataset.productName || row.querySelector('.pm-product-name').textContent;
-
-    if (action === 'delete') {
-      rowToDelete = row;
-      openDeleteModal(
-        'Delete product?',
-        `Are you sure you want to delete "${productName}"? This action cannot be undone.`,
-        () => {
-          if (rowToDelete) {
-            console.log('Deleting single product:', productName);
-            rowToDelete.remove();
-            rowToDelete = null;
-            checkAndShowEmptyState();
-          }
+    tableBody.addEventListener('change', function (e) {
+        if (e.target.classList.contains('pm-row-checkbox')) {
+            const row = e.target.closest('.pm-row');
+            toggleRowHighlight(row, e.target.checked);
+            updateBulkBarState();
         }
-      );
-    } else if (action === 'edit') {
-      console.log('Redirecting to edit details for:', productName);
-      // Backend routing e.g., window.location.href = `/seller/products/edit/${productId}/`;
-    } else if (action === 'duplicate') {
-      console.log('Duplicating product:', productName);
-      // Handle cloning request here
-    } else if (action === 'hide') {
-      console.log('Hiding product status to drafts/hidden:', productName);
-      const statusBadge = row.querySelector('.pm-badge');
-      if (statusBadge) {
-        statusBadge.className = 'pm-badge pm-badge-hidden';
-        statusBadge.textContent = 'Hidden';
-      }
+    });
+
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', function () {
+            getRowCheckboxes().forEach(function (cb) {
+                cb.checked = false;
+                toggleRowHighlight(cb.closest('.pm-row'), false);
+            });
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            updateBulkBarState();
+        });
     }
-    closeAllDropdowns();
-  });
 
-  /* ==========================================================================
-     5. DELETE MODAL FUNCTIONALITY
-     ========================================================================== */
+    /* ================= 4. BULK ACTIONS ================= */
+    document.querySelectorAll('[data-bulk-action]').forEach(function (button) {
+        button.addEventListener('click', function (e) {
+            const action = e.target.closest('[data-bulk-action]').dataset.bulkAction;
+            const selectedRows = getRowCheckboxes()
+                .filter(function (cb) { return cb.checked; })
+                .map(function (cb) { return cb.closest('.pm-row'); });
 
-  let confirmCallback = null;
+            if (!selectedRows.length) return;
 
-  function openDeleteModal(title, text, onConfirm) {
-    deleteModalTitle.textContent = title;
-    deleteModalText.textContent = text;
-    confirmCallback = onConfirm;
-    
-    deleteModalOverlay.classList.remove('pm-hidden');
-    document.body.style.overflow = 'hidden'; // Lock scrolling background
-  }
-
-  function closeDeleteModal() {
-    deleteModalOverlay.classList.add('pm-hidden');
-    document.body.style.overflow = '';
-    confirmCallback = null;
-  }
-
-  if (deleteModalCancel) {
-    deleteModalCancel.addEventListener('click', closeDeleteModal);
-  }
-
-  // Close modal when clicking dark backdrop directly
-  if (deleteModalOverlay) {
-    deleteModalOverlay.addEventListener('click', (e) => {
-      if (e.target === deleteModalOverlay) closeDeleteModal();
+            if (action === 'delete') {
+                openDeleteModal(
+                    'Delete ' + selectedRows.length + ' products?',
+                    'Are you sure you want to delete these ' + selectedRows.length + ' selected products? This cannot be undone.',
+                    function () {
+                        selectedRows.forEach(function (row) { row.remove(); });
+                        updateBulkBarState();
+                        checkAndShowEmptyState();
+                    }
+                );
+            } else if (action === 'publish') {
+                selectedRows.forEach(function (row) { setRowStatus(row, 'published', 'Published'); });
+                closeAllDropdowns();
+            } else if (action === 'hide') {
+                selectedRows.forEach(function (row) { setRowStatus(row, 'hidden', 'Hidden'); });
+                closeAllDropdowns();
+            }
+        });
     });
-  }
 
-  if (deleteModalConfirm) {
-    deleteModalConfirm.addEventListener('click', () => {
-      if (confirmCallback) {
-        confirmCallback();
-      }
-      closeDeleteModal();
-    });
-  }
-
-  // Handle escape key to close active modal
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !deleteModalOverlay.classList.contains('pm-hidden')) {
-      closeDeleteModal();
+    function setRowStatus(row, statusClass, statusLabel) {
+        const badge = row.querySelector('.pm-badge');
+        if (!badge) return;
+        badge.className = 'pm-badge pm-badge-' + statusClass;
+        badge.textContent = statusLabel;
     }
-  });
 
-  /* ==========================================================================
-     6. CLIENT-SIDE SEARCH, FILTERS & SORTING
-     ========================================================================== */
+    /* ================= 5. INDIVIDUAL ROW ACTIONS ================= */
+    let rowToDelete = null;
 
-  function performFiltering() {
-    const searchVal = searchInput.value.toLowerCase().trim();
-    const catVal = categoryFilter.value.toLowerCase();
-    const statusVal = statusFilter.value.toLowerCase();
-    
-    const rows = Array.from(tableBody.querySelectorAll('.pm-row'));
+    tableBody.addEventListener('click', function (e) {
+        const actionItem = e.target.closest('[data-row-action]');
+        if (!actionItem) return;
 
-    rows.forEach(row => {
-      const pName = row.dataset.productName || row.querySelector('.pm-product-name').textContent.toLowerCase();
-      const pSku = row.querySelector('.pm-product-sku')?.textContent.toLowerCase() || "";
-      const pCategory = row.querySelector('[data-label="Category"]').textContent.toLowerCase();
-      const pStatusBadge = row.querySelector('.pm-badge');
-      
-      let pStatus = "";
-      if (pStatusBadge) {
-        // Read clean class modifiers (e.g. published, draft, out-of-stock, hidden)
-        pStatus = Array.from(pStatusBadge.classList)
-                       .find(cls => cls.startsWith('pm-badge-'))
-                       ?.replace('pm-badge-', '') || pStatusBadge.textContent.toLowerCase().replace(" ", "-");
-      }
+        const action = actionItem.dataset.rowAction;
+        const row = actionItem.closest('.pm-row');
+        const productName = row.dataset.productName || row.querySelector('.pm-product-name').textContent;
 
-      // Check search query matches
-      const matchesSearch = !searchVal || pName.includes(searchVal) || pSku.includes(searchVal);
-      // Check category match
-      const matchesCategory = !catVal || pCategory === catVal;
-      // Check status match
-      const matchesStatus = !statusVal || pStatus === statusVal;
+        if (action === 'delete') {
+            rowToDelete = row;
+            openDeleteModal(
+                'Delete product?',
+                'Are you sure you want to delete "' + productName + '"? This action cannot be undone.',
+                function () {
+                    if (rowToDelete) {
+                        rowToDelete.remove();
+                        rowToDelete = null;
+                        checkAndShowEmptyState();
+                    }
+                }
+            );
+        } else if (action === 'edit' || action === 'duplicate') {
+            // Placeholder — no backend routing exists yet for editing/duplicating a product.
+        } else if (action === 'hide') {
+            setRowStatus(row, 'hidden', 'Hidden');
+        }
 
-      if (matchesSearch && matchesCategory && matchesStatus) {
-        row.classList.remove('pm-hidden');
-      } else {
-        row.classList.add('pm-hidden');
-        // Uncheck if it got hidden during filter change
-        const cb = row.querySelector('.pm-row-checkbox');
-        if (cb) cb.checked = false;
-      }
+        closeAllDropdowns();
     });
 
-    performSorting();
+    /* ================= 6. DELETE CONFIRMATION MODAL ================= */
+    function openDeleteModal(title, text, onConfirm) {
+        if (!deleteModalOverlay) return;
+
+        if (deleteModalTitle) deleteModalTitle.textContent = title;
+        if (deleteModalText) deleteModalText.textContent = text;
+        confirmCallback = onConfirm;
+
+        deleteModalOverlay.classList.remove('pm-hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        if (!deleteModalOverlay) return;
+
+        deleteModalOverlay.classList.add('pm-hidden');
+        document.body.style.overflow = '';
+        confirmCallback = null;
+        rowToDelete = null;
+    }
+
+    if (deleteModalCancel) deleteModalCancel.addEventListener('click', closeDeleteModal);
+
+    if (deleteModalOverlay) {
+        deleteModalOverlay.addEventListener('click', function (e) {
+            if (e.target === deleteModalOverlay) closeDeleteModal();
+        });
+    }
+
+    if (deleteModalConfirm) {
+        deleteModalConfirm.addEventListener('click', function () {
+            if (confirmCallback) confirmCallback();
+            closeDeleteModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && deleteModalOverlay && !deleteModalOverlay.classList.contains('pm-hidden')) {
+            closeDeleteModal();
+        }
+    });
+
+    /* ================= 7. CLIENT-SIDE SEARCH / FILTER / SORT ================= */
+    function performFiltering() {
+        const searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
+        const catVal = (categoryFilter ? categoryFilter.value : '').toLowerCase();
+        const statusVal = (statusFilter ? statusFilter.value : '').toLowerCase();
+
+        Array.from(tableBody.querySelectorAll('.pm-row')).forEach(function (row) {
+            const nameEl = row.querySelector('.pm-product-name');
+            const pName = row.dataset.productName || (nameEl ? nameEl.textContent.toLowerCase() : '');
+            const skuEl = row.querySelector('.pm-product-sku');
+            const pSku = skuEl ? skuEl.textContent.toLowerCase() : '';
+            const catEl = row.querySelector('[data-label="Category"]');
+            const pCategory = catEl ? catEl.textContent.toLowerCase().trim() : '';
+            const statusBadge = row.querySelector('.pm-badge');
+
+            let pStatus = '';
+            if (statusBadge) {
+                const statusModifier = Array.from(statusBadge.classList).find(function (cls) {
+                    return cls.indexOf('pm-badge-') === 0;
+                });
+                pStatus = statusModifier ? statusModifier.replace('pm-badge-', '') : '';
+            }
+
+            const matchesSearch = !searchVal || pName.includes(searchVal) || pSku.includes(searchVal);
+            const matchesCategory = !catVal || pCategory.replace(/&amp;/g, '&').includes(catVal.replace('-', ' '));
+            const matchesStatus = !statusVal || pStatus === statusVal;
+
+            if (matchesSearch && matchesCategory && matchesStatus) {
+                row.classList.remove('pm-hidden');
+            } else {
+                row.classList.add('pm-hidden');
+                const cb = row.querySelector('.pm-row-checkbox');
+                if (cb) cb.checked = false;
+            }
+        });
+
+        performSorting();
+        updateBulkBarState();
+        checkAndShowEmptyState();
+    }
+
+    function performSorting() {
+        const sortVal = sortFilter ? sortFilter.value : 'newest';
+        const rows = getVisibleRows();
+
+        rows.sort(function (rowA, rowB) {
+            if (sortVal === 'newest' || sortVal === 'oldest') {
+                const dateA = new Date(rowA.querySelector('.pm-date').textContent);
+                const dateB = new Date(rowB.querySelector('.pm-date').textContent);
+                return sortVal === 'newest' ? dateB - dateA : dateA - dateB;
+            }
+
+            if (sortVal === 'price-low-high' || sortVal === 'price-high-low') {
+                const priceA = parseFloat(rowA.querySelector('.pm-price').textContent.replace(/[^0-9]/g, ''));
+                const priceB = parseFloat(rowB.querySelector('.pm-price').textContent.replace(/[^0-9]/g, ''));
+                return sortVal === 'price-low-high' ? priceA - priceB : priceB - priceA;
+            }
+
+            if (sortVal === 'stock-low-high') {
+                const stockA = parseInt(rowA.querySelector('.pm-stock').textContent, 10) || 0;
+                const stockB = parseInt(rowB.querySelector('.pm-stock').textContent, 10) || 0;
+                return stockA - stockB;
+            }
+
+            if (sortVal === 'name-a-z') {
+                const nameA = rowA.querySelector('.pm-product-name').textContent.toLowerCase();
+                const nameB = rowB.querySelector('.pm-product-name').textContent.toLowerCase();
+                return nameA.localeCompare(nameB);
+            }
+
+            return 0;
+        });
+
+        rows.forEach(function (row) { tableBody.appendChild(row); });
+    }
+
+    if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', performFiltering);
+    if (searchInput) searchInput.addEventListener('input', performFiltering);
+    if (categoryFilter) categoryFilter.addEventListener('change', performFiltering);
+    if (statusFilter) statusFilter.addEventListener('change', performFiltering);
+    if (sortFilter) sortFilter.addEventListener('change', performFiltering);
+
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', function () {
+            if (searchInput) searchInput.value = '';
+            if (categoryFilter) categoryFilter.value = '';
+            if (statusFilter) statusFilter.value = '';
+            if (sortFilter) sortFilter.value = 'newest';
+            performFiltering();
+        });
+    }
+
+    /* ================= 8. EMPTY STATE ================= */
+    function checkAndShowEmptyState() {
+        const visibleCount = getVisibleRows().length;
+
+        if (!emptyState) return;
+
+        if (visibleCount === 0) {
+            table.style.display = 'none';
+            emptyState.classList.remove('pm-hidden');
+        } else {
+            table.style.display = '';
+            emptyState.classList.add('pm-hidden');
+        }
+    }
+
+    /* ================= 9. INIT ================= */
     updateBulkBarState();
-    checkAndShowEmptyState();
-  }
-
-  function performSorting() {
-    const sortVal = sortFilter.value;
-    const rows = getVisibleRows();
-
-    rows.sort((rowA, rowB) => {
-      if (sortVal === 'newest' || sortVal === 'oldest') {
-        // Simple date parsing fallback
-        const dateA = new Date(rowA.querySelector('.pm-date').textContent);
-        const dateB = new Date(rowB.querySelector('.pm-date').textContent);
-        return sortVal === 'newest' ? dateB - dateA : dateA - dateB;
-      }
-
-      if (sortVal === 'price-low-high' || sortVal === 'price-high-low') {
-        const priceA = parseFloat(rowA.querySelector('.pm-price').textContent.replace(/[^0-9]/g, ''));
-        const priceB = parseFloat(rowB.querySelector('.pm-price').textContent.replace(/[^0-9]/g, ''));
-        return sortVal === 'price-low-high' ? priceA - priceB : priceB - priceA;
-      }
-
-      if (sortVal === 'stock-low-high') {
-        const stockA = parseInt(rowA.querySelector('.pm-stock').textContent, 10) || 0;
-        const stockB = parseInt(rowB.querySelector('.pm-stock').textContent, 10) || 0;
-        return stockA - stockB;
-      }
-
-      if (sortVal === 'name-a-z') {
-        const nameA = rowA.querySelector('.pm-product-name').textContent.toLowerCase();
-        const nameB = rowB.querySelector('.pm-product-name').textContent.toLowerCase();
-        return nameA.localeCompare(nameB);
-      }
-      return 0;
-    });
-
-    // Re-append rows in new sorted order
-    rows.forEach(row => tableBody.appendChild(row));
-  }
-
-  function checkAndShowEmptyState() {
-    const visibleCount = getVisibleRows().length;
-    if (visibleCount === 0) {
-      table.style.display = 'none';
-      emptyState.classList.remove('pm-hidden');
-    } else {
-      table.style.display = '';
-      emptyState.classList.add('pm-hidden');
-    }
-  }
-
-  // Attach filter events
-  if (applyFiltersBtn) {
-    applyFiltersBtn.addEventListener('click', performFiltering);
-  }
-
-  // Keyup real-time search
-  if (searchInput) {
-    searchInput.addEventListener('input', performFiltering);
-  }
-
-  // Reset filter values
-  if (resetFiltersBtn) {
-    resetFiltersBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      categoryFilter.value = '';
-      statusFilter.value = '';
-      sortFilter.value = 'newest';
-      performFiltering();
-    });
-  }
 });

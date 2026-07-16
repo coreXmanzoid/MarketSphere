@@ -89,6 +89,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "products.context_processors.categories",
                 "accounts.context_processors.seller_context",
+                "seller_dashboard.context_processors.seller_dashboard",
             ],
         },
     },

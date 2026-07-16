@@ -140,7 +140,7 @@
                 <h3 class="sa-status-card-title">Seller Account Verified</h3>
                 <p class="sa-status-card-desc">Congratulations! Your seller account has been verified and is ready to sell.</p>
                 <!-- Links to the future seller dashboard once it exists -->
-                <a href="#" class="btn btn-hero-primary sa-status-card-btn" id="saDashboardBtn"><i class="bi bi-speedometer2"></i> Go to Seller Dashboard</a>
+                <a href="{% url "dashboard" %}" class="btn btn-hero-primary sa-status-card-btn" id="saDashboardBtn"><i class="bi bi-speedometer2"></i> Go to Seller Dashboard</a>
               </div>
             </div>
           {% elif seller.status == 'rejected' %}

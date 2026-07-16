@@ -47,4 +47,14 @@ urlpatterns = [
         views.cart_data,
         name="cart_data",
     ),
+    path(
+        "api/search-brands/",
+        views.search_brands,
+        name="search_brands",
+    ),
+    path(
+        "api/search-categories/",
+        views.search_categories,
+        name="search_categories",
+    ),
 ]

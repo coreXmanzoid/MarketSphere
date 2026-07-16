@@ -87,8 +87,8 @@ Shopping Cart • MarketSphere
             <div class="cart-item-media">
               <a href="{% url "product" item.product.slug %}" class="cart-item-image-link" aria-label="View Wireless Over-Ear Headphones">
                 <!-- Product image will be rendered here by Django from item.product.images -->
-                <div class="product-image-placeholder cart-item-image-placeholder">
-                  <i class="bi bi-headphones"></i>
+                <div class="product-image-placeholder cart-item-image-placeholder" onclick="window.location.href='{% url 'product' item.product.slug %}'">
+                  <img src="{{ item.product.primary_image.image.url }}" alt="">
                 </div>
               </a>
             </div>

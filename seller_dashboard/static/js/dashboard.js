@@ -35,9 +35,8 @@
        Purely presentational — no routing/backend involved.
        ===================================================== */
     function highlightActiveNavLink() {
-        var activePage = document.body.getAttribute('data-active-page');
+        var activePage = document.body.getAttribute('data-active-page').trim();
         if (!activePage) return;
-
         var links = sidebar.querySelectorAll('.sd-nav-link[data-page]');
         links.forEach(function (link) {
             var isMatch = link.getAttribute('data-page') === activePage;

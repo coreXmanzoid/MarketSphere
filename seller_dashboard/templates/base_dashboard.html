@@ -197,10 +197,14 @@
                     <div class="sd-seller-chip">
                         <span class="sd-seller-avatar" aria-hidden="true">
                             <!-- Placeholder initial; a real seller avatar/photo will replace this later -->
-                            S
+                            {% if dashboard_seller.user.profile_picture %}
+                                <img src="{{ dashboard_seller.user.profile_picture }}">
+                                {% else %}
+                                {{ dashboard_seller.user.username|slice:1}}
+                            {% endif %}
                         </span>
                         <span class="sd-seller-info">
-                            <strong class="sd-seller-name">{{ seller.user.username }} </strong>
+                            <strong class="sd-seller-name">{{ dashboard_seller.user.username }} </strong>
                             <small class="sd-seller-role">Store Owner</small>
                         </span>
                         <svg class="sd-seller-caret" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

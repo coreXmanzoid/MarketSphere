@@ -1,0 +1,1480 @@
+/* =========================================================
+   MARKETSPHERE — ADD PRODUCT (SELLER DASHBOARD)
+   Page-scoped styles for seller_dashboard/products/create.html.
+   Builds on the dashboard shell's tokens (static/seller_dashboard/
+   css/dashboard.css — --sd-* variables) and prefixes every class
+   `pf-` (Product Form) to avoid collisions, matching the project's
+   page-scoped prefix convention (dh-, pm-, sa-, od- ...).
+
+   Sections:
+     1. Variables (page-local additions)
+     2. Page Wrapper / Reveal Animation
+     3. Header
+     4. Buttons
+     5. Layout Grid
+     6. Card / Accordion
+     7. Form Fields (inputs, floating labels, textareas)
+     8. Select / Prefix / Suffix Inputs
+     9. Upload Zone / Image Grid
+    10. Switches
+    11. Tags Input
+    12. Visibility Options
+    13. SEO Preview
+    14. Sidebar (checklist, completion, tips)
+    15. Sticky Footer
+    16. Discard Modal
+    17. Responsive
+   ========================================================= */
+
+/* ================= 1. VARIABLES ================= */
+.pf-page {
+    --pf-accent: var(--sd-accent, #9D6638);
+    --pf-accent-soft: var(--sd-accent-soft, rgba(157, 102, 56, 0.12));
+    --pf-accent-ring: var(--sd-accent-ring, rgba(157, 102, 56, 0.22));
+    --pf-dark: var(--sd-dark, #4E220F);
+    --pf-success: var(--sd-success, #4f7d54);
+    --pf-warning: var(--sd-warning, #b7802b);
+    --pf-danger: var(--sd-danger, #b54b3b);
+    --pf-border: var(--sd-border, #E4DCC8);
+    --pf-bg: var(--sd-bg, #F7F1DE);
+    --pf-muted: var(--sd-muted, #B0BA99);
+    --pf-surface: var(--sd-surface-raised, #FFFFFF);
+    --pf-heading: var(--sd-heading-color, #3A1B0E);
+    --pf-body: var(--sd-body-color, #5B5142);
+    --pf-caption: var(--sd-caption-color, #9A9082);
+    --pf-radius-card: var(--sd-radius-card, 14px);
+    --pf-radius-control: var(--sd-radius-control, 1px);
+    --pf-radius-pill: var(--sd-radius-pill, 40px);
+    --pf-ease: var(--sd-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    --pf-transition-fast: var(--sd-transition-fast, 0.18s var(--pf-ease));
+    --pf-transition: var(--sd-transition, 0.28s var(--pf-ease));
+    --pf-shadow-sm: var(--sd-shadow-sm, 0 1px 2px rgba(58, 27, 14, 0.06));
+    --pf-shadow-md: var(--sd-shadow-md, 0 8px 24px rgba(58, 27, 14, 0.08));
+    --pf-shadow-lg: var(--sd-shadow-lg, 0 18px 46px rgba(58, 27, 14, 0.14));
+    --pf-footer-h: 76px;
+}
+
+/* ================= 2. PAGE WRAPPER / REVEAL ================= */
+.pf-page {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-bottom: calc(var(--pf-footer-h) + 20px);
+}
+
+.pf-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s var(--pf-ease), transform 0.5s var(--pf-ease);
+}
+
+.pf-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.pf-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.pf-hidden {
+    display: none !important;
+}
+
+.pf-optional {
+    color: var(--pf-caption);
+    font-weight: 500;
+}
+
+/* ================= 3. HEADER ================= */
+.pf-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    background-color: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-card);
+    padding: 24px 26px;
+    box-shadow: var(--pf-shadow-sm);
+}
+
+.pf-header-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pf-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+}
+
+.pf-eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--pf-accent);
+    display: inline-block;
+}
+
+.pf-header-title {
+    font-size: 25px;
+    font-weight: 700;
+    color: var(--pf-heading);
+    line-height: 1.25;
+}
+
+.pf-header-subtitle {
+    margin-top: 5px;
+    font-size: 13.5px;
+    color: var(--pf-caption);
+}
+
+.pf-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ================= 4. BUTTONS ================= */
+.pf-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 2px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: background-color var(--pf-transition-fast), color var(--pf-transition-fast),
+        border-color var(--pf-transition-fast), transform var(--pf-transition-fast), box-shadow var(--pf-transition-fast);
+}
+
+.pf-btn svg {
+    flex-shrink: 0;
+}
+
+.pf-btn:active {
+    transform: scale(0.97);
+}
+
+.pf-btn-primary {
+    background-color: #9D6638 !important;
+    color: #F7F1DE;
+    border-color: var(--pf-accent);
+    border: 1.5px solid #9D6638 !important;
+}
+
+.pf-btn-primary:hover {
+    background-color: #F7F1DE !important;
+    box-shadow: var(--pf-shadow-sm);
+    color: #9D6638;
+}
+
+.pf-btn-secondary {
+    background-color: transparent;
+    color: #9D6638;
+    border: 1.5px solid #9D6638 !important;
+}
+
+.pf-btn-secondary:hover {
+    color: #F7F1DE;
+    background-color: #9D6638;
+}
+
+.pf-btn-ghost {
+    background-color: transparent;
+    color: var(--pf-caption);
+    border-color: transparent;
+}
+
+.pf-btn-ghost:hover {
+    background-color: var(--pf-bg);
+    color: var(--pf-heading);
+}
+
+.pf-btn-danger {
+    background-color: var(--pf-danger);
+    color: #F7F1DE;
+    border-color: var(--pf-danger);
+}
+
+.pf-btn-danger:hover {
+    background-color: #93372a;
+    border-color: #93372a;
+}
+
+.pf-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Loading state — swaps label text and spins an inline icon */
+.pf-btn.is-loading {
+    pointer-events: none;
+}
+
+.pf-btn.is-loading .pf-btn-label::before {
+    content: "";
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    margin-right: 7px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: currentColor;
+    vertical-align: -2px;
+    animation: pfSpin 0.7s linear infinite;
+}
+
+
+.pf-btn-secondary.is-loading .pf-btn-label::before,
+.pf-btn-ghost.is-loading .pf-btn-label::before {
+    border: 2px solid var(--pf-accent-ring);
+    border-top-color: var(--pf-accent);
+}
+
+.pf-btn.is-loading svg {
+    display: none;
+}
+
+@keyframes pfSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================= 5. LAYOUT GRID ================= */
+.pf-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 22px;
+    align-items: start;
+}
+
+.pf-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.pf-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: calc(var(--sd-topbar-height, 68px) + 20px);
+}
+
+/* ================= 6. CARD / ACCORDION ================= */
+.pf-card {
+    background-color: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-card);
+    box-shadow: var(--pf-shadow-sm);
+    overflow: hidden;
+}
+
+.pf-card-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 22px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: default;
+    font-family: inherit;
+}
+
+.pf-card-head-text {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.pf-card-icon {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background-color: var(--pf-accent-soft);
+    color: var(--pf-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pf-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--pf-heading);
+}
+
+.pf-card-subtitle {
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: var(--pf-caption);
+}
+
+.pf-accordion-caret {
+    display: none;
+    flex: 0 0 auto;
+    color: var(--pf-caption);
+    transition: transform var(--pf-transition-fast);
+}
+
+.pf-card-body {
+    padding: 4px 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ================= 7. FORM FIELDS ================= */
+.pf-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pf-field-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.pf-field-row-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.pf-field {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.pf-label-static {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pf-body);
+    margin-bottom: 8px;
+}
+
+.pf-field-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--pf-caption);
+    line-height: 1.5;
+}
+
+.pf-field-hint code {
+    background-color: var(--pf-bg);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11.5px;
+    color: var(--pf-accent);
+}
+
+.pf-field-footer {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.pf-char-counter {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--pf-caption);
+    white-space: nowrap;
+}
+
+.pf-input,
+.pf-textarea,
+.pf-select {
+    width: 100%;
+    background-color: var(--pf-bg);
+    border: 1.5px solid var(--pf-border);
+    border-radius: 2px;
+    padding: 15px 14px 9px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--pf-heading);
+    transition: border-color var(--pf-transition-fast), box-shadow var(--pf-transition-fast), background-color var(--pf-transition-fast);
+}
+
+.pf-input::placeholder,
+.pf-textarea::placeholder {
+    color: transparent;
+}
+
+.pf-input:focus,
+.pf-textarea:focus,
+.pf-select:focus {
+    outline: none;
+    background-color: var(--pf-surface);
+    border-color: var(--pf-accent);
+    box-shadow: 0 0 0 3px var(--pf-accent-ring);
+}
+
+.pf-input[readonly] {
+    color: var(--pf-caption);
+    cursor: default;
+}
+
+.pf-input-mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+}
+
+/* ---- Floating labels ---- */
+.pf-field-floating .pf-label {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    font-size: 14px;
+    color: var(--pf-caption);
+    font-weight: 500;
+    pointer-events: none;
+    transform-origin: left top;
+    transition: transform var(--pf-transition-fast), color var(--pf-transition-fast), top var(--pf-transition-fast);
+    background: transparent;
+}
+
+.pf-field-floating .pf-textarea~.pf-label {
+    top: 15px;
+}
+
+.pf-field-floating.pf-label-float .pf-label,
+.pf-field-floating .pf-input:focus~.pf-label,
+.pf-field-floating .pf-input:not(:placeholder-shown)~.pf-label,
+.pf-field-floating .pf-textarea:focus~.pf-label,
+.pf-field-floating .pf-textarea:not(:placeholder-shown)~.pf-label {
+    top: 6px;
+    transform: scale(0.74) translateY(0);
+    color: var(--pf-accent);
+    font-weight: 700;
+}
+
+.pf-field-floating .pf-input:focus~.pf-label,
+.pf-field-floating .pf-textarea:focus~.pf-label {
+    color: var(--pf-accent);
+}
+
+.pf-field-floating .pf-input {
+    padding-top: 21px;
+    padding-bottom: 9px;
+}
+
+.pf-field-floating .pf-textarea {
+    padding-top: 24px;
+}
+
+.pf-textarea {
+    resize: vertical;
+    line-height: 1.55;
+}
+
+.pf-textarea-sm {
+    min-height: 78px;
+}
+
+.pf-textarea-lg {
+    min-height: 160px;
+}
+
+.pf-inline-edit-btn {
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: transparent;
+    border: none;
+    color: var(--pf-caption);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--pf-transition-fast), color var(--pf-transition-fast);
+}
+
+.pf-inline-edit-btn:hover {
+    background-color: var(--pf-accent-soft);
+    color: var(--pf-accent);
+}
+
+/* ================= 8. SELECT / PREFIX / SUFFIX ================= */
+
+.pf-search-select{
+    position:relative;
+}
+
+.pf-search-dropdown{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+
+    background: #F7F1DE;
+
+    border:1px solid #9D6638;
+
+    border-radius:10px;
+
+    max-height:250px;
+
+    overflow-y:auto;
+
+    display:none;
+
+    z-index:500;
+}
+
+.pf-search-item{
+
+    padding:12px 16px;
+
+    cursor:pointer;
+
+}
+
+.pf-search-item:hover{
+
+    background: #F7F1DE;
+}
+
+.pf-select-wrap {
+    position: relative;
+}
+
+.pf-select {
+    appearance: none;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    cursor: pointer;
+}
+
+
+.pf-select[multiple] {
+    padding: 10px 12px;
+    min-height: 110px;
+}
+
+.pf-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 22px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--pf-caption);
+    pointer-events: none;
+}
+
+.pf-select[multiple]+.pf-select-wrap::after,
+.pf-select-wrap:has(select[multiple])::after {
+    display: none;
+}
+
+.pf-input-prefix-wrap,
+.pf-input-suffix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pf-input-suffix-wrap-narrow {
+    max-width: 220px;
+}
+
+.pf-input-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--pf-accent);
+    pointer-events: none;
+}
+
+.pf-input-prefixed {
+    padding-left: 42px;
+}
+
+.pf-input-suffix {
+    position: absolute;
+    right: 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--pf-caption);
+    pointer-events: none;
+}
+
+.pf-input-suffixed {
+    padding-right: 40px;
+}
+
+.pf-dimensions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pf-dimensions-row .pf-input-suffix-wrap {
+    flex: 1;
+}
+
+.pf-dimensions-sep {
+    color: var(--pf-caption);
+    font-size: 15px;
+    flex: 0 0 auto;
+}
+
+/* ================= 9. UPLOAD ZONE / IMAGE GRID ================= */
+.pf-upload-zone {
+    border: 2px dashed var(--pf-border);
+    border-radius: var(--pf-radius-control);
+    background-color: var(--pf-bg);
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--pf-transition-fast), background-color var(--pf-transition-fast);
+}
+
+.pf-upload-zone:hover,
+.pf-upload-zone:focus-visible {
+    border-color: var(--pf-accent);
+    background-color: var(--pf-accent-soft);
+}
+
+.pf-upload-zone.is-dragover {
+    border-color: var(--pf-accent);
+    background-color: var(--pf-accent-soft);
+    transform: scale(0.995);
+}
+
+.pf-upload-illustration {
+    color: var(--pf-accent);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: center;
+}
+
+.pf-upload-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--pf-heading);
+    margin-bottom: 3px;
+}
+
+.pf-upload-subtitle {
+    font-size: 13px;
+    color: var(--pf-caption);
+    margin-bottom: 10px;
+}
+
+.pf-upload-link {
+    color: var(--pf-accent);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.pf-upload-guidelines {
+    font-size: 11.5px;
+    color: var(--pf-caption);
+}
+
+.pf-image-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.pf-image-slot {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--pf-radius-control);
+    background-color: var(--pf-bg);
+    border: 1.5px dashed var(--pf-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: border-color var(--pf-transition-fast);
+}
+
+.pf-image-slot:hover {
+    border-color: var(--pf-accent);
+}
+
+.pf-image-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-image-slot-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--pf-caption);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px;
+}
+
+.pf-image-slot-primary {
+    border-style: solid;
+    border-color: var(--pf-accent);
+    background-color: var(--pf-accent-soft);
+}
+
+.pf-image-primary-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: var(--pf-accent);
+    color: #F7F1DE;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--pf-radius-pill);
+}
+
+.pf-star-icon {
+    font-size: 10px;
+    font-style: normal;
+}
+
+.pf-image-slot-filled .pf-image-slot-empty {
+    display: none;
+}
+
+.pf-image-remove-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgba(58, 27, 14, 0.65);
+    color: #F7F1DE;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: background-color var(--pf-transition-fast);
+}
+
+.pf-image-remove-btn:hover {
+    background-color: var(--pf-danger);
+}
+
+/* ================= 10. SWITCHES ================= */
+.pf-switch-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid var(--pf-border);
+    padding-top: 16px;
+}
+
+.pf-switch-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+}
+
+.pf-switch-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pf-switch-text strong {
+    font-size: 13.5px;
+    color: var(--pf-heading);
+    font-weight: 700;
+}
+
+.pf-switch-text small {
+    font-size: 12px;
+    color: var(--pf-caption);
+}
+
+.pf-switch {
+    flex: 0 0 auto;
+    position: relative;
+    width: 44px;
+    height: 25px;
+}
+
+.pf-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.pf-switch-track {
+    position: absolute;
+    inset: 0;
+    background-color: var(--pf-border);
+    border-radius: var(--pf-radius-pill);
+    transition: background-color var(--pf-transition-fast);
+}
+
+.pf-switch-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background-color: #F7F1DE;
+    box-shadow: var(--pf-shadow-sm);
+    transition: transform var(--pf-transition-fast);
+}
+
+.pf-switch input:checked~.pf-switch-track {
+    background-color: var(--pf-accent);
+}
+
+.pf-switch input:checked~.pf-switch-track .pf-switch-thumb {
+    transform: translateX(19px);
+}
+
+.pf-switch input:focus-visible~.pf-switch-track {
+    box-shadow: 0 0 0 3px var(--pf-accent-ring);
+}
+
+/* ================= 11. TAGS INPUT ================= */
+.pf-tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--pf-bg);
+    border: 1.5px solid var(--pf-border);
+    border-radius: var(--pf-radius-control);
+    padding: 10px 12px;
+    transition: border-color var(--pf-transition-fast), box-shadow var(--pf-transition-fast);
+}
+
+.pf-tags-input:focus-within {
+    border-color: var(--pf-accent);
+    box-shadow: 0 0 0 3px var(--pf-accent-ring);
+    background-color: var(--pf-surface);
+}
+
+.pf-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--pf-accent-soft);
+    color: var(--pf-accent);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 5px 6px 5px 12px;
+    border-radius: var(--pf-radius-pill);
+}
+
+.pf-tag-remove {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background-color: rgba(157, 102, 56, 0.18);
+    color: var(--pf-accent);
+    border: none;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--pf-transition-fast);
+}
+
+.pf-tag-remove:hover {
+    background-color: var(--pf-accent);
+    color: #F7F1DE;
+}
+
+.pf-tags-field {
+    flex: 1;
+    min-width: 140px;
+    border: none;
+    background: transparent;
+    font-size: 13.5px;
+    color: var(--pf-heading);
+    padding: 4px 2px;
+    font-family: inherit;
+}
+
+.pf-tags-field:focus {
+    outline: none;
+}
+
+/* ================= 12. VISIBILITY OPTIONS ================= */
+.pf-visibility-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pf-visibility-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background-color: var(--pf-bg);
+    border: 1.5px solid var(--pf-border);
+    border-radius: var(--pf-radius-control);
+    padding: 13px 16px;
+    cursor: pointer;
+    transition: border-color var(--pf-transition-fast), background-color var(--pf-transition-fast), box-shadow var(--pf-transition-fast);
+}
+
+.pf-visibility-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pf-visibility-option:hover {
+    border-color: var(--pf-accent);
+}
+
+.pf-visibility-option.is-selected {
+    border-color: var(--pf-accent);
+    background-color: var(--pf-accent-soft);
+    box-shadow: 0 0 0 3px var(--pf-accent-ring);
+}
+
+.pf-visibility-icon {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: var(--pf-surface);
+    color: var(--pf-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pf-visibility-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.pf-visibility-text strong {
+    font-size: 13.5px;
+    color: var(--pf-heading);
+}
+
+.pf-visibility-text small {
+    font-size: 12px;
+    color: var(--pf-caption);
+}
+
+.pf-schedule-field {
+    padding-top: 14px;
+    border-top: 1px solid var(--pf-border);
+}
+
+/* ================= 13. SEO PREVIEW ================= */
+.pf-seo-preview {
+    border-top: 1px solid var(--pf-border);
+    padding-top: 18px;
+}
+
+.pf-seo-preview-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--pf-caption);
+    margin-bottom: 10px;
+}
+
+.pf-seo-preview-card {
+    background-color: var(--pf-bg);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-control);
+    padding: 16px 18px;
+}
+
+.pf-seo-preview-url {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--pf-success);
+    margin-bottom: 4px;
+}
+
+.pf-seo-preview-favicon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--pf-accent);
+    flex: 0 0 auto;
+}
+
+.pf-seo-preview-title {
+    font-size: 16px;
+    color: #1a0dab;
+    margin-bottom: 3px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-seo-preview-desc {
+    font-size: 13px;
+    color: var(--pf-body);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ================= 14. SIDEBAR ================= */
+.pf-sidebar-card {
+    padding: 20px;
+}
+
+.pf-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--pf-heading);
+    margin-bottom: 14px;
+}
+
+.pf-sidebar-title-icon {
+    color: var(--pf-accent);
+    flex: 0 0 auto;
+}
+
+.pf-completion-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.pf-completion-head .pf-sidebar-title {
+    margin-bottom: 0;
+}
+
+.pf-completion-percent {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--pf-accent);
+}
+
+.pf-completion-bar {
+    width: 100%;
+    height: 8px;
+    background-color: var(--pf-bg);
+    border-radius: var(--pf-radius-pill);
+    overflow: hidden;
+}
+
+.pf-completion-bar-fill {
+    height: 100%;
+    border-radius: var(--pf-radius-pill);
+    background: linear-gradient(90deg, var(--pf-accent), var(--pf-dark));
+    transition: width 0.5s var(--pf-ease);
+}
+
+.pf-completion-caption {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--pf-caption);
+    line-height: 1.5;
+}
+
+.pf-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.pf-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--pf-caption);
+    font-weight: 500;
+    transition: color var(--pf-transition-fast);
+}
+
+.pf-checklist-dot {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--pf-border);
+    background-color: var(--pf-bg);
+    position: relative;
+    transition: background-color var(--pf-transition-fast), border-color var(--pf-transition-fast);
+}
+
+.pf-checklist-item.is-complete {
+    color: var(--pf-heading);
+    text-decoration: line-through;
+    text-decoration-color: var(--pf-muted);
+}
+
+.pf-checklist-item.is-complete .pf-checklist-dot {
+    background-color: #9D6638 !important;
+
+    border-color: #9D6638;
+}
+
+.pf-checklist-item.is-complete .pf-checklist-dot::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 3px;
+    width: 9px;
+    height: 5px;
+    border-left: 2px solid #F7F1DE;
+    border-bottom: 2px solid #F7F1DE;
+    transform: rotate(-45deg);
+}
+
+.pf-tips-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pf-tips-list li {
+    position: relative;
+    padding-left: 16px;
+    font-size: 12.5px;
+    color: var(--pf-body);
+    line-height: 1.55;
+}
+
+.pf-tips-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--pf-accent);
+}
+
+/* ================= 15. STICKY FOOTER ================= */
+.pf-sticky-footer {
+    position: fixed;
+    left: var(--sd-sidebar-width, 264px);
+    right: 0;
+    bottom: 0;
+    z-index: 250;
+
+    /* 1. Make the background semi-transparent so the blur is visible */
+    /* If var(--pf-surface) is an opaque hex or rgb color, we can use a fallback rgba */
+    background-color: rgba(255, 255, 255, 0.137);
+    /* Adjust opacity (0.75) to your liking */
+
+    /* Alternatively, if you want to try and preserve your variable with alpha (modern CSS): */
+    /* background-color: color-mix(in srgb, var(--pf-surface) 75%, transparent); */
+
+    /* 2. Apply the blur effect to whatever is behind the footer */
+    -webkit-backdrop-filter: blur(4px);
+    /* Safari support */
+    backdrop-filter: blur(4px);
+    /* Modern browsers */
+
+    border-top: 1px solid var(--pf-border);
+    box-shadow: 0 -8px 24px rgba(58, 27, 14, 0.08);
+    transition: left var(--pf-transition);
+}
+
+.sd-shell.is-collapsed~.pf-sticky-footer,
+.sd-shell.is-collapsed+* .pf-sticky-footer {
+    left: var(--sd-sidebar-width-collapsed, 80px);
+}
+
+.pf-sticky-footer-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.pf-sticky-footer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--pf-caption);
+}
+
+.pf-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--pf-warning);
+}
+
+.pf-sticky-footer-status.is-saved .pf-status-dot {
+    background-color: var(--pf-success);
+}
+
+.pf-sticky-footer-status.is-saved {
+    color: var(--pf-success);
+}
+
+.pf-sticky-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ================= 16. DISCARD MODAL ================= */
+.pf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(58, 27, 14, 0.42);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    padding: 20px;
+}
+
+.pf-modal {
+    background-color: var(--pf-surface);
+    border-radius: var(--pf-radius-card);
+    padding: 28px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: var(--pf-shadow-lg);
+    animation: pfModalIn 0.25s var(--pf-ease);
+}
+
+@keyframes pfModalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.94) translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.pf-modal-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background-color: rgba(181, 75, 59, 0.13);
+    color: var(--pf-danger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pf-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--pf-heading);
+    margin-bottom: 8px;
+}
+
+.pf-modal-text {
+    font-size: 13.5px;
+    color: var(--pf-caption);
+    line-height: 1.55;
+    margin-bottom: 22px;
+}
+
+.pf-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.pf-modal-actions .pf-btn {
+    flex: 1;
+}
+
+/* ================= 17. RESPONSIVE ================= */
+@media (max-width: 1199.98px) {
+    .pf-layout {
+        grid-template-columns: 1fr 300px;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .pf-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .pf-sidebar {
+        position: static;
+        order: 2;
+    }
+
+    .pf-main {
+        order: 1;
+    }
+
+    .pf-sticky-footer {
+        left: 0;
+    }
+
+    /* Accordion behavior kicks in on tablet/mobile */
+    .pf-card-head {
+        cursor: pointer;
+    }
+
+    .pf-accordion-caret {
+        display: block;
+    }
+
+    .pf-card-body {
+        display: none;
+    }
+
+    .pf-card.is-expanded .pf-card-body {
+        display: flex;
+    }
+
+    .pf-card.is-expanded .pf-accordion-caret {
+        transform: rotate(180deg);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .pf-header {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .pf-header-actions {
+        width: 100%;
+    }
+
+    .pf-header-actions .pf-btn {
+        flex: 1;
+    }
+
+    .pf-field-row-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .pf-image-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .pf-card-body {
+        padding: 4px 16px 20px;
+    }
+
+    .pf-card-head {
+        padding: 16px;
+    }
+
+    .pf-input,
+    .pf-textarea,
+    .pf-select {
+        font-size: 16px;
+        /* avoids iOS zoom-on-focus */
+    }
+
+    .pf-sticky-footer-inner {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pf-sticky-footer-status {
+        justify-content: center;
+    }
+
+    .pf-sticky-footer-actions {
+        width: 100%;
+    }
+
+    .pf-sticky-footer-actions .pf-btn {
+        flex: 1;
+    }
+
+    .pf-dimensions-row {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .pf-image-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
