@@ -190,11 +190,7 @@
                 <div class="od-order-item">
                   <a href="{% url 'product' item.product.slug %}" class="od-order-item-img-link">
                     <div class="product-image-placeholder od-order-item-img">
-                      {% if item.product.images.first %}
-                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" />
-                      {% else %}
-                        <i class="bi bi-box-seam"></i>
-                      {% endif %}
+                      <img src="{{ item.product.primary_image.image.url }}" alt="">
                     </div>
                   </a>
 

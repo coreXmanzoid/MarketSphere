@@ -544,6 +544,11 @@
     aspect-ratio: unset;
 }
 
+.co-summary-item-img img{
+    border-radius: 10px;
+    transform: .5s;
+}
+
 .co-summary-item-img i {
     font-size: 22px;
 }

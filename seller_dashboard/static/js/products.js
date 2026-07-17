@@ -58,6 +58,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function getCSRFToken() {
+        const meta = document.querySelector('meta[name="csrf-token"], meta[name="csrf_token"]');
+        if (meta && meta.content) return meta.content;
+
+        const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
     /* ================= 2. DROPDOWN MANAGEMENT ================= */
     document.addEventListener('click', function (e) {
         const trigger = e.target.closest('.pm-dropdown-trigger');
@@ -198,32 +206,114 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ================= 5. INDIVIDUAL ROW ACTIONS ================= */
     let rowToDelete = null;
-
+    let rowToHide = null;
     tableBody.addEventListener('click', function (e) {
         const actionItem = e.target.closest('[data-row-action]');
         if (!actionItem) return;
-
+        const dropdonwn = e.target.closest('.pm-dropdown-menu');
+        const productSlug = dropdonwn.dataset.productSlug;
         const action = actionItem.dataset.rowAction;
         const row = actionItem.closest('.pm-row');
         const productName = row.dataset.productName || row.querySelector('.pm-product-name').textContent;
 
-        if (action === 'delete') {
-            rowToDelete = row;
+        if (action === 'hide' || action === 'unhide') {
+            rowToHide = row;
             openDeleteModal(
-                'Delete product?',
-                'Are you sure you want to delete "' + productName + '"? This action cannot be undone.',
+                `${action} product?`,
+                'Are you sure you want to "' + action + " " + productName + '"? This action cannot be undone.',
                 function () {
-                    if (rowToDelete) {
-                        rowToDelete.remove();
-                        rowToDelete = null;
-                        checkAndShowEmptyState();
+                    if (rowToHide) {
+                        var csrfToken = getCSRFToken();
+                        if (!csrfToken) {
+                            alert('Missing CSRF token. Please refresh the page and try again.');
+                            return;
+                        }
+
+                        fetch(`/seller/products/${action}-product`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken,
+                                'X-CSRF-Token': csrfToken
+                            },
+                            body: JSON.stringify({ productSlug: productSlug })
+                        })
+                            .then(function (res) { return res.json(); })
+                            .then(function (response) {
+                                if (response.status === 'success') {
+                                    if (action === 'hide') {
+                                        setRowStatus(row, 'hidden', 'Hidden');
+                                    } else {
+                                        setRowStatus(row, 'published', "Published");
+                                    }
+                                    alert(response.message);
+                                } else {
+                                    alert(response.message || `Unable to ${action} product.`);
+                                }
+                            })
+                            .catch(function () {
+                                alert('An error occurred. Please try again.');
+                            });
                     }
                 }
             );
         } else if (action === 'edit' || action === 'duplicate') {
+            window.location.href = `/seller/products/edit-product/${productSlug}`;
             // Placeholder — no backend routing exists yet for editing/duplicating a product.
-        } else if (action === 'hide') {
-            setRowStatus(row, 'hidden', 'Hidden');
+        } else if (action === 'delete') {
+            let rowToDelete = row;
+
+            openDeleteModal(
+                'Delete product?',
+                'Are you sure you want to delete "' + productName + '"?',
+                function () {
+
+                    if (!rowToDelete) return;
+
+                    var csrfToken = getCSRFToken();
+
+                    if (!csrfToken) {
+                        alert('Missing CSRF token. Please refresh the page and try again.');
+                        return;
+                    }
+
+                    fetch('/seller/products/delete-product', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            productSlug: productSlug
+                        })
+                    })
+                        .then(function (res) {
+                            return res.json().then(function (data) {
+                                return {
+                                    ok: res.ok,
+                                    data: data
+                                };
+                            });
+                        })
+                        .then(function (result) {
+                            if (!result.ok || result.data.status !== 'success') {
+                                alert(result.data.message || 'Unable to delete product.');
+                                return;
+                            }
+                            console.log(rowToDelete);
+                            rowToDelete.remove();
+                            rowToDelete = null;
+                            checkAndShowEmptyState();
+
+                            alert(result.data.message);
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                            alert('An unexpected error occurred. Please try again.');
+                        });
+
+                }
+            );
         }
 
         closeAllDropdowns();

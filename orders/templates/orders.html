@@ -101,7 +101,7 @@
                   <!-- Product thumbnails will be rendered here by Django from order.items -->
                   <div class="mo-thumb-strip">
                     {% for item in order.items.all|slice:3 %}
-                      <span class="mo-order-thumb"><img src="{% static 'images/logo-icon.png' %}" alt="Product thumbnail" /></span>
+                      <span class="mo-order-thumb"><img src="{{ item.product.primary_image.image.url }}" alt="Product thumbnail" /></span>
                     {% endfor %}
                     <!-- Overflow count will be rendered here by Django, e.g. order.items.count|add:'-3' -->
                     {% if order.items.count > 3 %}

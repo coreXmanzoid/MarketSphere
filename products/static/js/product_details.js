@@ -19,117 +19,120 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ================= IMAGE GALLERY ================= */
     // Placeholder icon set used until Django wires real product images per thumbnail.
-    const galleryIcons = ['bi-headphones', 'bi-headphones', 'bi-soundwave', 'bi-box-seam', 'bi-tag'];
+    const mainImage = document.getElementById("pdMainImage");
+    const thumbs = Array.from(document.querySelectorAll(".pd-thumb"));
 
-    const mainImage = document.getElementById('pdMainImage');
-    const imageWrap = document.getElementById('pdImageWrap');
-    const thumbs = Array.from(document.querySelectorAll('.pd-thumb'));
-    const imageCounter = document.getElementById('pdImageCounter');
-    const prevBtn = document.getElementById('pdPrevBtn');
-    const nextBtn = document.getElementById('pdNextBtn');
-    const fullscreenBtn = document.getElementById('pdFullscreenBtn');
-    const fullscreenOverlay = document.getElementById('pdFullscreenOverlay');
-    const fullscreenImage = document.getElementById('pdFullscreenImage');
-    const fullscreenClose = document.getElementById('pdFullscreenClose');
+    const imageCounter = document.getElementById("pdImageCounter");
+    const prevBtn = document.getElementById("pdPrevBtn");
+    const nextBtn = document.getElementById("pdNextBtn");
 
     let currentImageIndex = 0;
-    const totalImages = thumbs.length || 1;
+    const totalImages = thumbs.length;
 
     function setActiveThumb(index) {
-        thumbs.forEach(function (thumb, i) {
-            thumb.classList.toggle('is-active', i === index);
+        thumbs.forEach((thumb, i) => {
+            thumb.classList.toggle("is-active", i === index);
         });
     }
 
     function updateCounter(index) {
         if (imageCounter) {
-            imageCounter.textContent = (index + 1) + ' / ' + totalImages;
+            imageCounter.textContent = `${index + 1} / ${totalImages}`;
         }
     }
 
     function goToImage(index) {
-        if (!totalImages) return;
+
+        if (totalImages === 0) return;
 
         currentImageIndex = (index + totalImages) % totalImages;
+
+        const selectedThumb = thumbs[currentImageIndex];
+        const imageUrl = selectedThumb.dataset.image;
+
+        mainImage.classList.add("pd-fade-out");
+
+        setTimeout(() => {
+
+            mainImage.src = imageUrl;
+
+            mainImage.onload = () => {
+                mainImage.classList.remove("pd-fade-out");
+            };
+
+        }, 180);
+
         setActiveThumb(currentImageIndex);
         updateCounter(currentImageIndex);
-
-        if (!mainImage) return;
-
-        // Smooth fade transition between images.
-        // Note: image `src` will be swapped by Django with the real product image URL;
-        // here we only rotate the placeholder icon to demonstrate the switching behavior.
-        mainImage.classList.add('pd-fade-out');
-
-        window.setTimeout(function () {
-            mainImage.classList.remove('pd-fade-out');
-        }, 180);
     }
 
-    thumbs.forEach(function (thumb) {
-        thumb.addEventListener('click', function () {
-            const index = parseInt(thumb.dataset.index, 10) || 0;
+    thumbs.forEach((thumb) => {
+
+        thumb.addEventListener("click", () => {
+
+            const index = Number(thumb.dataset.index);
+
             goToImage(index);
+
         });
+
     });
 
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function () {
-            goToImage(currentImageIndex - 1);
-        });
-    }
+    prevBtn?.addEventListener("click", () => {
+        goToImage(currentImageIndex - 1);
+    });
 
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function () {
-            goToImage(currentImageIndex + 1);
-        });
-    }
+    nextBtn?.addEventListener("click", () => {
+        goToImage(currentImageIndex + 1);
+    });
 
-    // Keyboard navigation when gallery is focused/hovered.
-    const galleryEl = document.getElementById('pdGallery');
-    if (galleryEl) {
-        galleryEl.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowLeft') {
-                goToImage(currentImageIndex - 1);
-            } else if (e.key === 'ArrowRight') {
-                goToImage(currentImageIndex + 1);
-            }
-        });
-    }
-
-
-
+    updateCounter(0);
+    setActiveThumb(0);
     /* ================= FULLSCREEN VIEWER ================= */
+
+    const fullscreenBtn = document.getElementById("pdFullscreenBtn");
+    const fullscreenOverlay = document.getElementById("pdFullscreenOverlay");
+    const fullscreenImage = document.getElementById("pdFullscreenImage");
+    const fullscreenClose = document.getElementById("pdFullscreenClose");
+
     function openFullscreen() {
-        if (!fullscreenOverlay) return;
-        fullscreenOverlay.classList.remove('d-none');
-        document.body.style.overflow = 'hidden';
+        if (!fullscreenOverlay || !fullscreenImage || !mainImage) return;
+
+        // Display the currently selected gallery image
+        fullscreenImage.src = mainImage.src;
+        fullscreenImage.alt = mainImage.alt;
+
+        fullscreenOverlay.classList.remove("d-none");
+        document.body.style.overflow = "hidden";
     }
 
     function closeFullscreen() {
         if (!fullscreenOverlay) return;
-        fullscreenOverlay.classList.add('d-none');
-        document.body.style.overflow = '';
+
+        fullscreenOverlay.classList.add("d-none");
+        document.body.style.overflow = "";
     }
 
     if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', openFullscreen);
+        fullscreenBtn.addEventListener("click", openFullscreen);
     }
 
     if (fullscreenClose) {
-        fullscreenClose.addEventListener('click', closeFullscreen);
+        fullscreenClose.addEventListener("click", closeFullscreen);
     }
 
     if (fullscreenOverlay) {
-        fullscreenOverlay.addEventListener('click', function (e) {
+        fullscreenOverlay.addEventListener("click", function (e) {
+            // Close only when clicking the dark overlay,
+            // not when clicking the image itself.
             if (e.target === fullscreenOverlay) {
                 closeFullscreen();
             }
         });
     }
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
             closeFullscreen();
         }
     });

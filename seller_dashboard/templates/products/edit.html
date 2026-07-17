@@ -1,0 +1,749 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Add Product
+{% endblock %}
+
+{% block active_page %}
+  products
+{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sd-breadcrumb-sep">/</span>
+  <a href="{% url 'products-list' %}" class="sd-breadcrumb-current" style="color:var(--sd-caption-color); font-weight:600;">Products</a>
+  <span class="sd-breadcrumb-sep">/</span>
+  <span class="sd-breadcrumb-current">Add Product</span>
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static '/css/product_form.css' %}" />
+{% endblock %}
+
+{% block seller_content %}
+  <div class="pf-page" id="pfPage" data-dirty="false">
+    <!-- ================= 1. HEADER ================= -->
+    <header class="pf-header pf-reveal">
+      <div class="pf-header-text">
+        <span class="pf-header-eyebrow"><i class="pf-eyebrow-dot"></i> Product Catalog</span>
+        <h1 class="pf-header-title">Add Product</h1>
+        <p class="pf-header-subtitle">Create a new product for your store.</p>
+      </div>
+
+      <div class="pf-header-actions">
+        <button type="button" class="pf-btn pf-btn-ghost" id="pfCancelTopBtn">Cancel</button>
+        <button type="button" class="pf-btn pf-btn-secondary" id="pfSaveDraftTopBtn" data-loading-label="Saving Draft&hellip;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
+            <path d="M17 21v-8H7v8"></path>
+            <path d="M7 3v5h8"></path>
+          </svg>
+          <span class="pf-btn-label">Save Draft</span>
+        </button>
+        <button type="button" class="pf-btn pf-btn-primary" id="pfPublishTopBtn" data-loading-label="Publishing&hellip;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2 11 13"></path>
+            <path d="M22 2 15 22l-4-9-9-4 20-7Z"></path>
+          </svg>
+          <span class="pf-btn-label">Publish Product</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= FORM ================= -->
+    <form id="pfProductForm" class="pf-form" novalidate>
+      {% csrf_token %}
+      <div class="pf-layout">
+        <!-- ================= MAIN COLUMN ================= -->
+        <div class="pf-main">
+          <!-- ============ 2. PRODUCT INFORMATION ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionInfo" data-pf-section="info">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                    <path d="M14 2v6h6"></path>
+                    <path d="M9 15h6"></path>
+                    <path d="M9 11h6"></path>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Product Information</h2>
+                  <p class="pf-card-subtitle">The essentials buyers see first.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field-group">
+                <div class="pf-field pf-field-floating">
+                  <input type="text" id="pfName" name="name" class="pf-input" placeholder=" " data-pf-track autocomplete="off" />
+                  <label for="pfName" class="pf-label">Product Name</label>
+                  <span class="pf-field-hint">This is how the product will appear across your store.</span>
+                </div>
+              </div>
+
+              <div class="pf-field-row">
+                <div class="pf-field pf-field-floating">
+                  <input type="text" id="pfSlug" name="slug" class="pf-input pf-input-mono" placeholder=" " data-pf-track readonly />
+                  <label for="pfSlug" class="pf-label">Slug</label>
+                  <button type="button" class="pf-inline-edit-btn" id="pfSlugEditBtn" aria-label="Edit slug">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path>
+                    </svg>
+                  </button>
+                  <span class="pf-field-hint">Auto-generated from the product name &mdash; <code id="pfSlugPreview">/product/&hellip;</code></span>
+                </div>
+              </div>
+
+              <div class="pf-field-row pf-field-row-2">
+                <div class="pf-field pf-field-floating">
+                  <input type="text" id="pfSku" name="sku" class="pf-input pf-input-mono" placeholder=" " data-pf-track autocomplete="off" />
+                  <label for="pfSku" class="pf-label">SKU</label>
+                  <span class="pf-field-hint">Unique identifier used for inventory tracking.</span>
+                </div>
+
+                <div class="pf-field pf-field-floating">
+                  <input type="text" id="pfBarcode" name="barcode" class="pf-input pf-input-mono" placeholder=" " autocomplete="off" />
+                  <label for="pfBarcode" class="pf-label">Barcode <span class="pf-optional">(ISBN, UPC, GTIN)</span></label>
+                  <span class="pf-field-hint">Optional &mdash; used for POS &amp; fulfillment scanning.</span>
+                </div>
+              </div>
+
+              <div class="pf-field pf-field-floating">
+                <textarea id="pfShortDescription" name="short_description" class="pf-textarea pf-textarea-sm" placeholder=" " maxlength="300" data-pf-counter="pfShortDescCounter" data-pf-track></textarea>
+                <label for="pfShortDescription" class="pf-label">Short Description</label>
+                <div class="pf-field-footer">
+                  <span class="pf-field-hint">Shown on product cards and search results.</span>
+                  <span class="pf-char-counter"><span id="pfShortDescCounter">0</span>/300</span>
+                </div>
+              </div>
+
+              <div class="pf-field pf-field-floating">
+                <textarea id="pfFullDescription" name="description" class="pf-textarea pf-textarea-lg" placeholder=" " maxlength="5000" data-pf-counter="pfFullDescCounter" data-pf-track></textarea>
+                <label for="pfFullDescription" class="pf-label">Full Description</label>
+                <div class="pf-field-footer">
+                  <span class="pf-field-hint">Use clear paragraphs &mdash; this appears in the product details tab.</span>
+                  <span class="pf-char-counter"><span id="pfFullDescCounter">0</span>/5000</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 3. PRODUCT IMAGES ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionImages" data-pf-section="images">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="9" cy="9" r="2"></circle>
+                    <path d="m21 15-5-5L5 21"></path>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Product Images</h2>
+                  <p class="pf-card-subtitle">The first thing shoppers notice.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-upload-zone" id="pfUploadZone" tabindex="0" role="button" aria-label="Upload product images">
+                <input type="file" id="pfImageInput" class="pf-visually-hidden" accept="image/*" multiple />
+
+                <div class="pf-upload-illustration" aria-hidden="true">
+                  <svg viewBox="0 0 64 64" width="56" height="56" fill="none">
+                    <rect x="6" y="14" width="52" height="40" rx="6" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                    <circle cx="20" cy="27" r="4.5" stroke="currentColor" stroke-width="2.2" />
+                    <path d="M6 44 22 32l10 8 8-7 18 15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M32 4v14M25 11l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+
+                <p class="pf-upload-title">Drag &amp; drop images here</p>
+                <p class="pf-upload-subtitle">
+                  or <span class="pf-upload-link">browse from your device</span>
+                </p>
+                <p class="pf-upload-guidelines">JPG, PNG or WEBP &middot; up to 8 images &middot; 5MB max each &middot; 1000&times;1000px recommended</p>
+              </div>
+
+              <div class="pf-image-grid" id="pfImageGrid">
+                <div class="pf-image-slot pf-image-slot-primary" id="pfPrimarySlot">
+                  <div class="pf-image-slot-empty">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                      <circle cx="9" cy="9" r="2"></circle>
+                      <path d="m21 15-5-5L5 21"></path>
+                    </svg>
+                    <span>Primary Image</span>
+                  </div>
+                  <span class="pf-image-primary-badge"><i class="pf-star-icon" aria-hidden="true">&#9733;</i> Primary</span>
+                </div>
+
+                <div class="pf-image-slot" data-image-slot>
+                  <div class="pf-image-slot-empty">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="pf-image-slot" data-image-slot>
+                  <div class="pf-image-slot-empty">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="pf-image-slot" data-image-slot>
+                  <div class="pf-image-slot-empty">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 4. PRICING ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionPricing" data-pf-section="pricing">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1v22"></path>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Pricing</h2>
+                  <p class="pf-card-subtitle">Set what buyers will pay.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field-row pf-field-row-2">
+                <div class="pf-field">
+                  <label for="pfRegularPrice" class="pf-label pf-label-static">Regular Price</label>
+                  <div class="pf-input-prefix-wrap">
+                    <span class="pf-input-prefix">Rs.</span>
+                    <input type="number" id="pfRegularPrice" name="price" class="pf-input pf-input-prefixed" placeholder="0.00" min="0" step="0.01" inputmode="decimal" data-pf-track />
+                  </div>
+                  <span class="pf-field-hint">The price shown before any discount.</span>
+                </div>
+
+                <div class="pf-field">
+                  <label for="pfDiscountPrice" class="pf-label pf-label-static">Discount Price <span class="pf-optional">(optional)</span></label>
+                  <div class="pf-input-prefix-wrap">
+                    <span class="pf-input-prefix">Rs.</span>
+                    <input type="number" id="pfDiscountPrice" name="discount_price" class="pf-input pf-input-prefixed" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
+                  </div>
+                  <span class="pf-field-hint">Shown with a strike-through original price when set.</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 5. INVENTORY ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionInventory" data-pf-section="inventory">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                    <path d="M3 8v8l9 5 9-5V8"></path>
+                    <path d="M12 13v8"></path>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Inventory</h2>
+                  <p class="pf-card-subtitle">Track stock and availability.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field-row pf-field-row-2">
+                <div class="pf-field">
+                  <label for="pfStockQty" class="pf-label pf-label-static">Stock Quantity</label>
+                  <input type="number" id="pfStockQty" name="stock_quantity" class="pf-input" placeholder="0" min="0" step="1" inputmode="numeric" data-pf-track />
+                  <span class="pf-field-hint">Total units currently available.</span>
+                </div>
+
+                <div class="pf-field">
+                  <label for="pfMinStock" class="pf-label pf-label-static">Minimum Stock Level</label>
+                  <input type="number" id="pfMinStock" name="min_stock_level" class="pf-input" placeholder="5" min="0" step="1" inputmode="numeric" />
+                  <span class="pf-field-hint">You'll be alerted when stock falls below this.</span>
+                </div>
+              </div>
+
+              <div class="pf-switch-row">
+                <div class="pf-switch-item">
+                  <span class="pf-switch-text">
+                    <strong>Available for Purchase</strong>
+                    <small>Turn off to hide this product from your storefront.</small>
+                  </span>
+                  <label class="pf-switch">
+                    <input type="checkbox" id="pfAvailableToggle" checked />
+                    <span class="pf-switch-track"><span class="pf-switch-thumb"></span></span>
+                  </label>
+                </div>
+
+                <div class="pf-switch-item">
+                  <span class="pf-switch-text">
+                    <strong>Featured Product</strong>
+                    <small>Highlight this product on your storefront homepage.</small>
+                  </span>
+                  <label class="pf-switch">
+                    <input type="checkbox" id="pfFeaturedToggle" />
+                    <span class="pf-switch-track"><span class="pf-switch-thumb"></span></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 6. PRODUCT ORGANIZATION ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionOrganization" data-pf-section="organization">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16v4H4z"></path>
+                    <path d="M4 12h10v4H4z"></path>
+                    <path d="M4 20h6v0H4z"></path>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Organization</h2>
+                  <p class="pf-card-subtitle">Help buyers discover this product.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field-row pf-field-row-2">
+                <div class="pf-field">
+                  <label class="pf-label pf-label-static">Category</label>
+
+                  <div class="pf-search-select">
+                    <input type="text" id="pfCategorySearch" class="pf-input" placeholder="Search category..." autocomplete="off" />
+
+                    <div id="pfCategoryLoader" class="pf-search-loader"></div>
+
+                    <input type="hidden" id="pfCategory" name="category" />
+
+                    <div id="pfCategoryDropdown" class="pf-search-dropdown"></div>
+                  </div>
+                </div>
+
+                <div class="pf-field">
+                  <label class="pf-label pf-label-static">
+                    Brand
+                    <span class="pf-optional">(optional)</span>
+                  </label>
+
+                  <div class="pf-search-select">
+                    <input type="text" id="pfBrandSearch" class="pf-input" placeholder="Search brand..." autocomplete="off" />
+
+                    <input type="hidden" id="pfBrand" name="brand" />
+
+                    <div id="pfBrandDropdown" class="pf-search-dropdown"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pf-field">
+                <label for="pfTagsInput" class="pf-label pf-label-static">Tags</label>
+                <div class="pf-tags-input" id="pfTagsInput">
+                  <span class="pf-tag-chip">wireless <button type="button" class="pf-tag-remove" aria-label="Remove tag wireless">&times;</button></span>
+                  <span class="pf-tag-chip">best-seller <button type="button" class="pf-tag-remove" aria-label="Remove tag best-seller">&times;</button></span>
+                  <input type="text" id="pfTagInputField" class="pf-tags-field" placeholder="Add a tag and press Enter" />
+                </div>
+                <span class="pf-field-hint">Tags improve internal search and related-product matching.</span>
+              </div>
+
+              <div class="pf-field">
+                <label for="pfCollections" class="pf-label pf-label-static">Collections <span class="pf-optional">(optional)</span></label>
+                <div class="pf-select-wrap">
+                  <select id="pfCollections" name="collections" class="pf-select" multiple>
+                    <option value="summer-sale">Summer Sale</option>
+                    <option value="new-arrivals">New Arrivals</option>
+                    <option value="staff-picks">Staff Picks</option>
+                  </select>
+                </div>
+                <span class="pf-field-hint">Hold Ctrl / Cmd to select multiple collections.</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 7. SHIPPING ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionShipping" data-pf-section="shipping">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                    <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Shipping</h2>
+                  <p class="pf-card-subtitle">Used to calculate delivery cost.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field">
+                <label for="pfWeight" class="pf-label pf-label-static">Weight</label>
+                <div class="pf-input-suffix-wrap pf-input-suffix-wrap-narrow">
+                  <input type="number" id="pfWeight" name="weight" class="pf-input pf-input-suffixed" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
+                  <span class="pf-input-suffix">kg</span>
+                </div>
+              </div>
+
+              <div class="pf-field">
+                <span class="pf-label pf-label-static">Dimensions</span>
+                <div class="pf-dimensions-row">
+                  <div class="pf-input-suffix-wrap">
+                    <input type="number" id="pfLength" name="length" class="pf-input pf-input-suffixed" placeholder="Length" min="0" step="0.1" />
+                    <span class="pf-input-suffix">cm</span>
+                  </div>
+                  <span class="pf-dimensions-sep" aria-hidden="true">&times;</span>
+                  <div class="pf-input-suffix-wrap">
+                    <input type="number" id="pfWidth" name="width" class="pf-input pf-input-suffixed" placeholder="Width" min="0" step="0.1" />
+                    <span class="pf-input-suffix">cm</span>
+                  </div>
+                  <span class="pf-dimensions-sep" aria-hidden="true">&times;</span>
+                  <div class="pf-input-suffix-wrap">
+                    <input type="number" id="pfHeight" name="height" class="pf-input pf-input-suffixed" placeholder="Height" min="0" step="0.1" />
+                    <span class="pf-input-suffix">cm</span>
+                  </div>
+                </div>
+                <span class="pf-field-hint">Length &times; Width &times; Height, in centimeters.</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 8. SEO PREVIEW ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionSeo" data-pf-section="seo">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">SEO Preview</h2>
+                  <p class="pf-card-subtitle">How this product appears in search results.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field pf-field-floating">
+                <input type="text" id="pfMetaTitle" name="meta_title" class="pf-input" placeholder=" " maxlength="70" data-pf-counter="pfMetaTitleCounter" />
+                <label for="pfMetaTitle" class="pf-label">Meta Title</label>
+                <div class="pf-field-footer">
+                  <span class="pf-field-hint">Falls back to the product name if left blank.</span>
+                  <span class="pf-char-counter"><span id="pfMetaTitleCounter">0</span>/70</span>
+                </div>
+              </div>
+
+              <div class="pf-field pf-field-floating">
+                <textarea id="pfMetaDescription" name="meta_description" class="pf-textarea pf-textarea-sm" placeholder=" " maxlength="160" data-pf-counter="pfMetaDescCounter"></textarea>
+                <label for="pfMetaDescription" class="pf-label">Meta Description</label>
+                <div class="pf-field-footer">
+                  <span class="pf-field-hint">Falls back to the short description if left blank.</span>
+                  <span class="pf-char-counter"><span id="pfMetaDescCounter">0</span>/160</span>
+                </div>
+              </div>
+
+              <div class="pf-seo-preview" id="pfSeoPreview">
+                <span class="pf-seo-preview-label">Google Search Preview</span>
+                <div class="pf-seo-preview-card">
+                  <div class="pf-seo-preview-url">
+                    <span class="pf-seo-preview-favicon" aria-hidden="true"></span>
+                    marketsphere.com &rsaquo; product &rsaquo; <span id="pfSeoUrlSlug">your-product-slug</span>
+                  </div>
+                  <div class="pf-seo-preview-title" id="pfSeoPreviewTitle">Your Product Name &mdash; MarketSphere</div>
+                  <div class="pf-seo-preview-desc" id="pfSeoPreviewDesc">Your short description will appear here, giving shoppers a preview of what this product offers before they click through.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ 9. PUBLISHING ============ -->
+          <section class="pf-card pf-reveal" id="pfSectionPublishing" data-pf-section="publishing">
+            <button type="button" class="pf-card-head pf-accordion-trigger">
+              <div class="pf-card-head-text">
+                <span class="pf-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </span>
+                <span>
+                  <h2 class="pf-card-title">Publishing</h2>
+                  <p class="pf-card-subtitle">Decide when and where this goes live.</p>
+                </span>
+              </div>
+              <svg class="pf-accordion-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="pf-card-body">
+              <div class="pf-field">
+                <span class="pf-label pf-label-static">Visibility</span>
+                <div class="pf-visibility-options">
+                  <label class="pf-visibility-option is-selected">
+                    <input type="radio" name="visibility" value="published" checked />
+                    <span class="pf-visibility-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </span>
+                    <span class="pf-visibility-text">
+                      <strong>Published</strong>
+                      <small>Visible to all shoppers immediately</small>
+                    </span>
+                  </label>
+
+                  <label class="pf-visibility-option">
+                    <input type="radio" name="visibility" value="draft" />
+                    <span class="pf-visibility-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path>
+                      </svg>
+                    </span>
+                    <span class="pf-visibility-text">
+                      <strong>Draft</strong>
+                      <small>Only visible to you while you finish editing</small>
+                    </span>
+                  </label>
+
+                  <label class="pf-visibility-option">
+                    <input type="radio" name="visibility" value="hidden" />
+                    <span class="pf-visibility-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    </span>
+                    <span class="pf-visibility-text">
+                      <strong>Hidden</strong>
+                      <small>Kept out of search &amp; category listings</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="pf-field pf-schedule-field" id="pfScheduleField">
+                <label for="pfScheduleDate" class="pf-label pf-label-static">Schedule Publish Date <span class="pf-optional">(optional)</span></label>
+                <input type="datetime-local" id="pfScheduleDate" name="publish_at" class="pf-input" />
+                <span class="pf-field-hint">Leave blank to publish as soon as you hit "Publish Product".</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside class="pf-sidebar">
+          <!-- ============ COMPLETION ============ -->
+          <div class="pf-card pf-sidebar-card pf-reveal">
+            <div class="pf-completion-head">
+              <h3 class="pf-sidebar-title">Product Completion</h3>
+              <span class="pf-completion-percent" id="pfCompletionPercent">0%</span>
+            </div>
+
+            <div class="pf-completion-bar">
+              <div class="pf-completion-bar-fill" id="pfCompletionBarFill" style="width: 0%;"></div>
+            </div>
+
+            <p class="pf-completion-caption" id="pfCompletionCaption">Fill in the required fields to publish your product.</p>
+          </div>
+
+          <!-- ============ PUBLISHING CHECKLIST ============ -->
+          <div class="pf-card pf-sidebar-card pf-reveal">
+            <h3 class="pf-sidebar-title">Publishing Checklist</h3>
+
+            <ul class="pf-checklist" id="pfChecklist">
+              <li class="pf-checklist-item" data-checklist-for="name">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Add a product name</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="sku">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Add a SKU</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="short_description">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Write a short description</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="description">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Write a full description</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="price">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Set a regular price</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="category">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Choose a category</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="stock_quantity">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Set stock quantity</span>
+              </li>
+              <li class="pf-checklist-item" data-checklist-for="images">
+                <span class="pf-checklist-dot" aria-hidden="true"></span>
+                <span>Upload at least one image</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ============ PRODUCT TIPS ============ -->
+          <div class="pf-card pf-sidebar-card pf-reveal">
+            <h3 class="pf-sidebar-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="pf-sidebar-title-icon">
+                <path d="M9 18h6"></path>
+                <path d="M10 22h4"></path>
+                <path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"></path>
+              </svg>Product Tips
+            </h3>
+
+            <ul class="pf-tips-list">
+              <li>Lead your title with the brand and the most searched keyword.</li>
+              <li>Keep short descriptions under 20 words &mdash; they show on crowded cards.</li>
+              <li>Mention material, size, and compatibility in the full description.</li>
+            </ul>
+          </div>
+
+          <!-- ============ IMAGE RECOMMENDATIONS ============ -->
+          <div class="pf-card pf-sidebar-card pf-reveal">
+            <h3 class="pf-sidebar-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="pf-sidebar-title-icon">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <circle cx="9" cy="9" r="2"></circle>
+                <path d="m21 15-5-5L5 21"></path>
+              </svg>Image Recommendations
+            </h3>
+
+            <ul class="pf-tips-list">
+              <li>Use a plain or white background for the primary image.</li>
+              <li>Include at least one lifestyle or in-use photo.</li>
+              <li>Square images (1:1) display most consistently across the site.</li>
+            </ul>
+          </div>
+
+          <!-- ============ SEO TIPS ============ -->
+          <div class="pf-card pf-sidebar-card pf-reveal">
+            <h3 class="pf-sidebar-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="pf-sidebar-title-icon">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>SEO Tips
+            </h3>
+
+            <ul class="pf-tips-list">
+              <li>Keep meta titles under 60 characters so they aren't truncated.</li>
+              <li>Front-load meta descriptions with the key benefit.</li>
+              <li>Avoid keyword stuffing &mdash; write for shoppers, not algorithms.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </form>
+  </div>
+
+  <!-- ================= STICKY FOOTER ACTIONS ================= -->
+  <div class="pf-sticky-footer" id="pfStickyFooter">
+    <div class="pf-sticky-footer-inner">
+      <span class="pf-sticky-footer-status" id="pfStickyStatus">
+        <span class="pf-status-dot"></span>
+        Unsaved changes
+      </span>
+
+      <div class="pf-sticky-footer-actions">
+        <button type="button" class="pf-btn pf-btn-ghost" id="pfCancelBtn">Cancel</button>
+        <button type="button" class="pf-btn pf-btn-secondary" id="pfSaveDraftBtn" data-loading-label="Saving Draft&hellip;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
+            <path d="M17 21v-8H7v8"></path>
+            <path d="M7 3v5h8"></path>
+          </svg>
+          <span class="pf-btn-label">Save Draft</span>
+        </button>
+        <button type="button" class="pf-btn pf-btn-primary" id="pfPublishBtn" data-loading-label="Publishing&hellip;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2 11 13"></path>
+            <path d="M22 2 15 22l-4-9-9-4 20-7Z"></path>
+          </svg>
+          <span class="pf-btn-label">Publish Product</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DISCARD CONFIRM MODAL (frontend only) ================= -->
+  <div class="pf-modal-overlay pf-hidden" id="pfDiscardModalOverlay">
+    <div class="pf-modal" role="dialog" aria-modal="true" aria-labelledby="pfDiscardModalTitle">
+      <div class="pf-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="pf-modal-title" id="pfDiscardModalTitle">Discard unsaved changes?</h3>
+      <p class="pf-modal-text">You have unsaved changes on this product. Leaving now will discard them.</p>
+      <div class="pf-modal-actions">
+        <button type="button" class="pf-btn pf-btn-ghost" id="pfDiscardCancelBtn">Keep Editing</button>
+        <button type="button" class="pf-btn pf-btn-danger" id="pfDiscardConfirmBtn">Discard Changes</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static '/js/product_form.js' %}"></script>
+{% endblock %}

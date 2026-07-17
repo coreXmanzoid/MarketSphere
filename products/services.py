@@ -21,31 +21,25 @@ def get_all_categories():
     )
     return categories
 
+
 def get_all_brands():
     brands = Brand.objects.filter(is_active=True)
     return brands
 
+
 def get_featured_products():
-    return Product.objects.select_related(
-        "category",
-        "brand"
-    ).prefetch_related(
-        "images"
-    ).filter(
-        status=Product.Status.PUBLISHED,
-        is_featured=True
+    return (
+        Product.objects.select_related("category", "brand")
+        .prefetch_related("images")
+        .filter(status=Product.Status.PUBLISHED, is_featured=True)
     )
+
 
 def get_product_by_slug(product_slug):
     return get_object_or_404(
-        Product.objects.select_related(
-            "category",
-            "brand"
-        ).prefetch_related(
-            "images"
-        ),
+        Product.objects.select_related("category", "brand").prefetch_related("images"),
         slug=product_slug,
-        status=Product.Status.PUBLISHED
+        status=Product.Status.PUBLISHED,
     )
 
 
@@ -91,32 +85,18 @@ def create_product(user, post_data, files):
         seller=seller,
         category=category,
         brand=brand,
-
         name=post_data.get("name"),
         slug=post_data.get("slug"),
-
         short_description=post_data.get("short_description"),
         description=post_data.get("description"),
-
         sku=post_data.get("sku"),
         barcode=post_data.get("barcode"),
-
         price=post_data.get("price"),
-
-        discount_price=(
-            post_data.get("discount_price") or None
-        ),
-
+        discount_price=(post_data.get("discount_price") or None),
         stock_quantity=post_data.get("stock_quantity"),
-
         min_stock_level=post_data.get("min_stock_level"),
-
-        weight=(
-            post_data.get("weight") or None
-        ),
-
+        weight=(post_data.get("weight") or None),
         status=status,
-
         is_featured=post_data.get("is_featured") == "true",
     )
 
@@ -133,9 +113,12 @@ def create_product(user, post_data, files):
         )
 
     return product
+
+
 # search logic
 
 from django.db.models import Q
+
 
 def get_search_products(q):
     if not q:
@@ -155,14 +138,22 @@ def get_search_products(q):
         )
     )
 
+
 from django.db.models import Q
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
 
 # ... keep existing imports/functions ...
 
-def filter_products(products, category_slugs=None, brand_slugs=None,
-                     max_price=None, availability=None, discount_only=False):
+
+def filter_products(
+    products,
+    category_slugs=None,
+    brand_slugs=None,
+    max_price=None,
+    availability=None,
+    discount_only=False,
+):
     if category_slugs:
         products = products.filter(category__slug__in=category_slugs)
 
@@ -212,56 +203,93 @@ def sort_products(products, sort_value):
     return products.order_by("-created_at")  # "newest" / default
 
 
+def hide_product_by_slug(product_slug, seller):
+    product = Product.objects.get(slug=product_slug, seller=seller)
+    product.status = Product.Status.HIDDEN
+    product.save(update_fields=["status"])
+
+
+def unhide_product_by_slug(product_slug, seller):
+    product = Product.objects.get(slug=product_slug, seller=seller)
+    product.status = Product.Status.PUBLISHED
+    product.save(update_fields=["status"])
+
+
+from django.db.models.deletion import ProtectedError
+
+
+
+def delete_product_by_slug(product_slug, seller):
+    try:
+        product = Product.objects.get(
+            slug=product_slug,
+            seller=seller,
+        )
+
+        try:
+            product.delete()
+            return {
+                "success": True,
+                "archived": False,
+            }
+
+        except ProtectedError:
+            product.status = Product.Status.ARCHIVED
+            product.save(update_fields=["status"])
+
+            return {
+                "success": True,
+                "archived": True,
+            }
+
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "archived": False,
+        }
+
 def paginate_products(products, page_number, per_page=12):
     paginator = Paginator(products, per_page)
     return paginator, paginator.get_page(page_number)
 
+
 def get_search_categories(products):
-    return (
-        Category.objects.filter(
-            products__in=products,
-            is_active=True,
-        )
-        .distinct()[:5]
-    )
+    return Category.objects.filter(
+        products__in=products,
+        is_active=True,
+    ).distinct()[:5]
 
 
 def get_search_brands(products):
-    return (
-        Brand.objects.filter(
-            products__in=products,
-            is_active=True,
-        )
-        .distinct()[:5]
-    )
+    return Brand.objects.filter(
+        products__in=products,
+        is_active=True,
+    ).distinct()[:5]
+
 
 def get_brand_products(brand_slug):
-    return Product.objects.select_related(
-        "brand",
-        "category"
-    ).prefetch_related(
-        "images"
-    ).filter(
-        brand__slug=brand_slug,
-        status=Product.Status.PUBLISHED
+    return (
+        Product.objects.select_related("brand", "category")
+        .prefetch_related("images")
+        .filter(brand__slug=brand_slug, status=Product.Status.PUBLISHED)
     )
+
+
 def get_category_products(category_slug):
-    return Product.objects.select_related(
-        "brand",
-        "category"
-    ).prefetch_related(
-        "images"
-    ).filter(
-        category__slug=category_slug,
-        status=Product.Status.PUBLISHED
+    return (
+        Product.objects.select_related("brand", "category")
+        .prefetch_related("images")
+        .filter(category__slug=category_slug, status=Product.Status.PUBLISHED)
     )
+
 
 # wishlist logic
 def add_to_wishlist(user, product_slug):
-    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
+    product = get_object_or_404(
+        Product, slug=product_slug, status=Product.Status.PUBLISHED
+    )
     wishlist_item, created = WishlistItem.objects.get_or_create(
-        user=user,
-        product=product
+        user=user, product=product
     )
 
     return wishlist_item
@@ -269,8 +297,7 @@ def add_to_wishlist(user, product_slug):
 
 def remove_from_wishlist(user, product_slug):
     wishlist_item = WishlistItem.objects.filter(
-        user=user,
-        product__slug=product_slug
+        user=user, product__slug=product_slug
     ).first()
 
     if wishlist_item:
@@ -293,10 +320,7 @@ def is_in_wishlist(user, product_slug):
     if not getattr(user, "is_authenticated", False):
         return False
 
-    return WishlistItem.objects.filter(
-        user=user,
-        product__slug=product_slug
-    ).exists()
+    return WishlistItem.objects.filter(user=user, product__slug=product_slug).exists()
 
 
 def get_wishlist_ids(user):
@@ -304,20 +328,18 @@ def get_wishlist_ids(user):
 
     if user.is_authenticated:
         wishlist_ids = set(
-            WishlistItem.objects.filter(user=user)
-            .values_list("product_id", flat=True)
+            WishlistItem.objects.filter(user=user).values_list("product_id", flat=True)
         )
         return wishlist_ids
     return None
+
 
 def get_user_wishlist(user):
     if not getattr(user, "is_authenticated", False):
         return WishlistItem.objects.none()
 
     return WishlistItem.objects.filter(user=user).select_related(
-        "product",
-        "product__brand",
-        "product__category"
+        "product", "product__brand", "product__category"
     )
 
 
@@ -327,20 +349,23 @@ def wishlist_count(user):
 
     return WishlistItem.objects.filter(user=user).count()
 
+
 # cart logic
 
+
 def get_or_create_cart(user):
-    cart, created =  Cart.objects.get_or_create(user = user)
+    cart, created = Cart.objects.get_or_create(user=user)
     return cart
 
+
 def add_to_cart(user, product_slug):
-    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
+    product = get_object_or_404(
+        Product, slug=product_slug, status=Product.Status.PUBLISHED
+    )
     cart = get_or_create_cart(user)
 
     cart_item, created = CartItem.objects.get_or_create(
-        cart=cart,
-        product=product,
-        defaults={"quantity": 1}
+        cart=cart, product=product, defaults={"quantity": 1}
     )
 
     if not created:
@@ -349,6 +374,7 @@ def add_to_cart(user, product_slug):
 
     return cart_item
 
+
 def remove_from_cart(user, product_slug):
     cart = get_or_create_cart(user)
     cart_item = CartItem.objects.filter(cart=cart, product__slug=product_slug).first()
@@ -356,6 +382,7 @@ def remove_from_cart(user, product_slug):
         cart_item.delete()
         return True
     return False
+
 
 def update_quantity(user, product_slug, quantity):
     cart = get_or_create_cart(user)
@@ -376,12 +403,15 @@ def update_quantity(user, product_slug, quantity):
     cart_item.save()
     return cart_item
 
+
 def increment_quantity(user, product_slug):
     cart = get_or_create_cart(user)
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
-        product=get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED),
-        defaults={"quantity": 1}
+        product=get_object_or_404(
+            Product, slug=product_slug, status=Product.Status.PUBLISHED
+        ),
+        defaults={"quantity": 1},
     )
 
     if not created:
@@ -389,6 +419,7 @@ def increment_quantity(user, product_slug):
         cart_item.save()
 
     return cart_item
+
 
 def decrement_quantity(user, product_slug):
     cart = get_or_create_cart(user)
@@ -404,22 +435,24 @@ def decrement_quantity(user, product_slug):
     cart_item.save()
     return cart_item
 
+
 def clear_cart(user):
     cart = get_or_create_cart(user)
     CartItem.objects.filter(cart=cart).delete()
     return True
 
+
 def cart_total(user):
     cart = get_or_create_cart(user)
-    items = CartItem.objects.filter(cart=cart).select_related('product')
-    total = Decimal('0.00')
+    items = CartItem.objects.filter(cart=cart).select_related("product")
+    total = Decimal("0.00")
     for item in items:
-        price = (
-        getattr(item.product, "discount_price", None)
-        or getattr(item.product, "price", Decimal("0.00"))
+        price = getattr(item.product, "discount_price", None) or getattr(
+            item.product, "price", Decimal("0.00")
         )
-        total += (Decimal(price) * Decimal(item.quantity or 0))
+        total += Decimal(price) * Decimal(item.quantity or 0)
     return total
+
 
 def cart_subtotal(user):
     # same as total for now (no taxes/shipping applied here)
@@ -429,14 +462,16 @@ def cart_subtotal(user):
 def cart_count(user):
     cart = get_or_create_cart(user)
     return (
-        CartItem.objects.filter(cart=cart)
-        .aggregate(total_quantity=Sum("quantity"))["total_quantity"]
+        CartItem.objects.filter(cart=cart).aggregate(total_quantity=Sum("quantity"))[
+            "total_quantity"
+        ]
         or 0
     )
 
+
 def get_user_cart(user):
-    if not getattr(user, 'is_authenticated', False):
+    if not getattr(user, "is_authenticated", False):
         return None
 
-    cart = Cart.objects.filter(user=user).prefetch_related('items__product').first()
+    cart = Cart.objects.filter(user=user).prefetch_related("items__product").first()
     return cart

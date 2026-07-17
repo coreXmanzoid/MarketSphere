@@ -182,11 +182,7 @@
               {% for item in order.items.all %}
                 <div class="cf-order-item">
                   <div class="product-image-placeholder cf-order-item-img">
-                    {% if item.product.images.first %}
-                      <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" />
-                    {% else %}
-                      <i class="bi bi-box-seam"></i>
-                    {% endif %}
+                    <img src="{{ item.product.primary_image.image.url }}" alt="">
                   </div>
 
                   <div class="cf-order-item-info">

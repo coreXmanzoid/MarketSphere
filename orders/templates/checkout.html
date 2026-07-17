@@ -204,7 +204,7 @@
               {% for item in cart.items.all %}
               <div class="co-summary-item">
                 <div class="product-image-placeholder co-summary-item-img">
-                  <i class="bi bi-usb-c"></i>
+                  <img src="{{ item.product.primary_image.image.url }}" alt="">
                 </div>
                 <div class="co-summary-item-info">
                   <p class="co-summary-item-name">{{ item.product.name }}</p>

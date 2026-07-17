@@ -59,7 +59,7 @@
     --pm-shadow-md: 0 8px 22px rgba(78, 34, 15, 0.09);
     --pm-shadow-lg: 0 18px 44px rgba(78, 34, 15, 0.16);
 
-    --pm-radius-sm: 2px;
+    --pm-radius-sm: 4px;
     --pm-radius-md: 10px;
     --pm-radius-lg: 20px;
     --pm-radius-pill: 999px;
@@ -722,6 +722,7 @@
 .pm-product-thumb img {
     width: 100%;
     height: 100%;
+    border-radius: var(--pm-radius-sm);
     object-fit: cover;
 }
 

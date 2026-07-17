@@ -87,11 +87,7 @@
                   </button> {% endcomment %}
 
                   <a href="{% url 'product' item.product.slug %}" class="product-image-placeholder wishlist-image-link">
-                    {% if product.images.first %}
-                      <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.images.first.alt_text|default:product.name }}" class="wishlist-product-img" />
-                    {% else %}
-                      <i class="bi bi-image"></i>
-                    {% endif %}
+                      <img src="{{ item.product.primary_image.image.url }}" alt="" class="wishlist-product-img" />
                   </a>
                 </div>
 

@@ -28,7 +28,7 @@
       </div>
 
       <div class="pm-header-actions">
-        <button type="button" class="pm-btn pm-btn-primary pm-btn-lg" onclick="window.location.href='{% url "add-product" %}'">
+        <button type="button" class="pm-btn pm-btn-primary pm-btn-lg" onclick="window.location.href='{% url 'add-product' %}'">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -93,7 +93,7 @@
         </div>
         <div class="pm-stat-body">
           <!-- Placeholder value; will render draft-product count from Django -->
-          <span class="pm-stat-value">6</span>
+          <span class="pm-stat-value">{{ dashboard_drafted_products.count }}</span>
           <span class="pm-stat-label">Drafts</span>
         </div>
       </div>
@@ -237,11 +237,8 @@
                   </label>
                 </td>
                 <td data-label="">
-                  <div class="pm-product-thumb">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3ZM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"></path>
-                    </svg>
+                  <div class="product-image-placeholder pm-product-thumb">
+                    <img src="{{ product.primary_image.image.url }}" alt="" />
                   </div>
                 </td>
                 <td data-label="Product">
@@ -254,9 +251,9 @@
                 <td data-label="Price">
                   <span class="pm-price">
                     {% if product.discount_price %}
-                      {{ product.discount_price }}
+                      {{ product.discount_price|floatformat:0 }}
                     {% else %}
-                      {{ product.price }}
+                      {{ product.price|floatformat:0 }}
                     {% endif %}
                   </span>
                 </td>
@@ -266,12 +263,14 @@
                 <td data-label="Status">
                   {% if product.status == 'out_of_stock' %}
                     <span class="pm-badge pm-badge-out-of-stock">Out of Stock</span>
+                  {% elif product.status == 'archived' %}
+                    <span class="pm-badge pm-badge-out-of-stock">Archived</span>
                   {% elif product.status == 'published' %}
-                  <span class="pm-badge pm-badge-published">Published</span>
+                    <span class="pm-badge pm-badge-published">Published</span>
                   {% elif product.status == 'hidden' %}
-                  <span class="pm-badge pm-badge-hidden">Hidden</span>
-                  {% else %}
-                  <span class="pm-badge pm-badge-draft">Draft</span>
+                    <span class="pm-badge pm-badge-hidden">Hidden</span>
+                  {% elif product.status == 'drafted' %}
+                    <span class="pm-badge pm-badge-draft">Draft</span>
                   {% endif %}
                 </td>
 
@@ -287,7 +286,7 @@
                         <circle cx="12" cy="19" r="1.5"></circle>
                       </svg>
                     </button>
-                    <div class="pm-dropdown-menu" role="menu">
+                    <div class="pm-dropdown-menu" role="menu" data-product-slug="{{ product.slug }}">
                       <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="edit">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -300,19 +299,30 @@
                           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>Duplicate
                       </button>
-                      <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>Hide
-                      </button>
-                      <div class="pm-dropdown-divider" role="separator"></div>
-                      <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Wireless Over-Ear Headphones">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>Delete
-                      </button>
+                      {% if product.status != 'hidden' %}
+                        <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="hide">
+                          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                          </svg>Hide
+                        </button>
+                      {% else %}
+                        <button type="button" class="pm-dropdown-item" role="menuitem" data-row-action="unhide">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
+                            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
+                          </svg>Unhide
+                        </button>
+                      {% endif %}
+                      {% if product.status != 'archived' %}
+                        <div class="pm-dropdown-divider" role="separator"></div>
+                        <button type="button" class="pm-dropdown-item pm-dropdown-item-danger" role="menuitem" data-row-action="delete" data-product-name="Wireless Over-Ear Headphones">
+                          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>Delete
+                        </button>
+                      {% endif %}
                     </div>
                   </div>
                 </td>
@@ -336,7 +346,7 @@
           </div>
           <h3 class="pm-empty-title">No Products Yet</h3>
           <p class="pm-empty-subtitle">Start by adding your first product.</p>
-          <button type="button" class="pm-btn pm-btn-primary pm-btn-lg" onclick="window.location.href='{% url "add-product" %}'">
+          <button type="button" class="pm-btn pm-btn-primary pm-btn-lg" onclick="window.location.href='{% url 'add-product' %}'">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>

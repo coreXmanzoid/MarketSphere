@@ -38,35 +38,46 @@
         <div class="col-lg-6 col-12">
           <div class="pd-gallery" id="pdGallery">
             <div class="pd-gallery-main" id="pdGalleryMain">
-              <!-- Product badges will be rendered here by Django based on product state -->
-              <span class="badge-discount pd-gallery-badge">-20%</span>
-              <span class="badge-new pd-gallery-badge pd-gallery-badge-secondary d-none">New</span>
+              <!-- Discount Badge -->
+              {% if product.discount_price %}
+                <span class="badge-discount pd-gallery-badge">
+                  -{% widthratio product.discount_price product.price 100 as discount_percent %}
+                  {{ 100|add:'-'|add:discount_percent }}%
+                </span>
+              {% endif %}
+
+              <!-- New Badge (example: products created within last 7 days) -->
+              {% if product.created_at|timesince|slice:':1' == '0' %}
+                <span class="badge-new pd-gallery-badge pd-gallery-badge-secondary">New</span>
+              {% endif %}
 
               <button type="button" class="pd-zoom-btn" id="pdFullscreenBtn" aria-label="View fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
 
               <div class="pd-gallery-image-wrap" id="pdImageWrap">
-                <!-- Main product image will be rendered here by Django -->
-                <img src="{% static 'images/logo-icon.png' %}" alt="Product image placeholder" id="pdMainImage" class="pd-main-image" />
+                {% if product.primary_image %}
+                  <img src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}" id="pdMainImage" class="pd-main-image" />
+                {% else %}
+                  <img src="{% static 'images/logo-icon.png' %}" alt="No Image" id="pdMainImage" class="pd-main-image" />
+                {% endif %}
               </div>
 
               <button type="button" class="pd-nav-btn pd-nav-prev" id="pdPrevBtn" aria-label="Previous image"><i class="bi bi-chevron-left"></i></button>
+
               <button type="button" class="pd-nav-btn pd-nav-next" id="pdNextBtn" aria-label="Next image"><i class="bi bi-chevron-right"></i></button>
 
-              <span class="pd-image-counter" id="pdImageCounter">1 / 5</span>
+              <span class="pd-image-counter" id="pdImageCounter">1 / {{ product.images.count }}</span>
             </div>
 
             <!-- Thumbnail Strip -->
             <div class="pd-thumb-strip" id="pdThumbStrip" role="listbox" aria-label="Product thumbnails">
-              <!-- Thumbnails will be rendered here by Django from product.images -->
-              <button type="button" class="pd-thumb is-active" data-index="0" aria-label="View image 1"><i class="bi bi-headphones"></i></button>
-              <button type="button" class="pd-thumb" data-index="1" aria-label="View image 2"><i class="bi bi-headphones"></i></button>
-              <button type="button" class="pd-thumb" data-index="2" aria-label="View image 3"><i class="bi bi-soundwave"></i></button>
-              <button type="button" class="pd-thumb" data-index="3" aria-label="View image 4"><i class="bi bi-box-seam"></i></button>
-              <button type="button" class="pd-thumb" data-index="4" aria-label="View image 5"><i class="bi bi-tag"></i></button>
+              {% for image in product.images.all %}
+                <button type="button" class="pd-thumb {% if forloop.first %}is-active{% endif %}" data-index="{{ forloop.counter0 }}" data-image="{{ image.image.url }}" aria-label="View image {{ forloop.counter }}"><img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" /></button>
+              {% empty %}
+                <button type="button" class="pd-thumb is-active"><img src="{% static 'images/logo-icon.png' %}" alt="No image" /></button>
+              {% endfor %}
             </div>
           </div>
         </div>
-
         <!-- ================= RIGHT: PRODUCT INFO ================= -->
         <div class="col-lg-6 col-12">
           <div class="pd-info" id="pdInfo">
@@ -75,7 +86,11 @@
               <!-- Category will be rendered here by Django -->
               <span class="product-category-badge pd-inline-badge">{{ product.category.name }}</span>
               <!-- Brand will be rendered here by Django -->
-              <span class="product-brand pd-brand-text">{{ product.brand.name }}</span>
+               {% if product.brand %}
+               <span class="product-brand pd-brand-text">{{ product.brand.name }}</span>
+                {% else %}
+               <span class="product-brand pd-brand-text">No Brand</span>
+               {% endif %}
             </div>
 
             <!-- Product Title -->
@@ -155,9 +170,17 @@
                   id="pdWishlistBtn"
                   data-product-slug="{{ product.slug }}"
                   aria-label="{% if is_in_wishlist %}
+                    
+                    
                     Remove from wishlist
+
+
                   {% else %}
+                    
+                    
                     Add to wishlist
+
+
                   {% endif %}">
                   <i class="bi bi-heart"></i> <span>Wishlist</span>
                 </button>
@@ -969,6 +992,13 @@
 
   <!-- ================= BACK TO TOP ================= -->
   <button id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+  <!-- ================= FULLSCREEN VIEWER ================= -->
+  <div class="pd-fullscreen-overlay d-none" id="pdFullscreenOverlay">
+    <button type="button" class="pd-fullscreen-close" id="pdFullscreenClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+
+    <img id="pdFullscreenImage" class="pd-fullscreen-image" src="" alt="Product Image" />
+  </div>
 {% endblock %}
 
 {% block js %}

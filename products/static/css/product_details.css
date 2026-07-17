@@ -73,14 +73,15 @@
 }
 
 .pd-main-image {
-    max-width: 78%;
-    max-height: 78%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
+    border-radius: 4px;
     transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
 }
 
 .pd-gallery-image-wrap:hover .pd-main-image {
-    transform: scale(1.12);
+    transform: scale(1.1);
 }
 
 .pd-main-image.pd-fade-out {
@@ -195,7 +196,12 @@
     padding: 0 !important;
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
-
+.pd-thumb img{
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    border-width: 2px;
+}
 .pd-thumb:hover {
     border-color: var(--pd-accent) !important;
 }
@@ -1354,4 +1360,96 @@
         flex-direction: column;
         gap: 20px;
     }
+}
+/* ================= FULLSCREEN VIEWER ================= */
+
+.pd-fullscreen-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 40px;
+
+    /* Liquid glass background */
+    background: rgba(247, 241, 222, 0.18);
+    backdrop-filter: blur(35px) saturate(180%);
+    -webkit-backdrop-filter: blur(35px) saturate(180%);
+
+    animation: fadeIn .25s ease;
+}
+.pd-fullscreen-overlay:not(.d-none){
+    opacity: 1;
+    visibility: visible;
+}
+
+.pd-fullscreen-image{
+    max-width: 92vw;
+    max-height: 92vh;
+
+    object-fit: contain;
+    object-position: center;
+
+    border-radius: 12px;
+
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Close Button */
+
+.pd-fullscreen-close{
+    position: absolute;
+    top: 24px;
+    right: 24px;
+
+    width: 46px;
+    height: 46px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #F7F1DE;
+    color: #F7F1DE;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+    cursor: pointer;
+
+    transition: .25s;
+    border: 1.5px solid #9D6638;
+}
+
+.pd-fullscreen-close:hover{
+    background: #F7F1DE;
+    color: #4E220F;
+    /* transform: rotate(90deg); */
+}
+
+/* Mobile */
+
+@media (max-width:768px){
+
+    .pd-fullscreen-overlay{
+        padding:20px;
+    }
+
+    .pd-fullscreen-close{
+        top:16px;
+        right:16px;
+        width:42px;
+        height:42px;
+    }
+
+    .pd-fullscreen-image{
+        max-width:100%;
+        max-height:85vh;
+    }
+
 }

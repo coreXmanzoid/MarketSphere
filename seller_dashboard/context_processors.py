@@ -41,6 +41,11 @@ def seller_dashboard(request):
         .count()
     )
 
+    drafted_products = Product.objects.filter(
+        seller=seller,
+        status=Product.Status.DRAFT,
+    )
+
     completed_revenue = (
         OrderItem.objects.filter(
             product__seller=seller,
@@ -98,9 +103,7 @@ def seller_dashboard(request):
         stock_quantity__lte=F("min_stock_level")
     )
 
-    out_of_stock_products = seller_products.filter(
-        stock_quantity__lte=0
-    )
+    out_of_stock_products = seller_products.filter(stock_quantity__lte=0)
 
     return {
         "dashboard_seller": seller,
@@ -115,4 +118,5 @@ def seller_dashboard(request):
         "dashboard_month_orders": month_orders,
         "dashboard_new_orders_this_week": new_orders_this_week,
         "dashboard_recent_orders": recent_orders,
+        "dashboard_drafted_products": drafted_products,
     }
