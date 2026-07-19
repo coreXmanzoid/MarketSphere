@@ -23,6 +23,7 @@
     15. Init
    ========================================================= */
 let uploadedImages = [];
+let deletedImageIds = [];
 (function () {
     'use strict';
 
@@ -306,6 +307,48 @@ let uploadedImages = [];
         var extraSlots = $all('[data-image-slot]');
 
         if (!zone || !input) return;
+        document.querySelectorAll(".pf-image-remove-btn").forEach(function (btn) {
+
+            btn.addEventListener("click", function (e) {
+
+                e.stopPropagation();
+
+                const slot = btn.closest("[data-image-slot]");
+                const imageId = slot.dataset.imageId;
+
+                if (imageId) {
+                    deletedImageIds.push(imageId);
+                }
+
+                const img = slot.querySelector("img");
+                if (img) img.remove();
+
+                btn.remove();
+
+                slot.classList.remove("pf-image-slot-filled");
+
+                slot.innerHTML = `
+            <div class="pf-image-slot-empty">
+                <svg viewBox="0 0 24 24"
+                     width="18"
+                     height="18"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.6"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </div>
+        `;
+
+                markDirty();
+                updateCompletion();
+
+            });
+
+        });
 
         function findEmptySlot() {
             if (primarySlot && !primarySlot.classList.contains('pf-image-slot-filled')) {
@@ -392,7 +435,6 @@ let uploadedImages = [];
                 fillSlot(slot, file);
             });
         }
-
         zone.addEventListener('click', function () { input.click(); });
         zone.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -665,9 +707,164 @@ let uploadedImages = [];
     function initActionButtons() {
         var saveButtons = [document.getElementById('pfSaveDraftTopBtn'), document.getElementById('pfSaveDraftBtn')];
         var publishButtons = [document.getElementById('pfPublishTopBtn'), document.getElementById('pfPublishBtn')];
+        var updateButtons = [document.getElementById('pfUpdateTopBtn'), document.getElementById('pfUpdateBtn')];
 
+        updateButtons.forEach(function (btn) {
+
+            if (!btn) return;
+
+            btn.addEventListener("click", async function () {
+
+                const product = getFormData();
+                const formData = new FormData();
+                const productSlug = document.getElementById("pfSectionInfo").dataset.productSlug;
+                if (product.visibility === "published") {
+
+                    const percentEl = document.getElementById("pfCompletionPercent").textContent;
+
+                    if (percentEl !== "100%") {
+                        alert("Please complete the product data first.");
+                        return;
+                    }
+                }
+
+                // Normal fields
+                for (const key in product) {
+
+                    if (
+                        key === "tags" ||
+                        key === "collections" ||
+                        key === "dimensions" ||
+                        key === "images"
+                    ) {
+                        continue;
+                    }
+
+                    formData.append(key, product[key] ?? "");
+                }
+
+                // JSON fields
+                formData.append("tags", JSON.stringify(product.tags));
+                formData.append("collections", JSON.stringify(product.collections));
+                formData.append("dimensions", JSON.stringify(product.dimensions));
+
+                // Newly uploaded images
+                product.images.forEach(function (image) {
+                    formData.append("images", image);
+                });
+
+                // Existing images marked for deletion
+                formData.append(
+                    "deleted_images",
+                    JSON.stringify(deletedImageIds)
+                );
+
+                try {
+
+                    const response = await fetch(
+                        `/seller/products/edit-product/${productSlug}`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": getCSRFToken()
+                            },
+                            body: formData
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+
+                        // Images were deleted successfully, clear the list
+                        deletedImageIds = [];
+
+                        
+                        window.location.reload();
+                        simulateSave(btn, "Product updated");
+
+                    } else {
+
+                        console.error(result);
+                        alert(result.message || "Failed to update product.");
+
+                    }
+
+                } catch (error) {
+
+                    console.error(error);
+                    alert("Something went wrong while updating the product.");
+
+                }
+
+            });
+
+        });
         saveButtons.forEach(function (btn) {
-            if (btn) btn.addEventListener('click', function () { simulateSave(btn, 'Draft saved'); });
+
+            if (!btn) return;
+
+            btn.addEventListener("click", async function () {
+
+                const product = getFormData();
+                const formData = new FormData();
+                if (!product.name.trim()) {
+                    alert("Please enter a product name.");
+                    return;
+                }
+
+                // Append normal fields
+                for (const key in product) {
+
+                    if (
+                        key === "tags" ||
+                        key === "collections" ||
+                        key === "dimensions" ||
+                        key === "images"
+                    ) {
+                        continue;
+                    }
+
+                    formData.append(key, product[key]);
+                }
+
+                // Append arrays & object as JSON
+                formData.append("tags", JSON.stringify(product.tags));
+                formData.append("collections", JSON.stringify(product.collections));
+                formData.append("dimensions", JSON.stringify(product.dimensions));
+
+                // Append images
+                product.images.forEach(image => {
+                    formData.append("images", image);
+                });
+
+                try {
+
+                    const response = await fetch("/seller/products/save-draft/", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        console.log(result);
+                        simulateSave(btn, "Draft saved");
+                    } else {
+                        console.error(result);
+                        alert(result.message || "Failed to save draft.");
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    alert("Something went wrong while saving the draft.");
+                }
+
+            });
+
         });
 
         publishButtons.forEach(function (btn) {
@@ -677,9 +874,9 @@ let uploadedImages = [];
             btn.addEventListener("click", async function () {
 
                 var percentEl = document.getElementById('pfCompletionPercent').textContent;
-                if (percentEl != "100%"){
+                if (percentEl != "100%") {
                     alert("Please Complete the product data first.", "error");
-                    return; 
+                    return;
                 }
 
                 const product = getFormData();
@@ -766,8 +963,7 @@ let uploadedImages = [];
             if (isDirty) {
                 openModal();
             } else {
-                // Nothing unsaved — in a wired-up build this would navigate
-                // back to the products list. Frontend-only here.
+                window.location.href = "/seller/products/";
             }
         }
 
@@ -928,16 +1124,16 @@ brandInput.addEventListener("input", function () {
 
             });
 
-    },300);
+    }, 300);
 
 });
 
 
-document.addEventListener("click",function(e){
+document.addEventListener("click", function (e) {
 
-    if(!e.target.closest(".pf-search-select")){
+    if (!e.target.closest(".pf-search-select")) {
 
-        dropdown.style.display="none";
+        dropdown.style.display = "none";
 
     }
 
@@ -955,7 +1151,8 @@ categoryInput.addEventListener("input", function () {
     clearTimeout(categoryTimer);
 
     const query = this.value.trim();
-
+    // remove name from the visible input so only the hidden field is submitted
+    categoryHidden.removeAttribute("name");
     categoryHidden.value = "";
 
     if (query.length < 2) {
@@ -977,7 +1174,6 @@ categoryInput.addEventListener("input", function () {
             .then(data => {
 
                 categoryLoader.style.display = "none";
-
                 categoryDropdown.innerHTML = "";
 
                 if (data.categories.length === 0) {
@@ -1001,11 +1197,12 @@ categoryInput.addEventListener("input", function () {
                     item.addEventListener("click", function () {
 
                         categoryInput.value = category.name;
-
                         // Store slug
                         categoryHidden.value = category.slug;
-
+                        categoryHidden.setAttribute("name", "category");
+                        categoryHidden.dispatchEvent(new Event("change", { bubbles: true }));
                         categoryDropdown.style.display = "none";
+
 
                     });
 

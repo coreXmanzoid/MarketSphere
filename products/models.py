@@ -68,7 +68,7 @@ class Product(TimeStampedModel):
         ARCHIVED = "archived", "Archived"
 
     category = models.ForeignKey(
-        Category, on_delete=models.PROTECT, related_name="products"
+        Category, on_delete=models.PROTECT, related_name="products",  null=True, blank=True
     )
 
     brand = models.ForeignKey(
@@ -86,15 +86,15 @@ class Product(TimeStampedModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
 
-    short_description = models.CharField(max_length=300, blank=True)
+    short_description = models.CharField(max_length=300, blank=True, null=True)
 
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
 
-    sku = models.CharField(max_length=100, unique=True)
+    sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
 
-    barcode = models.CharField(max_length=100, blank=True)
+    barcode = models.CharField(max_length=100, blank=True, null=True)
 
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     discount_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True

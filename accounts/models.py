@@ -79,6 +79,7 @@ class User(AbstractUser):
 
     profile_image_url = models.URLField(blank=True, null=True, max_length=500)
 
+
     account_status = models.CharField(
         max_length=20,
         choices=AccountStatus.choices,

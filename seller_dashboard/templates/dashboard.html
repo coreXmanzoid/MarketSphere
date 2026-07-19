@@ -216,9 +216,9 @@
               {% for order in dashboard_recent_orders %}
                 <tr>
                   <td data-label="Order">
-                    <span class="dh-order-number">#MS-{{ order.order_number|slice:5 }}</span>
+                    <span class="dh-order-number">#MS-{{ order.order.order_number|slice:5 }}</span>
                   </td>
-                  <td data-label="Customer">{{ order.user.first_name }}</td>
+                  <td data-label="Customer">{{ order.order.user.first_name }}</td>
                   <td data-label="Date">{{ order.created_at|date:'F j, Y' }}</td>
                   <td data-label="Amount">Rs. {{ order.total|floatformat:0 }}</td>
                   <td data-label="Status">

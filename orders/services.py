@@ -1,13 +1,22 @@
+from collections import defaultdict
 from decimal import Decimal
 from uuid import uuid4
 
 from django.db import transaction
+from django.db.models import Prefetch, Sum
 from django.shortcuts import get_object_or_404
+
 from accounts.models import Address
-from products.services import get_or_create_cart
 from products.models import CartItem, Product
-from django.db.models import Sum
-from .models import Order, OrderItem
+from products.services import get_or_create_cart
+
+from .models import Order, OrderItem, SellerOrder
+
+CANCELABLE_SELLER_ORDER_STATUSES = (
+    SellerOrder.Status.PENDING,
+    SellerOrder.Status.CONFIRMED,
+    SellerOrder.Status.PROCESSING,
+)
 
 
 @transaction.atomic
@@ -19,8 +28,9 @@ def place_order(
     phone=None,
     notes="",
 ):
-    cart_items = CartItem.objects.select_related("product", "cart").filter(
-        cart__user=user
+    cart_items = (
+        CartItem.objects.select_related("product", "product__seller", "cart")
+        .filter(cart__user=user)
     )
 
     if not cart_items.exists():
@@ -40,7 +50,17 @@ def place_order(
 
     phone = phone or address.phone or user.contact
 
-    subtotal = Decimal("0.00")
+    # --------------------------------------------------
+    # Group cart items by seller — each seller gets its
+    # own SellerOrder under the parent Order.
+    # --------------------------------------------------
+    items_by_seller = defaultdict(list)
+    for item in cart_items:
+        if item.product.seller_id is None:
+            raise ValueError(
+                f"'{item.product.name}' has no seller assigned and cannot be ordered."
+            )
+        items_by_seller[item.product.seller_id].append(item)
 
     order = Order.objects.create(
         user=user,
@@ -53,54 +73,76 @@ def place_order(
         notes=notes,
     )
 
-    order_items = []
+    order_subtotal = Decimal("0.00")
 
-    for item in cart_items:
+    for seller_id, items in items_by_seller.items():
+        seller_subtotal = Decimal("0.00")
+        pending_order_items = []
 
-        price = item.product.discount_price or item.product.price
+        for item in items:
+            product = item.product
+            price = product.discount_price or product.price
 
-        item_total = price * item.quantity
+            if product.stock_quantity < item.quantity:
+                raise ValueError(
+                    f"Only {product.stock_quantity} units of '{product.name}' are available."
+                )
 
-        subtotal += item_total
-        if item.product.stock_quantity < item.quantity:
-            raise ValueError(
-                f"Only {item.product.stock_quantity} units of '{item.product.name}' are available."
+            item_total = price * item.quantity
+            seller_subtotal += item_total
+
+            product.stock_quantity -= item.quantity
+            product.status = (
+                Product.Status.OUT_OF_STOCK
+                if product.stock_quantity == 0
+                else Product.Status.PUBLISHED
             )
-        item.product.stock_quantity -= item.quantity
+            product.save(update_fields=["stock_quantity", "status"])
 
-        if item.product.stock_quantity == 0:
-            item.product.status = Product.Status.OUT_OF_STOCK
-        else:
-            item.product.status = Product.Status.PUBLISHED
-
-        item.product.save(update_fields=["stock_quantity", "status"])
-
-        order_items.append(
-            OrderItem(
-                order=order,
-                product=item.product,
-                # Uncomment if your Product model has a seller field
-                # seller=item.product.seller,
-                price=price,
-                quantity=item.quantity,
-                total=item_total,
+            pending_order_items.append(
+                (product, price, item.quantity, item_total)
             )
+
+        seller_shipping_cost = Decimal("0.00")
+        seller_discount = Decimal("0.00")
+        seller_tax = Decimal("0.00")
+        seller_total = seller_subtotal + seller_shipping_cost + seller_tax - seller_discount
+
+        seller_order = SellerOrder.objects.create(
+            order=order,
+            seller_id=seller_id,
+            subtotal=seller_subtotal,
+            shipping_cost=seller_shipping_cost,
+            discount=seller_discount,
+            tax=seller_tax,
+            total=seller_total,
         )
 
-    OrderItem.objects.bulk_create(order_items)
+        OrderItem.objects.bulk_create(
+            [
+                OrderItem(
+                    seller_order=seller_order,
+                    product=product,
+                    price=price,
+                    quantity=quantity,
+                    total=item_total,
+                )
+                for product, price, quantity, item_total in pending_order_items
+            ]
+        )
+
+        order_subtotal += seller_subtotal
 
     shipping_cost = Decimal("0.00")
     discount = Decimal("0.00")
     tax = Decimal("0.00")
+    total = order_subtotal + shipping_cost + tax - discount
 
-    total = subtotal + shipping_cost + tax - discount
-
-    order.subtotal = subtotal
+    order.subtotal = order_subtotal
     order.shipping_cost = shipping_cost
     order.discount = discount
     order.tax = tax
     order.total = total
-
     order.save()
 
     cart_items.delete()
@@ -108,18 +150,30 @@ def place_order(
     return order
 
 
+def _seller_orders_prefetch():
+    return Prefetch(
+        "seller_orders",
+        queryset=SellerOrder.objects.select_related("seller").prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("product"),
+            )
+        ),
+    )
+
+
 def get_user_orders(user):
     return (
         Order.objects.filter(user=user)
-        .prefetch_related("items", "items__product")
-        .annotate(total_items=Sum("items__quantity"))
+        .prefetch_related(_seller_orders_prefetch())
+        .annotate(total_items=Sum("seller_orders__items__quantity"))
         .order_by("-created_at")
     )
 
 
 def get_user_order(user, order_number):
     order = get_object_or_404(
-        Order,
+        Order.objects.prefetch_related(_seller_orders_prefetch()),
         order_number=order_number,
         user=user,
     )
@@ -128,16 +182,15 @@ def get_user_order(user, order_number):
 
 def cancel_user_order(user, order_number):
     order = get_user_order(user, order_number)
-    # Check if order exists AND is in a cancelable state
-    if not order or order.status not in [
-        Order.Status.PENDING,
-        Order.Status.CONFIRMED,
-        Order.Status.PROCESSING,
-    ]:
+    seller_orders = list(order.seller_orders.all())
+
+    if not seller_orders:
         return False
 
-    order.status = order.Status.CANCELLED
-    order.save()
+    if any(so.status not in CANCELABLE_SELLER_ORDER_STATUSES for so in seller_orders):
+        return False
+
+    SellerOrder.objects.filter(order=order).update(status=SellerOrder.Status.CANCELLED)
     return True
 
 
@@ -159,14 +212,38 @@ def add_to_cart(user, product, quantity=1):
 
 def reorder_user_order(user, order_number):
     order = get_user_order(user, order_number)
+    seller_orders = list(order.seller_orders.all())
 
-    if order.status != order.Status.DELIVERED:
+    if not seller_orders:
         return None
-    for item in order.items.select_related("product"):
-        add_to_cart(
-            user=user,
-            product=item.product,
-            quantity=item.quantity,
-        )
+
+    if any(so.status != SellerOrder.Status.DELIVERED for so in seller_orders):
+        return None
+
+    for seller_order in seller_orders:
+        for item in seller_order.items.select_related("product"):
+            add_to_cart(
+                user=user,
+                product=item.product,
+                quantity=item.quantity,
+            )
 
     return order
+
+def get_seller_orders(seller):
+    """
+    Returns all orders belonging to a specific seller.
+    """
+
+    return (
+        SellerOrder.objects.filter(seller=seller)
+        .select_related(
+            "order",
+            "order__user",
+        )
+        .prefetch_related(
+            "items",
+            "items__product",
+        )
+        .order_by("-created_at")
+    )

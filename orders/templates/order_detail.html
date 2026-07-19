@@ -44,7 +44,7 @@
           <div class="od-badge-group">
             <span class="od-badge-label">Order Status</span>
             <!-- Order status will be rendered here by Django -->
-            <span class="od-status-badge od-status-{{ order.status|default:'pending'|lower }}">
+            <span class="od-status-badge od-status-{{ order.overall_status|default:'pending'|lower }}">
               <i class="bi bi-box-seam"></i> {{ order.get_status_display|default:"Pending" }}
             </span>
           </div>
@@ -67,7 +67,7 @@
 <div class="od-card od-timeline-card">
     <ol class="od-timeline" aria-label="Order progress">
 
-        <li class="od-timeline-step {% if order.status == 'pending' or order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %}">
+        <li class="od-timeline-step {% if order.overall_status == 'pending' or order.overall_status == 'confirmed' or order.overall_status == 'processing' or order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %}">
             <span class="od-timeline-icon">
                 <i class="bi bi-check-lg"></i>
             </span>
@@ -79,7 +79,7 @@
             </span>
         </li>
 
-        <li class="od-timeline-step {% if order.status == 'confirmed' %}is-current{% elif order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %}">
+        <li class="od-timeline-step {% if order.overall_status == 'confirmed' %}is-current{% elif order.overall_status == 'processing' or order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %}">
             <span class="od-timeline-icon">
                 <i class="bi bi-patch-check"></i>
             </span>
@@ -88,7 +88,7 @@
             </span>
         </li>
 
-        <li class="od-timeline-step {% if order.status == 'processing' %}is-current{% elif order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %}">
+        <li class="od-timeline-step {% if order.overall_status == 'processing' %}is-current{% elif order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %}">
             <span class="od-timeline-icon">
                 <i class="bi bi-arrow-repeat"></i>
             </span>
@@ -97,7 +97,7 @@
             </span>
         </li>
 
-        <li class="od-timeline-step {% if order.status == 'shipped' %}is-current{% elif order.status == 'delivered' %}is-complete{% endif %}">
+        <li class="od-timeline-step {% if order.overall_status == 'shipped' %}is-current{% elif order.overall_status == 'delivered' %}is-complete{% endif %}">
             <span class="od-timeline-icon">
                 <i class="bi bi-truck"></i>
             </span>
@@ -106,7 +106,7 @@
             </span>
         </li>
 
-        <li class="od-timeline-step {% if order.status == 'delivered' %}is-current is-complete{% endif %}">
+        <li class="od-timeline-step {% if order.overall_status == 'delivered' %}is-current is-complete{% endif %}">
             <span class="od-timeline-icon">
                 <i class="bi bi-house-check"></i>
             </span>
@@ -117,7 +117,7 @@
 
     </ol>
 
-    {% if order.status == "cancelled" %}
+    {% if order.overall_status == "cancelled" %}
         <div class="od-cancelled-notice">
             <i class="bi bi-x-circle-fill"></i>
             <strong>Order Cancelled</strong>
@@ -186,7 +186,7 @@
 
             <div class="od-items-list">
               <!-- Ordered items will be rendered here by Django from order.items -->
-              {% for item in order.items.all %}
+              {% for item in order.items %}
                 <div class="od-order-item">
                   <a href="{% url 'product' item.product.slug %}" class="od-order-item-img-link">
                     <div class="product-image-placeholder od-order-item-img">
@@ -233,13 +233,13 @@
 
           <!-- ============ ACTIONS (desktop, left column) ============ -->
           <div class="od-actions-row od-actions-row-desktop">
-            <button type="button" class="btn od-action-btn od-action-cancel" id="odCancelOrderBtn" {% if order.status in 'cancelled delivered shipped' %}disabled{% endif %}>
+            <button type="button" class="btn od-action-btn od-action-cancel" id="odCancelOrderBtn" {% if order.overall_status in 'cancelled delivered shipped' %}disabled{% endif %}>
               <i class="bi bi-x-circle"></i> Cancel Order
             </button>
             <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtn" data-order-number="{{ order.order_number }}">
               <i class="bi bi-download"></i> Download Invoice
             </button>
-            <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtn" data-order-number="{{ order.order_number }}"{% if order.status != 'delivered' %}disabled{% endif %}>
+            <button type="button" class="btn od-action-btn od-action-reorder" id="odReorderBtn" data-order-number="{{ order.order_number }}"{% if order.overall_status != 'delivered' %}disabled{% endif %}>
               <i class="bi bi-arrow-repeat"></i> Buy Again
             </button>
           </div>
@@ -300,7 +300,7 @@
               <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtnMobile" data-order-number="{{ order.order_number }}">
                 <i class="bi bi-download"></i> Download Invoice
               </button>
-              <button type="button" class="btn od-action-btn od-action-cancel h-25" id="odCancelOrderBtnMobile" {% if order.status == 'cancelled' or order.status == 'completed' %}disabled{% endif %}>
+              <button type="button" class="btn od-action-btn od-action-cancel h-25" id="odCancelOrderBtnMobile" {% if order.overall_status == 'cancelled' or order.overall_status == 'completed' %}disabled{% endif %}>
                 <i class="bi bi-x-circle"></i> Cancel Order
               </button>
             </div>

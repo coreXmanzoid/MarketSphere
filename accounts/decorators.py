@@ -1,7 +1,7 @@
 from functools import wraps
 from django.contrib import messages
 from django.shortcuts import redirect
-
+from .models import User
 
 def verified_user(view_func):
     @wraps(view_func)
@@ -9,12 +9,12 @@ def verified_user(view_func):
         if not request.user.is_authenticated:
             return redirect("login")
 
-        if not request.user.email_verified:
+        if request.user.account_status != User.AccountStatus.VERIFIED:
             messages.error(
                 request,
                 "Please verify your email before placing an order."
             )
-            return redirect("profile")
+            return redirect("home")
 
         return view_func(request, *args, **kwargs)
 

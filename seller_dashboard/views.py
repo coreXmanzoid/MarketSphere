@@ -2,12 +2,14 @@ from django.shortcuts import render
 from accounts.decorators import verified_seller
 from products.services import (
     create_product,
-    get_product_by_slug,
     hide_product_by_slug,
     unhide_product_by_slug,
     delete_product_by_slug,
+    save_draft,
+    edit_product,
+    get_edit_product_by_slug
 )
-
+import json
 # Create your views here.
 
 
@@ -44,13 +46,56 @@ def add_product(request):
     return render(request, "products/create.html")
 
 
-def edit_product(request, product_slug):
-    product = get_product_by_slug(product_slug)
-    context = {"product": product}
-    return render(request, "products/edit.html", context)
+def draft_product(request):
+
+    if request.method == "POST":
+
+        product = save_draft(
+            request.user,
+            request.POST,
+            request.FILES,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Product created successfully.",
+                "product_id": product.id,
+            }
+        )
+    return render(request, "products/create.html")
 
 
-import json
+def edit_products(request, product_slug):
+
+    product = get_edit_product_by_slug(product_slug, request.user.seller_profile)
+
+    if request.method == "POST":
+
+        product = edit_product(
+            request.user.seller_profile,
+            product,
+            request.POST,
+            request.FILES,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Product updated successfully.",
+                "product_id": product.id,
+            }
+        )
+
+    context = {
+        "product": product,
+    }
+
+    return render(
+        request,
+        "products/edit.html",
+        context,
+    )
 
 
 def hide_product(request):
@@ -118,3 +163,11 @@ def delete_product(request):
         },
         status=404,
     )
+
+
+def orders(request):
+    # orders = 
+    # context = {
+    #     "orders": orders
+    # }
+    return render(request, "orders/list.html")

@@ -1,13 +1,15 @@
-from accounts.models import Seller
-from orders.models import Order, OrderItem
-from products.models import Product
-from django.db.models import F
-from django.db.models import Sum
-from django.utils import timezone
 from datetime import timedelta
 
-today = timezone.now()
+from django.db.models import F, Sum
+from django.utils import timezone
 
+from accounts.models import Seller
+from orders.models import Order, SellerOrder
+from products.models import Product
+
+from orders.services import get_seller_orders
+
+today = timezone.now()
 week_ago = today - timedelta(days=7)
 
 
@@ -21,89 +23,58 @@ def seller_dashboard(request):
         return {}
 
     seller_products = Product.objects.filter(seller=seller)
+    seller_orders = SellerOrder.objects.filter(seller=seller)
 
-    seller_order_items = OrderItem.objects.filter(product__seller=seller)
+    total_products = seller_products.count()
 
-    pending_orders = (
-        seller_order_items.filter(order__status=Order.Status.PENDING)
-        .values("order")
-        .distinct()
-        .count()
+    drafted_products = seller_products.filter(
+        status=Product.Status.DRAFT
     )
 
-    completed_orders = (
-        OrderItem.objects.filter(
-            product__seller=seller,
-            order__status=Order.Status.DELIVERED,
-        )
-        .values("order")
-        .distinct()
-        .count()
-    )
+    pending_orders = seller_orders.filter(
+        status=SellerOrder.Status.PENDING
+    ).count()
 
-    drafted_products = Product.objects.filter(
-        seller=seller,
-        status=Product.Status.DRAFT,
-    )
+    processing_orders = seller_orders.filter(
+        status=SellerOrder.Status.PROCESSING
+    ).count()
+
+    completed_orders = seller_orders.filter(
+        status=SellerOrder.Status.DELIVERED
+    ).count()
 
     completed_revenue = (
-        OrderItem.objects.filter(
-            product__seller=seller,
-            order__status=Order.Status.DELIVERED,
+        seller_orders.filter(
+            status=SellerOrder.Status.DELIVERED,
             order__payment_status=Order.PaymentStatus.PAID,
-        ).aggregate(revenue=Sum("total"))["revenue"]
+        ).aggregate(
+            revenue=Sum("total")
+        )["revenue"]
         or 0
     )
 
-    pending_orders = (
-        seller_order_items.filter(order__status=Order.Status.DELIVERED)
-        .values("order")
-        .distinct()
-        .count()
-    )
+    new_orders_this_week = seller_orders.filter(
+        created_at__gte=week_ago
+    ).count()
 
-    processing_orders = (
-        seller_order_items.filter(order__status=Order.Status.PROCESSING)
-        .values("order")
-        .distinct()
-        .count()
-    )
-
-    new_orders_this_week = (
-        OrderItem.objects.filter(
-            product__seller=seller,
-            order__created_at__gte=week_ago,
-        )
-        .values("order")
-        .distinct()
-        .count()
-    )
-
-    month_orders = (
-        OrderItem.objects.filter(
-            product__seller=seller,
-            order__created_at__year=today.year,
-            order__created_at__month=today.month,
-        )
-        .values("order")
-        .distinct()
-        .count()
-    )
+    month_orders = seller_orders.filter(
+        created_at__year=today.year,
+        created_at__month=today.month,
+    ).count()
 
     recent_orders = (
-        Order.objects.filter(items__product__seller=seller)
-        .distinct()
-        .select_related("user")
+        seller_orders.select_related("order", "order__user")
+        .prefetch_related("items", "items__product")
         .order_by("-created_at")[:4]
     )
-
-    total_products = seller_products.count()
 
     low_stock_products = seller_products.filter(
         stock_quantity__lte=F("min_stock_level")
     )
 
-    out_of_stock_products = seller_products.filter(stock_quantity__lte=0)
+    out_of_stock_products = seller_products.filter(
+        stock_quantity__lte=0
+    )
 
     return {
         "dashboard_seller": seller,
@@ -119,4 +90,5 @@ def seller_dashboard(request):
         "dashboard_new_orders_this_week": new_orders_this_week,
         "dashboard_recent_orders": recent_orders,
         "dashboard_drafted_products": drafted_products,
+        "dashboard_seller_orders": get_seller_orders(request.user.seller_profile)
     }

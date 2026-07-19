@@ -107,7 +107,7 @@
           <div class="cf-info-item">
             <span class="cf-info-label"><i class="bi bi-box-seam"></i> Order Status</span>
             <!-- Order status will be rendered here by Django -->
-            <span class="cf-status-badge cf-status-{{ order.status|default:'processing'|lower }}">
+            <span class="cf-status-badge cf-status-{{ order.overall_status|default:'processing'|lower }}">
               {{ order.get_status_display|default:"Processing" }}
             </span>
           </div>
@@ -179,7 +179,7 @@
 
             <div class="cf-items-list">
               <!-- Ordered items will be rendered here by Django from order.items -->
-              {% for item in order.items.all %}
+              {% for item in order.items %}
                 <div class="cf-order-item">
                   <div class="product-image-placeholder cf-order-item-img">
                     <img src="{{ item.product.primary_image.image.url }}" alt="">

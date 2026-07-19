@@ -1,27 +1,25 @@
 from django.contrib import admin
 
-from .models import Order, OrderItem
+from .models import Order, OrderItem, SellerOrder
 
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = (
-        "product",
-        "price",
-        "quantity",
-        "total",
-        "created_at",
-    )
+    readonly_fields = ("product", "price", "quantity", "total")
     can_delete = False
 
 
+class SellerOrderInline(admin.TabularInline):
+    model = SellerOrder
+    extra = 0
+    
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    inlines = [SellerOrderInline]
     list_display = (
         "order_number",
         "user",
-        "status",
         "payment_status",
         "subtotal",
         "total",
@@ -29,7 +27,6 @@ class OrderAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
-        "status",
         "payment_status",
         "created_at",
     )
@@ -60,7 +57,6 @@ class OrderAdmin(admin.ModelAdmin):
                 "fields": (
                     "order_number",
                     "user",
-                    "status",
                     "payment_status",
                 )
             },
@@ -101,15 +97,14 @@ class OrderAdmin(admin.ModelAdmin):
         ),
     )
 
-    inlines = [OrderItemInline]
-
+    inlines = [SellerOrderInline]
     ordering = ("-created_at",)
 
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = (
-        "order",
+        "seller_order",
         "product",
         "price",
         "quantity",
@@ -117,17 +112,20 @@ class OrderItemAdmin(admin.ModelAdmin):
         "created_at",
     )
 
-    list_filter = (
-        "created_at",
-    )
+    list_filter = ("created_at",)
 
     search_fields = (
-        "order__order_number",
+        "seller_order__order__order_number",
         "product__name",
     )
 
-    readonly_fields = (
-        "created_at",
-    )
+    readonly_fields = ("created_at",)
 
     ordering = ("-created_at",)
+
+
+@admin.register(SellerOrder)
+class SellerOrderAdmin(admin.ModelAdmin):
+    inlines = [OrderItemInline]
+
+

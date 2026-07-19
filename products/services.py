@@ -42,68 +42,90 @@ def get_product_by_slug(product_slug):
         status=Product.Status.PUBLISHED,
     )
 
+def get_edit_product_by_slug(product_slug, seller):
+    return get_object_or_404(
+        Product.objects.select_related("category", "brand").prefetch_related("images"),
+        slug=product_slug,
+        seller = seller,
+    )
 
 def create_product(user, post_data, files):
     """
-    Creates a product along with its images.
+    Creates a published product.
+    All required fields must be provided.
     """
+
+    required_fields = {
+        "name": "Product name",
+        "slug": "Slug",
+        "category": "Category",
+        "price": "Price",
+        "stock_quantity": "Stock quantity",
+        "min_stock_level": "Minimum stock level",
+        "sku": "SKU",
+        "short_description": "Short description",
+        "description": "Description",
+    }
+
+    missing_fields = []
+
+    for field, label in required_fields.items():
+        value = nullable(post_data.get(field))
+        if value is None:
+            missing_fields.append(label)
+
+    images = files.getlist("images")
+
+    if not images:
+        missing_fields.append("At least one product image")
+
+    if missing_fields:
+        raise ValueError(
+            "The following fields are required: "
+            + ", ".join(missing_fields)
+        )
 
     seller = Seller.objects.get(user=user)
 
-    category = Category.objects.get(slug=post_data.get("category"))
+    category = Category.objects.get(
+        slug=nullable(post_data.get("category"))
+    )
 
     brand = None
-    brand_slug = post_data.get("brand")
+    brand_slug = nullable(post_data.get("brand"))
 
     if brand_slug:
-        brand = Brand.objects.get(slug=brand_slug)
+        brand = Brand.objects.filter(slug=brand_slug).first()
 
-    # Access values that are not yet stored
+    # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
     collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
 
-    # (Leave these for future implementation)
     print(tags)
     print(collections)
     print(dimensions)
-
-    visibility = post_data.get("visibility")
-
-    status_map = {
-        "draft": Product.Status.DRAFT,
-        "published": Product.Status.PUBLISHED,
-        "hidden": Product.Status.HIDDEN,
-    }
-
-    status = status_map.get(
-        visibility,
-        Product.Status.DRAFT,
-    )
 
     product = Product.objects.create(
         seller=seller,
         category=category,
         brand=brand,
-        name=post_data.get("name"),
-        slug=post_data.get("slug"),
-        short_description=post_data.get("short_description"),
-        description=post_data.get("description"),
-        sku=post_data.get("sku"),
-        barcode=post_data.get("barcode"),
-        price=post_data.get("price"),
-        discount_price=(post_data.get("discount_price") or None),
-        stock_quantity=post_data.get("stock_quantity"),
-        min_stock_level=post_data.get("min_stock_level"),
-        weight=(post_data.get("weight") or None),
-        status=status,
+        name=post_data["name"],
+        slug=post_data["slug"],
+        short_description=post_data["short_description"],
+        description=post_data["description"],
+        sku=post_data["sku"],
+        barcode=nullable(post_data.get("barcode")),
+        price=post_data["price"],
+        discount_price=nullable(post_data.get("discount_price")),
+        stock_quantity=post_data["stock_quantity"],
+        min_stock_level=post_data["min_stock_level"],
+        weight=nullable(post_data.get("weight")),
+        status=Product.Status.PUBLISHED,
         is_featured=post_data.get("is_featured") == "true",
     )
 
-    images = files.getlist("images")
-
     for index, image in enumerate(images):
-
         ProductImage.objects.create(
             product=product,
             image=image,
@@ -113,9 +135,177 @@ def create_product(user, post_data, files):
         )
 
     return product
+def nullable(value):
+    """
+    Converts empty or invalid values to None.
+    """
+    if value in ("", "null", "undefined", None):
+        return None
+    return value
 
 
+def save_draft(user, post_data, files):
+    """
+    Saves a product as a draft.
+    Only the product name and slug are required.
+    """
+
+    required_fields = {
+        "name": "Product name",
+        "slug": "Slug",
+    }
+
+    missing_fields = []
+
+    for field, label in required_fields.items():
+        if not post_data.get(field):
+            missing_fields.append(label)
+
+    if missing_fields:
+        raise ValueError(
+            "The following fields are required: "
+            + ", ".join(missing_fields)
+        )
+
+    seller = Seller.objects.get(user=user)
+
+    category = None
+    category_slug = nullable(post_data.get("category"))
+
+    if category_slug:
+        category = Category.objects.filter(slug=category_slug).first()
+
+    brand = None
+    brand_slug = nullable(post_data.get("brand"))
+
+    if brand_slug:
+        brand = Brand.objects.filter(slug=brand_slug).first()
+
+    # Future implementation
+    tags = json.loads(post_data.get("tags", "[]"))
+    collections = json.loads(post_data.get("collections", "[]"))
+    dimensions = json.loads(post_data.get("dimensions", "{}"))
+
+    print(tags)
+    print(collections)
+    print(dimensions)
+
+    product = Product.objects.create(
+        seller=seller,
+        category=category,
+        brand=brand,
+        name=post_data["name"],
+        slug=post_data["slug"],
+        short_description=nullable(post_data.get("short_description")) or "",
+        description=nullable(post_data.get("description")) or "",
+        sku=nullable(post_data.get("sku")),
+        barcode=nullable(post_data.get("barcode")),
+        price=nullable(post_data.get("price")),
+        discount_price=nullable(post_data.get("discount_price")),
+        stock_quantity=nullable(post_data.get("stock_quantity")),
+        min_stock_level=nullable(post_data.get("min_stock_level")),
+        weight=nullable(post_data.get("weight")),
+        status=Product.Status.DRAFT,
+        is_featured=post_data.get("is_featured") == "true",
+    )
+
+    images = files.getlist("images")
+
+    for index, image in enumerate(images):
+        ProductImage.objects.create(
+            product=product,
+            image=image,
+            is_primary=(index == 0),
+            display_order=index + 1,
+            alt_text=product.name,
+        )
+
+    return product
 # search logic
+
+def edit_product(seller, product, post_data, files):
+    """
+    Updates an existing product.
+    """
+
+    category = None
+    category_slug = nullable(post_data.get("category"))
+
+    if category_slug:
+        category = Category.objects.filter(slug=category_slug).first()
+
+    brand = None
+    brand_slug = nullable(post_data.get("brand"))
+
+    if brand_slug:
+        brand = Brand.objects.filter(slug=brand_slug).first()
+
+    # Future implementation
+    tags = json.loads(post_data.get("tags", "[]"))
+    collections = json.loads(post_data.get("collections", "[]"))
+    dimensions = json.loads(post_data.get("dimensions", "{}"))
+
+    print(tags)
+    print(collections)
+    print(dimensions)
+
+    product.category = category
+    product.brand = brand
+    product.name = post_data["name"]
+    product.slug = post_data["slug"]
+    product.short_description = nullable(post_data.get("short_description")) or ""
+    product.description = nullable(post_data.get("description")) or ""
+    product.sku = nullable(post_data.get("sku"))
+    product.barcode = nullable(post_data.get("barcode"))
+    product.price = nullable(post_data.get("price"))
+    product.discount_price = nullable(post_data.get("discount_price"))
+    product.stock_quantity = nullable(post_data.get("stock_quantity")) or 0
+    product.min_stock_level = nullable(post_data.get("min_stock_level")) or 5
+    product.weight = nullable(post_data.get("weight"))
+    product.is_featured = post_data.get("is_featured") == "true"
+
+    product.save()
+
+    # Delete existing images selected by the user
+    deleted_images = json.loads(
+        post_data.get("deleted_images", "[]")
+    )
+
+    if deleted_images:
+        ProductImage.objects.filter(
+            id__in=deleted_images,
+            product=product,
+        ).delete()
+
+    # Add newly uploaded images
+    images = files.getlist("images")
+
+    current_count = product.images.count()
+
+    for index, image in enumerate(images):
+
+        ProductImage.objects.create(
+            product=product,
+            image=image,
+            is_primary=(current_count == 0 and index == 0),
+            display_order=current_count + index + 1,
+            alt_text=product.name,
+        )
+
+    # Ensure exactly one primary image exists
+    primary = product.images.filter(is_primary=True).first()
+
+    if not primary:
+        first_image = product.images.order_by(
+            "display_order",
+            "id"
+        ).first()
+
+        if first_image:
+            first_image.is_primary = True
+            first_image.save(update_fields=["is_primary"])
+
+    return product
 
 from django.db.models import Q
 
