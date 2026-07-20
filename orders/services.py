@@ -230,6 +230,22 @@ def reorder_user_order(user, order_number):
 
     return order
 
+
+def get_user_order_for_seller(seller, order_number):
+    return get_object_or_404(
+        SellerOrder.objects.select_related(
+            "order",
+            "order__user",
+            "seller",
+        ).prefetch_related(
+            "items",
+            "items__product",
+            "items__product__images",
+        ),
+        seller=seller,
+        order__order_number=order_number,
+    )
+
 def get_seller_orders(seller):
     """
     Returns all orders belonging to a specific seller.
@@ -247,3 +263,10 @@ def get_seller_orders(seller):
         )
         .order_by("-created_at")
     )
+
+
+def update_order_status(seller, order_number, status):
+    return SellerOrder.objects.filter(
+        order__order_number=order_number,
+        seller=seller,
+    ).update(status=status)

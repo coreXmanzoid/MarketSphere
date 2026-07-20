@@ -1,0 +1,1597 @@
+/* ==========================================================================
+   MARKETSPHERE — SELLER DASHBOARD: ORDER DETAIL (order_detail.css)
+   Page-scoped styles for seller_dashboard/templates/orders/detail.html.
+   Matches the MarketSphere earth-tone design system used across the
+   storefront and seller dashboard shell (see static/css/styles.css and
+   seller_dashboard/static/css/dashboard.css). No Bootstrap, no Tailwind,
+   no external libraries — plain CSS only. Every class is prefixed `sod-`
+   (Seller Order Detail) to avoid collisions with the shell and other
+   seller-dashboard pages, mirroring the pm- / so- / dh- convention.
+
+   Sections:
+     1. Variables
+     2. Reset / Page Wrapper
+     3. Buttons
+     4. Header
+     5. Progress Timeline
+     6. Shared Card
+     7. Customer Information Card
+     8. Products Table
+     9. Order Summary Card
+    10. Payment Information Card
+    11. Shipping Information Card
+    12. Internal Notes
+    13. Activity Timeline
+    14. Order Actions
+    15. Badges
+    16. Toast
+    17. Confirm Modal
+    18. Responsive
+   ========================================================================== */
+
+/* ================= 1. VARIABLES ================= */
+.sod-page {
+    --sod-bg: #F7F1DE;
+    --sod-surface: #F7F1DE;
+    --sod-surface-raised: #F7F1DE;
+
+    --sod-accent: #9D6638;
+    --sod-accent-hover: #4E220F;
+    --sod-accent-soft: rgba(157, 102, 56, 0.12);
+    --sod-accent-ring: rgba(157, 102, 56, 0.22);
+
+    --sod-success: #4f7d54;
+    --sod-success-bg: rgba(79, 125, 84, 0.13);
+
+    --sod-danger: #b54b3b;
+    --sod-danger-bg: rgba(181, 75, 59, 0.13);
+
+    --sod-warning: #b7802b;
+    --sod-warning-bg: rgba(183, 128, 43, 0.16);
+
+    --sod-info: #6b7458;
+    --sod-info-bg: rgba(176, 186, 153, 0.22);
+
+    --sod-muted: #B0BA99;
+    --sod-muted-bg: rgba(176, 186, 153, 0.22);
+
+    --sod-heading: #4E220F;
+    --sod-body: #5B5142;
+    --sod-border: #E4DCC8;
+
+    --sod-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+
+    --sod-shadow-sm: 0 1px 2px rgba(78, 34, 15, 0.06);
+    --sod-shadow-md: 0 8px 22px rgba(78, 34, 15, 0.09);
+    --sod-shadow-lg: 0 18px 44px rgba(78, 34, 15, 0.16);
+
+    --sod-radius-sm: 4px;
+    --sod-radius-md: 10px;
+    --sod-radius-lg: 20px;
+    --sod-radius-pill: 999px;
+
+    --sod-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --sod-transition: 0.2s var(--sod-ease);
+}
+
+/* ================= 2. RESET / PAGE WRAPPER ================= */
+.sod-page,
+.sod-page *,
+.sod-page *::before,
+.sod-page *::after {
+    box-sizing: border-box;
+}
+
+.sod-page {
+    font-family: var(--sod-font);
+    color: var(--sod-body);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-bottom: 40px;
+}
+
+.sod-page button {
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.sod-page svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.sod-page :focus-visible {
+    outline: 2px solid var(--sod-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sod-page,
+    .sod-page * {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+.sod-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s var(--sod-ease), transform 0.5s var(--sod-ease);
+}
+
+.sod-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sod-hidden {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ================= 3. BUTTONS ================= */
+.sod-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13.5px;
+    border-radius: var(--sod-radius-sm);
+    padding: 10px 18px;
+    white-space: nowrap;
+    transition: background-color var(--sod-transition), color var(--sod-transition),
+        border-color var(--sod-transition), transform var(--sod-transition), box-shadow var(--sod-transition);
+}
+
+.sod-btn:active {
+    transform: scale(0.97);
+}
+
+.sod-btn-primary {
+    background-color: #9D6638 !important;
+    color: #F7F1DE !important;
+    border: 1.5px solid #9D6638 !important;
+}
+
+.sod-btn-primary:hover {
+    background-color: #F7F1DE !important;
+    color: #9D6638 !important;
+    box-shadow: var(--sod-shadow-sm);
+}
+
+.sod-btn-secondary {
+    background-color: transparent;
+    color: #9D6638 !important;
+    border: 1.5px solid #9D6638 !important;
+}
+
+.sod-btn-secondary:hover {
+    color: #F7F1DE !important;
+    background-color: #9D6638;
+}
+
+.sod-btn-ghost {
+    background-color: transparent;
+    color: var(--sod-body);
+    border: 1.5px solid var(--sod-border);
+}
+
+.sod-btn-ghost:hover {
+    background-color: var(--sod-muted-bg);
+    color: var(--sod-heading);
+    border-color: var(--sod-accent);
+}
+
+.sod-btn-success {
+    background-color: var(--sod-success);
+    color: #F7F1DE;
+    border: 1.5px solid var(--sod-success);
+}
+
+.sod-btn-success:hover {
+    background-color: #3e6543;
+    border-color: #3e6543;
+}
+
+.sod-btn-danger {
+    background-color: transparent;
+    color: var(--sod-danger) !important;
+    border: 1.5px solid var(--sod-danger) !important;
+}
+
+.sod-btn-danger:hover {
+    background-color: var(--sod-danger) !important;
+    color: #F7F1DE !important;
+}
+
+.sod-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.sod-btn-sm {
+    padding: 8px 14px;
+    font-size: 12.5px;
+}
+
+.sod-btn-icon {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+/* ================= 4. HEADER ================= */
+.sod-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.sod-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.sod-back-btn {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--sod-surface-raised);
+    border: 1px solid var(--sod-border);
+    color: var(--sod-heading);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--sod-transition), border-color var(--sod-transition), color var(--sod-transition);
+}
+
+.sod-back-btn:hover {
+    background-color: var(--sod-accent-soft);
+    border-color: var(--sod-accent);
+    color: var(--sod-accent);
+}
+
+.sod-header-titleblock {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sod-header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sod-header-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--sod-heading);
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.sod-header-subtitle {
+    color: var(--sod-muted);
+    margin: 0;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sod-header-subtitle svg {
+    color: var(--sod-accent);
+}
+
+.sod-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ================= 5. PROGRESS TIMELINE ================= */
+
+.sod-timeline-card {
+    background-color: var(--sod-surface-raised);
+    border: 1px solid var(--sod-border);
+    border-radius: var(--sod-radius-md);
+    padding: 28px 26px;
+    box-shadow: var(--sod-shadow-sm);
+}
+
+.sod-timeline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sod-timeline-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+/* Connector to the NEXT step */
+.sod-timeline-step::after {
+    content: "";
+    position: absolute;
+    top: 21px;
+    left: calc(50% + 21px);
+    width: calc(100% - 42px);
+    height: 3px;
+    background: var(--sod-border);
+    z-index: 0;
+}
+
+/* No connector after last step */
+.sod-timeline-step:last-child::after {
+    display: none;
+}
+
+/* Completed connector */
+.sod-timeline-step.is-complete::after {
+    background: var(--sod-success);
+}
+
+.sod-timeline-icon {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--sod-bg);
+    border: 2.5px solid var(--sod-border);
+    color: var(--sod-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .25s ease;
+    z-index: 2;
+}
+
+.sod-timeline-step.is-complete .sod-timeline-icon {
+    background: var(--sod-success);
+    border-color: var(--sod-success);
+    color: #F7F1DE;
+}
+
+.sod-timeline-step.is-current .sod-timeline-icon {
+    background: var(--sod-accent);
+    border-color: var(--sod-accent);
+    color: #F7F1DE;
+    box-shadow: 0 0 0 5px var(--sod-accent-ring);
+}
+
+.sod-timeline-step.is-current .sod-timeline-icon svg {
+    animation: sodPulseIcon 1.6s ease-in-out infinite;
+}
+
+@keyframes sodPulseIcon {
+    0%,100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.sod-timeline-step.is-cancelled .sod-timeline-icon {
+    background: var(--sod-danger);
+    border-color: var(--sod-danger);
+    color: #F7F1DE;
+}
+
+.sod-timeline-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 10px;
+}
+
+.sod-timeline-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--sod-muted);
+}
+
+.sod-timeline-step.is-complete .sod-timeline-title,
+.sod-timeline-step.is-current .sod-timeline-title,
+.sod-timeline-step.is-cancelled .sod-timeline-title {
+    color: var(--sod-heading);
+}
+
+.sod-timeline-date {
+    font-size: 11.5px;
+    color: var(--sod-muted);
+    font-weight: 500;
+}
+
+.sod-cancelled-notice {
+    margin-top: 22px;
+    padding: 12px 16px;
+    background: var(--sod-danger-bg);
+    border: 1px solid rgba(181, 75, 59, 0.25);
+    border-radius: var(--sod-radius-sm);
+    color: var(--sod-danger);
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ================= 6. SHARED CARD ================= */
+.sod-card {
+    background-color: var(--sod-surface-raised);
+    border: 1px solid var(--sod-border);
+    border-radius: var(--sod-radius-md);
+    padding: 22px;
+    box-shadow: var(--sod-shadow-sm);
+}
+
+.sod-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.sod-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--sod-heading);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sod-card-title svg {
+    color: var(--sod-accent);
+}
+
+.sod-card-subtitle {
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--sod-muted);
+}
+
+.sod-item-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sod-muted);
+    background-color: var(--sod-muted-bg);
+    padding: 4px 10px;
+    border-radius: var(--sod-radius-pill);
+}
+
+/* ================= LAYOUT ================= */
+.sod-layout {
+    display: grid;
+    grid-template-columns: 1.65fr 1fr;
+    gap: 22px;
+    align-items: start;
+}
+
+.sod-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+}
+
+.sod-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: sticky;
+    top: calc(var(--sd-topbar-height, 68px) + 20px);
+}
+
+/* ================= 7. CUSTOMER INFORMATION CARD ================= */
+.sod-customer-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--sod-border);
+}
+
+.sod-customer-avatar {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: var(--sod-accent);
+    color: #F7F1DE;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sod-customer-profile-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.sod-customer-name {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--sod-heading);
+}
+
+.sod-customer-since {
+    font-size: 12px;
+    color: var(--sod-muted);
+    font-weight: 500;
+}
+
+.sod-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sod-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.sod-info-icon {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sod-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.sod-info-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--sod-muted);
+}
+
+.sod-info-value {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--sod-heading);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.sod-info-value a {
+    color: var(--sod-accent);
+    font-weight: 600;
+    transition: color var(--sod-transition);
+}
+
+.sod-info-value a:hover {
+    color: var(--sod-accent-hover);
+}
+
+.sod-note-box {
+    margin-top: 4px;
+    padding: 12px 14px;
+    background-color: var(--sod-bg);
+    border: 1px dashed var(--sod-border);
+    border-radius: var(--sod-radius-sm);
+    font-size: 13px;
+    color: var(--sod-body);
+    line-height: 1.55;
+    font-style: italic;
+}
+
+/* ================= 8. PRODUCTS TABLE ================= */
+.sod-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sod-accent) var(--sod-surface);
+}
+
+.sod-table-wrap::-webkit-scrollbar {
+    height: 6px;
+}
+
+.sod-table-wrap::-webkit-scrollbar-track {
+    background: var(--sod-surface);
+    border-radius: 8px;
+}
+
+.sod-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--sod-accent);
+    border-radius: 8px;
+}
+
+.sod-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.sod-table th {
+    background-color: var(--sod-bg);
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--sod-muted);
+    border-bottom: 1px solid var(--sod-border);
+    white-space: nowrap;
+}
+
+.sod-table tbody tr {
+    border-bottom: 1px solid var(--sod-border);
+    transition: background-color var(--sod-transition);
+}
+
+.sod-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.sod-table tbody tr:hover {
+    background-color: rgba(157, 102, 56, 0.045);
+}
+
+.sod-table td {
+    padding: 12px 14px;
+    font-size: 13.5px;
+    vertical-align: middle;
+    color: var(--sod-body);
+}
+
+.sod-col-image {
+    width: 58px;
+}
+
+.sod-product-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--sod-radius-sm);
+    background: linear-gradient(145deg, rgba(157, 102, 56, 0.12), rgba(176, 186, 153, 0.22));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sod-accent);
+    border: 1px solid var(--sod-border);
+    overflow: hidden;
+}
+
+.sod-product-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sod-product-name {
+    display: block;
+    font-weight: 700;
+    color: var(--sod-heading);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sod-product-variant {
+    display: block;
+    font-size: 11.5px;
+    color: var(--sod-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.sod-sku {
+    color: var(--sod-muted);
+    font-weight: 500;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12.5px;
+}
+
+.sod-qty-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    padding: 3px 8px;
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent-hover);
+    font-weight: 700;
+    border-radius: var(--sod-radius-pill);
+    font-size: 12.5px;
+}
+
+.sod-unit-price,
+.sod-subtotal {
+    font-weight: 600;
+    color: var(--sod-body);
+    white-space: nowrap;
+}
+
+.sod-subtotal {
+    font-weight: 700;
+    color: var(--sod-accent-hover);
+}
+
+.sod-table-note {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--sod-border);
+    font-size: 12px;
+    color: var(--sod-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sod-table-note svg {
+    color: var(--sod-accent);
+    flex-shrink: 0;
+}
+
+/* ================= 9. ORDER SUMMARY CARD ================= */
+.sod-summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.sod-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13.5px;
+    color: var(--sod-body);
+}
+
+.sod-summary-row span:last-child {
+    color: var(--sod-heading);
+    font-weight: 600;
+}
+
+.sod-summary-row-discount span:last-child {
+    color: var(--sod-success) !important;
+}
+
+.sod-summary-divider {
+    border: none;
+    border-top: 1px solid var(--sod-border);
+    margin: 14px 0;
+}
+
+.sod-summary-grand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sod-summary-grand-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--sod-heading);
+}
+
+.sod-summary-grand-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--sod-accent-hover);
+}
+
+/* ================= 10. PAYMENT INFORMATION CARD ================= */
+.sod-kv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.sod-kv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.sod-kv-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--sod-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.sod-kv-label svg {
+    color: var(--sod-accent);
+}
+
+.sod-kv-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sod-heading);
+    text-align: right;
+}
+
+.sod-kv-value-mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ================= 11. SHIPPING INFORMATION CARD ================= */
+.sod-tracking-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background-color: var(--sod-bg);
+    border: 1px dashed var(--sod-border);
+    border-radius: var(--sod-radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+
+.sod-tracking-box-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.sod-tracking-number {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--sod-heading);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sod-copy-btn {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--sod-transition), color var(--sod-transition);
+}
+
+.sod-copy-btn:hover {
+    background-color: var(--sod-accent);
+    color: #F7F1DE;
+}
+
+.sod-copy-btn.is-copied {
+    background-color: var(--sod-success);
+    color: #F7F1DE;
+}
+
+/* ================= 12. INTERNAL NOTES ================= */
+.sod-notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sod-note-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sod-note-block-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--sod-muted);
+}
+
+.sod-note-block-label svg {
+    color: var(--sod-accent);
+}
+
+.sod-note-block-text {
+    font-size: 13.5px;
+    color: var(--sod-body);
+    line-height: 1.6;
+    background-color: var(--sod-bg);
+    border: 1px solid var(--sod-border);
+    border-radius: var(--sod-radius-sm);
+    padding: 12px 14px;
+}
+
+.sod-note-block-text.is-empty {
+    color: var(--sod-muted);
+    font-style: italic;
+}
+
+/* ================= 13. ACTIVITY TIMELINE ================= */
+.sod-activity-toggle {
+    background-color: transparent;
+    color: var(--sod-accent);
+    font-size: 12.5px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    transition: color var(--sod-transition), gap var(--sod-transition);
+}
+
+.sod-activity-toggle:hover {
+    color: var(--sod-accent-hover);
+    gap: 9px;
+}
+
+.sod-activity-toggle svg {
+    transition: transform var(--sod-transition);
+}
+
+.sod-activity-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+}
+
+.sod-activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 4px;
+    overflow: hidden;
+    max-height: 400px;
+    transition: max-height 0.35s var(--sod-ease);
+}
+
+.sod-activity-feed.is-collapsed {
+    max-height: 168px;
+}
+
+.sod-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.sod-activity-item::before {
+    content: "";
+    position: absolute;
+    top: 30px;
+    left: 15px;
+    width: 2px;
+    height: calc(100% - 30px);
+    background-color: var(--sod-border);
+}
+
+.sod-activity-item:last-child::before {
+    display: none;
+}
+
+.sod-activity-icon {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.sod-activity-icon-success {
+    background-color: var(--sod-success-bg);
+    color: var(--sod-success);
+}
+
+.sod-activity-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 4px;
+}
+
+.sod-activity-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--sod-heading);
+}
+
+.sod-activity-desc {
+    font-size: 12.5px;
+    color: var(--sod-body);
+}
+
+.sod-activity-time {
+    font-size: 11.5px;
+    color: var(--sod-muted);
+    font-weight: 500;
+}
+
+.sod-activity-fade {
+    position: relative;
+    margin-top: -40px;
+    height: 40px;
+    background: linear-gradient(180deg, rgba(247, 241, 222, 0), var(--sod-surface-raised));
+    pointer-events: none;
+}
+
+.sod-activity-fade.is-hidden {
+    display: none;
+}
+
+/* ================= 14. ORDER ACTIONS ================= */
+.sod-actions-card {
+    background-color: var(--sod-surface-raised);
+    border: 1px solid var(--sod-border);
+    border-radius: var(--sod-radius-md);
+    padding: 24px;
+    box-shadow: var(--sod-shadow-sm);
+}
+
+.sod-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.sod-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 18px 12px;
+    border-radius: var(--sod-radius-sm);
+    border: 1.5px solid var(--sod-border);
+    background-color: var(--sod-bg);
+    color: var(--sod-heading);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    transition: transform var(--sod-transition), box-shadow var(--sod-transition), border-color var(--sod-transition), background-color var(--sod-transition);
+}
+
+.sod-action-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: var(--sod-shadow-md);
+}
+
+.sod-action-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.sod-action-btn-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sod-action-confirm .sod-action-btn-icon {
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent);
+}
+
+.sod-action-confirm:hover:not(:disabled) {
+    border-color: var(--sod-accent);
+}
+
+.sod-action-processing .sod-action-btn-icon {
+    background-color: var(--sod-info-bg);
+    color: var(--sod-info);
+}
+
+.sod-action-processing:hover:not(:disabled) {
+    border-color: var(--sod-info);
+}
+
+.sod-action-shipped .sod-action-btn-icon {
+    background-color: rgba(78, 34, 15, 0.1);
+    color: var(--sod-accent-hover);
+}
+
+.sod-action-shipped:hover:not(:disabled) {
+    border-color: var(--sod-accent-hover);
+}
+
+.sod-action-delivered .sod-action-btn-icon {
+    background-color: var(--sod-success-bg);
+    color: var(--sod-success);
+}
+
+.sod-action-delivered:hover:not(:disabled) {
+    border-color: var(--sod-success);
+}
+
+.sod-action-cancel {
+    background-color: var(--sod-danger-bg);
+    border-color: rgba(181, 75, 59, 0.25);
+}
+
+.sod-action-cancel .sod-action-btn-icon {
+    background-color: rgba(181, 75, 59, 0.16);
+    color: var(--sod-danger);
+}
+
+.sod-action-cancel:hover:not(:disabled) {
+    border-color: var(--sod-danger);
+}
+
+.sod-action-cancel .sod-action-btn-label {
+    color: var(--sod-danger);
+}
+
+.sod-actions-secondary {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--sod-border);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sod-refund-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ================= 15. BADGES ================= */
+.sod-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 13px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: var(--sod-radius-pill);
+    line-height: 1;
+    white-space: nowrap;
+    transition: transform var(--sod-transition);
+}
+
+.sod-badge::before {
+    content: "";
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sod-badge:hover {
+    transform: scale(1.05);
+}
+
+.sod-badge-pending {
+    background-color: var(--sod-warning-bg);
+    color: var(--sod-warning);
+}
+.sod-badge-pending::before { background-color: var(--sod-warning); }
+
+.sod-badge-confirmed {
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent);
+}
+.sod-badge-confirmed::before { background-color: var(--sod-accent); }
+
+.sod-badge-processing {
+    background-color: var(--sod-info-bg);
+    color: var(--sod-info);
+}
+.sod-badge-processing::before { background-color: var(--sod-info); }
+
+.sod-badge-shipped {
+    background-color: rgba(78, 34, 15, 0.12);
+    color: var(--sod-accent-hover);
+}
+.sod-badge-shipped::before { background-color: var(--sod-accent-hover); }
+
+.sod-badge-delivered {
+    background-color: var(--sod-success-bg);
+    color: var(--sod-success);
+}
+.sod-badge-delivered::before { background-color: var(--sod-success); }
+
+.sod-badge-cancelled {
+    background-color: var(--sod-danger-bg);
+    color: var(--sod-danger);
+}
+.sod-badge-cancelled::before { background-color: var(--sod-danger); }
+
+.sod-badge-paid {
+    background-color: var(--sod-success-bg);
+    color: var(--sod-success);
+}
+.sod-badge-paid::before { background-color: var(--sod-success); }
+
+.sod-badge-payment-pending {
+    background-color: var(--sod-warning-bg);
+    color: var(--sod-warning);
+}
+.sod-badge-payment-pending::before { background-color: var(--sod-warning); }
+
+.sod-badge-refunded {
+    background-color: var(--sod-muted-bg);
+    color: #6b7458;
+}
+.sod-badge-refunded::before { background-color: #6b7458; }
+
+/* ================= 16. TOAST ================= */
+.sod-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 340px;
+}
+
+.sod-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #fffaf0;
+    border: 1px solid rgba(157, 102, 56, 0.22);
+    border-left: 4px solid var(--sod-accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-shadow: var(--sod-shadow-md);
+    font-size: 13.5px;
+    color: var(--sod-heading);
+    animation: sodToastIn 0.25s ease;
+}
+
+.sod-toast svg {
+    color: var(--sod-accent);
+    flex-shrink: 0;
+}
+
+.sod-toast.sod-toast-success {
+    border-left-color: var(--sod-success);
+}
+.sod-toast.sod-toast-success svg { color: var(--sod-success); }
+
+.sod-toast.sod-toast-error {
+    border-left-color: var(--sod-danger);
+}
+.sod-toast.sod-toast-error svg { color: var(--sod-danger); }
+
+.sod-toast.is-leaving {
+    animation: sodToastOut 0.22s ease forwards;
+}
+
+@keyframes sodToastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sodToastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+/* ================= 17. CONFIRM MODAL ================= */
+.sod-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(58, 27, 14, 0.42);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+    padding: 20px;
+}
+
+.sod-modal {
+    background-color: rgba(247, 241, 222, 0.9);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: var(--sod-radius-lg);
+    padding: 30px;
+    width: 100%;
+    border: 1.5px solid #9D6638;
+    max-width: 420px;
+    box-shadow: var(--sod-shadow-lg);
+    text-align: center;
+    animation: sodScaleIn 0.28s var(--sod-ease);
+}
+
+@keyframes sodScaleIn {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.sod-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background-color: var(--sod-accent-soft);
+    color: var(--sod-accent);
+    margin-bottom: 18px;
+}
+
+.sod-modal-icon.is-danger {
+    background-color: var(--sod-danger-bg);
+    color: var(--sod-danger);
+}
+
+.sod-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--sod-heading);
+}
+
+.sod-modal-text {
+    font-size: 13.5px;
+    color: var(--sod-muted);
+    line-height: 1.55;
+    margin: 0 0 22px;
+}
+
+.sod-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.sod-modal-actions .sod-btn {
+    flex: 1;
+}
+
+/* ================= 18. RESPONSIVE ================= */
+@media (max-width: 1199.98px) {
+    .sod-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sod-right-col {
+        position: static;
+    }
+
+    .sod-actions-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 767.98px) {
+    .sod-header {
+        flex-direction: column;
+    }
+
+    .sod-header-actions {
+        width: 100%;
+    }
+
+    .sod-header-actions .sod-btn {
+        flex: 1;
+    }
+
+    /* ================= Mobile Timeline ================= */
+
+    .sod-timeline {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 24px;
+    }
+
+    .sod-timeline-step {
+        flex: none;
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 16px;
+    }
+
+    .sod-timeline-step::after {
+        content: "";
+        position: absolute;
+        left: 20px;
+        top: 42px;
+        width: 3px;
+        height: calc(100% + 24px);
+        background: var(--sod-border);
+        z-index: 0;
+    }
+
+    .sod-timeline-step:last-child::after {
+        display: none;
+    }
+
+    .sod-timeline-step.is-complete::after {
+        background: var(--sod-success);
+    }
+
+    .sod-timeline-icon {
+        flex-shrink: 0;
+    }
+
+    .sod-timeline-text {
+        margin-top: 0;
+    }
+
+    /* ================= Other ================= */
+
+    .sod-card {
+        padding: 18px;
+    }
+
+    .sod-actions-card {
+        padding: 18px;
+    }
+
+    .sod-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sod-actions-secondary {
+        justify-content: stretch;
+    }
+
+    .sod-refund-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .sod-customer-profile {
+        flex-wrap: wrap;
+    }
+
+    .sod-toast-container {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+    }
+}
+@media (max-width: 480px) {
+    .sod-actions-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+
+.sod-modal-overlay{
+    position:fixed;
+    inset:0;
+    opacity:0;
+    visibility:hidden;
+    transition:.25s;
+
+}
+
+.sod-modal-overlay.active{
+    opacity:1;
+    visibility:visible;
+}
+
+.sod-modal-overlay.active .sod-modal{
+    transform:translateY(0);
+}
+
+.sod-modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:22px;
+}
+
+.sod-modal-header h3{
+    font-size:22px;
+    color:#4E220F;
+}
+
+.sod-modal-close{
+    border:none;
+    background:none;
+    cursor:pointer;
+    font-size:30px;
+    color:#666;
+}
+
+.sod-form-group{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:18px;
+}
+
+.sod-form-group label{
+    font-weight:600;
+    color:#4E220F;
+}
+
+.sod-form-group input,
+.sod-form-group textarea{
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:15px;
+    outline:none;
+    transition:.2s;
+}
+
+.sod-form-group input:focus,
+.sod-form-group textarea:focus{
+    border-color:#9D6638;
+    box-shadow:0 0 0 4px rgba(157,102,56,.12);
+}
+
+.sod-modal-footer{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    margin-top:28px;
+}

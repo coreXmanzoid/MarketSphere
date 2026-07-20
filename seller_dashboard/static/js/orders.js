@@ -199,12 +199,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const action = actionItem.dataset.rowAction;
         const row = actionItem.closest('.so-row');
-        const orderNumber = actionItem.dataset.orderNumber || (row ? row.dataset.orderNumber : '');
-
+        let orderNumber = actionItem.dataset.orderNumber || (row ? row.dataset.orderNumber : '');
+        orderNumber = orderNumber.split('-')[1];
         if (action === 'view') {
-            // Placeholder — the Order Detail page for sellers does not
-            // exist yet. This simply signals intent to navigate there.
-            window.alert('This will open the Order Detail page for #' + orderNumber + ' once it is built.');
+            window.location.href = "/seller/orders/"+orderNumber;
         } else if (action === 'print') {
             window.alert('Printing the invoice for #' + orderNumber + ' isn\u2019t available yet \u2014 check back soon.');
         } else if (action === 'contact') {
@@ -222,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const link = e.target.closest('[data-view-order]');
         if (!link) return;
         e.preventDefault();
-        window.alert('This will open the Order Detail page for #' + link.dataset.viewOrder + ' once it is built.');
+        window.location.href = "/seller/orders/" + link.dataset.viewOrder;
     });
 
     /* ================= 6. CANCEL CONFIRMATION MODAL ================= */

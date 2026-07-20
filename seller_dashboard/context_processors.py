@@ -25,16 +25,23 @@ def seller_dashboard(request):
     seller_products = Product.objects.filter(seller=seller)
     seller_orders = SellerOrder.objects.filter(seller=seller)
 
+
     total_products = seller_products.count()
 
     drafted_products = seller_products.filter(
         status=Product.Status.DRAFT
     )
+    
+    published_products = seller_products.filter(
+        status=Product.Status.PUBLISHED
+    ).count()
+
 
     pending_orders = seller_orders.filter(
         status=SellerOrder.Status.PENDING
     ).count()
 
+    
     processing_orders = seller_orders.filter(
         status=SellerOrder.Status.PROCESSING
     ).count()
@@ -83,6 +90,7 @@ def seller_dashboard(request):
         "dashboard_processing_orders": processing_orders,
         "dashboard_total_products": total_products,
         "dashboard_seller_products": seller_products,
+        "dashboard_published_products": published_products,
         "dashboard_low_stock_products": low_stock_products,
         "dashboard_out_of_stock_products": out_of_stock_products,
         "dashboard_completed_revenue": completed_revenue,

@@ -9,6 +9,7 @@ from products.services import (
     edit_product,
     get_edit_product_by_slug
 )
+from orders.services import get_user_order_for_seller, update_order_status
 import json
 # Create your views here.
 
@@ -166,8 +167,22 @@ def delete_product(request):
 
 
 def orders(request):
-    # orders = 
-    # context = {
-    #     "orders": orders
-    # }
     return render(request, "orders/list.html")
+
+def order_detail(request, order_no):
+    order = get_user_order_for_seller(request.user.seller_profile, order_no)
+
+    return render(request, "orders/detail.html", {"order": order})
+
+
+def update_user_order_status(request, order_no, status):
+    update_order_status(
+        request.user.seller_profile,
+        order_no,
+        status,
+    )
+
+    return JsonResponse({
+        "success": True,
+        "status": status,
+    })

@@ -1,0 +1,1043 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Order #MS-748213
+{% endblock %}
+
+{% block active_page %}
+  orders
+{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sd-breadcrumb-sep">/</span>
+  <a href="{% url 'orders-list' %}" class="sd-breadcrumb-current" style="color:var(--sd-caption-color); font-weight:600;">Orders</a>
+  <span class="sd-breadcrumb-sep">/</span>
+  <span class="sd-breadcrumb-current">#MS-{{ order.order.order_number }}</span>
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static '/css/seller_order_detail.css' %}" />
+{% endblock %}
+
+{% block seller_content %}
+  <div class="sod-page">
+    <!-- ================= 1. PAGE HEADER ================= -->
+    <header class="sod-header sod-reveal">
+      <div class="sod-header-left">
+        <button type="button" class="sod-back-btn" id="sodBackBtn" aria-label="Back to Orders">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+
+        <div class="sod-header-titleblock">
+          <div class="sod-header-title-row">
+            <!-- orderItem.order.order_number -->
+            <h1 class="sod-header-title">Order #MS-{{ order.order.order_number|slice:6 }}</h1>
+            <!-- orderItem.order.overall_status -->
+            <span class="sod-badge sod-badge-{{ order.order.overall_status }}" id="sodStatusBadge">{{ order.order.overall_status|title }}</span>
+          </div>
+          <p class="sod-header-subtitle">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 3"></path>
+            </svg>Placed on {{ order.order.created_at|date:'F j' }} &middot; {{ order.order.created_at|date:'g:i A' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="sod-header-actions">
+        <button type="button" class="sod-btn sod-btn-ghost" id="sodPrintInvoiceBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>Print Invoice
+        </button>
+        <button type="button" class="sod-btn sod-btn-primary" id="sodDownloadInvoiceBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>Download Invoice
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= 2. ORDER PROGRESS TIMELINE ================= -->
+  <section class="sod-timeline-card sod-reveal" aria-label="Order progress">
+  <ol class="sod-timeline">
+
+    <!-- Order Placed -->
+    <li class="sod-timeline-step is-complete" data-timeline-step="placed">
+      <span class="sod-timeline-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </span>
+
+      <div class="sod-timeline-text">
+        <span class="sod-timeline-title">Order Placed</span>
+        <span class="sod-timeline-date">{{ order.order.created_at|date:"F j, g:i A" }}</span>
+      </div>
+    </li>
+
+    <!-- Confirmed -->
+    <li class="sod-timeline-step
+        {% if order.status == 'confirmed' %}
+            is-current
+        {% elif order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}
+            is-complete
+        {% elif order.status == 'cancelled' %}
+            is-cancelled
+        {% endif %}"
+        data-timeline-step="confirmed">
+
+      <span class="sod-timeline-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 12l2 2 4-4"></path>
+          <circle cx="12" cy="12" r="9"></circle>
+        </svg>
+      </span>
+
+      <div class="sod-timeline-text">
+        <span class="sod-timeline-title">Confirmed</span>
+        <span class="sod-timeline-date">
+          {% if order.status == 'pending' %}
+            Pending
+          {% elif order.status == 'confirmed' %}
+            Current Step
+          {% else %}
+            Completed
+          {% endif %}
+        </span>
+      </div>
+    </li>
+
+    <!-- Processing -->
+    <li class="sod-timeline-step
+        {% if order.status == 'processing' %}
+            is-current
+        {% elif order.status == 'shipped' or order.status == 'delivered' %}
+            is-complete
+        {% elif order.status == 'cancelled' %}
+            is-cancelled
+        {% endif %}"
+        data-timeline-step="processing">
+
+      <span class="sod-timeline-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+          <polyline points="21 3 21 9 15 9"></polyline>
+        </svg>
+      </span>
+
+      <div class="sod-timeline-text">
+        <span class="sod-timeline-title">Processing</span>
+        <span class="sod-timeline-date">
+          {% if order.status == 'processing' %}
+            In Progress
+          {% elif order.status == 'pending' or order.status == 'confirmed' %}
+            Pending
+          {% else %}
+            Completed
+          {% endif %}
+        </span>
+      </div>
+    </li>
+
+    <!-- Shipped -->
+    <li class="sod-timeline-step
+        {% if order.status == 'shipped' %}
+            is-current
+        {% elif order.status == 'delivered' %}
+            is-complete
+        {% elif order.status == 'cancelled' %}
+            is-cancelled
+        {% endif %}"
+        data-timeline-step="shipped">
+
+      <span class="sod-timeline-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+          <path d="M16 8h4l3 3v5h-7V8Z"></path>
+          <circle cx="5.5" cy="18.5" r="2.5"></circle>
+          <circle cx="18.5" cy="18.5" r="2.5"></circle>
+        </svg>
+      </span>
+
+      <div class="sod-timeline-text">
+        <span class="sod-timeline-title">Shipped</span>
+        <span class="sod-timeline-date">
+          {% if order.status == 'shipped' %}
+            Current Step
+          {% elif order.status == 'delivered' %}
+            Completed
+          {% else %}
+            Pending
+          {% endif %}
+        </span>
+      </div>
+    </li>
+
+    <!-- Delivered -->
+    <li class="sod-timeline-step
+        {% if order.status == 'delivered' %}
+            is-current is-complete
+        {% elif order.status == 'cancelled' %}
+            is-cancelled
+        {% endif %}"
+        data-timeline-step="delivered">
+
+      <span class="sod-timeline-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </span>
+
+      <div class="sod-timeline-text">
+        <span class="sod-timeline-title">Delivered</span>
+        <span class="sod-timeline-date">
+          {% if order.status == 'delivered' %}
+            Completed
+          {% else %}
+            Pending
+          {% endif %}
+        </span>
+      </div>
+    </li>
+
+  </ol>
+
+  {% if order.status == 'cancelled' %}
+  <div class="sod-cancelled-notice">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="15" y1="9" x2="9" y2="15"></line>
+      <line x1="9" y1="9" x2="15" y2="15"></line>
+    </svg>
+    <strong>Order Cancelled</strong> &mdash; this order was cancelled and will not be fulfilled.
+  </div>
+  {% endif %}
+</section>
+    <!-- ================= MAIN BODY ================= -->
+    <div class="sod-layout">
+      <!-- ================= LEFT COLUMN (~65%) ================= -->
+      <div class="sod-left-col">
+        <!-- ============ 3. CUSTOMER INFORMATION CARD ============ -->
+        <section class="sod-card sod-reveal" id="sodCustomerCard" aria-label="Customer information">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>Customer Information
+            </h2>
+          </div>
+
+          <div class="sod-customer-profile">
+            <span class="sod-customer-avatar" aria-hidden="true">
+              {% if order.order.user.profile_image_url %}
+                <img src="{{ order.order.user.profile_image_url }}" alt="" />
+              {% else %}
+                <!-- customer.username|slice:1 -->{{ order.order.user.username|slice:1 }}
+              {% endif %}
+            </span>
+            <div class="sod-customer-profile-text">
+              <!-- order.user.first_name order.user.last_name -->
+              <span class="sod-customer-name">{{ order.order.user.first_name }} {{ order.order.user.last_name }}</span>
+              <!-- order.user.date_joined -->
+              <span class="sod-customer-since">Customer since {{ order.order.user.date_joined|date:'F Y' }}</span>
+            </div>
+          </div>
+
+          <div class="sod-info-grid">
+            <div class="sod-info-row">
+              <span class="sod-info-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"></path>
+                </svg>
+              </span>
+              <div class="sod-info-text">
+                <span class="sod-info-label">Phone Number</span>
+                <!-- order.shipping_phone -->
+                <span class="sod-info-value">{{ order.order.shipping_phone }}</span>
+              </div>
+            </div>
+
+            <div class="sod-info-row">
+              <span class="sod-info-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16v16H4z" opacity="0"></path>
+                  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                  <path d="m22 7-10 6L2 7"></path>
+                </svg>
+              </span>
+              <div class="sod-info-text">
+                <span class="sod-info-label">Email Address</span>
+                <!-- order.user.email -->
+                <span class="sod-info-value"><a href="mailto:{{ order.order.user.email }}">{{ order.order.user.email }}</a></span>
+              </div>
+            </div>
+
+            <div class="sod-info-row">
+              <span class="sod-info-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </span>
+              <div class="sod-info-text">
+                <span class="sod-info-label">Shipping Address</span>
+                <!-- order.shipping_address, order.shipping_city, order.shipping_postal_code -->
+                <span class="sod-info-value">{{ order.order.shipping_address }}, {{ order.order.shipping_city }}, {{ order.order.shipping_postal_code }}</span>
+              </div>
+            </div>
+
+            <div class="sod-info-row">
+              <span class="sod-info-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3h18v14H7l-4 4Z"></path>
+                </svg>
+              </span>
+              <div class="sod-info-text">
+                <span class="sod-info-label">Billing Address</span>
+                <!-- order.billing_address|default:"Same as shipping address" -->
+                <span class="sod-info-value">{{ order.order.billing_address|default:'Same as shipping address' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sod-note-box">
+            <!-- order.notes|default:"No notes left by the customer." -->
+            "{{ order.order.notes|default:'No notes left by the customer.' }}"
+          </div>
+        </section>
+
+        <!-- ============ 4. SELLER PRODUCTS CARD ============ -->
+        <section class="sod-card sod-reveal" id="sodProductsCard" aria-label="Products in this order">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                <path d="M3 8v8l9 5 9-5V8"></path>
+                <path d="M12 13v8"></path>
+              </svg>Your Products in This Order
+            </h2>
+            <!-- seller_order.items.count -->
+            <span class="sod-item-count">{{ order.items.count }} items</span>
+          </div>
+
+          <div class="sod-table-wrap">
+            <table class="sod-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="sod-col-image">
+                    <span class="sr-only">Image</span>
+                  </th>
+                  <th scope="col">Product</th>
+                  <th scope="col">SKU</th>
+                  <th scope="col">Qty</th>
+                  <th scope="col">Unit Price</th>
+                  <th scope="col">Subtotal</th>
+                </tr>
+              </thead>
+
+              <tbody id="sodProductsTableBody">
+                <!-- ============ PRODUCT ROWS ============ -->
+                <!-- Only THIS seller's items (seller_order.items) render here. -->
+                {% for item in order.items.all %}
+                  <tr>
+                    <td data-label="">
+                      <div class="sod-product-thumb">
+                        <img src="{{ item.product.primary_image.image.url }}" alt="" />
+                      </div>
+                    </td>
+                    <td data-label="Product">
+                      <!-- item.product.name -->
+                      <span class="sod-product-name">{{ item.product.name }}</span>
+                      <span class="sod-product-variant">Matte Black</span>
+                    </td>
+                    <td data-label="SKU">
+                      <!-- item.product.sku -->
+                      <span class="sod-sku">{{ item.product.sku }}</span>
+                    </td>
+                    <td data-label="Qty">
+                      <!-- item.quantity -->
+                      <span class="sod-qty-pill">{{ item.quantity }}</span>
+                    </td>
+                    <td data-label="Unit Price">
+                      <!-- item.price -->
+                      <span class="sod-unit-price">Rs. {{ item.price|floatformat:0 }}</span>
+                    </td>
+                    <td data-label="Subtotal">
+                      <!-- item.total -->
+                      <span class="sod-subtotal">Rs. {{ item.total|floatformat:0 }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+
+                <!-- ============ END PRODUCT ROWS ============ -->
+              </tbody>
+            </table>
+          </div>
+
+          <p class="sod-table-note">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>Only products from your store are shown. This order may include items fulfilled by other sellers.
+          </p>
+        </section>
+
+        <!-- ============ 8. INTERNAL NOTES ============ -->
+        <section class="sod-card sod-reveal" id="sodNotesCard" aria-label="Internal notes">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                <path d="M14 2v6h6"></path>
+                <path d="M9 15h6"></path>
+                <path d="M9 11h6"></path>
+              </svg>Internal Notes
+            </h2>
+          </div>
+
+          <div class="sod-notes-list">
+            <div class="sod-note-block">
+              <span class="sod-note-block-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                </svg>Seller Notes
+              </span>
+              <!-- seller_order.seller_notes -->
+<p
+    class="sod-note-block-text editable-note"
+    data-url=""
+>
+    {{ item.seller.notes|default:"No seller Notes." }}
+</p>            </div>
+
+            <div class="sod-note-block">
+              <span class="sod-note-block-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
+                </svg>Admin Notes
+              </span>
+              <!-- seller_order.admin_notes|default:"" -->
+              <p class="sod-note-block-text is-empty">{{ item.order.admin_notes|default:'No admin notes on this order.' }}</p>
+            </div>
+
+            <div class="sod-note-block">
+              <span class="sod-note-block-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>Customer Message
+              </span>
+              <!-- order.notes -->
+              <p class="sod-note-block-text">"{{ item.order.notes|default:'No Customer Notes.' }}"</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 9. ORDER ACTIVITY TIMELINE ============ -->
+        <section class="sod-card sod-reveal" id="sodActivityCard" aria-label="Order activity" data-order-number="{{ order.order.order_number }}">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3v18h18"></path>
+                <path d="M7 15l4-5 3 3 5-7"></path>
+              </svg>Order Activity
+            </h2>
+
+            <button type="button" class="sod-activity-toggle" id="sodActivityToggle" aria-expanded="false">
+              <span>Show Full Activity</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <div class="sod-activity-feed is-collapsed" id="sodActivityFeed">
+            <!-- Order Placed -->
+            <div class="sod-activity-item">
+              <span class="sod-activity-icon sod-activity-icon-success">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+              </span>
+
+              <div class="sod-activity-body">
+                <span class="sod-activity-title">Order Placed</span>
+                <span class="sod-activity-desc">Customer placed this order.</span>
+                <span class="sod-activity-time">{{ order.order.created_at|date:'F j, Y · g:i A' }}</span>
+              </div>
+            </div>
+
+            {% if order.status != 'pending' %}
+              <!-- Confirmed -->
+              <div class="sod-activity-item">
+                <span class="sod-activity-icon sod-activity-icon-success">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M9 12l2 2 4-4"></path>
+                    <circle cx="12" cy="12" r="9"></circle>
+                  </svg>
+                </span>
+
+                <div class="sod-activity-body">
+                  <span class="sod-activity-title">Order Confirmed</span>
+                  <span class="sod-activity-desc">Seller confirmed this order.</span>
+                  <span class="sod-activity-time">{{ order.updated_at|date:'F j, Y · g:i A' }}</span>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}
+              <!-- Processing -->
+              <div class="sod-activity-item">
+                <span class="sod-activity-icon">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                    <path d="M3 8v8l9 5 9-5V8"></path>
+                  </svg>
+                </span>
+
+                <div class="sod-activity-body">
+                  <span class="sod-activity-title">Order Processing</span>
+                  <span class="sod-activity-desc">Items are being prepared for shipment.</span>
+                  <span class="sod-activity-time">{{ order.updated_at|date:'F j, Y · g:i A' }}</span>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if order.status == 'shipped' or order.status == 'delivered' %}
+              <!-- Shipped -->
+              <div class="sod-activity-item">
+                <span class="sod-activity-icon">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                    <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                  </svg>
+                </span>
+
+                <div class="sod-activity-body">
+                  <span class="sod-activity-title">Order Shipped</span>
+                  <span class="sod-activity-desc">Order handed over to the courier.</span>
+                  <span class="sod-activity-time">{{ order.shipped_at|date:'F j, Y · g:i A'|default:'Pending' }}</span>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if order.status == 'delivered' %}
+              <!-- Delivered -->
+              <div class="sod-activity-item">
+                <span class="sod-activity-icon sod-activity-icon-success">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </span>
+
+                <div class="sod-activity-body">
+                  <span class="sod-activity-title">Order Delivered</span>
+                  <span class="sod-activity-desc">Customer successfully received the order.</span>
+                  <span class="sod-activity-time">{{ order.delivered_at|date:'F j, Y · g:i A' }}</span>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if order.status == 'cancelled' %}
+              <!-- Cancelled -->
+              <div class="sod-activity-item">
+                <span class="sod-activity-icon sod-activity-icon-danger">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                </span>
+
+                <div class="sod-activity-body">
+                  <span class="sod-activity-title">Order Cancelled</span>
+                  <span class="sod-activity-desc">This seller order has been cancelled.</span>
+                  <span class="sod-activity-time">{{ order.updated_at|date:'F j, Y · g:i A' }}</span>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="sod-activity-fade" id="sodActivityFade"></div>
+        </section>
+        <!-- ============ 10. ORDER ACTIONS ============ -->
+        <section class="sod-actions-card sod-reveal" id="sodActionsCard" aria-label="Order actions">
+    <div class="sod-card-head">
+        <h2 class="sod-card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path>
+            </svg>
+            Order Actions
+        </h2>
+    </div>
+
+    <div class="sod-actions-grid">
+
+        <!-- Confirm -->
+        <button
+            type="button"
+            class="sod-action-btn sod-action-confirm"
+            id="sodConfirmBtn"
+            data-status-step="confirmed"
+            {% if order.status != "pending" %}disabled{% endif %}>
+
+            <span class="sod-action-btn-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4"></path>
+                    <circle cx="12" cy="12" r="9"></circle>
+                </svg>
+            </span>
+
+            <span class="sod-action-btn-label">
+                Confirm Order
+            </span>
+        </button>
+
+        <!-- Processing -->
+        <button
+            type="button"
+            class="sod-action-btn sod-action-processing"
+            id="sodProcessingBtn"
+            data-status-step="processing"
+            {% if order.status != "confirmed" %}disabled{% endif %}>
+
+            <span class="sod-action-btn-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+                    <polyline points="21 3 21 9 15 9"></polyline>
+                </svg>
+            </span>
+
+            <span class="sod-action-btn-label">
+                Mark as Processing
+            </span>
+        </button>
+
+        <!-- Shipped -->
+        <button
+            type="button"
+            class="sod-action-btn sod-action-shipped"
+            id="sodShippedBtn"
+            data-status-step="shipped"
+            {% if order.status != "processing" %}disabled{% endif %}>
+
+            <span class="sod-action-btn-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                    <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+            </span>
+
+            <span class="sod-action-btn-label">
+                Mark as Shipped
+            </span>
+        </button>
+
+        <!-- Delivered -->
+        <button
+            type="button"
+            class="sod-action-btn sod-action-delivered"
+            id="sodDeliveredBtn"
+            data-status-step="delivered"
+            {% if order.status != "shipped" %}disabled{% endif %}>
+
+            <span class="sod-action-btn-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </span>
+
+            <span class="sod-action-btn-label">
+                Mark as Delivered
+            </span>
+        </button>
+
+        <!-- Cancel -->
+        <button
+            type="button"
+            class="sod-action-btn sod-action-cancel"
+            id="sodCancelBtn"
+            {% if order.status == "delivered" or order.status == "cancelled" %}disabled{% endif %}>
+
+            <span class="sod-action-btn-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </span>
+
+            <span class="sod-action-btn-label">
+                Cancel Order
+            </span>
+        </button>
+
+    </div>
+
+    {% if order.order.payment_status == "paid" %}
+    <div class="sod-actions-secondary">
+        <button
+            type="button"
+            class="sod-btn sod-btn-danger sod-refund-btn"
+            id="sodRefundBtn">
+
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+                <path d="M3 3v5h5"></path>
+            </svg>
+
+            Issue Refund
+        </button>
+    </div>
+    {% endif %}
+</section>
+      </div>
+
+      <!-- ================= RIGHT COLUMN (~35%) ================= -->
+      <div class="sod-right-col">
+        <!-- ============ 5. ORDER SUMMARY CARD ============ -->
+        <section class="sod-card sod-reveal" id="sodSummaryCard" aria-label="Order summary">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+                <path d="M14 2v5h5"></path>
+                <path d="M8.5 13h7"></path>
+                <path d="M8.5 17h5"></path>
+              </svg>Order Summary
+            </h2>
+          </div>
+
+          <div class="sod-summary-rows">
+            <div class="sod-summary-row">
+              <span>Seller Subtotal</span>
+              <!-- seller_order.subtotal -->
+              <span>Rs. {{ order.subtotal|floatformat:0 }}</span>
+            </div>
+            <div class="sod-summary-row">
+              <span>Shipping</span>
+              <!-- seller_order.shipping_cost -->
+              <span>Rs. {{ order.shipping_cost|floatformat:0 }}</span>
+            </div>
+            <div class="sod-summary-row sod-summary-row-discount">
+              <span>Discount</span>
+              <!-- seller_order.discount -->
+              <span>- Rs. {{ order.discount|floatformat:0 }}</span>
+            </div>
+            <div class="sod-summary-row">
+              <span>Tax</span>
+              <!-- seller_order.tax -->
+              <span>Rs. {{ order.tax|floatformat:0 }}</span>
+            </div>
+          </div>
+
+          <hr class="sod-summary-divider" />
+
+          <div class="sod-summary-grand-row">
+            <span class="sod-summary-grand-label">Seller Total</span>
+            <!-- seller_order.total -->
+            <span class="sod-summary-grand-value">Rs. {{ order.total|floatformat:0 }}</span>
+          </div>
+        </section>
+
+        <!-- ============ 6. PAYMENT INFORMATION ============ -->
+        <section class="sod-card sod-reveal" id="sodPaymentCard" aria-label="Payment information">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+              </svg>Payment Information
+            </h2>
+          </div>
+
+          <div class="sod-kv-list">
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 9V7a4 4 0 0 0-8 0v2"></path>
+                  <rect x="3" y="9" width="18" height="12" rx="2"></rect>
+                </svg>Payment Method
+              </span>
+              <!-- order.payment_method|default:"Cash on Delivery" -->
+              <span class="sod-kv-value">{{ order.payment_method|default:"Cash on Delivery"}}</span>
+            </div>
+
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1v22"></path>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>Payment Status
+              </span>
+              <!-- order.payment_status -->
+<span class="sod-badge
+{% if order.order.payment_status == 'unpaid' %}
+    sod-badge-pending
+{% elif order.order.payment_status == 'paid' %}
+    sod-badge-delivered
+{% elif order.order.payment_status == 'refunded' %}
+    sod-badge-cancelled
+{% endif %}">
+    {{ order.order.get_payment_status_display }}
+</span>            </div>
+
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>Transaction ID
+              </span>
+              <!-- order.transaction_id|default:"—" -->
+              <span class="sod-kv-value sod-kv-value-mono">{{ order.order.transaction_id|default:"—"}}</span>
+            </div>
+
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 3"></path>
+                </svg>Payment Date
+              </span>
+              <!-- order.paid_at|default:"Not yet paid" -->
+              <span class="sod-kv-value">{{ order.order.paid_at|default:"Not yet paid" }}</span>
+            </div>
+
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                  <path d="M14 2v6h6"></path>
+                </svg>Invoice Number
+              </span>
+              <!-- "MS-INV-" + order.order_number -->
+              <span class="sod-kv-value sod-kv-value-mono">MS-INV-{{ order.order.order_number }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 7. SHIPPING INFORMATION ============ -->
+        <section class="sod-card sod-reveal" id="sodShippingCard" aria-label="Shipping information">
+          <div class="sod-card-head">
+            <h2 class="sod-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>Shipping Information
+            </h2>
+            <div class="edit-shipping">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+</svg>
+            </div>
+          </div>
+
+          <div class="sod-tracking-box">
+            <div class="sod-tracking-box-text">
+              <span class="sod-info-label">Tracking Number</span>
+              <!-- seller_order.tracking_number|default:"Not yet assigned" -->
+              <span class="sod-tracking-number">{{ order.tracking_number|default:"Not yet assigned"}}</span>
+            </div>
+            <button type="button" class="sod-copy-btn" id="sodCopyTrackingBtn" data-tracking-number="TCS-8827301-PK" aria-label="Copy tracking number">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="sod-kv-list">
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                  <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                </svg>Courier
+              </span>
+              <!-- seller_order.courier|default:"Not yet assigned" -->
+              <span class="sod-kv-value">{{ order.courier|default:"Not yet assigned" }}</span>
+            </div>
+
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 3"></path>
+                </svg>Estimated Delivery
+              </span>
+              <!-- seller_order.estimated_delivery -->
+              <span class="sod-kv-value">Jul 16 &ndash; Jul 18</span>
+            </div>
+
+            <div class="sod-kv-row">
+              <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+                  <polyline points="21 3 21 9 15 9"></polyline>
+                </svg>Shipping Status
+              </span>
+              <!-- seller_order.status -->
+<span class="sod-badge
+{% if order.status == 'pending' %}
+    sod-badge-pending
+{% elif order.status == 'confirmed' %}
+    sod-badge-confirmed
+{% elif order.status == 'processing' %}
+    sod-badge-processing
+{% elif order.status == 'shipped' %}
+    sod-badge-shipped
+{% elif order.status == 'delivered' %}
+    sod-badge-delivered
+{% elif order.status == 'cancelled' %}
+    sod-badge-cancelled
+{% endif %}">
+    {{ order.get_status_display }}
+</span>            </div>
+          </div>
+
+          <div class="sod-note-box" style="margin-top: 14px;">
+            <!-- seller_order.shipping_notes|default:"No shipping notes yet." -->
+            {{ order.shipping_notes|default:'No shipping notes yet.' }}
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="sod-toast-container" id="sodToastContainer" aria-live="polite"></div>
+
+  <!-- ================= CANCEL ORDER CONFIRMATION MODAL (frontend only) ================= -->
+  <div class="sod-modal-overlay sod-hidden" id="sodCancelModalOverlay">
+    <div class="sod-modal" role="dialog" aria-modal="true" aria-labelledby="sodCancelModalTitle">
+      <div class="sod-modal-icon is-danger" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      </div>
+      <h3 class="sod-modal-title" id="sodCancelModalTitle">Cancel this order?</h3>
+      <p class="sod-modal-text">This action cannot be undone. The customer will be notified that order #MS-748213 was cancelled.</p>
+      <div class="sod-modal-actions">
+        <button type="button" class="sod-btn sod-btn-secondary" id="sodCancelModalDismiss">Keep Order</button>
+        <button type="button" class="sod-btn sod-btn-primary" id="sodCancelModalConfirm">Yes, Cancel Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= REFUND PLACEHOLDER MODAL (frontend only) ================= -->
+  <div class="sod-modal-overlay sod-hidden" id="sodRefundModalOverlay">
+    <div class="sod-modal" role="dialog" aria-modal="true" aria-labelledby="sodRefundModalTitle">
+      <div class="sod-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+      </div>
+      <h3 class="sod-modal-title" id="sodRefundModalTitle">Issue a refund?</h3>
+      <p class="sod-modal-text">Refund processing isn't connected to a payment gateway yet. This is a preview of what's coming.</p>
+      <div class="sod-modal-actions">
+        <button type="button" class="sod-btn sod-btn-secondary" id="sodRefundModalDismiss">Cancel</button>
+        <button type="button" class="sod-btn sod-btn-primary" id="sodRefundModalConfirm">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipping Overlay -->
+<div class="sod-modal-overlay" id="shippingModal">
+    <div class="sod-modal">
+        <div class="sod-modal-header">
+            <h3>Edit Shipping Information</h3>
+
+            <button type="button" class="sod-modal-close" id="closeShippingModal">
+                &times;
+            </button>
+        </div>
+
+        <form id="shippingForm">
+
+            <div class="sod-form-group">
+                <label>Courier</label>
+                <input
+                    type="text"
+                    id="shippingCourier"
+                    value="{{ order.courier }}"
+                    placeholder="e.g. TCS"
+                >
+            </div>
+
+            <div class="sod-form-group">
+                <label>Tracking Number</label>
+                <input
+                    type="text"
+                    id="shippingTracking"
+                    value="{{ order.tracking_number }}"
+                    placeholder="Tracking Number"
+                >
+            </div>
+
+            <div class="sod-form-group">
+                <label>Estimated Delivery</label>
+                <input
+                    type="date"
+                    id="shippingEta"
+                >
+            </div>
+
+            <div class="sod-form-group">
+                <label>Shipping Notes</label>
+
+                <textarea
+                    id="shippingNotes"
+                    rows="4"
+                    placeholder="Optional notes..."
+                >{{ order.shipping_notes }}</textarea>
+            </div>
+
+            <div class="sod-modal-footer">
+                <button
+                    type="button"
+                    class="sod-btn sod-btn-secondary"
+                    id="cancelShipping"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="sod-btn sod-btn-primary"
+                >
+                    Save Changes
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static '/js/seller_order_detail.js' %}"></script>
+{% endblock %}
