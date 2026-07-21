@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <div class="sod-header-actions">
+      <div class="sod-header-actions" data-order-number="{{ order.order.order_number }}">
         <button type="button" class="sod-btn sod-btn-ghost" id="sodPrintInvoiceBtn">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -236,6 +236,12 @@
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>Customer Information
             </h2>
+                    <button type="button" class="sod-btn sod-btn-ghost" id="soddownloadShippingLabelBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-arrow-down" viewBox="0 0 16 16">
+  <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293z"/>
+  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+</svg>Shipping Label
+        </button>
           </div>
 
           <div class="sod-customer-profile">
@@ -326,9 +332,16 @@
                 <path d="M3 8v8l9 5 9-5V8"></path>
                 <path d="M12 13v8"></path>
               </svg>Your Products in This Order
+              <span class="sod-item-count">{{ order.items.count }} items</span>
             </h2>
             <!-- seller_order.items.count -->
-            <span class="sod-item-count">{{ order.items.count }} items</span>
+            
+            <button type="button" class="sod-btn sod-btn-ghost" id="sodDownloadPackingSlipBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-arrow-down" viewBox="0 0 16 16">
+  <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293z"/>
+  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+</svg>Packing Slip
+        </button>
           </div>
 
           <div class="sod-table-wrap">
@@ -836,95 +849,124 @@
 
         <!-- ============ 7. SHIPPING INFORMATION ============ -->
         <section class="sod-card sod-reveal" id="sodShippingCard" aria-label="Shipping information">
-          <div class="sod-card-head">
-            <h2 class="sod-card-title">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <div class="sod-card-head">
+        <h2 class="sod-card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="3" width="15" height="13" rx="1"></rect>
                 <path d="M16 8h4l3 3v5h-7V8Z"></path>
                 <circle cx="5.5" cy="18.5" r="2.5"></circle>
                 <circle cx="18.5" cy="18.5" r="2.5"></circle>
-              </svg>Shipping Information
-            </h2>
-            <div class="edit-shipping">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-</svg>
-            </div>
-          </div>
+            </svg>
+            Shipping Information
+        </h2>
 
-          <div class="sod-tracking-box">
-            <div class="sod-tracking-box-text">
-              <span class="sod-info-label">Tracking Number</span>
-              <!-- seller_order.tracking_number|default:"Not yet assigned" -->
-              <span class="sod-tracking-number">{{ order.tracking_number|default:"Not yet assigned"}}</span>
-            </div>
-            <button type="button" class="sod-copy-btn" id="sodCopyTrackingBtn" data-tracking-number="TCS-8827301-PK" aria-label="Copy tracking number">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="edit-shipping">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="sod-tracking-box">
+        <div class="sod-tracking-box-text">
+            <span class="sod-info-label">Tracking Number</span>
+
+            <span
+                class="sod-tracking-number"
+                id="trackingNumber">
+                {{ order.tracking_number|default:"Not yet assigned" }}
+            </span>
+        </div>
+
+        <button
+            type="button"
+            class="sod-copy-btn"
+            id="sodCopyTrackingBtn"
+            data-tracking-number="{{ order.tracking_number }}"
+            aria-label="Copy tracking number">
+
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </button>
-          </div>
+            </svg>
 
-          <div class="sod-kv-list">
-            <div class="sod-kv-row">
-              <span class="sod-kv-label">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="1" y="3" width="15" height="13" rx="1"></rect>
-                  <path d="M16 8h4l3 3v5h-7V8Z"></path>
-                </svg>Courier
-              </span>
-              <!-- seller_order.courier|default:"Not yet assigned" -->
-              <span class="sod-kv-value">{{ order.courier|default:"Not yet assigned" }}</span>
-            </div>
-
-            <div class="sod-kv-row">
-              <span class="sod-kv-label">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9"></circle>
-                  <path d="M12 7v5l3 3"></path>
-                </svg>Estimated Delivery
-              </span>
-              <!-- seller_order.estimated_delivery -->
-              <span class="sod-kv-value">Jul 16 &ndash; Jul 18</span>
-            </div>
-
-            <div class="sod-kv-row">
-              <span class="sod-kv-label">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
-                  <polyline points="21 3 21 9 15 9"></polyline>
-                </svg>Shipping Status
-              </span>
-              <!-- seller_order.status -->
-<span class="sod-badge
-{% if order.status == 'pending' %}
-    sod-badge-pending
-{% elif order.status == 'confirmed' %}
-    sod-badge-confirmed
-{% elif order.status == 'processing' %}
-    sod-badge-processing
-{% elif order.status == 'shipped' %}
-    sod-badge-shipped
-{% elif order.status == 'delivered' %}
-    sod-badge-delivered
-{% elif order.status == 'cancelled' %}
-    sod-badge-cancelled
-{% endif %}">
-    {{ order.get_status_display }}
-</span>            </div>
-          </div>
-
-          <div class="sod-note-box" style="margin-top: 14px;">
-            <!-- seller_order.shipping_notes|default:"No shipping notes yet." -->
-            {{ order.shipping_notes|default:'No shipping notes yet.' }}
-          </div>
-        </section>
-      </div>
+        </button>
     </div>
-  </div>
 
+    <div class="sod-kv-list">
+
+        <div class="sod-kv-row">
+            <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                    <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                </svg>
+                Courier
+            </span>
+
+            <span
+                class="sod-kv-value"
+                id="courierName">
+                {{ order.courier|default:"Not yet assigned" }}
+            </span>
+        </div>
+
+        <div class="sod-kv-row">
+            <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 7v5l3 3"></path>
+                </svg>
+                Estimated Delivery
+            </span>
+
+            <span
+                class="sod-kv-value"
+                id="estimatedDelivery">
+                {{ order.estimated_delivery|default:"Not Found Yet." }}
+            </span>
+        </div>
+
+        <div class="sod-kv-row">
+            <span class="sod-kv-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+                    <polyline points="21 3 21 9 15 9"></polyline>
+                </svg>
+                Shipping Status
+            </span>
+
+            <span class="sod-badge
+                {% if order.status == 'pending' %}
+                    sod-badge-pending
+                {% elif order.status == 'confirmed' %}
+                    sod-badge-confirmed
+                {% elif order.status == 'processing' %}
+                    sod-badge-processing
+                {% elif order.status == 'shipped' %}
+                    sod-badge-shipped
+                {% elif order.status == 'delivered' %}
+                    sod-badge-delivered
+                {% elif order.status == 'cancelled' %}
+                    sod-badge-cancelled
+                {% endif %}">
+                {{ order.get_status_display }}
+            </span>
+
+        </div>
+
+    </div>
+
+    <div
+        class="sod-note-box"
+        id="shippingNotesDisplay"
+        style="margin-top:14px;">
+        {{ order.shipping_notes|default:"No shipping notes yet." }}
+    </div>
+
+</section>
+      </div></div></div>
   <!-- ================= TOAST CONTAINER ================= -->
   <div class="sod-toast-container" id="sodToastContainer" aria-live="polite"></div>
 
@@ -976,8 +1018,11 @@
             </button>
         </div>
 
-        <form id="shippingForm">
-
+<form
+    id="shippingForm"
+    data-url="{% url 'update_shipping' order.order.order_number %}"
+>
+{% csrf_token %}
             <div class="sod-form-group">
                 <label>Courier</label>
                 <input
@@ -1001,8 +1046,9 @@
             <div class="sod-form-group">
                 <label>Estimated Delivery</label>
                 <input
-                    type="date"
-                    id="shippingEta"
+                  type="date"
+                  id="shippingEta"
+                  min="{% now 'Y-m-d' %}"
                 >
             </div>
 

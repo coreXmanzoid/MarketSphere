@@ -79,7 +79,6 @@ class User(AbstractUser):
 
     profile_image_url = models.URLField(blank=True, null=True, max_length=500)
 
-
     account_status = models.CharField(
         max_length=20,
         choices=AccountStatus.choices,
@@ -104,60 +103,40 @@ class Seller(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="seller_profile"
+        related_name="seller_profile",
     )
 
     store_email = models.EmailField(blank=True, null=True)
 
     store_name = models.CharField(max_length=100)
 
-    slug = models.SlugField(
-        unique=True,
-        help_text="Unique URL for the seller store."
-    )
+    slug = models.SlugField(unique=True, help_text="Unique URL for the seller store.")
 
-    store_description = models.TextField(
-        blank=True,
-        null=True
-    )
+    store_description = models.TextField(blank=True, null=True)
 
-    store_logo = models.ImageField(
-        upload_to="store_logos/",
-        blank=True,
-        null=True
-    )
+    store_logo = models.ImageField(upload_to="store_logos/", blank=True, null=True)
 
-    store_banner = models.ImageField(
-        upload_to="store_banners/",
-        blank=True,
-        null=True
-    )
+    store_banner = models.ImageField(upload_to="store_banners/", blank=True, null=True)
 
     status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.PENDING
+        max_length=20, choices=Status.choices, default=Status.PENDING
     )
 
     verification_notes = models.TextField(
-        blank=True,
-        null=True,
-        help_text="Reason for rejection or notes from the admin."
+        blank=True, null=True, help_text="Reason for rejection or notes from the admin."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     @property
     def is_verified(self):
         return self.status == self.Status.VERIFIED
 
-
     @property
     def can_sell(self):
         return self.status == self.Status.VERIFIED
-
 
     @property
     def can_access_dashboard(self):
@@ -165,6 +144,11 @@ class Seller(models.Model):
             self.Status.VERIFIED,
             self.Status.DEACTIVATED,
         )
+
+    @property
+    def business_address(self):
+        return self.user.addresses.filter(address_type=Address.BUSINESS).first()
+
     class Meta:
         ordering = ["-created_at"]
         verbose_name = "Seller"

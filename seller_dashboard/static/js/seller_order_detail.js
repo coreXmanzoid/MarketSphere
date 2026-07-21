@@ -463,7 +463,10 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ================= 10. PRINT / DOWNLOAD INVOICE PLACEHOLDERS ================= */
     const printBtn = document.getElementById('sodPrintInvoiceBtn');
     const downloadBtn = document.getElementById('sodDownloadInvoiceBtn');
+    const downloadShippingLabelBtn = document.getElementById('soddownloadShippingLabelBtn');
+    const downloadPackingLabelBtn = document.getElementById('sodDownloadPackingSlipBtn');
 
+    // const orderNumber = document.querySelector(".sod-header-actions").dataset.orderNumber;
     if (printBtn) {
         printBtn.addEventListener('click', function () {
             window.print();
@@ -473,6 +476,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (downloadBtn) {
         downloadBtn.addEventListener('click', function () {
             showToast('Preparing your invoice download...', 'info');
+            window.location.href = `/order/${orderNumber}/invoice`;
+        });
+    }
+
+    if (downloadPackingLabelBtn) {
+        downloadPackingLabelBtn.addEventListener('click', function () {
+            showToast('Preparing your Packing-slip download...', 'info');
+            window.location.href = `/order/${orderNumber}/packing-slip`;
+        });
+    }
+
+    if (downloadShippingLabelBtn) {
+        downloadShippingLabelBtn.addEventListener('click', function () {
+            showToast('Preparing your Shipping-label download...', 'info');
+            window.location.href = `/order/${orderNumber}/shipping-label/`;
         });
     }
 
@@ -539,26 +557,65 @@ document.addEventListener("keydown", function(e){
 
 });
 
-document.getElementById("shippingForm").addEventListener("submit", function(e){
+function getCSRFToken() {
+    return document.querySelector("[name=csrfmiddlewaretoken]").value;
+}
+
+document.getElementById("shippingForm").addEventListener("submit", async function (e) {
 
     e.preventDefault();
 
-    /*
-        Later:
+    const formData = new FormData();
 
-        Fetch API
+    formData.append(
+        "courier",
+        document.getElementById("shippingCourier").value
+    );
 
-        Update Shipping
+    formData.append(
+        "tracking_number",
+        document.getElementById("shippingTracking").value
+    );
 
-        Success Toast
+    formData.append(
+        "estimated_delivery",
+        document.getElementById("shippingEta").value
+    );
 
-        Update UI
-    */
+    formData.append(
+        "shipping_notes",
+        document.getElementById("shippingNotes").value
+    );
 
-    hideShippingModal();
+    const response = await fetch(this.dataset.url, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+        },
+        body: formData,
+    });
 
+    const data = await response.json();
+
+if (data.success) {
+    document.getElementById("trackingNumber").textContent =
+        data.tracking_number || "Not yet assigned";
+
+    document.getElementById("courierName").textContent =
+        data.courier || "Not yet assigned";
+
+    document.getElementById("estimatedDelivery").textContent =
+        data.estimated_delivery || "Not Found Yet.";
+
+    document.getElementById("shippingNotesDisplay").textContent =
+        data.shipping_notes || "No shipping notes yet.";
+
+    document.getElementById("sodCopyTrackingBtn").dataset.trackingNumber =
+        data.tracking_number || "";
+
+        hideShippingModal();
+}
 });
-
 
 
 document.querySelectorAll(".editable-note").forEach((note) => {
@@ -571,8 +628,9 @@ document.querySelectorAll(".editable-note").forEach((note) => {
 
         const originalText = note.textContent.trim();
 
-        const textarea = document.createElement("textarea");
+        const textarea = document.createElement("input");
         textarea.className = "editable-note-input";
+        textarea.type = "text";
         textarea.value = originalText === "No seller Notes." ? "" : originalText;
 
         note.innerHTML = "";

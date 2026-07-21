@@ -270,3 +270,32 @@ def update_order_status(seller, order_number, status):
         order__order_number=order_number,
         seller=seller,
     ).update(status=status)
+
+
+from django.utils.dateparse import parse_date
+
+
+def update_shipping_information(seller_order, data):
+    seller_order.courier = data.get("courier", "").strip()
+    seller_order.tracking_number = data.get("tracking_number", "").strip()
+
+    eta = data.get("estimated_delivery")
+
+    if eta:
+        seller_order.estimated_delivery = parse_date(eta)
+    else:
+        seller_order.estimated_delivery = None
+
+    seller_order.shipping_notes = data.get("shipping_notes", "").strip()
+
+    seller_order.save(
+        update_fields=[
+            "courier",
+            "tracking_number",
+            "estimated_delivery",
+            "shipping_notes",
+            "updated_at",
+        ]
+    )
+
+    return seller_order

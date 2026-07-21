@@ -1529,7 +1529,6 @@
     opacity:0;
     visibility:hidden;
     transition:.25s;
-
 }
 
 .sod-modal-overlay.active{
@@ -1558,7 +1557,7 @@
     background:none;
     cursor:pointer;
     font-size:30px;
-    color:#666;
+    color: #B0BA99;
 }
 
 .sod-form-group{
@@ -1569,24 +1568,28 @@
 }
 
 .sod-form-group label{
+    text-align: start;
     font-weight:600;
     color:#4E220F;
 }
 
 .sod-form-group input,
 .sod-form-group textarea{
-    border:1px solid #ddd;
-    border-radius:10px;
+    resize: none;
+    border:1px solid #9D6638;
+    border-radius:4px;
     padding:12px 14px;
     font-size:15px;
     outline:none;
     transition:.2s;
+    background-color: transparent;
+    color: #B0BA99;
 }
 
 .sod-form-group input:focus,
 .sod-form-group textarea:focus{
-    border-color:#9D6638;
-    box-shadow:0 0 0 4px rgba(157,102,56,.12);
+    border-color: #B0BA99;
+    /* box-shadow:0 0 0 4px rgba(157,102,56,.12); */
 }
 
 .sod-modal-footer{
@@ -1594,4 +1597,15 @@
     justify-content:flex-end;
     gap:12px;
     margin-top:28px;
+}
+
+.editable-note input ,
+.editable-note input:focus {
+    background-color: transparent;
+    width: 100%;
+    border: 0;
+    outline: none;
+    font-size: 13px;
+    color: #B0BA99;
+    border-radius: 4px;
 }

@@ -16,6 +16,23 @@ urlpatterns = [
         views.download_invoice,
         name="download_invoice",
     ),
-    path("cancel-order/<str:order_number>/", views.order_cancelation, name="cancel-order"),
+    path(
+        "<str:order_number>/shipping-label/",
+        views.download_shipping_label,
+        name="download-shipping-label",
+    ),
+    path(
+        "<str:order_number>/packing-slip/",
+        views.download_packing_slip,
+        name="download-packing-slip",
+    ),
+    path(
+        "<str:order_number>/shipping/",
+        views.update_shipping,
+        name="update_shipping",
+    ),
+    path(
+        "cancel-order/<str:order_number>/", views.order_cancelation, name="cancel-order"
+    ),
     path("reorder/<str:order_number>/", views.reorder, name="reorder"),
 ]

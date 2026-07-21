@@ -1,15 +1,18 @@
 """
-orders/invoice.py
+orders/packing_slip.py
 
-Redesigned PDF invoice generation for MarketSphere seller orders, built with
-ReportLab Platypus for flow-based multi-page support.
+Redesigned PDF packing slip generation for MarketSphere seller orders, built
+with ReportLab Platypus for flow-based multi-page support.
 
-Generates professional seller-specific invoices representing ONLY items belonging
-to the current SellerOrder.
+Designed specifically for warehouse fulfillment and customer order verification:
+• Includes physical check-off boxes ([ ]) for warehouse item picking
+• Highlights SKU and item quantities prominently
+• Features warehouse verification & signature sign-off blocks
+• Omits all financial details (prices, tax, discounts, grand totals)
 
 Usage:
-    from orders.invoice import generate_invoice
-    pdf_buffer = generate_invoice(seller_order)
+    from orders.packing_slip import generate_packing_slip
+    pdf_buffer = generate_packing_slip(seller_order)
 """
 
 from io import BytesIO
@@ -31,7 +34,7 @@ from reportlab.platypus import (
 
 # =============================================================
 # BRAND & STYLE CONSTANTS
-# Matches the MarketSphere palette (shipping_label.py & packing_slip.py)
+# Matches the MarketSphere design language (invoice.py & shipping_label.py)
 # =============================================================
 ACCENT_COLOR = colors.HexColor("#9D6638")
 HEADING_COLOR = colors.HexColor("#4E220F")
@@ -44,11 +47,11 @@ PRINTABLE_WIDTH = 170 * mm  # A4 width (210mm) - 2 * PAGE_MARGIN (40mm)
 
 
 def _get_styles():
-    """Returns the ParagraphStyle set used throughout the invoice."""
+    """Returns the ParagraphStyle set used throughout the packing slip."""
     styles = getSampleStyleSheet()
 
     styles.add(ParagraphStyle(
-        name="InvoiceBrand",
+        name="PackingSlipBrand",
         fontName="Helvetica-Bold",
         fontSize=20,
         textColor=HEADING_COLOR,
@@ -57,7 +60,7 @@ def _get_styles():
     ))
 
     styles.add(ParagraphStyle(
-        name="InvoiceSubtitle",
+        name="PackingSlipSubtitle",
         fontName="Helvetica",
         fontSize=9,
         textColor=MUTED_COLOR,
@@ -67,10 +70,10 @@ def _get_styles():
     styles.add(ParagraphStyle(
         name="DocTitle",
         fontName="Helvetica-Bold",
-        fontSize=16,
+        fontSize=14,
         textColor=ACCENT_COLOR,
         alignment=TA_RIGHT,
-        leading=18,
+        leading=16,
     ))
 
     styles.add(ParagraphStyle(
@@ -100,12 +103,11 @@ def _get_styles():
     ))
 
     styles.add(ParagraphStyle(
-        name="BodyTextRight9",
+        name="PartyText",
         fontName="Helvetica",
-        fontSize=9,
+        fontSize=8.5,
         textColor=colors.black,
-        alignment=TA_RIGHT,
-        leading=13,
+        leading=14,
     ))
 
     styles.add(ParagraphStyle(
@@ -117,19 +119,29 @@ def _get_styles():
     ))
 
     styles.add(ParagraphStyle(
-        name="PartyText",
-        fontName="Helvetica",
-        fontSize=8.5,
-        textColor=colors.black,
-        leading=14,
-    ))
-
-    styles.add(ParagraphStyle(
         name="TableHeader",
         fontName="Helvetica-Bold",
         fontSize=9,
         textColor=colors.white,
         leading=11,
+    ))
+
+    styles.add(ParagraphStyle(
+        name="TableTextCenter",
+        fontName="Helvetica",
+        fontSize=9,
+        textColor=colors.black,
+        alignment=TA_CENTER,
+        leading=12,
+    ))
+
+    styles.add(ParagraphStyle(
+        name="TableTextRight",
+        fontName="Helvetica",
+        fontSize=9,
+        textColor=colors.black,
+        alignment=TA_RIGHT,
+        leading=12,
     ))
 
     styles.add(ParagraphStyle(
@@ -145,65 +157,51 @@ def _get_styles():
 
 
 # =============================================================
-# FORMATTING & DATA HELPERS
+# DATA HELPERS
 # =============================================================
-def _currency(value):
-    """Formats a Decimal/number as 'Rs. 1,234.00'."""
-    try:
-        return "Rs. {:,.2f}".format(float(value or 0))
-    except (TypeError, ValueError):
-        return "Rs. 0.00"
-
-
-def _invoice_number(seller_order):
-    """Generates the invoice identifier based on the parent order number."""
-    parent_order = getattr(seller_order, "order", seller_order)
-    order_num = getattr(parent_order, "order_number", "0000")
-    return f"MS-INV-{order_num}"
-
-
 def _get_seller_info(seller_order):
-    """Extract seller information for PDFs."""
+    """Extracts seller details with defensive fallbacks across model schemas."""
+    seller = getattr(seller_order, "seller", None)
+    user = getattr(seller, "user", None) if seller else None
 
-    seller = seller_order.seller
-    user = seller.user
-
-    business_address = seller.business_address
-
-    if business_address:
-        address_parts = [
-            business_address.address_line_1,
-        ]
-
-        if business_address.address_line_2:
-            address_parts.append(business_address.address_line_2)
-
-        address_parts.append(
-            f"{business_address.city}, {business_address.postal_code}"
-        )
-
-        address = "<br/>".join(address_parts)
-    else:
-        address = "—"
+    store_name = (
+        getattr(seller, "store_name", None)
+        or getattr(seller, "shop_name", None)
+        or getattr(seller, "company_name", None)
+        or "MarketSphere Seller"
+    )
+    store_email = (
+        getattr(seller, "store_email", None)
+        or getattr(seller, "email", None)
+        or getattr(user, "email", None)
+        or "support@marketsphere.com"
+    )
+    contact = (
+        getattr(user, "contact", None)
+        or getattr(seller, "phone_number", None)
+        or getattr(seller, "phone", None)
+        or "—"
+    )
 
     return {
-        "name": seller.store_name or "MarketSphere Seller",
-        "email": seller.store_email or user.email or "—",
-        "contact": user.contact or "—",
-        "address": address,
+        "name": store_name,
+        "email": store_email,
+        "contact": contact,
     }
+
 
 def _get_customer_info(seller_order):
-    """Extracts shipping customer details from parent Order."""
-    order = getattr(seller_order, "order", seller_order)
-    return {
-        "name": getattr(order, "shipping_name", None) or "—",
-        "phone": getattr(order, "shipping_phone", None) or "—",
-        "address": getattr(order, "shipping_address", None) or "—",
-        "city": getattr(order, "shipping_city", None) or "—",
-        "postal_code": getattr(order, "shipping_postal_code", None) or "",
-    }
+    """Extract customer shipping information from the parent Order."""
 
+    order = seller_order.order
+
+    return {
+        "name": order.shipping_name or "—",
+        "phone": order.shipping_phone or "—",
+        "address": order.shipping_address or "—",
+        "city": order.shipping_city or "—",
+        "postal_code": order.shipping_postal_code or "—",
+    }
 
 def _get_items_list(seller_order):
     """Safely retrieves order items from either `items` or `sellerorderitems`."""
@@ -218,14 +216,14 @@ def _get_items_list(seller_order):
 # SECTION BUILDERS
 # =============================================================
 def _build_header(styles):
-    """Modern header banner with brand on left and document title on right."""
+    """Modern header banner with brand on left and packing slip badge on right."""
     brand_block = [
-        Paragraph("MARKETSPHERE", styles["InvoiceBrand"]),
-        Paragraph("Official Seller Tax Invoice", styles["InvoiceSubtitle"]),
+        Paragraph("MARKETSPHERE", styles["PackingSlipBrand"]),
+        Paragraph("Fulfillment & Warehouse Packing Slip", styles["PackingSlipSubtitle"]),
     ]
 
     doc_block = [
-        Paragraph("INVOICE", styles["DocTitle"]),
+        Paragraph("PACKING SLIP", styles["DocTitle"]),
     ]
 
     header_table = Table([[brand_block, doc_block]], colWidths=[100 * mm, 70 * mm])
@@ -246,30 +244,25 @@ def _build_header(styles):
 
 
 def _build_meta_card(seller_order, styles):
-    """Key/Value grid card for Invoice #, Order #, Dates, Order Status, Payment Status."""
+    """Key/Value grid card for Order Number, Packing Date, Tracking Number, Courier, Status."""
     parent_order = getattr(seller_order, "order", seller_order)
     created_at = getattr(seller_order, "created_at", None) or getattr(parent_order, "created_at", None)
     date_str = created_at.strftime("%B %d, %Y") if created_at else "—"
 
     order_num = getattr(parent_order, "order_number", "—")
-    inv_num = _invoice_number(seller_order)
+    tracking_num = getattr(seller_order, "tracking_number", None) or "—"
+    courier_name = getattr(seller_order, "courier", None) or "Standard Delivery"
 
-    order_status = (
+    status = (
         seller_order.get_status_display()
         if hasattr(seller_order, "get_status_display")
         else getattr(seller_order, "status", "Pending").title()
     )
 
-    payment_status = (
-        parent_order.get_payment_status_display()
-        if hasattr(parent_order, "get_payment_status_display")
-        else getattr(parent_order, "payment_status", "Unpaid").title()
-    )
-
     rows = [
-        ("Invoice Number", inv_num, "Invoice Date", date_str),
-        ("Order Number", order_num, "Order Date", date_str),
-        ("Order Status", order_status, "Payment Status", payment_status),
+        ("Order Number", order_num, "Packing Date", date_str),
+        ("Tracking Number", tracking_num, "Courier", courier_name),
+        ("Order Status", status, "Package Count", "1 of 1"),
     ]
 
     table_data = []
@@ -296,18 +289,15 @@ def _build_meta_card(seller_order, styles):
 
 
 def _build_parties_section(seller_order, styles):
-    """Seller and Customer (BILL TO) details formatted side-by-side."""
+    """Seller (FROM) and Customer (SHIP TO) details formatted side-by-side."""
     seller = _get_seller_info(seller_order)
     customer = _get_customer_info(seller_order)
 
     seller_lines = [
         f"<b>{seller['name']}</b>",
+        f"Contact: {seller['contact']}",
+        f"Email: {seller['email']}",
     ]
-    if seller["contact"] != "—":
-        seller_lines.append(f"Phone: {seller['contact']}")
-    if seller["address"] != "—":
-        seller_lines.append(seller["address"])
-    seller_lines.append(f"Email: {seller['email']}")
 
     city_zip = f"{customer['city']} {customer['postal_code']}".strip()
     buyer_lines = [
@@ -318,12 +308,12 @@ def _build_parties_section(seller_order, styles):
     ]
 
     from_card = [
-        Paragraph("SELLER", styles["SectionHeading"]),
+        Paragraph("FROM", styles["SectionHeading"]),
         Paragraph("<br/>".join(seller_lines), styles["PartyText"]),
     ]
 
     to_card = [
-        Paragraph("BILL TO", styles["SectionHeading"]),
+        Paragraph("SHIP TO", styles["SectionHeading"]),
         Paragraph("<br/>".join(buyer_lines), styles["PartyText"]),
     ]
 
@@ -340,49 +330,55 @@ def _build_parties_section(seller_order, styles):
         ("LEFTPADDING", (0, 0), (-1, -1), 0),
         ("RIGHTPADDING", (0, 0), (-1, -1), 0),
     ]))
+
+    wrapper = Table([[table]], colWidths=[PRINTABLE_WIDTH])
+    wrapper.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
     return table
 
 
 def _build_items_table(seller_order, styles):
-    """Products table displaying items for this SellerOrder."""
+    """Warehouse items table featuring check boxes, index, product name, SKU, and quantity."""
     header = [
+        Paragraph("<b>Check</b>", styles["TableHeader"]),
+        Paragraph("<b>#</b>", styles["TableHeader"]),
         Paragraph("<b>Product Description</b>", styles["TableHeader"]),
-        Paragraph("<b>Qty</b>", ParagraphStyle("HCenter", parent=styles["TableHeader"], alignment=TA_CENTER)),
-        Paragraph("<b>Unit Price</b>", ParagraphStyle("HRight1", parent=styles["TableHeader"], alignment=TA_RIGHT)),
-        Paragraph("<b>Total</b>", ParagraphStyle("HRight2", parent=styles["TableHeader"], alignment=TA_RIGHT)),
+        Paragraph("<b>SKU</b>", styles["TableHeader"]),
+        Paragraph("<b>Qty Packed</b>", ParagraphStyle("HeaderRight", parent=styles["TableHeader"], alignment=TA_RIGHT)),
     ]
     table_data = [header]
 
     items = _get_items_list(seller_order)
 
-    for item in items:
+    for idx, item in enumerate(items, start=1):
         product = getattr(item, "product", None)
         product_name = getattr(product, "name", str(product or item))
-        quantity = getattr(item, "quantity", 1)
-        price = getattr(item, "price", getattr(item, "unit_price", 0))
-
-        if hasattr(item, "total"):
-            item_total = item.total
-        elif hasattr(item, "total_price"):
-            item_total = item.total_price
-        else:
-            item_total = float(price) * int(quantity)
+        sku = getattr(product, "sku", None) or "—"
+        quantity = str(getattr(item, "quantity", 1))
 
         table_data.append([
+            Paragraph("[ &nbsp; ]", styles["TableTextCenter"]),
+            Paragraph(str(idx), styles["TableTextCenter"]),
             Paragraph(product_name, styles["BodyText9"]),
-            Paragraph(str(quantity), ParagraphStyle("Cent", parent=styles["BodyText9"], alignment=TA_CENTER)),
-            Paragraph(_currency(price), styles["BodyTextRight9"]),
-            Paragraph(_currency(item_total), styles["BodyTextRight9"]),
+            Paragraph(sku, styles["BodyText9"]),
+            Paragraph(quantity, styles["TableTextRight"]),
         ])
 
     table = Table(
         table_data,
-        colWidths=[85 * mm, 20 * mm, 30 * mm, 35 * mm],
+        colWidths=[16 * mm, 12 * mm, 87 * mm, 35 * mm, 20 * mm],
         repeatRows=1,
     )
 
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), HEADING_COLOR),
+        ("ALIGN", (0, 0), (1, -1), "CENTER"),
+        ("ALIGN", (2, 0), (3, -1), "LEFT"),
+        ("ALIGN", (4, 0), (4, -1), "RIGHT"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
@@ -393,100 +389,90 @@ def _build_items_table(seller_order, styles):
     return table
 
 
-def _build_summary_table(seller_order, styles):
-    """Subtotal / Shipping / Discount / Tax / Seller Total right-aligned summary card."""
+def _build_summary_and_verification_section(seller_order, styles):
+    """Total quantity badge and warehouse audit signature fields."""
     items = _get_items_list(seller_order)
 
-    computed_subtotal = sum(
-        float(getattr(item, "total", getattr(item, "total_price", float(getattr(item, "price", 0)) * int(getattr(item, "quantity", 1)))))
-        for item in items
-    )
+    total_items = len(items)
+    total_quantity = sum(int(getattr(item, "quantity", 1)) for item in items)
 
-    subtotal = getattr(seller_order, "subtotal", computed_subtotal)
-    shipping_cost = getattr(seller_order, "shipping_cost", getattr(seller_order, "shipping_charges", 0))
-    discount = getattr(seller_order, "discount", 0)
-    tax = getattr(seller_order, "tax", 0)
-
-    if hasattr(seller_order, "total"):
-        seller_total = seller_order.total
-    elif hasattr(seller_order, "total_price"):
-        seller_total = seller_order.total_price
-    else:
-        seller_total = float(subtotal) + float(shipping_cost) + float(tax) - float(discount)
-
-    rows = [
-        ("Subtotal", _currency(subtotal)),
-        ("Shipping Cost", _currency(shipping_cost)),
+    summary_rows = [
+        ("Total Line Items:", str(total_items)),
+        ("Total Units Packed:", str(total_quantity)),
     ]
 
-    if discount and float(discount) > 0:
-        rows.append(("Discount", f"- {_currency(discount)}"))
-
-    rows.append(("Tax", _currency(tax)))
-
-    table_data = [
-        [Paragraph(label, styles["BodyText9"]), Paragraph(value, styles["BodyTextRight9"])]
-        for label, value in rows
+    summary_table_data = [
+        [Paragraph(f"<b>{label}</b>", styles["BodyText9"]), Paragraph(value, styles["BodyTextBold9"])]
+        for label, value in summary_rows
     ]
 
-    grand_total_label_style = ParagraphStyle(
-        "GrandTotalLabel", parent=styles["BodyTextBold9"],
-        fontSize=11, textColor=HEADING_COLOR,
-    )
-    grand_total_value_style = ParagraphStyle(
-        "GrandTotalValue", parent=styles["BodyTextBold9"],
-        fontSize=12, textColor=ACCENT_COLOR, alignment=TA_RIGHT,
-    )
-
-    table_data.append([
-        Paragraph("Grand Total", grand_total_label_style),
-        Paragraph(_currency(seller_total), grand_total_value_style),
-    ])
-
-    table = Table(table_data, colWidths=[40 * mm, 35 * mm], hAlign="RIGHT")
-    table.setStyle(TableStyle([
+    summary_table = Table(summary_table_data, colWidths=[45 * mm, 25 * mm], hAlign="RIGHT")
+    summary_table.setStyle(TableStyle([
         ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-        ("TOPPADDING", (0, 0), (-1, -1), 3.5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
-        ("LINEABOVE", (0, -1), (-1, -1), 1, ACCENT_COLOR),
-        ("TOPPADDING", (0, -1), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("LINEABOVE", (0, 0), (-1, 0), 0.5, BORDER_COLOR),
+        ("LINEBELOW", (0, -1), (-1, -1), 1, ACCENT_COLOR),
     ]))
-    return table
 
+    verify_data = [
+        [
+            Paragraph("<b>Packed By (Staff Name):</b> _______________________", styles["BodyText9"]),
+            Paragraph("<b>Date:</b> _____________", styles["BodyText9"]),
+        ],
+        [
+            Paragraph("<b>Inspected By (QA):</b> ___________________________", styles["BodyText9"]),
+            Paragraph("<b>Date:</b> _____________", styles["BodyText9"]),
+        ],
+        [
+            Paragraph("<b>Customer Signature:</b> ________________________", styles["BodyText9"]),
+            Paragraph("<b>Date:</b> _____________", styles["BodyText9"]),
+        ],
+    ]
 
-def _build_notes_section(seller_order, styles):
-    """Optional notes section from parent order or seller order."""
-    parent_order = getattr(seller_order, "order", seller_order)
-    notes = getattr(seller_order, "notes", None) or getattr(parent_order, "notes", None)
-    if not notes:
-        return []
+    verify_table = Table(verify_data, colWidths=[115 * mm, 55 * mm])
+    verify_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
+        ("BOX", (0, 0), (-1, -1), 0.75, BORDER_COLOR),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+    ]))
 
     return [
-        Spacer(1, 10),
-        Paragraph("NOTES", styles["SectionHeading"]),
-        Paragraph(notes, styles["BodyMuted"]),
+        summary_table,
+        Spacer(1, 14),
+        Paragraph("FULFILLMENT VERIFICATION & AUDIT SIGN-OFF", styles["SectionHeading"]),
+        Spacer(1, 4),
+        verify_table,
     ]
 
 
 def _build_footer(styles):
-    """Footer notes and support info."""
+    """Footer note for recipient inspection guidance."""
     return [
-        Spacer(1, 24),
+        Spacer(1, 20),
         HRFlowable(width="100%", thickness=0.75, color=BORDER_COLOR, spaceAfter=10),
-        Paragraph("Thank you for shopping with MarketSphere.", styles["FooterText"]),
-        Paragraph("Questions? support@marketsphere.com", styles["FooterText"]),
+        Paragraph("<b>Important:</b> Please verify all received items against this packing slip immediately upon arrival.", styles["FooterText"]),
+        Paragraph("For discrepancies or shipping support, contact support@marketsphere.com", styles["FooterText"]),
     ]
 
 
 # =============================================================
 # PUBLIC ENTRY POINT
 # =============================================================
-def generate_invoice(seller_order):
-    """Builds a professional PDF invoice for the given SellerOrder and
-    returns it as an in-memory BytesIO buffer, ready to be served in HTTP responses.
+def generate_packing_slip(seller_order):
+    """Builds a professional A4 PDF packing slip for the given SellerOrder and
+    returns it as an in-memory BytesIO buffer ready to be written to a Django FileResponse.
     """
     buffer = BytesIO()
     styles = _get_styles()
+
+    parent_order = getattr(seller_order, "order", seller_order)
+    order_num = getattr(parent_order, "order_number", "0000")
 
     doc = SimpleDocTemplate(
         buffer,
@@ -495,7 +481,7 @@ def generate_invoice(seller_order):
         bottomMargin=PAGE_MARGIN,
         leftMargin=PAGE_MARGIN,
         rightMargin=PAGE_MARGIN,
-        title=f"Invoice {_invoice_number(seller_order)}",
+        title=f"Packing Slip - {order_num}",
     )
 
     elements = []
@@ -504,12 +490,11 @@ def generate_invoice(seller_order):
     elements.append(Spacer(1, 14))
     elements.append(_build_parties_section(seller_order, styles))
     elements.append(Spacer(1, 14))
-    elements.append(Paragraph("ORDER ITEMS", styles["SectionHeading"]))
+    elements.append(Paragraph("PACKED ITEMS CHECKLIST", styles["SectionHeading"]))
     elements.append(Spacer(1, 2))
     elements.append(_build_items_table(seller_order, styles))
     elements.append(Spacer(1, 10))
-    elements.append(_build_summary_table(seller_order, styles))
-    elements += _build_notes_section(seller_order, styles)
+    elements += _build_summary_and_verification_section(seller_order, styles)
     elements += _build_footer(styles)
 
     doc.build(elements)
