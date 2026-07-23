@@ -205,8 +205,8 @@
                   </div>
 
                   <div class="od-order-item-pricing">
-                    <span class="od-order-item-unit-price">Rs. {{ item.price }} <span>each</span></span>
-                    <span class="od-order-item-total">Rs. {{ item.total }}</span>
+                    <span class="od-order-item-unit-price">Rs. {{ item.price|floatformat:0 }} <span>each</span></span>
+                    <span class="od-order-item-total">Rs. {{ item.total|floatformat:0 }}</span>
                   </div>
                 </div>
               {% empty %}
@@ -254,27 +254,27 @@
               <div class="od-summary-row">
                 <span>Subtotal</span>
                 <!-- Subtotal will be rendered here by Django -->
-                <span>Rs. {{ order.subtotal|default:"0" }}</span>
+                <span>Rs. {{ order.subtotal|floatformat:0 }}</span>
               </div>
 
               <div class="od-summary-row">
                 <span>Shipping</span>
                 <!-- Shipping cost will be rendered here by Django -->
-                <span>Rs. {{ order.shipping_cost|default:"0" }}</span>
+                <span>Rs. {{ order.shipping_cost|floatformat:0 }}</span>
               </div>
 
               {% if order.discount %}
                 <div class="od-summary-row od-summary-discount-row">
                   <span>Discount</span>
                   <!-- Discount amount will be rendered here by Django -->
-                  <span>- Rs. {{ order.discount }}</span>
+                  <span>- Rs. {{ order.discount|floatformat:0 }}</span>
                 </div>
               {% endif %}
 
               <div class="od-summary-row">
                 <span>Tax</span>
                 <!-- Tax amount will be rendered here by Django -->
-                <span>Rs. {{ order.tax|default:"0" }}</span>
+                <span>Rs. {{ order.tax|floatformat:0 }}</span>
               </div>
             </div>
 
@@ -283,7 +283,7 @@
             <div class="od-summary-row od-summary-grand-total">
               <span>Grand Total</span>
               <!-- Grand total will be rendered here by Django -->
-              <span>Rs. {{ order.total|default:"0" }}</span>
+              <span>Rs. {{ order.total|floatformat:0 }}</span>
             </div>
 
             <div class="od-summary-payment-row">

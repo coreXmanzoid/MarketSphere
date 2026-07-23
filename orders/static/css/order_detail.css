@@ -389,7 +389,7 @@
     flex: 0 0 auto;
     width: 76px;
     height: 76px;
-    border-radius: 12px;
+    border-radius: 8px;
     aspect-ratio: unset;
 }
 
@@ -397,6 +397,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 8px;
 }
 
 .od-order-item-img i {

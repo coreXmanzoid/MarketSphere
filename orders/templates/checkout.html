@@ -210,7 +210,7 @@
                   <p class="co-summary-item-name">{{ item.product.name }}</p>
                   <span class="co-summary-item-meta">Qty: {{ item.quantity }}</span>
                 </div>
-                <span class="co-summary-item-price" data-quantity="{{ item.quantity }}" data-unit-price="{% if item.product.discount_price %}{{ item.product.discount_price }}{% else %}{{ item.product.price }}{% endif %}">Rs. {{ item.product.price }}</span>
+                <span class="co-summary-item-price" data-quantity="{{ item.quantity }}" data-unit-price="{% if item.product.discount_price %}{{ item.product.discount_price|floatformat:0 }}{% else %}{{ item.product.price|floatformat:0 }}{% endif %}">Rs. {{ item.product.price|floatformat:0 }}</span>
               </div>
               {% endfor %}
             </div>
@@ -232,25 +232,25 @@
               <div class="co-summary-row">
                 <span>Subtotal</span>
                 <!-- Subtotal will be rendered here by Django -->
-                <span id="coSummarySubtotal">Rs. {{ subtotal }}</span>
+                <span id="coSummarySubtotal">Rs. {{ subtotal|floatformat:'0' }}</span>
               </div>
 
               <div class="co-summary-row">
                 <span>Shipping</span>
                 <!-- Shipping cost will be rendered here by Django -->
-                <span id="coSummaryShipping">Rs. 0</span>
+                <span id="coSummaryShipping">Rs. {{ shipping_cost|default:"0"}}</span>
               </div>
 
               <div class="co-summary-row co-summary-discount-row d-none" id="coSummaryDiscountRow">
                 <span>Discount</span>
                 <!-- Discount amount will be rendered here by Django once a coupon is applied -->
-                <span id="coSummaryDiscount">- Rs. 0</span>
+                <span id="coSummaryDiscount">- Rs. {{ discount|default:"0" }}</span>
               </div>
 
               <div class="co-summary-row">
                 <span>Tax</span>
                 <!-- Tax amount will be rendered here by Django -->
-                <span id="coSummaryTax">Rs. 0</span>
+                <span id="coSummaryTax">Rs. {{ tax|default:"0"}}</span>
               </div>
             </div>
 
@@ -259,7 +259,7 @@
             <div class="co-summary-row co-summary-grand-total">
               <span>Grand Total</span>
               <!-- Grand total will be rendered here by Django -->
-              <span id="coSummaryGrandTotal">Rs. {{ total }}</span>
+              <span id="coSummaryGrandTotal">Rs. {{ total|floatformat:0 }}</span>
             </div>
 
             <!-- ============ PLACE ORDER ============ -->

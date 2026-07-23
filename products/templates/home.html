@@ -73,7 +73,7 @@
         <!-- Category cards will be rendered here -->
         {% for category in categories %}
           <div class="col-lg-2 col-md-4 col-6">
-            <a href="{% url "search" %}?category={{category.slug}}" class="category-card" style="--bg-image: url('{% if category.image %}{{ category.image.url }}{% endif %}');">
+            <a href="{% url 'search' %}?category={{ category.slug }}" class="category-card" style="--bg-image: url('{% if category.image %}{{ category.image.url }}{% endif %}');">
               <div class="category-card-icon">
                 <i class="{{ category.icon }}"></i>
               </div>
@@ -104,22 +104,36 @@
           <div class="col-lg-3 col-md-4 col-6">
             <div class="product-card">
               <div class="product-card-media">
-                {% if product.discount_price %}
-                  {% widthratio product.discount_price product.price 100 as discount_percent %}
-                  <span class="badge-discount">-{{ 100|add:'-'|add:discount_percent }}%</span>
-                {% endif %}
-                <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}" type="button" aria-label="{% if product.id in wishlist_ids %} Remove from wishlist {% else %}Add to wishlist{% endif %}"><i class="bi bi-heart"></i></button>
+                <div class="product-badges">
+                  {% if 'week' not in product.created_at|timesince and 'month' not in product.created_at|timesince %}
+                    <span class="badge-new">New</span>
+                  {% endif %}
+                  {% if product.discount_price %}
+                    <span class="badge-discount">-{{ product.discount_percentage }}%</span>
+                  {% endif %}
+                </div>
+
+                <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                  type="button"
+                  aria-label="{% if product.id in wishlist_ids %}
+                    Remove from wishlist
+                  {% else %}
+                    Add to wishlist
+                  {% endif %}">
+                  <i class="bi bi-heart"></i>
+                </button>
+
                 <span class="product-category-badge">({{ product.category.name }})</span>
+
                 <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
-                  <img src="{{ product.primary_image.image.url }}" alt="">
+                  <img src="{{ product.primary_image.image.url }}" alt="" />
                 </div>
               </div>
               <div class="product-card-body">
                 {% if product.brand %}
-                <span class="product-brand">{{ product.brand.name }}</span>
+                  <span class="product-brand">{{ product.brand.name }}</span>
                 {% else %}
-                <span class="product-brand">NO BRAND</span>
-
+                  <span class="product-brand">NO BRAND</span>
                 {% endif %}
 
                 <h6 class="product-name" onclick="window.location.href='{% url 'product' product.slug %}'">{{ product.name }}</h6>
@@ -140,18 +154,17 @@
                   {% endif %}
                 </div>
                 {% if product.stock_quantity <= 0 %}
-                <span class="stock-badge out-of-stock">Out of Stock</span>
+                  <span class="stock-badge out-of-stock">Out of Stock</span>
                 {% elif product.stock_quantity <= 80 %}
-                <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
+                  <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
                 {% else %}
-                <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
                 {% endif %}
-                <button class="btn add-to-cart-btn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
+                <button class="btn add-to-cart-tn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
             </div>
           </div>
         {% endfor %}
-
       </div>
     </div>
   </section>
@@ -188,117 +201,68 @@
       <div class="row g-4">
         <!-- New arrival products will be rendered here -->
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-new">New</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-earbuds"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">SoundWave</span>
-              <h6 class="product-name">True Wireless Earbuds X2</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <span>(12)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 3,999</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
+        {% for product in featured_products|slice:4 %}
+          <div class="col-lg-3 col-md-4 col-6">
+            <div class="product-card">
+               <div class="product-card-media">
+                <div class="product-badges">
+                  {% if product.discount_price %}
+                    <span class="badge-discount">-{{ product.discount_percentage }}%</span>
+                  {% endif %}
+                </div>
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-new">New</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-tv"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">VisionMax</span>
-              <h6 class="product-name">43" 4K Smart LED TV</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(31)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 62,999</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
+                <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                  type="button"
+                  aria-label="{% if product.id in wishlist_ids %}
+                    Remove from wishlist
+                  {% else %}
+                    Add to wishlist
+                  {% endif %}">
+                  <i class="bi bi-heart"></i>
+                </button>
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-new">New</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-shoe-print"></i>
-              </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">StrideFit</span>
-              <h6 class="product-name">Running Sneakers Air Flex</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <i class="bi bi-star"></i>
-                <span>(8)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 5,299</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
-            </div>
-          </div>
-        </div>
+                <span class="product-category-badge">({{ product.category.name }})</span>
 
-        <div class="col-lg-3 col-md-4 col-6">
-          <div class="product-card">
-            <div class="product-card-media">
-              <span class="badge-new">New</span>
-              <button class="wishlist-btn" type="button" aria-label="Add to wishlist"><i class="bi bi-heart"></i></button>
-              <div class="product-image-placeholder">
-                <i class="bi bi-droplet"></i>
+                <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
+                  <img src="{{ product.primary_image.image.url }}" alt="" />
+                </div>
               </div>
-            </div>
-            <div class="product-card-body">
-              <span class="product-brand">PureGlow</span>
-              <h6 class="product-name">Vitamin C Face Serum</h6>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(47)</span>
+              <div class="product-card-body">
+                {% if product.brand %}
+                  <span class="product-brand">{{ product.brand.name }}</span>
+                {% else %}
+                  <span class="product-brand">NO BRAND</span>
+                {% endif %}
+
+                <h6 class="product-name" onclick="window.location.href='{% url 'product' product.slug %}'">{{ product.name }}</h6>
+                <div class="product-rating">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-half"></i>
+                  <span>({{ product.review_count|default:'0' }})</span>
+                </div>
+                <div class="product-price">
+                  {% if product.discount_price %}
+                    <span class="price-current">Rs. {{ product.discount_price }}</span>
+                    <span class="price-original">Rs. {{ product.price }}</span>
+                  {% else %}
+                    <span class="price-current">Rs. {{ product.price }}</span>
+                  {% endif %}
+                </div>
+                {% if product.stock_quantity <= 0 %}
+                  <span class="stock-badge out-of-stock">Out of Stock</span>
+                {% elif product.stock_quantity <= 80 %}
+                  <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
+                {% else %}
+                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                {% endif %}
+                <button class="btn add-to-cart-tn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
-              <div class="product-price">
-                <span class="price-current">Rs. 1,899</span>
-              </div>
-              <button class="btn add-to-cart-btn w-100"><i class="bi bi-cart4"></i> Add to Cart</button>
             </div>
           </div>
-        </div>
+        {% endfor %}
       </div>
     </div>
   </section>
@@ -314,24 +278,20 @@
 
       <div class="row g-4 category-grid">
         {% for brand in brands %}
-        <div class="col-lg-2 col-md-4 col-6">
-    <a href="{% url "search" %}?brand={{brand.slug}}"
-       ondblclick="window.location.href={{ brand.website|default:"#"}}"
-       class="category-card brand-card">
+          <div class="col-lg-2 col-md-4 col-6">
+            <a href="{% url 'search' %}?brand={{ brand.slug }}" ondblclick="window.location.href={{ brand.website|default:'#' }}" class="category-card brand-card">
+              <div class="brand-logo-img">
+                {% if brand.logo %}
+                  <img src="{{ brand.logo.url }}" alt="{{ brand.name }} logo" />
+                {% else %}
+                  <img src="{% static 'images/logo-icon.png' %}" alt="{{ brand.name }} logo" />
+                {% endif %}
+              </div>
 
-        <div class="brand-logo-img">
-            {% if brand.logo %}
-                <img src="{{ brand.logo.url }}" alt="{{ brand.name }} logo">
-            {% else %}
-                <img src="{% static 'images/logo-icon.png' %}" alt="{{ brand.name }} logo">
-            {% endif %}
-        </div>
-
-        <h6>{{ brand.name }}</h6>
-
-    </a>
-</div>
-{% endfor %}
+              <h6>{{ brand.name }}</h6>
+            </a>
+          </div>
+        {% endfor %}
       </div>
     </div>
   </section>

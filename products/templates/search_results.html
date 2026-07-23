@@ -21,7 +21,7 @@ Search Results • MarketSphere
         </li>
         <!-- Category breadcrumb will be rendered here by Django, e.g. {{ product.category.name }} -->
         <li class="breadcrumb-item">
-          <a href="">{{ categories.1.name }}</a>
+          <a href="">{{ categories.0.name }}</a>
         </li>
         <!-- Product name breadcrumb will be rendered here by Django -->
         <li class="breadcrumb-item active" aria-current="page">{{ q }}</li>
@@ -175,28 +175,32 @@ Search Results • MarketSphere
           {% for product in products %}
           <div class="col-lg-3 col-md-6 col-6">
             <div class="product-card">
-              <div class="product-card-media">
+               <div class="product-card-media">
+                <div class="product-badges">
+                  {% if 'week' not in product.created_at|timesince and 'month' not in product.created_at|timesince %}
+                    <span class="badge-new">New</span>
+                  {% endif %}
+                  {% if product.discount_price %}
+                    {% widthratio product.discount_price product.price 100 as discount_percent %}
+                    <span class="badge-discount">-{{ 100|add:'-'|add:discount_percent }}%</span>
+                  {% endif %}
+                </div>
 
-                {% if product.discount_price %}
-                {% widthratio product.discount_price product.price 100 as discount_percent %}
-                <span class="badge-discount">
-                  -{{ 100|add:'-'|add:discount_percent }}%
-                </span>
-                {% endif %}
-
-                <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}" type="button"
-                  aria-label="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+                <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                  type="button"
+                  aria-label="{% if product.id in wishlist_ids %}
+                    Remove from wishlist
+                  {% else %}
+                    Add to wishlist
+                  {% endif %}">
                   <i class="bi bi-heart"></i>
                 </button>
 
-                <span class="product-category-badge">
-                  {{ product.category.name }}
-                </span>
+                <span class="product-category-badge">({{ product.category.name }})</span>
 
-                 <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
-                  <img src="{{ product.primary_image.image.url }}" alt="">
+                <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' product.slug %}'">
+                  <img src="{{ product.primary_image.image.url }}" alt="" />
                 </div>
-
               </div>
 
               <div class="product-card-body">

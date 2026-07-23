@@ -156,3 +156,38 @@ class Seller(models.Model):
 
     def __str__(self):
         return self.store_name
+
+
+class SellerSettings(models.Model):
+    seller = models.OneToOneField(
+        Seller,
+        on_delete=models.CASCADE,
+        related_name="settings",
+    )
+
+    class HandlingTime(models.IntegerChoices):
+        ONE_DAY = 1, "1 business day"
+        TWO_DAYS = 2, "2 business days"
+        THREE_DAYS = 3, "3 business days"
+        FIVE_DAYS = 5, "5 business days"
+
+    default_handling_time = models.PositiveSmallIntegerField(
+        choices=HandlingTime.choices,
+        default=HandlingTime.TWO_DAYS,
+)
+    # Shipping
+    default_courier = models.CharField(max_length=100, blank=True)
+    auto_mark_shipped = models.BooleanField(default=False)
+    shipping_notes = models.TextField(blank=True)
+    return_address = models.TextField(blank=True)
+
+    # Notifications
+    email_new_order = models.BooleanField(default=True)
+    email_cancelled_order = models.BooleanField(default=True)
+    email_delivered_order = models.BooleanField(default=True)
+    email_low_stock = models.BooleanField(default=True)
+    weekly_sales_summary = models.BooleanField(default=False)
+    monthly_store_report = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

@@ -18,6 +18,11 @@ urlpatterns = [
         name="add_to_cart",
     ),
     path(
+        "cart/add-frequently-bought/",
+        views.add_frequently_bought_products_view,
+        name="add-frequently-bought",
+    ),
+    path(
         "cart/remove/<slug:product_slug>/",
         views.remove_from_cart,
         name="remove_from_cart",

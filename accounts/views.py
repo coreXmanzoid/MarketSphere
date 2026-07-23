@@ -133,13 +133,43 @@ def update_seller_info(request):
         )
 
 
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-
 from . import services
 from .decorators import only_seller
 
+@login_required
+@only_seller
+def deactivate_seller_account(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {"status": "error", "message": "Invalid request."},
+            status=405,
+        )
 
+    services.deactivate_seller_account(request.user.seller_profile)
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Seller account deactivated successfully.",
+        }
+    )
+@login_required
+@only_seller
+def reactivate_seller_account(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {"status": "error", "message": "Invalid request."},
+            status=405,
+        )
+
+    services.reactivate_seller_account(request.user.seller_profile)
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Seller account activated successfully.",
+        }
+    )
 @login_required
 @only_seller
 def update_seller_address(request):
@@ -202,6 +232,59 @@ def save_user_address(request):
         }
     )
 
+
+
+@login_required
+def update_shipping_preferences_view(request):
+
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request.",
+            },
+            status=405,
+        )
+
+    seller = request.user.seller_profile
+
+    services.update_shipping_preferences(seller, request.POST)
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Shipping preferences updated successfully.",
+        }
+    )
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+from . import services
+
+
+@login_required
+def update_notification_preferences_view(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request method.",
+            },
+            status=405,
+        )
+
+    seller = request.user.seller_profile
+
+    services.update_notification_preferences(seller, request.POST)
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Notification preferences updated successfully.",
+        }
+    )
 
 @login_required
 def logout_user(request):

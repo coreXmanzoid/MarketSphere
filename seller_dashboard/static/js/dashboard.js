@@ -207,3 +207,52 @@
     highlightActiveNavLink();
     initCollapseState();
 })();
+document.addEventListener("DOMContentLoaded", () => {
+    const profileChip = document.querySelector(".sd-seller-chip");
+    const profileMenu = document.getElementById("adProfileMenu");
+
+    if (!profileChip || !profileMenu) return;
+
+    profileChip.setAttribute("aria-expanded", "false");
+
+    function openProfileMenu() {
+        profileMenu.classList.add("is-open");
+        profileChip.setAttribute("aria-expanded", "true");
+    }
+
+    function closeProfileMenu() {
+        profileMenu.classList.remove("is-open");
+        profileChip.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleProfileMenu() {
+        profileMenu.classList.contains("is-open")
+            ? closeProfileMenu()
+            : openProfileMenu();
+    }
+
+    profileChip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleProfileMenu();
+    });
+
+    profileMenu.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
+
+    document.addEventListener("click", () => {
+        closeProfileMenu();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeProfileMenu();
+        }
+    });
+
+    profileMenu.querySelectorAll("a").forEach((item) => {
+        item.addEventListener("click", () => {
+            closeProfileMenu();
+        });
+    });
+});

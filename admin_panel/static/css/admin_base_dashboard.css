@@ -1,0 +1,1046 @@
+/* =========================================================
+   MARKETSPHERE — ADMIN DASHBOARD SHELL
+   Reusable layout: sidebar + topbar + content.
+   Shares the storefront's earth-tone palette (see
+   static/css/styles.css) but the admin area reads as its
+   own control room: a deeper graphite-bronze sidebar and a
+   restrained amber accent, distinct from the seller
+   dashboard's warm-brown shell. Self-contained stylesheet —
+   nothing here depends on storefront or seller classes.
+
+   Sections:
+     1. Variables
+     2. Reset
+     3. Shell Layout
+     4. Sidebar
+     5. Sidebar Nav (incl. expandable groups)
+     6. Topbar
+     7. Search
+     8. Topbar Icon Buttons / Profile Dropdown
+     9. Flash Messages
+    10. Content / Cards
+    11. Buttons
+    12. Scrollbar
+    13. Responsive
+   ========================================================= */
+
+/* ================= 1. VARIABLES ================= */
+:root {
+    /* Brand palette (shared with storefront) */
+    --ad-bg: #F7F1DE;
+    --ad-muted: #B0BA99;
+    --ad-dark: #4E220F;
+    --ad-success: #4f7d54;
+    --ad-warning: #b7802b;
+    --ad-danger: #b54b3b;
+    --ad-border: #E4DCC8;
+
+    /* Admin-specific identity: graphite-bronze sidebar, amber accent.
+       Distinct from the seller shell's warm-brown sidebar so the two
+       areas never get confused, while staying in the same family. */
+    --ad-accent: #C08A4E;
+    --ad-accent-soft: rgba(192, 138, 78, 0.14);
+    --ad-accent-ring: rgba(192, 138, 78, 0.28);
+    --ad-accent-strong: #A56B34;
+
+    --ad-sidebar-bg: #211B22;
+    --ad-sidebar-bg-alt: #2A2230;
+    --ad-sidebar-text: rgba(244, 238, 227, 0.68);
+    --ad-sidebar-text-strong: #F4EEE3;
+    --ad-sidebar-border: rgba(244, 238, 227, 0.09);
+
+    /* Surfaces */
+    --ad-surface: #FFFDF9;
+    --ad-surface-raised: #FBF7EC;
+
+    /* Typography */
+    --ad-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    --ad-heading-color: #241A17;
+    --ad-body-color: #5B5142;
+    --ad-caption-color: #948B79;
+
+    /* Sizing */
+    --ad-sidebar-width: 272px;
+    --ad-sidebar-width-collapsed: 78px;
+    --ad-topbar-height: 68px;
+    --ad-radius-card: 12px;
+    --ad-radius-control: 8px;
+    --ad-radius-pill: 30px;
+
+    /* Motion */
+    --ad-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --ad-transition-fast: 0.16s var(--ad-ease);
+    --ad-transition: 0.26s var(--ad-ease);
+
+    /* Elevation */
+    --ad-shadow-sm: 0 1px 2px rgba(36, 26, 23, 0.07);
+    --ad-shadow-md: 0 10px 26px rgba(36, 26, 23, 0.10);
+    --ad-shadow-lg: 0 20px 50px rgba(36, 26, 23, 0.18);
+}
+
+/* ================= 2. RESET ================= */
+.ad-shell,
+.ad-shell *,
+.ad-shell *::before,
+.ad-shell *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--ad-font);
+    background-color: var(--ad-bg);
+    color: var(--ad-body-color);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.ad-shell a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.ad-shell ul {
+    list-style: none;
+}
+
+.ad-shell button {
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+}
+
+.ad-shell input {
+    font-family: inherit;
+}
+
+.ad-shell svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.ad-shell :focus-visible {
+    outline: 2px solid var(--ad-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ad-shell,
+    .ad-shell * {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/* ================= 3. SHELL LAYOUT ================= */
+.ad-shell {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--ad-bg);
+}
+
+.ad-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--ad-sidebar-width);
+    transition: margin-left var(--ad-transition);
+}
+
+.ad-shell.is-collapsed .ad-main {
+    margin-left: var(--ad-sidebar-width-collapsed);
+}
+
+/* ================= 4. SIDEBAR ================= */
+.ad-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--ad-sidebar-width);
+    background-color: var(--ad-sidebar-bg);
+    background-image: linear-gradient(178deg, var(--ad-sidebar-bg-alt) 0%, var(--ad-sidebar-bg) 62%);
+    display: flex;
+    flex-direction: column;
+    z-index: 300;
+    transition: width var(--ad-transition), transform var(--ad-transition);
+    overflow: hidden;
+}
+
+.ad-shell.is-collapsed .ad-sidebar {
+    width: var(--ad-sidebar-width-collapsed);
+}
+
+.ad-sidebar-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 18px;
+    border-bottom: 1px solid var(--ad-sidebar-border);
+    flex-shrink: 0;
+}
+
+.ad-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    flex: 1;
+}
+
+.ad-brand-mark {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: var(--ad-accent-soft);
+    border: 1px solid rgba(192, 138, 78, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ad-accent);
+}
+
+.ad-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity var(--ad-transition-fast);
+}
+
+.ad-brand-text strong {
+    color: var(--ad-sidebar-text-strong);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1px;
+}
+
+.ad-brand-text small {
+    color: var(--ad-accent);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+}
+
+.ad-collapse-btn {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ad-sidebar-text);
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast), transform var(--ad-transition-fast);
+}
+
+.ad-collapse-btn:hover {
+    background-color: rgba(244, 238, 227, 0.08);
+    color: var(--ad-sidebar-text-strong);
+}
+
+.ad-shell.is-collapsed .ad-collapse-btn svg {
+    transform: rotate(180deg);
+}
+
+/* ================= 5. SIDEBAR NAV ================= */
+.ad-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ad-nav-label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(244, 238, 227, 0.32);
+    padding: 14px 12px 6px;
+    white-space: nowrap;
+    transition: opacity var(--ad-transition-fast);
+}
+
+.ad-nav > .ad-nav-label:first-child {
+    padding-top: 2px;
+}
+
+.ad-nav-item + .ad-nav-item {
+    margin-top: 2px;
+}
+
+.ad-nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--ad-radius-control);
+    color: var(--ad-sidebar-text);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-align: left;
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast);
+}
+
+.ad-nav-link:hover {
+    background-color: rgba(244, 238, 227, 0.07);
+    color: var(--ad-sidebar-text-strong);
+}
+
+.ad-nav-icon {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ad-nav-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ad-nav-chevron {
+    flex: 0 0 auto;
+    color: rgba(244, 238, 227, 0.45);
+    transition: transform var(--ad-transition-fast);
+}
+
+/* Active state */
+.ad-nav-link.is-active {
+    background-color: var(--ad-accent);
+    color: #241A17;
+    font-weight: 600;
+    box-shadow: var(--ad-shadow-sm);
+}
+
+.ad-nav-link.is-active .ad-nav-chevron {
+    color: #241A17;
+}
+
+.ad-nav-link.is-active::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 22px;
+    border-radius: 0 4px 4px 0;
+    background-color: var(--ad-accent);
+}
+
+.ad-nav-badge {
+    flex: 0 0 auto;
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background-color: rgba(244, 238, 227, 0.1);
+    color: rgba(244, 238, 227, 0.55);
+    padding: 3px 7px;
+    border-radius: var(--ad-radius-pill);
+    white-space: nowrap;
+}
+
+.ad-nav-badge-dot {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--ad-danger);
+}
+
+/* ---- Expandable groups ---- */
+.ad-nav-group.is-open > .ad-nav-link .ad-nav-chevron {
+    transform: rotate(180deg);
+}
+
+.ad-nav-submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 32px;
+    transition: max-height var(--ad-transition);
+}
+
+.ad-nav-group.is-open .ad-nav-submenu {
+    max-height: 240px;
+}
+
+.ad-nav-sublink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-top: 3px;
+    border-radius: var(--ad-radius-control);
+    color: var(--ad-sidebar-text);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast);
+}
+
+.ad-nav-sublink::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.5;
+    flex: 0 0 auto;
+}
+
+.ad-nav-sublink:hover {
+    background-color: rgba(244, 238, 227, 0.07);
+    color: var(--ad-sidebar-text-strong);
+}
+
+.ad-nav-sublink.is-active {
+    color: var(--ad-accent);
+    font-weight: 700;
+}
+
+.ad-nav-sublink.is-active::before {
+    background-color: var(--ad-accent);
+    opacity: 1;
+}
+
+/* Tooltip shown only while collapsed on desktop */
+.ad-nav-tooltip {
+    display: none;
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--ad-heading-color);
+    color: #F4EEE3;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: var(--ad-shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--ad-transition-fast), transform var(--ad-transition-fast);
+    z-index: 400;
+}
+
+.ad-shell.is-collapsed .ad-nav-link:hover .ad-nav-tooltip {
+    display: block;
+    opacity: 1;
+    transform: translateY(-50%) translateX(4px);
+}
+
+.ad-shell.is-collapsed .ad-brand-text,
+.ad-shell.is-collapsed .ad-nav-label,
+.ad-shell.is-collapsed .ad-nav-text,
+.ad-shell.is-collapsed .ad-nav-badge,
+.ad-shell.is-collapsed .ad-nav-badge-dot,
+.ad-shell.is-collapsed .ad-nav-chevron,
+.ad-shell.is-collapsed .ad-nav-submenu {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.ad-shell.is-collapsed .ad-nav-submenu {
+    max-height: 0 !important;
+}
+
+.ad-shell.is-collapsed .ad-nav-link {
+    justify-content: center;
+}
+
+.ad-shell.is-collapsed .ad-nav-link.is-active::before {
+    left: -12px;
+}
+
+/* ================= 6. TOPBAR ================= */
+.ad-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    height: var(--ad-topbar-height);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 24px;
+    background-color: var(--ad-surface-raised);
+    border-bottom: 1px solid var(--ad-border);
+}
+
+.ad-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    flex: 0 1 auto;
+}
+
+.ad-hamburger,
+.ad-desktop-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    transition: background-color var(--ad-transition-fast);
+}
+
+.ad-hamburger {
+    display: none;
+}
+
+.ad-hamburger span,
+.ad-desktop-toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background-color: var(--ad-heading-color);
+    transition: transform var(--ad-transition-fast), opacity var(--ad-transition-fast);
+    margin: 0 auto;
+}
+
+.ad-hamburger:hover,
+.ad-desktop-toggle:hover {
+    background-color: var(--ad-accent-soft);
+}
+
+.ad-shell.is-mobile-open .ad-hamburger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.ad-shell.is-mobile-open .ad-hamburger span:nth-child(2) { opacity: 0; }
+.ad-shell.is-mobile-open .ad-hamburger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.ad-page-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ================= 7. SEARCH ================= */
+.ad-search-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    padding: 0 12px;
+}
+
+.ad-search {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+}
+
+.ad-search svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ad-caption-color);
+    pointer-events: none;
+}
+
+.ad-search-input {
+    width: 100%;
+    padding: 9px 14px 9px 38px;
+    font-size: 13.5px;
+    color: var(--ad-heading-color);
+    background-color: var(--ad-bg);
+    border: 1.5px solid var(--ad-border);
+    border-radius: var(--ad-radius-pill);
+    transition: border-color var(--ad-transition-fast), box-shadow var(--ad-transition-fast), background-color var(--ad-transition-fast);
+}
+
+.ad-search-input::placeholder {
+    color: var(--ad-caption-color);
+}
+
+.ad-search-input:focus {
+    outline: none;
+    background-color: var(--ad-surface);
+    border-color: var(--ad-accent);
+    box-shadow: 0 0 0 3px var(--ad-accent-ring);
+}
+
+.ad-search-shortcut {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ad-caption-color);
+    background-color: var(--ad-border);
+    padding: 2px 6px;
+    border-radius: 5px;
+    pointer-events: none;
+}
+
+/* ================= 8. TOPBAR ICON BUTTONS / PROFILE DROPDOWN ================= */
+.ad-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.ad-icon-btn {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ad-heading-color);
+    background-color: transparent;
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast);
+}
+
+.ad-icon-btn:hover {
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+}
+
+.ad-notif-dot {
+    position: absolute;
+    top: 8px;
+    right: 9px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--ad-danger);
+    border: 1.5px solid var(--ad-surface-raised);
+}
+
+.ad-topbar-divider {
+    width: 1px;
+    height: 26px;
+    background-color: var(--ad-border);
+    margin: 0 2px;
+}
+
+/* ---- Profile dropdown ---- */
+.ad-profile {
+    position: relative;
+}
+
+.ad-profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 6px 6px;
+    border-radius: var(--ad-radius-pill);
+    transition: background-color var(--ad-transition-fast);
+}
+
+.ad-profile-trigger:hover,
+.ad-profile.is-open .ad-profile-trigger {
+    background-color: var(--ad-accent-soft);
+}
+
+.ad-profile-avatar {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: var(--ad-heading-color);
+    color: #F4EEE3;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ad-profile-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.ad-profile-name {
+    font-size: 13.5px;
+    color: var(--ad-heading-color);
+    font-weight: 700;
+}
+
+.ad-profile-role {
+    font-size: 11.5px;
+    color: var(--ad-caption-color);
+    font-weight: 500;
+}
+
+.ad-profile-caret {
+    color: var(--ad-caption-color);
+    transition: transform var(--ad-transition-fast);
+}
+
+.ad-profile.is-open .ad-profile-caret {
+    transform: rotate(180deg);
+}
+
+.ad-profile-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    background-color: var(--ad-surface);
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    box-shadow: var(--ad-shadow-lg);
+    padding: 8px;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    pointer-events: none;
+    transform-origin: top right;
+    transition: opacity var(--ad-transition-fast), transform var(--ad-transition-fast);
+    z-index: 400;
+}
+
+.ad-profile.is-open .ad-profile-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.ad-profile-menu-head {
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--ad-border);
+    margin-bottom: 6px;
+}
+
+.ad-profile-menu-head strong {
+    display: block;
+    font-size: 13.5px;
+    color: var(--ad-heading-color);
+}
+
+.ad-profile-menu-head span {
+    font-size: 12px;
+    color: var(--ad-caption-color);
+}
+
+.ad-profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ad-heading-color);
+    text-align: left;
+    transition: background-color var(--ad-transition-fast);
+}
+
+.ad-profile-menu-item svg {
+    color: var(--ad-caption-color);
+}
+
+.ad-profile-menu-item:hover {
+    background-color: var(--ad-bg);
+}
+
+.ad-profile-menu-item.is-danger {
+    color: var(--ad-danger);
+}
+
+.ad-profile-menu-item.is-danger svg {
+    color: var(--ad-danger);
+}
+
+.ad-profile-menu-item.is-danger:hover {
+    background-color: rgba(181, 75, 59, 0.1);
+}
+
+.ad-profile-menu-divider {
+    height: 1px;
+    background-color: var(--ad-border);
+    margin: 6px 2px;
+}
+
+/* ================= 9. FLASH MESSAGES ================= */
+.ad-flash-area {
+    padding: 0 24px;
+}
+
+.ad-flash-area:empty {
+    display: none;
+}
+
+.ad-flash {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 12px 16px;
+    background-color: var(--ad-surface);
+    border: 1px solid var(--ad-border);
+    border-left: 4px solid var(--ad-accent);
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--ad-heading-color);
+    box-shadow: var(--ad-shadow-sm);
+}
+
+.ad-flash-success { border-left-color: var(--ad-success); }
+.ad-flash-error { border-left-color: var(--ad-danger); }
+.ad-flash-warning { border-left-color: var(--ad-warning); }
+
+.ad-flash-close {
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: var(--ad-caption-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.ad-flash-close:hover {
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+}
+
+/* ================= 10. CONTENT / CARDS ================= */
+.ad-content {
+    flex: 1;
+    padding: 28px 24px 40px;
+    max-width: 1440px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Generic card primitive available to every page that extends this shell */
+.ad-card {
+    background-color: var(--ad-surface-raised);
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    padding: 22px;
+    box-shadow: var(--ad-shadow-sm);
+    transition: box-shadow var(--ad-transition-fast);
+}
+
+.ad-card:hover {
+    box-shadow: var(--ad-shadow-md);
+}
+
+.ad-empty-shell {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--ad-caption-color);
+}
+
+.ad-empty-shell h2 {
+    color: var(--ad-heading-color);
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.ad-empty-shell p {
+    font-size: 14px;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* ================= 11. BUTTONS ================= */
+.ad-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: var(--ad-radius-control);
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast), border-color var(--ad-transition-fast), transform var(--ad-transition-fast);
+}
+
+.ad-btn:active {
+    transform: scale(0.97);
+}
+
+.ad-btn-primary {
+    background-color: var(--ad-accent);
+    color: #241A17;
+    border: 1.5px solid var(--ad-accent);
+}
+
+.ad-btn-primary:hover {
+    background-color: var(--ad-accent-strong);
+    border-color: var(--ad-accent-strong);
+    color: #F4EEE3;
+}
+
+.ad-btn-secondary {
+    background-color: transparent;
+    color: var(--ad-heading-color);
+    border: 1.5px solid var(--ad-border);
+}
+
+.ad-btn-secondary:hover {
+    border-color: var(--ad-accent);
+    color: var(--ad-accent-strong);
+}
+
+/* ================= 12. SCROLLBAR (sidebar) ================= */
+.ad-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ad-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ad-nav::-webkit-scrollbar-thumb {
+    background: rgba(244, 238, 227, 0.15);
+    border-radius: 10px;
+}
+
+.ad-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 238, 227, 0.25);
+}
+
+/* ================= 13. RESPONSIVE ================= */
+
+/* ---- Sidebar overlay (mobile drawer backdrop) ---- */
+.ad-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(33, 27, 34, 0.5);
+    z-index: 290;
+    opacity: 0;
+    transition: opacity var(--ad-transition);
+}
+
+@media (max-width: 991.98px) {
+    .ad-desktop-toggle {
+        display: none;
+    }
+
+    /* Sidebar becomes an off-canvas drawer */
+    .ad-sidebar {
+        transform: translateX(-100%);
+        width: var(--ad-sidebar-width);
+        box-shadow: var(--ad-shadow-lg);
+    }
+
+    .ad-shell.is-mobile-open .ad-sidebar {
+        transform: translateX(0);
+    }
+
+    .ad-shell.is-collapsed .ad-sidebar {
+        width: var(--ad-sidebar-width);
+    }
+
+    .ad-shell.is-collapsed .ad-brand-text,
+    .ad-shell.is-collapsed .ad-nav-label,
+    .ad-shell.is-collapsed .ad-nav-text,
+    .ad-shell.is-collapsed .ad-nav-badge,
+    .ad-shell.is-collapsed .ad-nav-badge-dot,
+    .ad-shell.is-collapsed .ad-nav-chevron {
+        opacity: 1;
+        width: auto;
+    }
+
+    .ad-shell.is-collapsed .ad-nav-group.is-open .ad-nav-submenu {
+        max-height: 240px !important;
+    }
+
+    .ad-shell.is-collapsed .ad-nav-link {
+        justify-content: flex-start;
+    }
+
+    .ad-main,
+    .ad-shell.is-collapsed .ad-main {
+        margin-left: 0;
+    }
+
+    .ad-shell.is-mobile-open .ad-sidebar-overlay {
+        display: block;
+        opacity: 1;
+    }
+
+    .ad-hamburger {
+        display: flex;
+    }
+
+    .ad-search-wrap {
+        display: none;
+    }
+
+    .ad-profile-info {
+        display: none;
+    }
+
+    .ad-profile-caret {
+        display: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ad-topbar {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .ad-content {
+        padding: 20px 16px 32px;
+    }
+
+    .ad-flash-area {
+        padding: 0 16px;
+    }
+
+    .ad-page-title {
+        display: none;
+    }
+
+    .ad-profile-menu {
+        right: -8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ad-topbar-divider {
+        display: none;
+    }
+}

@@ -350,10 +350,70 @@ document.addEventListener('DOMContentLoaded', function () {
 
     recalcFbtTotal();
 
-    if (fbtAddAllBtn) {
-        bindAddToCartFeedback(fbtAddAllBtn);
+    async function addFrequentlyBoughtTogether(btn) {
+        if (btn.disabled) return;
+
+        const selectedProducts = [];
+
+        document
+            .querySelectorAll(".form-check-input:checked")
+            .forEach((checkbox) => {
+                selectedProducts.push(checkbox.dataset.productId);
+            });
+
+        if (!selectedProducts.length) {
+            alert("Please select at least one product.");
+            return;
+        }
+
+        btn.disabled = true;
+
+        try {
+            const response = await fetch( btn.dataset.addUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify({
+                    products: selectedProducts,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const counter = document.querySelector("#cartCounter");
+
+                if (counter) {
+                    counter.textContent = data.cart_count;
+                }
+
+                btn.innerHTML = '<i class="bi bi-check2"></i> Added';
+
+                
+                setTimeout(() => {
+                    btn.innerHTML =
+                        '<i class="bi bi-cart-plus"></i> Add All to Cart';
+                    btn.disabled = false;
+                }, 1500);
+            } else {
+                alert(data.message);
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Something went wrong.");
+            btn.disabled = false;
+        }
     }
 
+    document
+        .getElementById("pdFbtAddAll")
+        ?.addEventListener("click", function () {
+            addFrequentlyBoughtTogether(this);
+        });
     /* ================= NEWSLETTER VALIDATION ================= */
     const newsletterForm = document.getElementById('newsletterForm');
     const newsletterEmail = document.getElementById('newsletterEmail');

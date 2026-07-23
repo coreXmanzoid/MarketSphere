@@ -1,0 +1,508 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Settings
+{% endblock %}
+
+{% block active_page %}
+  settings
+{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sd-breadcrumb-sep">/</span>
+  <span class="sd-breadcrumb-current">Settings</span>
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static '/css/settings.css' %}" />
+{% endblock %}
+
+{% block seller_content %}
+  <div class="se-page" id="sePage" data-dirty="false">
+    <!-- ================= 1. HEADER ================= -->
+    <header class="se-header se-reveal">
+      <div class="se-header-text">
+        <span class="se-header-eyebrow"><i class="se-eyebrow-dot"></i> Store Configuration</span>
+        <h1 class="se-header-title">Settings</h1>
+        <p class="se-header-subtitle">Manage your store information, shipping preferences, notifications and account security.</p>
+      </div>
+      <span class="se-header-badge">Seller Settings</span>
+    </header>
+
+    <!-- ================= 2. LAYOUT: NAV + SECTIONS ================= -->
+    <div class="se-layout">
+      <!-- ============ LEFT: SETTINGS NAV ============ -->
+      <nav class="se-nav se-reveal" id="seNav" aria-label="Settings sections">
+        <ul class="se-nav-list" role="tablist">
+          <li>
+            <a href="#storeInformation" class="se-nav-link is-active" data-se-nav="storeInformation" role="tab" aria-selected="true">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l1-5h16l1 5"></path>
+                <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+                <path d="M9 21V13h6v8"></path>
+              </svg>
+              <span>Store Information</span>
+            </a>
+          </li>
+          <li>
+            <a href="#businessAddress" class="se-nav-link" data-se-nav="businessAddress" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>Business Address</span>
+            </a>
+          </li>
+          <li>
+            <a href="#shippingPreferences" class="se-nav-link" data-se-nav="shippingPreferences" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+              <span>Shipping Preferences</span>
+            </a>
+          </li>
+          <li>
+            <a href="#notifications" class="se-nav-link" data-se-nav="notifications" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span>Notifications</span>
+            </a>
+          </li>
+          <li>
+            <a href="#security" class="se-nav-link" data-se-nav="security" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
+              </svg>
+              <span>Security</span>
+            </a>
+          </li>
+          <li>
+            <a href="#payouts" class="se-nav-link" data-se-nav="payouts" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1v22"></path>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              <span>Payouts</span>
+              <span class="se-nav-badge">Soon</span>
+            </a>
+          </li>
+        </ul>
+        <hr class="se-nav-divider" />
+
+        <div class="se-nav-info">
+          <div class="se-nav-tip">
+            <strong>💡 Tip</strong>
+            <p>Changes are saved independently for each section. Make sure to save your updates before switching to another settings category.</p>
+          </div>
+        </div>
+      </nav>
+
+      <!-- ============ RIGHT: SECTIONS ============ -->
+      <div class="se-sections">
+        <!-- ============ SECTION 1: STORE INFORMATION ============ -->
+        <section class="se-card se-reveal" id="storeInformation" data-se-section tabindex="-1">
+          <div class="se-card-head">
+            <h2 class="se-card-title">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l1-5h16l1 5"></path>
+                <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+                <path d="M9 21V13h6v8"></path>
+              </svg>Store Information
+            </h2>
+          </div>
+
+          <div class="se-media-row">
+            <div class="se-media-block">
+              <span class="se-field-label">Store Logo</span>
+              <div class="se-upload-zone se-upload-zone-round" id="seLogoUploadZone" tabindex="0" role="button" aria-label="Upload store logo">
+                <input type="file" id="seLogoInput" class="se-visually-hidden" accept="image/*" />
+                <div class="se-logo-preview" id="seLogoPreview">
+                  {% if seller.store_logo %}
+                    <img src="{{ seller.store_logo.url }}" alt="store logo" />
+                  {% else %}
+                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 9l1-5h16l1 5"></path>
+                      <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+                    </svg>
+                  {% endif %}
+                </div>
+              </div>
+              <button type="button" class="se-btn se-btn-secondary se-btn-sm" id="seChangeLogoBtn">Change Logo</button>
+            </div>
+
+            <div class="se-media-block se-media-block-wide">
+              <span class="se-field-label">Store Banner</span>
+              <div class="se-upload-zone se-upload-zone-banner" id="seBannerUploadZone" tabindex="0" role="button" aria-label="Upload store banner">
+                <input type="file" id="seBannerInput" class="se-visually-hidden" accept="image/*" />
+                <div class="se-banner-preview" id="seBannerPreview">
+                  {% if seller.store_banner %}
+                  <img src="{{ seller.store_banner.url}}" alt="store banner">
+                  {% else %}
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="9" cy="9" r="2"></circle>
+                    <path d="m21 15-5-5L5 21"></path>
+                  </svg>
+                  <p>
+                    Drag &amp; drop a banner image, or <span class="se-upload-link">browse</span>
+                  </p>
+                  {% endif %}
+                </div>
+              </div>
+              <button type="button" class="se-btn se-btn-secondary se-btn-sm" id="seChangeBannerBtn">Change Banner</button>
+            </div>
+          </div>
+
+          <div class="se-field-row se-field-row-2">
+            <div class="se-field">
+              <label for="seStoreName" class="se-label">Store Name</label>
+              <input type="text" id="seStoreName" class="se-input" value="{{ seller.store_name }}" placeholder="e.g. Tech World" data-se-track />
+            </div>
+            <div class="se-field">
+              <label for="seStoreEmail" class="se-label">Store Email</label>
+              <input type="email" id="seStoreEmail" class="se-input" value="{{ seller.store_email }}" placeholder="support@techworld.com" data-se-track />
+            </div>
+          </div>
+
+          <div class="se-field">
+            <label for="seStoreDescription" class="se-label">Store Description</label>
+            <textarea id="seStoreDescription" class="se-textarea" rows="4" maxlength="500" placeholder="Tell customers about your store..." data-se-track data-se-counter="seDescCounter">{{ seller.store_description }}</textarea>
+            <div class="se-field-footer">
+              <span class="se-field-hint">Shown on your public store page.</span>
+              <span class="se-char-counter"><span id="seDescCounter">0</span>/500</span>
+            </div>
+          </div>
+
+          <div class="se-card-actions">
+            <button type="button" class="se-btn se-btn-ghost" data-se-cancel>Cancel</button>
+            <button type="button" class="se-btn se-btn-primary" data-se-save data-loading-label="Saving&hellip;"><span class="se-btn-label">Save Changes</span></button>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 2: BUSINESS ADDRESS ============ -->
+        <section class="se-card se-reveal" id="businessAddress" data-se-section tabindex="-1">
+          <div class="se-card-head">
+            <h2 class="se-card-title">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>Business Address
+            </h2>
+          </div>
+
+          <div class="se-field-row se-field-row-2">
+            <div class="se-field">
+              <label for="seBizName" class="se-label">Business Name</label>
+              <input type="text" id="seBizName" class="se-input" value="{{ seller.business_address.full_name }}" placeholder="e.g. Hammad Ashraf" data-se-track />
+            </div>
+            <div class="se-field">
+              <label for="seBizPhone" class="se-label">Phone</label>
+              <input type="text" id="seBizPhone" class="se-input" value="{{ seller.business_address.phone }}" placeholder="+92 300 1234567" data-se-track />
+            </div>
+          </div>
+
+          <div class="se-field">
+            <label for="seBizAddr1" class="se-label">Address Line 1</label>
+            <input type="text" id="seBizAddr1" class="se-input" value="{{ seller.business_address.address_line_1 }}" placeholder="House No. 123, Street 4" data-se-track />
+          </div>
+
+          <div class="se-field">
+            <label for="seBizAddr2" class="se-label">Address Line 2 <span class="se-optional">(optional)</span></label>
+            <input type="text" id="seBizAddr2" class="se-input" placeholder="Apartment, suite, etc." data-se-track />
+          </div>
+
+          <div class="se-field-row se-field-row-3">
+            <div class="se-field">
+              <label for="seBizCity" class="se-label">City</label>
+              <input type="text" id="seBizCity" class="se-input" value="{{ seller.business_address.city }}" placeholder="Islamabad" data-se-track />
+            </div>
+            <div class="se-field">
+              <label for="seBizPostal" class="se-label">Postal Code</label>
+              <input type="text" id="seBizPostal" class="se-input" value="{{ seller.business_address.postal_code }}" placeholder="44000" data-se-track />
+            </div>
+            <div class="se-field">
+              <label for="seBizCountry" class="se-label">Country</label>
+              <div class="se-select-wrap">
+                <select id="seBizCountry" class="se-select" data-se-track>
+                  <option value="pk" selected>Pakistan</option>
+                  <option value="ae">United Arab Emirates</option>
+                  <option value="sa">Saudi Arabia</option>
+                  <option value="us">United States</option>
+                  <option value="gb">United Kingdom</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="se-card-actions">
+            <button type="button" class="se-btn se-btn-ghost" data-se-cancel>Cancel</button>
+            <button type="button" class="se-btn se-btn-primary" data-se-save data-loading-label="Saving&hellip;"><span class="se-btn-label">Save Address</span></button>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 3: SHIPPING PREFERENCES ============ -->
+        <section class="se-card se-reveal" id="shippingPreferences" data-se-section tabindex="-1">
+          <div class="se-card-head">
+            <h2 class="se-card-title">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="1"></rect>
+                <path d="M16 8h4l3 3v5h-7V8Z"></path>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>Shipping Preferences
+            </h2>
+          </div>
+
+          <div class="se-field-row se-field-row-2">
+            <div class="se-field">
+              <label for="seDefaultCourier" class="se-label">Default Courier</label>
+              <div class="se-select-wrap">
+                <select id="seDefaultCourier" class="se-select" name="courier" data-se-track>
+                  <option value="">Select a courier</option>
+                  <option value="tcs" {% if seller.settings.default_courier == 'tcs' %}selected{% endif %}>TCS</option>
+                  <option value="leopards" {% if seller.settings.default_courier == 'leopards' %}selected{% endif %}>Leopards Courier</option>
+                  <option value="mnp" {% if seller.settings.default_courier == 'mnp' %}selected{% endif %}>M&amp;P</option>
+                  <option value="postex" {% if seller.settings.default_courier == 'postex' %}selected{% endif %}>PostEx</option>
+                </select>
+              </div>
+            </div>
+            <div class="se-field">
+              <label for="seHandlingTime" class="se-label">Default Handling Time</label>
+              <div class="se-select-wrap">
+                <select id="seHandlingTime" class="se-select" data-se-track>
+                    <option value="1" {% if seller.settings.default_handling_time == 1 %}selected{% endif %}>1 business day</option>
+                    <option value="2" {% if seller.settings.default_handling_time == 2 %}selected{% endif %}>2 business days</option>
+                    <option value="3" {% if seller.settings.default_handling_time == 3 %}selected{% endif %}>3 business days</option>
+                    <option value="5" {% if seller.settings.default_handling_time == 5 %}selected{% endif %}>5 business days</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="se-field">
+            <label for="seReturnAddress" class="se-label">Return Address</label>
+            <textarea id="seReturnAddress" class="se-textarea" rows="3" placeholder="Address where returned items should be sent" data-se-track>{{ seller.settings.return_address }}</textarea>
+          </div>
+
+          <div class="se-field">
+            <label for="seShippingNotes" class="se-label">Shipping Notes <span class="se-optional">(optional)</span></label>
+            <textarea id="seShippingNotes" class="se-textarea" rows="3" placeholder="Any notes shown to buyers about shipping" data-se-track>{{ seller.settings.shipping_notes }}</textarea>
+          </div>
+
+          <label class="se-checkbox-row">
+            <input type="checkbox" id="seAutoShipped" data-se-track {% if seller.settings.auto_mark_shipped %}checked{% endif %} />
+            <span class="se-checkbox-box"></span>
+            <span class="se-checkbox-text">Automatically mark orders as shipped after adding tracking</span>
+          </label>
+
+          <div class="se-card-actions">
+            <button type="button" class="se-btn se-btn-ghost" data-se-reset>Reset</button>
+            <button type="button" class="se-btn se-btn-primary" data-se-save data-loading-label="Saving&hellip;"><span class="se-btn-label">Save Shipping</span></button>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 4: NOTIFICATIONS ============ -->
+        <section class="se-card se-reveal" id="notifications" data-se-section tabindex="-1">
+          <div class="se-card-head">
+            <h2 class="se-card-title">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>Notifications
+            </h2>
+          </div>
+
+          <div class="se-switch-list">
+            <div class="se-switch-item">
+              <span class="se-switch-text">
+                <strong>Email on New Orders</strong>
+                <small>Get notified the moment a customer places an order.</small>
+              </span>
+              <label class="se-switch">
+                <input type="checkbox" id="seEmailNewOrder" data-se-track {% if seller.settings.email_new_order %}checked{% endif %} />
+                <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="se-switch-item">
+              <span class="se-switch-text">
+                <strong>Email on Cancelled Orders</strong>
+                <small>Be alerted when an order is cancelled.</small>
+              </span>
+              <label class="se-switch">
+                <input type="checkbox" id="seEmailCancelledOrder" data-se-track {% if seller.settings.email_cancelled_order %}checked{% endif %} />
+                <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="se-switch-item">
+              <span class="se-switch-text">
+                <strong>Email on Delivered Orders</strong>
+                <small>Know when an order successfully reaches the customer.</small>
+              </span>
+              <label class="se-switch">
+                <input type="checkbox" id="seEmailDeliveredOrder" data-se-track {% if seller.settings.email_delivered_order %}checked{% endif %} />
+                <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="se-switch-item">
+              <span class="se-switch-text">
+                <strong>Email on Low Stock</strong>
+                <small>Get alerted before you run out of a product.</small>
+              </span>
+              <label class="se-switch">
+                <input type="checkbox" id="seEmailLowStock" data-se-track {% if seller.settings.email_low_stock %}checked{% endif %} />
+                <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="se-switch-item">
+              <span class="se-switch-text">
+                <strong>Weekly Sales Summary</strong>
+                <small>A digest of your store's performance every week.</small>
+              </span>
+              <label class="se-switch">
+                <input type="checkbox" id="seWeeklySalesSummary" data-se-track {% if seller.settings.weekly_sales_summary %}checked{% endif %} />
+                <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="se-switch-item">
+              <span class="se-switch-text">
+                <strong>Monthly Store Report</strong>
+                <small>A deeper monthly breakdown of orders and revenue.</small>
+              </span>
+              <label class="se-switch">
+                <input type="checkbox" id="seMonthlyStoreReport" data-se-track {% if seller.settings.monthly_store_report %}checked{% endif %} />
+                <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="se-card-actions">
+            <button type="button" class="se-btn se-btn-primary" data-se-save data-loading-label="Saving&hellip;"><span class="se-btn-label">Save Preferences</span></button>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 5: SECURITY ============ -->
+        <section class="se-card se-reveal" id="security" data-se-section tabindex="-1">
+          <div class="se-card-head">
+            <h2 class="se-card-title">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
+              </svg>Security
+            </h2>
+          </div>
+
+          <div class="se-subcard-grid">
+            <div class="se-subcard">
+              <div class="se-subcard-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <div class="se-subcard-text">
+                <strong>Password</strong>
+                <small>Last changed 3 months ago.</small>
+              </div>
+              <button type="button" class="se-btn se-btn-secondary se-btn-sm">Change Password</button>
+            </div>
+
+            <div class="se-subcard">
+              <div class="se-subcard-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1v6m0 0-4-4m4 4 4-4"></path>
+                  <rect x="4" y="9" width="16" height="12" rx="2"></rect>
+                </svg>
+              </div>
+              <div class="se-subcard-text">
+                <strong>Two Factor Authentication</strong>
+                <small>Add an extra layer of protection to your account.</small>
+              </div>
+              <span class="se-soon-badge">Coming Soon</span>
+            </div>
+
+            <div class="se-subcard">
+              <div class="se-subcard-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                  <path d="M6 8h.01M10 8h8"></path>
+                </svg>
+              </div>
+              <div class="se-subcard-text">
+                <strong>Active Sessions</strong>
+                <small>See where you're currently signed in.</small>
+              </div>
+              <button type="button" class="se-btn se-btn-secondary se-btn-sm">View Devices</button>
+            </div>
+          </div>
+
+          <div class="se-danger-zone">
+            <h3 class="se-danger-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>Danger Zone
+            </h3>
+
+            <div class="se-danger-row">
+              <div class="se-danger-text">
+                <strong>Deactivate Seller Account</strong>
+                <small>Temporarily hide your store. You can reactivate anytime.</small>
+              </div>
+              <button type="button" id="deactivateAccount" class="se-btn se-btn-danger-outline se-btn-sm">Deactivate Seller Account</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 6: PAYOUTS ============ -->
+        <section class="se-card se-payouts-card se-reveal" id="payouts" data-se-section tabindex="-1">
+          <div class="se-payouts-illustration" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1v22"></path>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <h2 class="se-payouts-title">Payouts <span class="se-soon-badge">Coming Soon</span></h2>
+          <p class="se-payouts-text">Secure payout methods including Bank Transfer, EasyPaisa and JazzCash will be available in a future update.</p>
+          <button type="button" class="se-btn se-btn-secondary" disabled>Notify Me</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="se-toast-container" id="seToastContainer" aria-live="polite"></div>
+
+  <!-- ================= UNSAVED CHANGES MODAL (frontend only) ================= -->
+  <div class="se-modal-overlay se-hidden" id="seLeaveModalOverlay">
+    <div class="se-modal" role="dialog" aria-modal="true" aria-labelledby="seLeaveModalTitle">
+      <div class="se-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="se-modal-title" id="seLeaveModalTitle">Discard unsaved changes?</h3>
+      <p class="se-modal-text">You have unsaved changes on this page. Leaving now will discard them.</p>
+      <div class="se-modal-actions">
+        <button type="button" class="se-btn se-btn-ghost" id="seLeaveKeepBtn">Keep Editing</button>
+        <button type="button" class="se-btn se-btn-danger" id="seLeaveDiscardBtn">Discard Changes</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static '/js/settings.js' %}"></script>
+{% endblock %}

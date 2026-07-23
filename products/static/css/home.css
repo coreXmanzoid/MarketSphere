@@ -504,21 +504,33 @@
     opacity: 0.75;
     background-color: transparent;
 }
-
-.badge-discount,
-.badge-new {
+.product-badges {
     position: absolute;
     top: 12px;
     left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 2;
+}
+
+.badge-new,
+.badge-discount {
     background-color: #b54b3b;
     color: #F7F1DE;
     font-size: 12px;
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 20px;
-    z-index: 2;
+    white-space: nowrap;
 }
 
+.wishlist-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+}
 .product-category-badge {
     position: absolute;
     bottom: 12px;

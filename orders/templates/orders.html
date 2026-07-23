@@ -36,7 +36,7 @@
         </div>
 
         <!-- ============ FUTURE: SEARCH / FILTER TOOLBAR ============ -->
-        <!--       
+        <!--        
           Structural space reserved for future search + status filter +
           date-range controls. Intentionally left unimplemented — no
           backend/query wiring yet. When added, this should follow the
@@ -49,7 +49,7 @@
               <option>All Statuses</option>
             </select>
           </div>
-               -->
+                -->
       </div>
     </div>
   </section>
@@ -101,7 +101,7 @@
                   <!-- Product thumbnails will be rendered here by Django from order.items -->
                   <div class="mo-thumb-strip">
                     {% for item in order.items|slice:3 %}
-                      <span class="mo-order-thumb"><img src="{{ item.product.primary_image.image.url }}" alt="Product thumbnail" /></span>
+                      <span class="mo-order-thumb" title="{{ item.product.name }}"><img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" /></span>
                     {% endfor %}
                     <!-- Overflow count will be rendered here by Django, e.g. order.items.count|add:'-3' -->
                     {% if order.items.count > 3 %}
@@ -130,11 +130,11 @@
               </div>
               <div class="mo-order-actions-secondary mt-3">
                 {% if order.overall_status in 'pending confirmed processing' %}
-                  <a href="{% url "cancel-order" order_number=order.order_number  %}" class="mo-action-link"><i class="bi bi-x-circle"></i> Cancel Order</a>
+                  <a href="{% url 'cancel-order' order_number=order.order_number %}" class="mo-action-link"><i class="bi bi-x-circle"></i> Cancel Order</a>
                   <span class="mo-order-date">|</span>
                 {% endif %}
                 {% if order.overall_status == 'delivered' %}
-                  <a href="{% url "reorder" order_number=order.order_number %}" class="mo-action-link"><i class="bi bi-arrow-repeat"></i> Reorder</a>
+                  <a href="{% url 'reorder' order_number=order.order_number %}" class="mo-action-link"><i class="bi bi-arrow-repeat"></i> Reorder</a>
                   <span class="mo-order-date">|</span>
                 {% endif %}
                 {% if order.overall_status != 'canceled' %}
@@ -150,7 +150,7 @@
       <!-- ================= END ORDERS LIST ================= -->
 
       <!-- ============ FUTURE: PAGINATION ============ -->
-      <!--        Structural space only — mirrors .search-pagination-wrap /
+      <!--         Structural space only — mirrors .search-pagination-wrap /
            .pagination markup used on search_results.html. Will be wired
            to a paginated orders queryset once the backend view exists.
       <nav aria-label="Orders pagination" class="mo-pagination-wrap">
@@ -161,7 +161,7 @@
           <li class="page-item"><a class="page-link" href="#">Next</a></li>
         </ul>
       </nav>
-             -->
+              -->
     </div>
   </section>
 {% endblock %}

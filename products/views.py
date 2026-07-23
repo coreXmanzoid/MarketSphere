@@ -9,10 +9,12 @@ def home(request):
     categories = services.get_all_categories()
     brands = services.get_all_brands()
     featured_products = services.get_featured_products()
+    new_products = services.get_new_products()
     context = {
         "categories": categories,
         "brands": brands,
         "featured_products": featured_products,
+        "new_products": new_products,
         "wishlist_ids": services.get_wishlist_ids(request.user),
     }
     return render(request, "home.html", context)
@@ -22,6 +24,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 
 from . import services
+
 
 def search(request):
     q = request.GET.get("q", "").strip()
@@ -54,12 +57,16 @@ def search(request):
 
     context = {
         "q": q,
-        "products": page_obj,          # Page objects support |length and iteration
+        "products": page_obj,  # Page objects support |length and iteration
         "page_obj": page_obj,
         "paginator": paginator,
         "categories": categories,
         "brands": brands,
-        "wishlist_ids": services.get_wishlist_ids(request.user) if request.user.is_authenticated else set(),
+        "wishlist_ids": (
+            services.get_wishlist_ids(request.user)
+            if request.user.is_authenticated
+            else set()
+        ),
     }
 
     return render(request, "search_results.html", context)
@@ -72,21 +79,20 @@ def search_categories(request):
 
     query = request.GET.get("q", "")
 
-    categories = (
-        Category.objects
-        .filter(name__icontains=query)
-        .order_by("name")[:10]
+    categories = Category.objects.filter(name__icontains=query).order_by("name")[:10]
+
+    return JsonResponse(
+        {
+            "categories": [
+                {
+                    "name": category.name,
+                    "slug": category.slug,
+                }
+                for category in categories
+            ]
+        }
     )
 
-    return JsonResponse({
-        "categories": [
-            {
-                "name": category.name,
-                "slug": category.slug,
-            }
-            for category in categories
-        ]
-    })
 
 from django.http import JsonResponse
 
@@ -95,33 +101,39 @@ from products.models import Brand
 
 def search_brands(request):
 
-    query = request.GET.get("q","")
+    query = request.GET.get("q", "")
 
-    brands = Brand.objects.filter(
-        name__icontains=query
-    ).order_by("name")[:10]
+    brands = Brand.objects.filter(name__icontains=query).order_by("name")[:10]
 
     data = []
 
     for brand in brands:
 
-        data.append({
+        data.append(
+            {
+                "slug": brand.slug,
+                "name": brand.name,
+            }
+        )
 
-            "slug":brand.slug,
-            "name":brand.name,
+    return JsonResponse({"brands": data})
 
-        })
-
-    return JsonResponse({
-
-        "brands":data
-
-    })
 
 def product(request, product_slug):
     product = services.get_product_by_slug(product_slug)
+    frequent_products = services.get_frequent_products(product)
+    related_products = services.get_related_products(product)
+    services.update_recently_viewed_products(request, product)
+    recently_viewed_products = services.get_recently_viewed_products(
+        request,
+        product,
+    )
+
     context = {
         "product": product,
+        "frequent_products": frequent_products,
+        "related_products": related_products,
+        "recently_viewed_products": recently_viewed_products,
         "is_in_wishlist": (
             services.is_in_wishlist(request.user, product.slug)
             if request.user.is_authenticated
@@ -181,6 +193,29 @@ def add_to_cart(request, product_slug):
             "cart_count": services.cart_count(request.user),
             "subtotal": str(services.cart_subtotal(request.user)),
             "total": str(services.cart_total(request.user)),
+        }
+    )
+
+
+def add_frequently_bought_products_view(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request.",
+            },
+            status=405,
+        )
+
+    cart = services.add_frequently_bought_products(
+        request.user,
+        request.body,
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "cart_count": services.cart_count(request.user),
         }
     )
 

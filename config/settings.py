@@ -51,7 +51,8 @@ INSTALLED_APPS = [
 
     "products",
     "orders",
-    "seller_dashboard"
+    "seller_dashboard",
+    "admin_panel",
 ]
 
 

@@ -1,17 +1,45 @@
 document.addEventListener('DOMContentLoaded', function () {
     /* ================= ADD TO CART FEEDBACK ================= */
-    document.querySelectorAll('.wishlist-add-cart-btn:not([disabled])').forEach(function (btn) {
+    document.querySelectorAll(".wishlist-add-cart-btn:not([disabled])").forEach((btn) => {
         const originalHTML = btn.innerHTML;
 
-        btn.addEventListener('click', function () {
-            btn.classList.add('is-loading');
-            btn.innerHTML = '<i class="bi bi-check2"></i> Added';
-            btn.disabled = true;
+        btn.addEventListener("click", async function () {
+            if (btn.disabled) return;
 
-            window.setTimeout(function () {
+            btn.disabled = true;
+            btn.classList.add("is-loading");
+
+            try {
+                const response = await fetch(btn.dataset.addUrl, {
+                    method: "GET",
+                    headers: {
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    btn.innerHTML = '<i class="bi bi-check2"></i> Added';
+
+                    // Update navbar cart counter
+                    const counter = document.querySelector("#cartCounter");
+                    if (counter) {
+                        counter.textContent = data.cart_count;
+                    }
+                } else {
+                    alert("Unable to add product to cart.");
+                }
+            } catch (error) {
+                console.error("Cart Error:", error);
+                alert("Something went wrong. Please try again.");
+            }
+
+            setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
-                btn.classList.remove('is-loading');
+                btn.classList.remove("is-loading");
             }, 1500);
         });
     });

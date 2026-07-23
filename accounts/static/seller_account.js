@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (dashboardBtn) {
         dashboardBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            showToast('The seller dashboard isn\'t available yet — check back soon.', 'info');
+            window.location.href = "/seller";
         });
     }
 
@@ -286,19 +286,62 @@ document.addEventListener('DOMContentLoaded', function () {
        ========================================================= */
     const reactivateBtn = document.getElementById('saReactivateBtn');
 
-    if (reactivateBtn) {
-        reactivateBtn.addEventListener('click', function () {
-            if (reactivateBtn.classList.contains('is-loading')) return;
+    // const reactivateBtn = document.getElementById("reactivateAccount");
 
-            const confirmed = window.confirm('Reactivate your store? Your listings will become visible to buyers again once this is live.');
+    if (reactivateBtn) {
+        reactivateBtn.addEventListener("click", function () {
+
+            if (reactivateBtn.classList.contains("is-loading")) return;
+
+            const confirmed = window.confirm(
+                "Are you sure you want to reactivate your seller account?\n\nYour store will become active and you'll be able to sell products again."
+            );
+
             if (!confirmed) return;
 
-            setButtonLoading(reactivateBtn, true, 'Reactivating...');
+            setButtonLoading(reactivateBtn, true, "Reactivating...");
 
-            window.setTimeout(function () {
-                setButtonLoading(reactivateBtn, false);
-                showToast('Reactivating your store isn\'t available yet — check back soon.', 'info');
-            }, 700);
+            fetch("/accounts/reactivate-seller-account", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+
+                    setButtonLoading(reactivateBtn, false);
+
+                    if (data.status === "success") {
+                        showToast(
+                            data.message || "Your seller account has been reactivated.",
+                            "success"
+                        );
+
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showToast(
+                            data.message || "Unable to reactivate your account.",
+                            "error"
+                        );
+                    }
+
+                })
+                .catch(error => {
+
+                    console.error(error);
+
+                    setButtonLoading(reactivateBtn, false);
+
+                    showToast(
+                        "Something went wrong. Please try again.",
+                        "error"
+                    );
+
+                });
+
         });
     }
 

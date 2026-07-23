@@ -181,16 +181,16 @@
               <!-- Ordered items will be rendered here by Django from order.items -->
               {% for item in order.items %}
                 <div class="cf-order-item">
-                  <div class="product-image-placeholder cf-order-item-img">
+                  <div class="product-image-placeholder cf-order-item-img" onclick="window.location.href='{% url "product" item.product.slug %}';">
                     <img src="{{ item.product.primary_image.image.url }}" alt="">
                   </div>
 
                   <div class="cf-order-item-info">
                     <p class="cf-order-item-name">{{ item.product.name }}</p>
-                    <span class="cf-order-item-meta">Qty: {{ item.quantity }} &times; Rs. {{ item.price }}</span>
+                    <span class="cf-order-item-meta">Qty: {{ item.quantity }} &times; Rs. {{ item.price|floatformat:0 }}</span>
                   </div>
 
-                  <span class="cf-order-item-total">Rs. {{ item.total }}</span>
+                  <span class="cf-order-item-total">Rs. {{ item.total|floatformat:0 }}</span>
                 </div>
               {% empty %}
                 <!-- Empty state: should not normally render on a real order -->

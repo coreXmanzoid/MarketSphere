@@ -1092,7 +1092,7 @@
 .pd-fbt-image {
     width: 64px;
     height: 64px;
-    border-radius: 12px;
+    border-radius: 8px;
     background: linear-gradient(145deg, rgba(157, 102, 56, 0.10), rgba(176, 186, 153, 0.18));
     display: flex;
     align-items: center;
@@ -1100,10 +1100,10 @@
     flex-shrink: 0;
 }
 
-.pd-fbt-image i {
-    background-color: transparent;
-    color: var(--pd-accent);
-    font-size: 26px;
+.pd-fbt-image img {    
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
 }
 
 .pd-fbt-info {

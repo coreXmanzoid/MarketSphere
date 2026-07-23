@@ -207,6 +207,70 @@ def update_seller_information(user, data, files):
     seller.save()
     return seller
 
+from .models import SellerSettings
+def update_shipping_preferences(seller, data):
+    settings, created = SellerSettings.objects.get_or_create(
+        seller=seller
+    )
+
+    settings.default_courier = data.get("default_courier", "")
+    settings.default_handling_time = int(
+        data.get(
+            "handling_time",
+            SellerSettings.HandlingTime.TWO_DAYS,
+        )
+    )
+    settings.return_address = data.get("return_address", "").strip()
+    settings.shipping_notes = data.get("shipping_notes", "").strip()
+    settings.auto_mark_shipped = (
+        str(data.get("auto_mark_shipped")).lower() == "true"
+    )
+
+    settings.save()
+
+    return settings
+
+
+def update_notification_preferences(seller, data):
+    settings, _ = SellerSettings.objects.get_or_create(seller=seller)
+
+    settings.email_new_order = (
+        str(data.get("email_new_order")).lower() == "true"
+    )
+
+    settings.email_cancelled_order = (
+        str(data.get("email_cancelled_order")).lower() == "true"
+    )
+
+    settings.email_delivered_order = (
+        str(data.get("email_delivered_order")).lower() == "true"
+    )
+
+    settings.email_low_stock = (
+        str(data.get("email_low_stock")).lower() == "true"
+    )
+
+    settings.weekly_sales_summary = (
+        str(data.get("weekly_sales_summary")).lower() == "true"
+    )
+
+    settings.monthly_store_report = (
+        str(data.get("monthly_store_report")).lower() == "true"
+    )
+
+    settings.save()
+
+    return settings
+
+
+def deactivate_seller_account(seller):
+    seller.status = Seller.Status.DEACTIVATED
+    seller.save(update_fields=["status"])
+
+def reactivate_seller_account(seller):
+    seller.status = Seller.Status.VERIFIED
+    seller.save(update_fields=["status"])
+
 
 def update_seller_address(user, data):
     seller = user.seller_profile

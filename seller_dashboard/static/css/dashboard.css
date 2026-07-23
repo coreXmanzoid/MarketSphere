@@ -722,6 +722,110 @@ body {
     background-color: var(--sd-dark);
     border-color: var(--sd-dark);
 }
+.ad-profile-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all .25s ease;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.ad-profile-menu.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.sd-seller-chip {
+    position: relative;
+}
+
+
+.ad-profile-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    background-color: #F7F1DE;
+    border: 1px solid #E4DCC8;
+    border-radius: 8px;
+    box-shadow: 0 20px 50px rgba(36, 26, 23, 0.18);
+    padding: 8px;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    pointer-events: none;
+    transform-origin: top right;
+    transition: opacity 0.16s cubic-bezier(0.22, 1, 0.36, 1), transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 400;
+}
+
+.ad-profile.is-open .ad-profile-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.ad-profile-menu-head {
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid #E4DCC8;
+    margin-bottom: 6px;
+}
+
+.ad-profile-menu-head strong {
+    display: block;
+    font-size: 13.5px;
+    color: #241A17;
+}
+
+.ad-profile-menu-head span {
+    font-size: 12px;
+    color: #948B79;
+}
+
+.ad-profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #241A17;
+    text-align: left;
+    transition: background-color 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ad-profile-menu-item svg {
+    color: #948B79;
+}
+
+.ad-profile-menu-item:hover {
+    background-color: #B0BA99;
+}
+
+.ad-profile-menu-item.is-danger {
+    color: #b54b3b;
+}
+
+.ad-profile-menu-item.is-danger svg {
+    color: #b54b3b;
+}
+
+.ad-profile-menu-item.is-danger:hover {
+    background-color: rgba(181, 75, 59, 0.1);
+}
+
+.ad-profile-menu-divider {
+    height: 1px;
+    background-color: #E4DCC8;
+    margin: 6px 2px;
+}
 
 .sd-btn-secondary {
     background-color: transparent;

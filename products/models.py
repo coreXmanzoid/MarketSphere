@@ -120,6 +120,12 @@ class Product(TimeStampedModel):
     def primary_image(self):
         return self.images.filter(is_primary=True).first()  # type: ignore[attr-defined]
 
+    @property
+    def discount_percentage(self):
+        if self.discount_price and self.price:
+            return round(((self.price - self.discount_price) / self.price) * 100)
+        return 0
+
     def __str__(self):
         return self.name
 

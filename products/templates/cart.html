@@ -118,10 +118,10 @@ Shopping Cart • MarketSphere
               <div class="cart-item-bottom-row">
                 <div class="cart-item-price-block">
                   {% if item.product.discount_price %}
-                  <span class="cart-item-price-current">Rs. {{ item.product.discount_price }}</span>
-                  <span class="cart-item-price-original">Rs. {{ item.product.price }}</span>
+                  <span class="cart-item-price-current">Rs. {{ item.product.discount_price|floatformat:0 }}</span>
+                  <span class="cart-item-price-original">Rs. {{ item.product.price|floatformat:0 }}</span>
                   {% else %}
-                  <span class="cart-item-price-current">Rs. {{ item.product.price }}</span>
+                  <span class="cart-item-price-current">Rs. {{ item.product.price|floatformat:0 }}</span>
                   <span class="cart-item-price-original">Rs. {{ item.product.price|add:1 }}</span>
                   {% endif %}
                 </div>
@@ -137,7 +137,7 @@ Shopping Cart • MarketSphere
                 <div class="cart-item-subtotal">
                   <span class="cart-item-subtotal-label">Subtotal</span>
                   <!-- Item subtotal will be recalculated live by cart.js; initial value rendered by Django -->
-                  <span class="cart-item-subtotal-value">Rs. {{ item.product.price }}</span>
+                  <span class="cart-item-subtotal-value">Rs. {{ item.product.price|floatformat:0 }}</span>
                 </div>
               </div>
             </div>
@@ -166,29 +166,29 @@ Shopping Cart • MarketSphere
           <div class="cart-summary-row">
             <span>Subtotal</span>
             <!-- Subtotal will be recalculated live by cart.js; initial value rendered by Django -->
-            <span id="summarySubtotal">Rs. {{ subtotal }}</span>
+            <span id="summarySubtotal">Rs. {{ subtotal|floatformat:0 }}</span>
           </div>
 
           <div class="cart-summary-row">
             <span>Shipping</span>
-            <span id="summaryShipping">Rs. 0</span>
+            <span id="summaryShipping">Rs. {{ shipping_cost|default:"0"|floatformat:0 }}</span>
           </div>
 
           <div class="cart-summary-row">
             <span>Tax</span>
-            <span id="summaryTax">Rs. 0</span>
+            <span id="summaryTax">Rs. {{ tax|default:"0"|floatformat:0 }}</span>
           </div>
 
           <div class="cart-summary-row cart-summary-discount d-none" id="summaryDiscountRow">
             <span>Discount</span>
-            <span id="summaryDiscount">- Rs. 0</span>
+            <span id="summaryDiscount">- Rs. {{ discount|default:"0"|floatformat:0}}</span>
           </div>
 
           <hr class="cart-summary-divider" />
 
           <div class="cart-summary-row cart-summary-total-row">
             <span>Estimated Total</span>
-            <span id="summaryTotal">Rs. {{ total }}</span>
+            <span id="summaryTotal">Rs. {{ total|floatformat:0 }}</span>
           </div>
 
           <!-- Promo code: kept minimal, Django will validate and apply the coupon -->

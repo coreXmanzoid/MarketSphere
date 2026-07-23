@@ -31,7 +31,39 @@ def get_featured_products():
     return (
         Product.objects.select_related("category", "brand")
         .prefetch_related("images")
-        .filter(status=Product.Status.PUBLISHED, is_featured=True)
+        .filter(
+            status=Product.Status.PUBLISHED,
+            is_featured=True,
+            seller__status=Seller.Status.VERIFIED,
+        )
+    )
+
+
+def get_frequent_products(product):
+    return Product.objects.filter(
+        category=product.category,
+        seller=product.seller,
+        status=Product.Status.PUBLISHED,
+    ).exclude(id=product.id)[:2]
+
+
+def get_related_products(product):
+    return Product.objects.filter(
+        category=product.category,
+        seller=product.seller,
+        status=Product.Status.PUBLISHED,
+    ).exclude(id=product.id)
+
+
+def get_new_products(limit=8):
+    return (
+        Product.objects.select_related("category", "brand", "seller")
+        .prefetch_related("images")
+        .filter(
+            status=Product.Status.PUBLISHED,
+            seller__status=Seller.Status.VERIFIED,
+        )
+        .order_by("-created_at")[:limit]
     )
 
 
@@ -42,12 +74,14 @@ def get_product_by_slug(product_slug):
         status=Product.Status.PUBLISHED,
     )
 
+
 def get_edit_product_by_slug(product_slug, seller):
     return get_object_or_404(
         Product.objects.select_related("category", "brand").prefetch_related("images"),
         slug=product_slug,
-        seller = seller,
+        seller=seller,
     )
+
 
 def create_product(user, post_data, files):
     """
@@ -81,15 +115,12 @@ def create_product(user, post_data, files):
 
     if missing_fields:
         raise ValueError(
-            "The following fields are required: "
-            + ", ".join(missing_fields)
+            "The following fields are required: " + ", ".join(missing_fields)
         )
 
     seller = Seller.objects.get(user=user)
 
-    category = Category.objects.get(
-        slug=nullable(post_data.get("category"))
-    )
+    category = Category.objects.get(slug=nullable(post_data.get("category")))
 
     brand = None
     brand_slug = nullable(post_data.get("brand"))
@@ -135,6 +166,8 @@ def create_product(user, post_data, files):
         )
 
     return product
+
+
 def nullable(value):
     """
     Converts empty or invalid values to None.
@@ -163,8 +196,7 @@ def save_draft(user, post_data, files):
 
     if missing_fields:
         raise ValueError(
-            "The following fields are required: "
-            + ", ".join(missing_fields)
+            "The following fields are required: " + ", ".join(missing_fields)
         )
 
     seller = Seller.objects.get(user=user)
@@ -221,7 +253,10 @@ def save_draft(user, post_data, files):
         )
 
     return product
+
+
 # search logic
+
 
 def edit_product(seller, product, post_data, files):
     """
@@ -267,9 +302,7 @@ def edit_product(seller, product, post_data, files):
     product.save()
 
     # Delete existing images selected by the user
-    deleted_images = json.loads(
-        post_data.get("deleted_images", "[]")
-    )
+    deleted_images = json.loads(post_data.get("deleted_images", "[]"))
 
     if deleted_images:
         ProductImage.objects.filter(
@@ -296,16 +329,14 @@ def edit_product(seller, product, post_data, files):
     primary = product.images.filter(is_primary=True).first()
 
     if not primary:
-        first_image = product.images.order_by(
-            "display_order",
-            "id"
-        ).first()
+        first_image = product.images.order_by("display_order", "id").first()
 
         if first_image:
             first_image.is_primary = True
             first_image.save(update_fields=["is_primary"])
 
     return product
+
 
 from django.db.models import Q
 
@@ -408,7 +439,6 @@ def unhide_product_by_slug(product_slug, seller):
 from django.db.models.deletion import ProtectedError
 
 
-
 def delete_product_by_slug(product_slug, seller):
     try:
         product = Product.objects.get(
@@ -437,6 +467,7 @@ def delete_product_by_slug(product_slug, seller):
             "success": False,
             "archived": False,
         }
+
 
 def paginate_products(products, page_number, per_page=12):
     paginator = Paginator(products, per_page)
@@ -564,6 +595,71 @@ def add_to_cart(user, product_slug):
 
     return cart_item
 
+
+def add_frequently_bought_products(user, body):
+    data = json.loads(body)
+    product_ids = data.get("products", [])
+
+    cart, _ = Cart.objects.get_or_create(user=user)
+
+    for product_id in product_ids:
+        try:
+            product = Product.objects.get(
+                id=int(product_id),
+                status=Product.Status.PUBLISHED,
+            )
+
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={
+                    "quantity": 1,
+                },
+            )
+
+            if not created:
+                cart_item.quantity += 1
+                cart_item.save(update_fields=["quantity", "updated_at"])
+
+        except (Product.DoesNotExist, ValueError, TypeError):
+            continue
+
+    return cart
+
+
+def update_recently_viewed_products(request, product):
+    recently_viewed = request.session.get("recently_viewed", [])
+
+    if product.id in recently_viewed:
+        recently_viewed.remove(product.id)
+
+    recently_viewed.insert(0, product.id)
+
+    recently_viewed = recently_viewed[:10]
+
+    request.session["recently_viewed"] = recently_viewed
+    request.session.modified = True
+
+
+def get_recently_viewed_products(request, current_product, limit=8):
+    recently_viewed_ids = request.session.get("recently_viewed", [])
+
+    products = list(
+        Product.objects.select_related("category", "brand", "seller")
+        .prefetch_related("images")
+        .filter(
+            id__in=recently_viewed_ids,
+            status=Product.Status.PUBLISHED,
+            seller__status=Seller.Status.VERIFIED,
+        )
+        .exclude(id=current_product.id)
+    )
+
+    products.sort(
+        key=lambda product: recently_viewed_ids.index(product.id)
+    )
+
+    return products[:limit]
 
 def remove_from_cart(user, product_slug):
     cart = get_or_create_cart(user)

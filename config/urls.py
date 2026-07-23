@@ -26,6 +26,7 @@ urlpatterns = [
     path("order/", include("orders.urls")),
     path("", include("products.urls")),
     path("seller/", include("seller_dashboard.urls")),
+    path("admin-db/", include("admin_panel.urls")),
 ]
 
 

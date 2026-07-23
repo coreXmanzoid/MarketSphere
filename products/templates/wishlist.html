@@ -60,36 +60,32 @@
           {% for item in wishlist_products %}
             <div class="col-lg-3 col-md-6 col-6 wishlist-grid-item" data-wishlist-item-id="{{ item.product.id }}">
               <div class="product-card wishlist-product-card">
-
-                <div class="product-card-media">
-                  <!-- Category badge will be rendered here by Django -->
-                  {% if item.product.category %}
-                    <span class="product-category-badge">{{ item.product.category.name }}</span>
-                  {% endif %}
-
-                  <!-- Discount / New badges will be rendered here by Django based on product state -->
-                  {% if item.product.discount_price %}
-                    {% widthratio item.product.discount_price item.product.price 100 as discount_percent %}
-                    <span class="badge-discount">-{{ 100|add:"-"|add:discount_percent }}%</span>
-                  {% elif item.product.is_new %}
+<div class="product-card-media">
+                <div class="product-badges">
+                  {% if 'week' not in item.product.created_at|timesince and 'month' not in itemm.product.created_at|timesince %}
                     <span class="badge-new">New</span>
                   {% endif %}
-
-                  <!-- Remove from wishlist: Django will persist wishlist removal -->
-                  {% comment %} <button
-                    class="wishlist-btn wishlist-remove-btn active"
-                    type="button"
-                    data-product-id="{{ item.product.id }}"
-                    data-product-slug="{{ item.product.slug }}"
-                    aria-label="Remove {{ item.product.name }} from wishlist"
-                  >
-                    <i class="bi bi-heart-fill"></i>
-                  </button> {% endcomment %}
-
-                  <a href="{% url 'product' item.product.slug %}" class="product-image-placeholder wishlist-image-link">
-                      <img src="{{ item.product.primary_image.image.url }}" alt="" class="wishlist-product-img" />
-                  </a>
+                  {% if item.product.discount_price %}
+                    <span class="badge-discount">-{{ item.product.discount_percentage }}%</span>
+                  {% endif %}
                 </div>
+
+                <button class="wishlist-btn active"
+                  type="button"
+                  aria-label="{% if item.product.id in wishlist_ids %}
+                    Remove from wishlist
+                  {% else %}
+                    Add to wishlist
+                  {% endif %}">
+                  <i class="bi bi-heart"></i>
+                </button>
+
+                <span class="product-category-badge">({{ item.product.category.name }})</span>
+
+                <div class="product-image-placeholder" onclick="window.location.href='{% url 'product' item.product.slug %}'">
+                  <img src="{{ item.product.primary_image.image.url }}" alt="" />
+                </div>
+              </div>
 
                 <div class="product-card-body">
                   <!-- Brand will be rendered here by Django -->
@@ -141,6 +137,7 @@
                       type="button"
                       class="btn add-to-cart-btn wishlist-add-cart-btn"
                       {% if item.item.product.stock_quantity == 0 %}disabled{% endif %}
+                      data-add-url="{% url "add_to_cart" item.product.slug %}"
                     >
                       <i class="bi bi-cart4"></i> Add to Cart
                     </button>

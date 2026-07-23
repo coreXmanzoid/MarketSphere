@@ -137,20 +137,20 @@
           </span>
         </button>
 
-        <button type="button" class="dh-action-card">
+        <button type="button" class="dh-action-card" onclick="window.location.href='{% url "products-list" %}'">
           <span class="dh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
               <path d="M3 8v8l9 5 9-5V8"></path>
             </svg>
           </span>
-          <span class="dh-action-text">
+          <span class="dh-action-text" >
             <strong>Manage Products</strong>
             <small>Edit, price or archive listings</small>
           </span>
         </button>
 
-        <button type="button" class="dh-action-card">
+        <button type="button" class="dh-action-card" onclick="window.location.href='{% url "orders-list" %}'">
           <span class="dh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
@@ -165,7 +165,7 @@
           </span>
         </button>
 
-        <button type="button" class="dh-action-card">
+        <button type="button" class="dh-action-card" onclick="window.location.href='{% url "dashboard-settings" %}'">
           <span class="dh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
@@ -189,7 +189,7 @@
             <h2 class="dh-card-title">Recent Orders</h2>
             <p class="dh-card-subtitle">Your five most recent customer orders</p>
           </div>
-          <a href="#" class="dh-link">
+          <a href="{% url "orders-list" %}" class="dh-link">
             View All<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14"></path>
               <path d="M13 6l6 6-6 6"></path>

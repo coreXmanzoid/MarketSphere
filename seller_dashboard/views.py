@@ -186,3 +186,8 @@ def update_user_order_status(request, order_no, status):
         "success": True,
         "status": status,
     })
+
+
+def dashboard_settings(request):
+    seller = request.user.seller_profile
+    return render(request, "settings.html", {"seller": seller})
