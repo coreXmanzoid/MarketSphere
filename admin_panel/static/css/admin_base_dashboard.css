@@ -51,7 +51,7 @@
 
     /* Surfaces */
     --ad-surface: #FFFDF9;
-    --ad-surface-raised: #FBF7EC;
+    --ad-surface-raised: #F7F1DE;
 
     /* Typography */
     --ad-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
@@ -204,6 +204,10 @@ body {
     align-items: center;
     justify-content: center;
     color: var(--ad-accent);
+}
+.ad-brand-mark img{
+    height: 80%;
+    width: 90%;
 }
 
 .ad-brand-text {
@@ -491,7 +495,14 @@ body {
     justify-content: space-between;
     gap: 16px;
     padding: 0 24px;
-    background-color: var(--ad-surface-raised);
+    
+    /* Semi-transparent background using color-mix or rgba for blur transparency */
+    background-color: color-mix(in srgb, var(--ad-surface-raised) 82%, transparent);
+    
+    /* Backdrop blur filters */
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    
     border-bottom: 1px solid var(--ad-border);
 }
 

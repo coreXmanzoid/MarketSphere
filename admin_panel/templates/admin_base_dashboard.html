@@ -1,320 +1,309 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
-        {% block title %}Dashboard{% endblock %} • MarketSphere Admin
+      {% block title %}
+        Dashboard
+      {% endblock %}• MarketSphere Admin
     </title>
 
     <link rel="stylesheet" href="{% static 'css/admin_base_dashboard.css' %}" />
     <link rel="shortcut icon" href="{% static 'images/logo-icon.png' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% block extra_css %}
+    {% endblock %}
+  </head>
 
-    {% block extra_css %}{% endblock %}
-</head>
-
-{% comment %}
-    data-active-page is the only "routing" mechanism this shell relies on.
-    Child templates set {% block active_page %}orders{% endblock %} (etc.)
-    and base_dashboard.js uses it to highlight the matching sidebar link —
-    no backend/view logic involved, purely a template block + data attribute.
-{% endcomment %}
-<body data-active-page="{% block active_page %}dashboard{% endblock %}">
-
+  {% comment %}data-active-page is the only "routing" mechanism this shell relies on. Child templates set{% block active_page %}
+    orders
+  {% endblock %}(etc.) and base_dashboard.js uses it to highlight the matching sidebar link — no backend/view logic involved, purely a template block + data attribute.{% endcomment %}
+  <body data-active-page="{% block active_page %}
+      dashboard
+    {% endblock %}">
     <div class="ad-shell" id="adShell">
+      <!-- ================= SIDEBAR OVERLAY (mobile only) ================= -->
+      <div class="ad-sidebar-overlay" id="adSidebarOverlay"></div>
 
-        <!-- ================= SIDEBAR OVERLAY (mobile only) ================= -->
-        <div class="ad-sidebar-overlay" id="adSidebarOverlay"></div>
+      <!-- ================= SIDEBAR ================= -->
+      <aside class="ad-sidebar" id="adSidebar" aria-label="Admin navigation">
+        <div class="ad-sidebar-head">
+          <a href="{% url 'home' %}" class="ad-brand">
+            <span class="ad-brand-mark" aria-hidden="true"><img src="{% static 'images/logo-icon.png' %}" alt="" /></span>
+            <span class="ad-brand-text">
+              <strong>MarketSphere</strong>
+              <small>Admin</small>
+            </span>
+          </a>
 
-        <!-- ================= SIDEBAR ================= -->
-        <aside class="ad-sidebar" id="adSidebar" aria-label="Admin navigation">
+          <button type="button" class="ad-collapse-btn" id="adCollapseBtn" aria-label="Collapse sidebar" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+        </div>
 
-            <div class="ad-sidebar-head">
-                <a href="{% url 'home' %}" class="ad-brand">
-                    <span class="ad-brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2 3 7v10l9 5 9-5V7Z"></path>
-                            <path d="M3 7l9 5 9-5"></path>
-                            <path d="M12 12v10"></path>
-                        </svg>
-                    </span>
-                    <span class="ad-brand-text">
-                        <strong>MarketSphere</strong>
-                        <small>Admin</small>
-                    </span>
+        <nav class="ad-nav" aria-label="Admin sections" id="adNav">
+          <span class="ad-nav-label">General</span>
+
+          <ul class="ad-nav-list">
+            <li class="ad-nav-item">
+              <a href="{% url "admin-dasboard" %}" class="ad-nav-link" data-page="dashboard">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="9" rx="1.5"></rect>
+                    <rect x="14" y="3" width="7" height="5" rx="1.5"></rect>
+                    <rect x="14" y="12" width="7" height="9" rx="1.5"></rect>
+                    <rect x="3" y="16" width="7" height="5" rx="1.5"></rect>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">Dashboard</span>
+                <span class="ad-nav-tooltip">Dashboard</span>
+              </a>
+            </li>
+
+            <li class="ad-nav-item">
+              <a href="#" class="ad-nav-link" data-page="users">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="10" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">User Management</span>
+                <span class="ad-nav-tooltip">User Management</span>
+              </a>
+            </li>
+          </ul>
+
+          <span class="ad-nav-label">Catalog &amp; Sales</span>
+
+          <ul class="ad-nav-list">
+            <!-- ============ EXPANDABLE GROUP: CATALOG ============ -->
+            <li class="ad-nav-item ad-nav-group" data-group="catalog">
+              <button type="button" class="ad-nav-link ad-nav-group-trigger" data-page="catalog" aria-expanded="false">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                    <path d="M3 8v8l9 5 9-5V8"></path>
+                    <path d="M12 13v8"></path>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">Catalog</span>
+                <svg class="ad-nav-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span class="ad-nav-tooltip">Catalog</span>
+              </button>
+
+              <div class="ad-nav-submenu">
+                <a href="#" class="ad-nav-sublink" data-subpage="products">Product Management</a>
+                <a href="#" class="ad-nav-sublink" data-subpage="categories">Categories</a>
+                <a href="#" class="ad-nav-sublink" data-subpage="brands">Brands</a>
+              </div>
+            </li>
+
+            <!-- ============ EXPANDABLE GROUP: SALES ============ -->
+            <li class="ad-nav-item ad-nav-group" data-group="sales">
+              <button type="button" class="ad-nav-link ad-nav-group-trigger" data-page="sales" aria-expanded="false">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+                    <path d="M14 2v5h5"></path>
+                    <path d="M8.5 13h7"></path>
+                    <path d="M8.5 17h5"></path>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">Sales</span>
+                <svg class="ad-nav-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span class="ad-nav-tooltip">Sales</span>
+              </button>
+
+              <div class="ad-nav-submenu">
+                <a href="#" class="ad-nav-sublink" data-subpage="orders">Orders</a>
+                <a href="#" class="ad-nav-sublink" data-subpage="payments">Payments</a>
+              </div>
+            </li>
+          </ul>
+
+          <span class="ad-nav-label">Insights</span>
+
+          <ul class="ad-nav-list">
+            <li class="ad-nav-item">
+              <a href="#" class="ad-nav-link" data-page="analytics">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M7 15l4-5 3 3 5-7"></path>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">Analytics</span>
+                <span class="ad-nav-tooltip">Analytics</span>
+              </a>
+            </li>
+
+            <li class="ad-nav-item">
+              <a href="#" class="ad-nav-link" data-page="notifications">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">Notifications</span>
+                <span class="ad-nav-badge-dot" aria-hidden="true"></span>
+                <span class="ad-nav-tooltip">Notifications</span>
+              </a>
+            </li>
+          </ul>
+
+          <span class="ad-nav-label">Configuration</span>
+
+          <ul class="ad-nav-list">
+            <li class="ad-nav-item">
+              <a href="#" class="ad-nav-link" data-page="settings">
+                <span class="ad-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+                  </svg>
+                </span>
+                <span class="ad-nav-text">Settings</span>
+                <span class="ad-nav-tooltip">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- ================= MAIN COLUMN ================= -->
+      <div class="ad-main">
+        <!-- ================= TOPBAR ================= -->
+        <header class="ad-topbar">
+          <div class="ad-topbar-left">
+            <button type="button" class="ad-hamburger" id="adHamburgerBtn" aria-label="Open sidebar" aria-expanded="false" aria-controls="adSidebar">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            {% block breadcrumb %}
+              <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+                <span>Admin</span>
+                <span class="adh-breadcrumb-sep">/</span>
+                <span class="adh-breadcrumb-current">Dashboard</span>
+              </nav>
+            {% endblock %}
+          </div>
+
+          <div class="ad-search-wrap">
+            <div class="ad-search">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input type="search" class="ad-search-input" id="adGlobalSearch" placeholder="Search orders, products, sellers, users…" aria-label="Global search" />
+              <span class="ad-search-shortcut" aria-hidden="true">/</span>
+            </div>
+          </div>
+
+          <div class="ad-topbar-right">
+            <button type="button" class="ad-icon-btn" id="adNotifBtn" aria-label="Notifications">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="ad-notif-dot" aria-hidden="true"></span>
+            </button>
+
+            {% comment %} <button type="button" class="ad-icon-btn" id="adThemeBtn" aria-label="Toggle theme">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+              </svg>
+            </button> {% endcomment %}
+
+            <div class="ad-topbar-divider" aria-hidden="true"></div>
+
+            <div class="ad-profile" id="adProfile">
+              <button type="button" class="ad-profile-trigger" id="adProfileTrigger" aria-haspopup="true" aria-expanded="false">
+                <span class="ad-profile-avatar" aria-hidden="true">
+                  {% if request.user.profile_image_url %}
+                    <img src="{{ request.user.profile_image_url }}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+                  {% else %}
+                    {{ request.user.username|slice:':1'|upper|default:'A' }}
+                  {% endif %}
+                </span>
+                <span class="ad-profile-info">
+                  <strong class="ad-profile-name">{{ request.user.username|default:'Admin' }}</strong>
+                  <small class="ad-profile-role">Administrator</small>
+                </span>
+                <svg class="ad-profile-caret" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              <div class="ad-profile-menu" id="adProfileMenu" role="menu">
+                <div class="ad-profile-menu-head">
+                  <strong>{{ request.user.username|default:'Admin' }}</strong>
+                  <span>{{ request.user.email|default:'admin@marketsphere.com' }}</span>
+                </div>
+
+                <a href="#" class="ad-profile-menu-item" role="menuitem">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>Profile
                 </a>
 
-                <button type="button" class="ad-collapse-btn" id="adCollapseBtn" aria-label="Collapse sidebar" aria-pressed="false">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
+                <a href="#" class="ad-profile-menu-item" role="menuitem">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+                  </svg>Settings
+                </a>
+
+                <div class="ad-profile-menu-divider"></div>
+
+                <a href="{% url 'logout' %}" class="ad-profile-menu-item is-danger" role="menuitem">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>Logout
+                </a>
+              </div>
             </div>
+          </div>
+        </header>
 
-            <nav class="ad-nav" aria-label="Admin sections" id="adNav">
-
-                <span class="ad-nav-label">General</span>
-
-                <ul class="ad-nav-list">
-                    <li class="ad-nav-item">
-                        <a href="#" class="ad-nav-link" data-page="dashboard">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="7" height="9" rx="1.5"></rect>
-                                    <rect x="14" y="3" width="7" height="5" rx="1.5"></rect>
-                                    <rect x="14" y="12" width="7" height="9" rx="1.5"></rect>
-                                    <rect x="3" y="16" width="7" height="5" rx="1.5"></rect>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">Dashboard</span>
-                            <span class="ad-nav-tooltip">Dashboard</span>
-                        </a>
-                    </li>
-
-                    <li class="ad-nav-item">
-                        <a href="#" class="ad-nav-link" data-page="users">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="10" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">User Management</span>
-                            <span class="ad-nav-tooltip">User Management</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <span class="ad-nav-label">Catalog &amp; Sales</span>
-
-                <ul class="ad-nav-list">
-                    <!-- ============ EXPANDABLE GROUP: CATALOG ============ -->
-                    <li class="ad-nav-item ad-nav-group" data-group="catalog">
-                        <button type="button" class="ad-nav-link ad-nav-group-trigger" data-page="catalog" aria-expanded="false">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
-                                    <path d="M3 8v8l9 5 9-5V8"></path>
-                                    <path d="M12 13v8"></path>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">Catalog</span>
-                            <svg class="ad-nav-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                            <span class="ad-nav-tooltip">Catalog</span>
-                        </button>
-
-                        <div class="ad-nav-submenu">
-                            <a href="#" class="ad-nav-sublink" data-subpage="products">Product Management</a>
-                            <a href="#" class="ad-nav-sublink" data-subpage="categories">Categories</a>
-                            <a href="#" class="ad-nav-sublink" data-subpage="brands">Brands</a>
-                        </div>
-                    </li>
-
-                    <!-- ============ EXPANDABLE GROUP: SALES ============ -->
-                    <li class="ad-nav-item ad-nav-group" data-group="sales">
-                        <button type="button" class="ad-nav-link ad-nav-group-trigger" data-page="sales" aria-expanded="false">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
-                                    <path d="M14 2v5h5"></path>
-                                    <path d="M8.5 13h7"></path>
-                                    <path d="M8.5 17h5"></path>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">Sales</span>
-                            <svg class="ad-nav-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                            <span class="ad-nav-tooltip">Sales</span>
-                        </button>
-
-                        <div class="ad-nav-submenu">
-                            <a href="#" class="ad-nav-sublink" data-subpage="orders">Orders</a>
-                            <a href="#" class="ad-nav-sublink" data-subpage="payments">Payments</a>
-                        </div>
-                    </li>
-                </ul>
-
-                <span class="ad-nav-label">Insights</span>
-
-                <ul class="ad-nav-list">
-                    <li class="ad-nav-item">
-                        <a href="#" class="ad-nav-link" data-page="analytics">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 3v18h18"></path>
-                                    <path d="M7 15l4-5 3 3 5-7"></path>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">Analytics</span>
-                            <span class="ad-nav-tooltip">Analytics</span>
-                        </a>
-                    </li>
-
-                    <li class="ad-nav-item">
-                        <a href="#" class="ad-nav-link" data-page="notifications">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">Notifications</span>
-                            <span class="ad-nav-badge-dot" aria-hidden="true"></span>
-                            <span class="ad-nav-tooltip">Notifications</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <span class="ad-nav-label">Configuration</span>
-
-                <ul class="ad-nav-list">
-                    <li class="ad-nav-item">
-                        <a href="#" class="ad-nav-link" data-page="settings">
-                            <span class="ad-nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
-                                </svg>
-                            </span>
-                            <span class="ad-nav-text">Settings</span>
-                            <span class="ad-nav-tooltip">Settings</span>
-                        </a>
-                    </li>
-                </ul>
-
-            </nav>
-        </aside>
-
-        <!-- ================= MAIN COLUMN ================= -->
-        <div class="ad-main">
-
-            <!-- ================= TOPBAR ================= -->
-            <header class="ad-topbar">
-                <div class="ad-topbar-left">
-                    <button type="button" class="ad-hamburger" id="adHamburgerBtn" aria-label="Open sidebar" aria-expanded="false" aria-controls="adSidebar">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-
-                    <button type="button" class="ad-desktop-toggle" id="adDesktopToggleBtn" aria-label="Toggle sidebar">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-
-                    <h1 class="ad-page-title" id="adPageTitle">
-                        {% block page_title %}Dashboard{% endblock %}
-                    </h1>
-                </div>
-
-                <div class="ad-search-wrap">
-                    <div class="ad-search">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.35-4.35"></path>
-                        </svg>
-                        <input type="search" class="ad-search-input" id="adGlobalSearch" placeholder="Search orders, products, sellers, users…" aria-label="Global search" />
-                        <span class="ad-search-shortcut" aria-hidden="true">/</span>
-                    </div>
-                </div>
-
-                <div class="ad-topbar-right">
-                    <button type="button" class="ad-icon-btn" id="adNotifBtn" aria-label="Notifications">
-                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span class="ad-notif-dot" aria-hidden="true"></span>
-                    </button>
-
-                    <button type="button" class="ad-icon-btn" id="adThemeBtn" aria-label="Toggle theme">
-                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="4"></circle>
-                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-                        </svg>
-                    </button>
-
-                    <div class="ad-topbar-divider" aria-hidden="true"></div>
-
-                    <div class="ad-profile" id="adProfile">
-                        <button type="button" class="ad-profile-trigger" id="adProfileTrigger" aria-haspopup="true" aria-expanded="false">
-                            <span class="ad-profile-avatar" aria-hidden="true">
-                                {% if request.user.profile_image_url %}
-                                    <img src="{{ request.user.profile_image_url }}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
-                                {% else %}
-                                    {{ request.user.username|slice:':1'|upper|default:'A' }}
-                                {% endif %}
-                            </span>
-                            <span class="ad-profile-info">
-                                <strong class="ad-profile-name">{{ request.user.username|default:'Admin' }}</strong>
-                                <small class="ad-profile-role">Administrator</small>
-                            </span>
-                            <svg class="ad-profile-caret" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-
-                        <div class="ad-profile-menu" id="adProfileMenu" role="menu">
-                            <div class="ad-profile-menu-head">
-                                <strong>{{ request.user.username|default:'Admin' }}</strong>
-                                <span>{{ request.user.email|default:'admin@marketsphere.com' }}</span>
-                            </div>
-
-                            <a href="#" class="ad-profile-menu-item" role="menuitem">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>Profile
-                            </a>
-
-                            <a href="#" class="ad-profile-menu-item" role="menuitem">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
-                                </svg>Settings
-                            </a>
-
-                            <div class="ad-profile-menu-divider"></div>
-
-                            <a href="{% url 'logout' %}" class="ad-profile-menu-item is-danger" role="menuitem">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- ================= FLASH MESSAGE AREA ================= -->
-            <div class="ad-flash-area" id="adFlashArea" aria-live="polite">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="ad-flash ad-flash-{{ message.tags|default:'info' }}">
-                            <span class="ad-flash-text">{{ message }}</span>
-                            <button type="button" class="ad-flash-close" aria-label="Dismiss">&times;</button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-            <!-- ================= MAIN CONTENT ================= -->
-            <main class="ad-content">
-                {% block content %}{% endblock %}
-            </main>
+        <!-- ================= FLASH MESSAGE AREA ================= -->
+        <div class="ad-flash-area" id="adFlashArea" aria-live="polite">
+          {% if messages %}
+            {% for message in messages %}
+              <div class="ad-flash ad-flash-{{ message.tags|default:'info' }}">
+                <span class="ad-flash-text">{{ message }}</span>
+                <button type="button" class="ad-flash-close" aria-label="Dismiss">&times;</button>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
+
+        <!-- ================= MAIN CONTENT ================= -->
+        <main class="ad-content">
+          {% block content %}
+          {% endblock %}
+        </main>
+      </div>
     </div>
 
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+    {% endblock %}
     <script src="{% static '/js/admin_base_dashboard.js' %}"></script>
-</body>
+  </body>
 </html>

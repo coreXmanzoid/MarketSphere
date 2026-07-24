@@ -91,6 +91,7 @@ TEMPLATES = [
                 "products.context_processors.categories",
                 "accounts.context_processors.seller_context",
                 "seller_dashboard.context_processors.seller_dashboard",
+                "admin_panel.context_processors.admin_context",
             ],
         },
     },

@@ -65,7 +65,8 @@ class Product(TimeStampedModel):
         PUBLISHED = "published", "Published"
         HIDDEN = "hidden", "Hidden"
         OUT_OF_STOCK = "out_of_stock", "Out of Stock"
-        ARCHIVED = "archived", "Archived"
+        ARCHIVED = "archived", "Archived",
+        PENDING = "pending", "Pending",
 
     category = models.ForeignKey(
         Category, on_delete=models.PROTECT, related_name="products",  null=True, blank=True

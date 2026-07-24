@@ -1,0 +1,1011 @@
+/* =========================================================
+   MARKETSPHERE — ADMIN DASHBOARD HOME (admin_dashboard.css)
+   Page-scoped styles for admin_panel/templates/admin_dashboard.html.
+   Builds on the admin shell's tokens (static/css/admin_base_dashboard.css
+   — --ad-* variables) rather than redefining the palette, and prefixes
+   every class `adh-` (Admin Dashboard Home) to avoid collisions with
+   the shell and future admin pages, matching the project's page-scoped
+   prefix convention (dh-, pm-, so-, sod-, sa-, pf- ...).
+
+   Sections:
+     1. Page Wrapper / Reveal Animation
+     2. Welcome Header
+     3. Buttons
+     4. Statistics Cards
+     5. Split Grid / Shared Card
+     6. Sales Overview Chart Placeholder
+     7. Marketplace Activity Feed
+     8. Quick Actions
+     9. Pending Tasks
+    10. Top Selling Categories
+    11. Recent Orders Table
+    12. Badges
+    13. System Status
+    14. Responsive
+   ========================================================= */
+
+/* ================= 1. PAGE WRAPPER / REVEAL ================= */
+
+.adh-page {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+
+.adh-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s var(--ad-ease), transform 0.5s var(--ad-ease);
+    background-color: #F7F1DE !important;
+}
+
+.adh-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ================= 2. WELCOME HEADER ================= */
+.adh-welcome {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    background-color: var(--ad-surface-raised);
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    padding: 26px 28px;
+    box-shadow: var(--ad-shadow-sm);
+}
+
+.adh-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ad-caption-color);
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.adh-breadcrumb-sep {
+    color: var(--ad-caption-color);
+}
+
+.adh-breadcrumb-current {
+    color: var(--ad-accent);
+}
+
+.adh-welcome-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+    line-height: 1.25;
+}
+
+.adh-welcome-subtitle {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--ad-caption-color);
+}
+
+.adh-welcome-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.adh-welcome-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ad-accent-strong);
+    background-color: var(--ad-accent-soft);
+    border: 1px solid var(--ad-accent-ring);
+    padding: 8px 14px;
+    border-radius: var(--ad-radius-pill);
+    white-space: nowrap;
+}
+
+/* ================= 3. BUTTONS ================= */
+.adh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: var(--ad-radius-control);
+    border: 1.5px solid transparent;
+    white-space: nowrap;
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast),
+        border-color var(--ad-transition-fast), transform var(--ad-transition-fast), box-shadow var(--ad-transition-fast);
+}
+
+.adh-btn:active {
+    transform: scale(0.97);
+}
+
+.adh-btn-primary {
+    background-color: var(--ad-accent);
+    color: #241A17;
+    border-color: var(--ad-accent);
+}
+
+.adh-btn-primary:hover {
+    background-color: var(--ad-accent-strong);
+    border-color: var(--ad-accent-strong);
+    color: #F4EEE3;
+}
+
+.adh-btn-secondary {
+    background-color: transparent;
+    color: var(--ad-heading-color);
+    border-color: var(--ad-border);
+}
+
+.adh-btn-secondary:hover {
+    border-color: var(--ad-accent);
+    color: var(--ad-accent-strong);
+}
+
+/* ================= 4. STATISTICS CARDS ================= */
+.adh-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    background-color: #F7F1DE;
+}
+
+.adh-stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background-color: var(--ad-surface-raised);
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    padding: 20px;
+    box-shadow: var(--ad-shadow-sm);
+    transition: transform var(--ad-transition-fast), box-shadow var(--ad-transition-fast), border-color var(--ad-transition-fast);
+}
+
+.adh-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ad-shadow-md);
+    border-color: var(--ad-accent-ring);
+}
+
+.adh-stat-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.adh-stat-icon-accent {
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+}
+
+.adh-stat-icon-info {
+    background-color: rgba(107, 116, 88, 0.16);
+    color: #6b7458;
+}
+
+.adh-stat-icon-success {
+    background-color: rgba(79, 125, 84, 0.14);
+    color: var(--ad-success);
+}
+
+.adh-stat-icon-warning {
+    background-color: rgba(183, 128, 43, 0.15);
+    color: var(--ad-warning);
+}
+
+.adh-stat-icon-danger {
+    background-color: rgba(181, 75, 59, 0.13);
+    color: var(--ad-danger);
+}
+
+.adh-stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.adh-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ad-caption-color);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.adh-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+    line-height: 1.2;
+}
+
+.adh-stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.adh-trend-up {
+    color: var(--ad-success);
+}
+
+.adh-trend-down {
+    color: var(--ad-danger);
+}
+
+.adh-trend-neutral {
+    color: var(--ad-caption-color);
+}
+
+/* ================= 5. SPLIT GRID / SHARED CARD ================= */
+.adh-split-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 22px;
+    align-items: start;
+}
+
+.adh-card {
+    background-color: var(--ad-surface-raised);
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    padding: 22px;
+    box-shadow: var(--ad-shadow-sm);
+}
+
+.adh-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.adh-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+}
+
+.adh-card-subtitle {
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--ad-caption-color);
+}
+
+.adh-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ad-accent);
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: color var(--ad-transition-fast), gap var(--ad-transition-fast);
+}
+
+.adh-link:hover {
+    color: var(--ad-accent-strong);
+    gap: 8px;
+}
+
+.adh-select-wrap {
+    position: relative;
+}
+
+.adh-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--ad-caption-color);
+    pointer-events: none;
+}
+
+.adh-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--ad-bg);
+    color: var(--ad-body-color);
+    border: 1.5px solid var(--ad-border);
+    border-radius: var(--ad-radius-control);
+    padding: 8px 30px 8px 13px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color var(--ad-transition-fast), box-shadow var(--ad-transition-fast);
+}
+
+.adh-select:focus {
+    outline: none;
+    border-color: var(--ad-accent);
+    box-shadow: 0 0 0 3px var(--ad-accent-ring);
+}
+
+/* ================= 6. SALES OVERVIEW CHART PLACEHOLDER ================= */
+.adh-chart-placeholder {
+    position: relative;
+    background-color: var(--ad-bg);
+    border: 1px dashed var(--ad-border);
+    border-radius: var(--ad-radius-control);
+    padding: 24px 20px 18px;
+    overflow: hidden;
+    height: 300px;
+
+}
+
+.adh-chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 160px;
+}
+
+.adh-chart-bars span {
+    flex: 1;
+    height: var(--adh-bar-h, 40%);
+    border-radius: 6px 6px 2px 2px;
+    background: linear-gradient(180deg, var(--ad-accent) 0%, rgba(192, 138, 78, 0.3) 100%);
+    opacity: 0.6;
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.7s var(--ad-ease), opacity 0.7s var(--ad-ease);
+}
+
+.adh-chart-placeholder.is-animated .adh-chart-bars span {
+    transform: scaleY(1);
+    opacity: 0.6;
+}
+
+.adh-chart-caption {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ad-caption-color);
+}
+
+.adh-chart-caption svg {
+    color: var(--ad-accent);
+}
+
+/* ================= 7. MARKETPLACE ACTIVITY FEED ================= */
+.adh-activity-feed {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 4px;
+    height: 300px;
+}
+
+.adh-activity-feed::-webkit-scrollbar {
+    width: 6px;
+}
+
+.adh-activity-feed::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.adh-activity-feed::-webkit-scrollbar-thumb {
+    background: var(--ad-border);
+    border-radius: 10px;
+}
+
+.adh-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 8px;
+    border-radius: 8px;
+    transition: background-color var(--ad-transition-fast);
+}
+
+.adh-activity-item:hover {
+    background-color: var(--ad-bg);
+}
+
+.adh-activity-icon {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.adh-activity-icon-success {
+    background-color: rgba(79, 125, 84, 0.14);
+    color: var(--ad-success);
+}
+
+.adh-activity-icon-warning {
+    background-color: rgba(183, 128, 43, 0.15);
+    color: var(--ad-warning);
+}
+
+.adh-activity-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.adh-activity-body strong {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+}
+
+.adh-activity-body span {
+    font-size: 12.5px;
+    color: var(--ad-body-color);
+}
+
+.adh-activity-body small {
+    font-size: 11.5px;
+    color: var(--ad-caption-color);
+    margin-top: 2px;
+}
+
+/* ================= 8. QUICK ACTIONS ================= */
+.adh-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.adh-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.adh-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+}
+
+.adh-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.adh-action-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    background-color: var(--ad-surface-raised);
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    padding: 18px;
+    box-shadow: var(--ad-shadow-sm);
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--ad-transition-fast), box-shadow var(--ad-transition-fast), border-color var(--ad-transition-fast), background-color var(--ad-transition-fast);
+}
+
+.adh-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ad-shadow-md);
+    border-color: var(--ad-accent);
+    background-color: var(--ad-accent-soft);
+}
+
+.adh-action-icon {
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast);
+}
+
+.adh-action-card:hover .adh-action-icon {
+    background-color: var(--ad-accent);
+    color: #241A17;
+}
+
+.adh-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.adh-action-text strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+}
+
+.adh-action-text small {
+    font-size: 12px;
+    color: var(--ad-caption-color);
+}
+
+/* Ripple element injected by JS */
+.adh-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(192, 138, 78, 0.35);
+    transform: scale(0);
+    pointer-events: none;
+}
+
+/* ================= 9. PENDING TASKS ================= */
+.adh-task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    height: 270px;
+}
+
+.adh-task-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 8px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--ad-transition-fast);
+}
+
+.adh-task-btn:hover {
+    background-color: var(--ad-bg);
+}
+
+.adh-task-icon {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.adh-task-title {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ad-heading-color);
+}
+
+.adh-task-badge {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+    padding: 3px 10px;
+    border-radius: var(--ad-radius-pill);
+}
+
+.adh-task-badge-danger {
+    background-color: rgba(181, 75, 59, 0.13);
+    color: var(--ad-danger);
+}
+
+.adh-task-arrow {
+    flex: 0 0 auto;
+    color: var(--ad-caption-color);
+    transition: transform var(--ad-transition-fast), color var(--ad-transition-fast);
+}
+
+.adh-task-btn:hover .adh-task-arrow {
+    transform: translateX(3px);
+    color: var(--ad-accent);
+}
+
+/* ================= 10. TOP SELLING CATEGORIES ================= */
+.adh-category-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    height: 270px;
+}
+
+.adh-category-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 8px;
+}
+
+.adh-category-icon {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.adh-category-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.adh-category-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ad-heading-color);
+}
+
+.adh-category-bar {
+    display: block;
+    width: 100%;
+    height: 6px;
+    border-radius: var(--ad-radius-pill);
+    background-color: var(--ad-bg);
+    overflow: hidden;
+}
+
+.adh-category-bar-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    border-radius: var(--ad-radius-pill);
+    background: linear-gradient(90deg, var(--ad-accent), var(--ad-accent-strong));
+    transition: width 0.8s var(--ad-ease);
+}
+
+.adh-category-bar-fill.is-filled {
+    width: var(--adh-pct, 0%);
+}
+
+.adh-category-count {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ad-caption-color);
+    white-space: nowrap;
+}
+
+/* ================= 11. RECENT ORDERS TABLE ================= */
+.adh-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.adh-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.adh-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ad-caption-color);
+    padding: 0 12px 10px;
+    border-bottom: 1px solid var(--ad-border);
+    white-space: nowrap;
+}
+
+.adh-table tbody td {
+    padding: 13px 12px;
+    border-bottom: 1px solid var(--ad-border);
+    color: var(--ad-body-color);
+    white-space: nowrap;
+}
+
+.adh-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.adh-table tbody tr {
+    transition: background-color var(--ad-transition-fast);
+}
+
+.adh-table tbody tr:hover {
+    background-color: var(--ad-bg);
+}
+
+.adh-order-number {
+    font-weight: 700;
+    color: var(--ad-heading-color);
+}
+
+.adh-table-action {
+    text-align: right;
+}
+
+.adh-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    color: var(--ad-caption-color);
+    cursor: pointer;
+    transition: background-color var(--ad-transition-fast), color var(--ad-transition-fast);
+}
+
+.adh-icon-link:hover {
+    background-color: var(--ad-accent-soft);
+    color: var(--ad-accent-strong);
+}
+
+/* ================= 12. BADGES ================= */
+.adh-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 11px;
+    border-radius: var(--ad-radius-pill);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.adh-badge-unpaid,
+.adh-badge-pending {
+    background-color: rgba(183, 128, 43, 0.15);
+    color: var(--ad-warning);
+}
+
+.adh-badge-processing {
+    background-color: rgba(107, 116, 88, 0.18);
+    color: #6b7458;
+}
+
+.adh-badge-shipped {
+    background-color: rgba(78, 34, 15, 0.1);
+    color: #4E220F;
+}
+
+.adh-badge-paid,
+.adh-badge-delivered {
+    background-color: rgba(79, 125, 84, 0.15);
+    color: var(--ad-success);
+}
+
+.adh-badge-cancelled,
+.adh-badge-refunded {
+    background-color: rgba(181, 75, 59, 0.13);
+    color: var(--ad-danger);
+}
+
+/* ================= 13. SYSTEM STATUS ================= */
+.adh-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.adh-status-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--ad-surface-raised);
+    background-color: #F7F1DE;
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-card);
+    padding: 16px 18px;
+    box-shadow: var(--ad-shadow-sm);
+}
+
+.adh-status-dot {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px transparent;
+}
+
+.adh-status-dot-online {
+    background-color: var(--ad-success);
+    box-shadow: 0 0 0 4px rgba(79, 125, 84, 0.16);
+}
+
+.adh-status-dot-warning {
+    background-color: var(--ad-warning);
+    box-shadow: 0 0 0 4px rgba(183, 128, 43, 0.16);
+}
+
+.adh-status-dot-offline {
+    background-color: var(--ad-danger);
+    box-shadow: 0 0 0 4px rgba(181, 75, 59, 0.16);
+}
+
+.adh-status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.adh-status-text strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ad-heading-color);
+}
+
+.adh-status-text small {
+    font-size: 11.5px;
+    color: var(--ad-caption-color);
+}
+
+/* ================= 14. RESPONSIVE ================= */
+@media (max-width: 1299.98px) {
+    .adh-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .adh-quick-actions {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1099.98px) {
+    .adh-split-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 899.98px) {
+    .adh-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .adh-quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .adh-status-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .adh-welcome {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .adh-welcome-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .adh-welcome-title {
+        font-size: 22px;
+    }
+
+    .adh-card {
+        padding: 18px;
+    }
+
+    /* Recent orders table collapses into stacked rows */
+    .adh-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .adh-table,
+    .adh-table tbody,
+    .adh-table tr,
+    .adh-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .adh-table tr {
+        padding: 12px 4px;
+        border-bottom: 1px solid var(--ad-border);
+    }
+
+    .adh-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 5px 4px;
+        border-bottom: none;
+        white-space: normal;
+        text-align: right;
+    }
+
+    .adh-table td[data-label]::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--ad-caption-color);
+        margin-right: 12px;
+        text-align: left;
+    }
+
+    .adh-table td[data-label=""]::before {
+        content: none;
+    }
+
+    .adh-table-action {
+        justify-content: flex-end !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .adh-stats-grid,
+    .adh-quick-actions,
+    .adh-status-grid {
+        grid-template-columns: 1fr;
+    }
+}

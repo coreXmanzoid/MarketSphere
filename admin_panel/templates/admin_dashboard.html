@@ -1,1 +1,701 @@
-{% include "admin_base_dashboard.html" %}
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Dashboard
+{% endblock %}
+{% block active_page %}
+  dashboard
+{% endblock %}
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">Dashboard</span>
+  </nav>
+{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <div class="adh-page" id="adhPage">
+    <!-- ================= 1. WELCOME HEADER ================= -->
+    <header class="adh-welcome adh-reveal">
+      <div class="adh-welcome-text">
+        <h1 class="adh-welcome-title">Welcome back, {{ request.user.username|default:'Admin' }}</h1>
+        <p class="adh-welcome-subtitle">Here's what's happening across the marketplace today.</p>
+      </div>
+
+      <div class="adh-welcome-actions">
+        <span class="adh-welcome-date" id="adhCurrentDate"><!-- filled by JS --></span>
+        <button type="button" class="adh-btn adh-btn-secondary" id="adhExportBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>Export Report
+        </button>
+        <a href="{% url 'home' %}" class="adh-btn adh-btn-primary" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>View Marketplace
+        </a>
+      </div>
+    </header>
+
+    <!-- ================= 2. STATISTICS CARDS ================= -->
+    <section class="adh-stats-grid" aria-label="Marketplace statistics">
+    <div class="adh-stat-card adh-reveal">
+      <div class="adh-stat-icon adh-stat-icon-accent" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1v22"></path>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <div class="adh-stat-body">
+        <span class="adh-stat-label">Total Revenue</span>
+        <span class="adh-stat-value" data-count-to="{{ admin.total_revenue }}" data-prefix="Rs. ">Rs. {{ admin.total_revenue }}</span>
+        
+        {% if admin.revenue_increased %}
+          <span class="adh-stat-trend adh-trend-up">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        {% else %}
+          <span class="adh-stat-trend adh-trend-down">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        {% endif %}
+            {{ admin.revenue_change|floatformat:0 }}% vs last month
+          </span>
+      </div>
+    </div>
+
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+            <path d="M14 2v5h5"></path>
+            <path d="M8.5 13h7"></path>
+            <path d="M8.5 17h5"></path>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Total Orders</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.total_orders }}">{{ admin.total_orders }}</span>
+          <span class="adh-stat-trend adh-trend-up">
+            {% if admin.orders_increased %}
+            <span class="adh-stat-trend adh-trend-up">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            {% else %}
+            <span class="adh-stat-trend adh-trend-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+            {% endif %}
+            </svg>{{ admin.orders_change}}% vs last month
+          </span>
+        </div>
+      </div>
+
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+            <path d="M3 8v8l9 5 9-5V8"></path>
+            <path d="M12 13v8"></path>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Total Products</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.total_products}}">{{ admin.total_products }}</span>
+          <span class="adh-stat-trend adh-trend-up">
+            {% if admin.products_increased %}
+            <span class="adh-stat-trend adh-trend-up">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            {% else %}
+            <span class="adh-stat-trend adh-trend-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+            {% endif %}
+            {{ admin.products_change }}% vs last month
+          </span>
+        </div>
+      </div>
+
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l1-5h16l1 5"></path>
+            <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+            <path d="M9 21V13h6v8"></path>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Total Sellers</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.total_sellers }}">{{ admin.total_sellers }}</span>
+          <span class="adh-stat-trend adh-trend-up">
+            {% if admin.sellers_increased %}
+            <span class="adh-stat-trend adh-trend-up">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            {% else %}
+            <span class="adh-stat-trend adh-trend-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+            {% endif %}
+            {{ admin.sellers_change }}% vs last month
+          </span>
+        </div>
+      </div>
+
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="10" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Total Buyers</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.total_buyers }}">{{ admin.total_buyers }}</span>
+          <span class="adh-stat-trend adh-trend-up">
+            {% if admin.buyers_increased %}
+            <span class="adh-stat-trend adh-trend-up">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            {% else %}
+            <span class="adh-stat-trend adh-trend-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+            {% endif %}{{ admin.buyers_change }}% vs last month
+          </span>
+        </div>
+      </div>
+
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-warning" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 3"></path>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Pending Seller Applications</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.pending_sellers }}">{{ admin.pending_sellers }}</span>
+          <span class="adh-stat-trend adh-trend-neutral">Needs review</span>
+        </div>
+      </div>
+
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-warning" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Pending Product Approvals</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.pending_products }}">{{ admin.pending_products }}</span>
+          <span class="adh-stat-trend adh-trend-neutral">Needs review</span>
+        </div>
+      </div>
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Low Stock Products</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.low_stock_products }}">{{ admin.low_stock_products }}</span>
+          <span class="adh-stat-trend adh-trend-down">Restock soon</span>
+        </div>
+      </div>
+      <div class="adh-stat-card adh-reveal">
+        <div class="adh-stat-icon adh-stat-icon-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div class="adh-stat-body">
+          <span class="adh-stat-label">Today's Sales</span>
+          <span class="adh-stat-value" data-count-to="{{ admin.today_sales }}">{{ admin.today_sales }}</span>
+          {% if admin.sales_increased %}
+            <span class="adh-stat-trend adh-trend-up">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            {% else %}
+            <span class="adh-stat-trend adh-trend-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+            {% endif %}{{ admin.sales_change }}% vs last yesterday
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3 & 4. SALES OVERVIEW + ACTIVITY ================= -->
+    <section class="adh-split-grid" aria-label="Sales overview and marketplace activity">
+      <!-- ============ SALES OVERVIEW ============ -->
+      <div class="adh-card adh-reveal">
+        <div class="adh-card-head">
+          <div>
+            <h2 class="adh-card-title">Sales Overview</h2>
+            <p class="adh-card-subtitle">Revenue trend across the marketplace</p>
+          </div>
+
+          <div class="adh-select-wrap">
+            <select id="adhRangeSelect" class="adh-select" aria-label="Select time range">
+              <option value="today">Today</option>
+              <option value="7d" selected>7 Days</option>
+              <option value="30d">30 Days</option>
+              <option value="12m">12 Months</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="adh-chart-placeholder" id="adhChartPlaceholder" aria-hidden="true">
+          <div class="adh-chart-bars">
+            <span style="--adh-bar-h: 32%;"></span>
+            <span style="--adh-bar-h: 48%;"></span>
+            <span style="--adh-bar-h: 40%;"></span>
+            <span style="--adh-bar-h: 63%;"></span>
+            <span style="--adh-bar-h: 55%;"></span>
+            <span style="--adh-bar-h: 74%;"></span>
+            <span style="--adh-bar-h: 68%;"></span>
+            <span style="--adh-bar-h: 85%;"></span>
+            <span style="--adh-bar-h: 77%;"></span>
+            <span style="--adh-bar-h: 92%;"></span>
+            <span style="--adh-bar-h: 81%;"></span>
+            <span style="--adh-bar-h: 100%;"></span>
+          </div>
+          <div class="adh-chart-caption">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"></path>
+              <path d="M7 15l4-5 3 3 5-7"></path>
+            </svg>
+            <span>Revenue chart — connects to live data soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ MARKETPLACE ACTIVITY ============ -->
+      <div class="adh-card adh-reveal">
+        <div class="adh-card-head">
+          <div>
+            <h2 class="adh-card-title">Marketplace Activity</h2>
+            <p class="adh-card-subtitle">Latest events across the platform</p>
+          </div>
+        </div>
+
+        <ul class="adh-activity-feed" id="adhActivityFeed">
+          <li class="adh-activity-item">
+            <span class="adh-activity-icon adh-activity-icon-success" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+                <circle cx="10" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <span class="adh-activity-body">
+              <strong>New seller registered</strong>
+              <span>Urban Threads Co. submitted a seller application.</span>
+              <small>2 minutes ago</small>
+            </span>
+          </li>
+          <li class="adh-activity-item">
+            <span class="adh-activity-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </span>
+            <span class="adh-activity-body">
+              <strong>Product approved</strong>
+              <span>"Wireless Over-Ear Headphones" is now live.</span>
+              <small>18 minutes ago</small>
+            </span>
+          </li>
+          <li class="adh-activity-item">
+            <span class="adh-activity-icon adh-activity-icon-success" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+                <path d="M14 2v5h5"></path>
+              </svg>
+            </span>
+            <span class="adh-activity-body">
+              <strong>Order completed</strong>
+              <span>Order #MS-748213 was delivered successfully.</span>
+              <small>34 minutes ago</small>
+            </span>
+          </li>
+          <li class="adh-activity-item">
+            <span class="adh-activity-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M4 4h16v4H4z"></path>
+                <path d="M4 12h10v4H4z"></path>
+              </svg>
+            </span>
+            <span class="adh-activity-body">
+              <strong>New category created</strong>
+              <span>"Smart Home" was added to the catalog.</span>
+              <small>1 hour ago</small>
+            </span>
+          </li>
+          <li class="adh-activity-item">
+            <span class="adh-activity-icon adh-activity-icon-success" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 1v22"></path>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </span>
+            <span class="adh-activity-body">
+              <strong>Payment received</strong>
+              <span>Rs. 12,450 settled for order #MS-748099.</span>
+              <small>2 hours ago</small>
+            </span>
+          </li>
+          <li class="adh-activity-item">
+            <span class="adh-activity-icon adh-activity-icon-warning" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+            </span>
+            <span class="adh-activity-body">
+              <strong>Refund requested</strong>
+              <span>Customer requested a refund for order #MS-747820.</span>
+              <small>3 hours ago</small>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= 5. QUICK ACTIONS ================= -->
+    <section class="adh-section adh-reveal" aria-label="Quick actions">
+      <div class="adh-section-head">
+        <h2 class="adh-section-title">Quick Actions</h2>
+      </div>
+
+      <div class="adh-quick-actions">
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+              <circle cx="10" cy="7" r="4"></circle>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Manage Sellers</strong><small>Review, verify or suspend sellers</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+              <path d="M3 8v8l9 5 9-5V8"></path>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Manage Products</strong><small>Approve, edit or remove listings</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16v4H4z"></path>
+              <path d="M4 12h10v4H4z"></path>
+              <path d="M4 20h6v0H4z"></path>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Manage Categories</strong><small>Organize the product catalog</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path>
+              <circle cx="7.5" cy="7.5" r="1.5"></circle>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Manage Brands</strong><small>Add or edit marketplace brands</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+              <path d="M14 2v5h5"></path>
+              <path d="M8.5 13h7"></path>
+              <path d="M8.5 17h5"></path>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>View Orders</strong><small>Track fulfilment across the platform</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>View Payments</strong><small>Monitor transactions & payouts</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Send Notification</strong><small>Broadcast an announcement</small></span>
+        </button>
+
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Review Applications</strong><small>Approve or Reject Sellers</small></span>
+        </button>
+        <button type="button" class="adh-action-card">
+          <span class="adh-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+            </svg>
+          </span>
+          <span class="adh-action-text"><strong>Marketplace Settings</strong><small>Configure platform-wide options</small></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= 6 & 8. PENDING TASKS + TOP CATEGORIES ================= -->
+    <section class="adh-split-grid" aria-label="Pending tasks and top categories">
+      <!-- ============ PENDING TASKS ============ -->
+      <div class="adh-card adh-reveal">
+        <div class="adh-card-head">
+          <div>
+            <h2 class="adh-card-title">Pending Tasks</h2>
+            <p class="adh-card-subtitle">Items that need your attention</p>
+          </div>
+        </div>
+
+        <ul class="adh-task-list">
+          <li class="adh-task-row">
+            <button type="button" class="adh-task-btn">
+              <span class="adh-task-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="10" cy="7" r="4"></circle>
+                </svg>
+              </span>
+              <span class="adh-task-title">Seller Applications</span>
+              <span class="adh-task-badge">{{ admin.pending_sellers }}</span>
+              <svg class="adh-task-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"></path>
+              </svg>
+            </button>
+          </li>
+          <li class="adh-task-row">
+            <button type="button" class="adh-task-btn">
+              <span class="adh-task-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                  <path d="M3 8v8l9 5 9-5V8"></path>
+                </svg>
+              </span>
+              <span class="adh-task-title">Product Approvals</span>
+              <span class="adh-task-badge">{{ admin.pending_products }}</span>
+              <svg class="adh-task-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"></path>
+              </svg>
+            </button>
+          </li>
+          <li class="adh-task-row">
+            <button type="button" class="adh-task-btn">
+              <span class="adh-task-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+              </span>
+              <span class="adh-task-title">Refund Requests</span>
+              <span class="adh-task-badge adh-task-badge-danger">-</span>
+              <svg class="adh-task-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"></path>
+              </svg>
+            </button>
+          </li>
+          <li class="adh-task-row">
+            <button type="button" class="adh-task-btn">
+              <span class="adh-task-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                </svg>
+              </span>
+              <span class="adh-task-title">Reported Reviews</span>
+              <span class="adh-task-badge">-</span>
+              <svg class="adh-task-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"></path>
+              </svg>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ============ TOP SELLING CATEGORIES ============ -->
+      <div class="adh-card adh-reveal">
+        <div class="adh-card-head">
+          <div>
+            <h2 class="adh-card-title">Top Selling Categories</h2>
+            <p class="adh-card-subtitle">Best performing categories this month</p>
+          </div>
+        </div>
+
+        <ul class="adh-category-list">
+          {% for category in admin.top_selling_categories %}
+          <li class="adh-category-row">
+            <span class="adh-category-icon" aria-hidden="true">
+              <i class="{{ category.icon }}"></i>
+            </span>
+            <span class="adh-category-info">
+              <span class="adh-category-name">{{ category.name }}</span>
+              <span class="adh-category-bar"><span class="adh-category-bar-fill" style="--adh-pct: {{ category.progress }}%;"></span></span>
+            </span>
+            <span class="adh-category-count">{{ category.sold }} sold</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= 7. RECENT ORDERS ================= -->
+    <section class="adh-card adh-reveal" aria-label="Recent orders">
+      <div class="adh-card-head">
+        <div>
+          <h2 class="adh-card-title">Recent Orders</h2>
+          <p class="adh-card-subtitle">The latest orders placed across the marketplace</p>
+        </div>
+        <a href="#" class="adh-link">
+          View All<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"></path>
+            <path d="M13 6l6 6-6 6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="adh-table-wrap">
+        <table class="adh-table" id="adhOrdersTable">
+          <thead>
+            <tr>
+              <th scope="col">Order ID</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Seller</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Payment</th>
+              <th scope="col">Status</th>
+              <th scope="col">Date</th>
+              <th scope="col">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in admin.latest_orders %}
+            <tr>
+              <td data-label="Order ID">
+                <span class="adh-order-number">#MS-{{ order.order_number|slice:6 }}</span>
+              </td>
+              <td data-label="Customer">{{ order.user.first_name }} {{ order.user.last_name }}</td>
+              <td data-label="Seller">
+                  {% for seller_order in order.seller_orders.all|slice:":2" %}
+                      {{ seller_order.seller.store_name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                  {% if order.seller_orders.count > 2 %}
+                      +{{ order.seller_orders.count|add:"-2" }} more
+                  {% endif %}
+              </td>
+              <td data-label="Amount">Rs. {{ order.total|floatformat:0 }}</td>
+              <td data-label="Payment">
+                <span class="adh-badge adh-badge-{{ order.payment_status }}">{{ order.payment_status }}</span>
+              </td>
+              <td data-label="Status">
+                <span class="adh-badge adh-badge-{{ order.overall_status }}">{{ order.overall_status }}</span>
+              </td>
+              <td data-label="Date">{{ order.created_at|date:"N j, Y" }}</td>
+              <td data-label="" class="adh-table-action">
+                <button type="button" class="adh-icon-link" aria-label="View order #MS-748099">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 9. SYSTEM STATUS ================= -->
+    <section class="adh-status-grid adh-reveal" aria-label="System status">
+      <div class="adh-status-card">
+        <span class="adh-status-dot adh-status-dot-online" aria-hidden="true"></span>
+        <span class="adh-status-text">
+          <strong>Database</strong>
+          <small>Operational</small>
+        </span>
+      </div>
+      <div class="adh-status-card">
+        <span class="adh-status-dot adh-status-dot-online" aria-hidden="true"></span>
+        <span class="adh-status-text">
+          <strong>Media Storage</strong>
+          <small>Operational</small>
+        </span>
+      </div>
+      <div class="adh-status-card">
+        <span class="adh-status-dot adh-status-dot-online" aria-hidden="true"></span>
+        <span class="adh-status-text">
+          <strong>Email Service</strong>
+          <small>Operational</small>
+        </span>
+      </div>
+      <div class="adh-status-card">
+        <span class="adh-status-dot adh-status-dot-warning" aria-hidden="true"></span>
+        <span class="adh-status-text">
+          <strong>Background Jobs</strong>
+          <small>Degraded performance</small>
+        </span>
+      </div>
+    </section>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/admin_dashboard.js' %}"></script>
+{% endblock %}
