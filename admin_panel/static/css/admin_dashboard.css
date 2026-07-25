@@ -70,24 +70,6 @@
     box-shadow: var(--ad-shadow-sm);
 }
 
-.adh-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--ad-caption-color);
-    font-weight: 600;
-    margin-bottom: 2px;
-}
-
-.adh-breadcrumb-sep {
-    color: var(--ad-caption-color);
-}
-
-.adh-breadcrumb-current {
-    color: var(--ad-accent);
-}
-
 .adh-welcome-title {
     font-size: 26px;
     font-weight: 700;

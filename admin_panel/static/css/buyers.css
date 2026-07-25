@@ -1,0 +1,1222 @@
+/* ==========================================================================
+   MARKETSPHERE ADMIN — BUYER MANAGEMENT (buyers.css)
+   Page-scoped styles for admin_panel/templates/users/buyers.html.
+   Builds on the admin shell's tokens (static/css/admin_base_dashboard.css
+   — --ad-* variables) and prefixes every class `bu-` (Buyers) to avoid
+   collisions with the shell and other admin pages, matching the project's
+   page-scoped prefix convention (dh-, pm-, so-, sod-, adh- ...).
+
+   Sections:
+     1. Variables
+     2. Reset / Page Wrapper
+     3. Buttons
+     4. Header
+     5. Statistics Cards
+     6. Toolbar & Filters
+     7. Bulk Actions Bar
+     8. Dropdown (row actions)
+     9. Checkbox
+    10. Buyers Table
+    11. Badges
+    12. Empty State
+    13. Pagination
+    14. Delete Confirmation Modal
+    15. Toast
+    16. Responsive
+   ========================================================================== */
+
+/* ================= 1. VARIABLES ================= */
+.bu-page {
+    --bu-bg: var(--ad-bg, #F7F1DE);
+    --bu-surface: var(--ad-surface-raised, #F7F1DE);
+    --bu-surface-raised: var(--ad-surface-raised, #F7F1DE);
+
+    --bu-accent: var(--ad-accent, #C08A4E);
+    --bu-accent-strong: var(--ad-accent-strong, #A56B34);
+    --bu-accent-soft: var(--ad-accent-soft, rgba(192, 138, 78, 0.14));
+    --bu-accent-ring: var(--ad-accent-ring, rgba(192, 138, 78, 0.28));
+
+    --bu-success: var(--ad-success, #4f7d54);
+    --bu-success-bg: rgba(79, 125, 84, 0.13);
+
+    --bu-danger: var(--ad-danger, #b54b3b);
+    --bu-danger-bg: rgba(181, 75, 59, 0.13);
+
+    --bu-warning: var(--ad-warning, #b7802b);
+    --bu-warning-bg: rgba(183, 128, 43, 0.16);
+
+    --bu-info: #6b7458;
+    --bu-info-bg: rgba(107, 116, 88, 0.16);
+
+    --bu-muted: var(--ad-muted, #B0BA99);
+    --bu-muted-bg: rgba(176, 186, 153, 0.22);
+
+    --bu-heading: var(--ad-heading-color, #241A17);
+    --bu-body: var(--ad-body-color, #5B5142);
+    --bu-caption: var(--ad-caption-color, #948B79);
+    --bu-border: var(--ad-border, #E4DCC8);
+
+    --bu-font: var(--ad-font, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif);
+
+    --bu-shadow-sm: var(--ad-shadow-sm, 0 1px 2px rgba(36, 26, 23, 0.07));
+    --bu-shadow-md: var(--ad-shadow-md, 0 10px 26px rgba(36, 26, 23, 0.10));
+    --bu-shadow-lg: var(--ad-shadow-lg, 0 20px 50px rgba(36, 26, 23, 0.18));
+
+    --bu-radius-sm: 4px;
+    --bu-radius-md: var(--ad-radius-card, 12px);
+    --bu-radius-lg: 20px;
+    --bu-radius-pill: 999px;
+
+    --bu-ease: var(--ad-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    --bu-transition: 0.2s var(--bu-ease);
+}
+
+/* ================= 2. RESET / PAGE WRAPPER ================= */
+.bu-page,
+.bu-page *,
+.bu-page *::before,
+.bu-page *::after {
+    box-sizing: border-box;
+}
+
+.bu-page {
+    font-family: var(--bu-font);
+    color: var(--bu-body);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.bu-page button {
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+}
+
+.bu-page svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.bu-page :focus-visible {
+    outline: 2px solid var(--bu-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bu-page,
+    .bu-page * {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/* .bu-reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s var(--bu-ease), transform 0.5s var(--bu-ease);
+} */
+
+.bu-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.bu-hidden {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ================= 3. BUTTONS ================= */
+.bu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13.5px;
+    border-radius: var(--bu-radius-sm);
+    border: 1.5px solid transparent;
+    padding: 10px 18px;
+    white-space: nowrap;
+    transition: background-color var(--bu-transition), color var(--bu-transition),
+        border-color var(--bu-transition), transform var(--bu-transition), box-shadow var(--bu-transition);
+}
+
+.bu-btn:active {
+    transform: scale(0.97);
+}
+
+.bu-btn-primary {
+    background-color: var(--bu-accent);
+    color: #241A17;
+    border-color: var(--bu-accent);
+}
+
+.bu-btn-primary:hover {
+    background-color: var(--bu-accent-strong);
+    border-color: var(--bu-accent-strong);
+    color: #F4EEE3;
+}
+
+.bu-btn-secondary {
+    background-color: transparent;
+    color: var(--bu-heading);
+    border: 1.5px solid var(--bu-border);
+}
+
+.bu-btn-secondary:hover {
+    border-color: var(--bu-accent);
+    color: var(--bu-accent-strong);
+}
+
+.bu-btn-ghost {
+    background-color: transparent;
+    color: var(--bu-body);
+}
+
+.bu-btn-ghost:hover {
+    background-color: var(--bu-muted-bg);
+    color: var(--bu-heading);
+}
+
+.bu-btn-danger {
+    background-color: var(--bu-danger);
+    color: #F7F1DE;
+    border-color: var(--bu-danger);
+}
+
+.bu-btn-danger:hover {
+    background-color: #93372a;
+    border-color: #93372a;
+}
+
+.bu-btn-sm {
+    padding: 8px 14px;
+    font-size: 12.5px;
+}
+
+.bu-icon-only {
+    padding: 8px !important;
+    width: 36px;
+    height: 36px;
+}
+
+/* ================= 4. HEADER ================= */
+.bu-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background-color: var(--bu-surface-raised);
+    border: 1px solid var(--bu-border);
+    border-radius: var(--bu-radius-md);
+    padding: 24px 26px;
+    box-shadow: var(--bu-shadow-sm);
+}
+
+.bu-header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.bu-header-title {
+    font-size: 25px;
+    font-weight: 700;
+    color: var(--bu-heading);
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.bu-header-subtitle {
+    margin-top: 6px;
+    color: var(--bu-caption);
+    font-size: 13.5px;
+    max-width: 520px;
+}
+
+.bu-total-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    background-color: var(--bu-accent-soft);
+    color: var(--bu-accent-strong);
+    padding: 5px 13px;
+    border-radius: var(--bu-radius-pill);
+    white-space: nowrap;
+}
+
+.bu-total-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--bu-accent-strong);
+    display: inline-block;
+}
+
+.bu-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ================= 5. STATISTICS CARDS ================= */
+.bu-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.bu-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background-color: var(--bu-surface-raised);
+    border: 1px solid var(--bu-border);
+    border-radius: var(--bu-radius-md);
+    padding: 20px;
+    box-shadow: var(--bu-shadow-sm);
+    transition: transform var(--bu-transition), box-shadow var(--bu-transition), border-color var(--bu-transition);
+}
+
+.bu-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--bu-shadow-md);
+    border-color: var(--bu-accent-ring);
+}
+
+.bu-stat-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bu-stat-icon-accent {
+    background-color: var(--bu-accent-soft);
+    color: var(--bu-accent-strong);
+}
+
+.bu-stat-icon-success {
+    background-color: var(--bu-success-bg);
+    color: var(--bu-success);
+}
+
+.bu-stat-icon-info {
+    background-color: var(--bu-info-bg);
+    color: var(--bu-info);
+}
+
+.bu-stat-icon-danger {
+    background-color: var(--bu-danger-bg);
+    color: var(--bu-danger);
+}
+
+.bu-stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.bu-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--bu-caption);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.bu-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--bu-heading);
+    line-height: 1.2;
+}
+
+.bu-stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.bu-trend-up {
+    color: var(--bu-success);
+}
+
+.bu-trend-down {
+    color: var(--bu-danger);
+}
+
+/* ================= 6. TOOLBAR & FILTERS ================= */
+.bu-toolbar-card {
+    background-color: var(--bu-surface-raised);
+    border: 1px solid var(--bu-border);
+    border-radius: var(--bu-radius-md);
+    padding: 16px 18px;
+    box-shadow: var(--bu-shadow-sm);
+}
+
+.bu-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.bu-search {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+}
+
+.bu-search svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bu-caption);
+    pointer-events: none;
+}
+
+.bu-search-input {
+    width: 100%;
+    padding: 9px 14px 9px 38px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--bu-body);
+    border: 1.5px solid var(--bu-border);
+    border-radius: var(--bu-radius-sm);
+    background-color: var(--bu-bg);
+    transition: border-color var(--bu-transition), box-shadow var(--bu-transition), background-color var(--bu-transition);
+}
+
+.bu-search-input::placeholder {
+    color: var(--bu-caption);
+}
+
+.bu-search-input:focus {
+    outline: none;
+    background-color: var(--bu-surface-raised);
+    border-color: var(--bu-accent);
+    box-shadow: 0 0 0 3px var(--bu-accent-ring);
+}
+
+.bu-toolbar-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.bu-select-wrap {
+    position: relative;
+}
+
+.bu-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--bu-caption);
+    pointer-events: none;
+}
+
+.bu-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--bu-bg);
+    color: var(--bu-body);
+    border: 1.5px solid var(--bu-border);
+    border-radius: var(--bu-radius-sm);
+    padding: 9px 30px 9px 13px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 150px;
+    transition: border-color var(--bu-transition), box-shadow var(--bu-transition), background-color var(--bu-transition);
+}
+
+.bu-select:focus {
+    outline: none;
+    background-color: var(--bu-surface-raised);
+    border-color: var(--bu-accent);
+    box-shadow: 0 0 0 3px var(--bu-accent-ring);
+}
+
+.bu-select-sm {
+    min-width: 110px;
+    padding: 7px 26px 7px 11px;
+    font-size: 12.5px;
+}
+
+/* ================= 7. BULK ACTIONS BAR ================= */
+.bu-bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    background-color: var(--bu-accent-soft);
+    border: 1px solid var(--bu-accent-ring);
+    border-radius: var(--bu-radius-sm);
+    padding: 12px 16px;
+    margin-top: 14px;
+    animation: buFadeInUp 0.2s var(--bu-ease);
+}
+
+@keyframes buFadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bu-bulk-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--bu-accent-strong);
+}
+
+.bu-bulk-count {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.bu-bulk-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ================= 8. DROPDOWN (row actions) ================= */
+.bu-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.bu-dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    width: 200px;
+    background-color: var(--bu-surface-raised);
+    border: 1px solid var(--bu-border);
+    border-radius: var(--bu-radius-sm);
+    box-shadow: var(--bu-shadow-lg);
+    z-index: 40;
+    padding: 6px;
+    transform-origin: top right;
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+    transition: opacity 0.15s var(--bu-ease), transform 0.15s var(--bu-ease);
+}
+
+.bu-dropdown.bu-active .bu-dropdown-menu {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.bu-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bu-heading);
+    border-radius: 6px;
+    text-align: left;
+    transition: background-color var(--bu-transition);
+}
+
+.bu-dropdown-item:hover {
+    background-color: var(--bu-bg);
+}
+
+.bu-dropdown-item-danger {
+    color: var(--bu-danger);
+}
+
+.bu-dropdown-item-danger:hover {
+    background-color: var(--bu-danger-bg);
+}
+
+.bu-dropdown-divider {
+    height: 1px;
+    background-color: var(--bu-border);
+    margin: 5px 2px;
+}
+
+.bu-dropdown-trigger[aria-expanded="true"] {
+    background-color: var(--bu-accent-soft);
+    color: var(--bu-accent-strong);
+}
+
+/* ================= 9. CHECKBOX ================= */
+.bu-checkbox {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.bu-checkbox input {
+    position: absolute;
+    opacity: 0;
+    height: 0;
+    width: 0;
+}
+
+.bu-checkbox-box {
+    position: relative;
+    height: 18px;
+    width: 18px;
+    background-color: var(--bu-surface-raised);
+    border: 1.8px solid var(--bu-border);
+    border-radius: 5px;
+    display: block;
+    transition: background-color var(--bu-transition), border-color var(--bu-transition);
+}
+
+.bu-checkbox:hover input ~ .bu-checkbox-box {
+    border-color: var(--bu-accent);
+}
+
+.bu-checkbox input:checked ~ .bu-checkbox-box {
+    background-color: var(--bu-accent);
+    border-color: var(--bu-accent);
+}
+
+.bu-checkbox-box::after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+    border: solid #F7F1DE;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.bu-checkbox input:checked ~ .bu-checkbox-box::after {
+    display: block;
+}
+
+/* ================= 10. BUYERS TABLE ================= */
+.bu-table-card {
+    background-color: var(--bu-surface-raised);
+    border: 1px solid var(--bu-border);
+    border-radius: var(--bu-radius-md);
+    box-shadow: var(--bu-shadow-sm);
+    overflow: hidden;
+}
+
+.bu-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bu-accent) var(--bu-surface);
+}
+
+.bu-table-wrap::-webkit-scrollbar {
+    height: 6px;
+}
+
+.bu-table-wrap::-webkit-scrollbar-track {
+    background: var(--bu-surface);
+}
+
+.bu-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--bu-accent);
+    border-radius: 8px;
+}
+
+.bu-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.bu-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: var(--bu-bg);
+    padding: 13px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--bu-caption);
+    border-bottom: 1px solid var(--bu-border);
+    white-space: nowrap;
+}
+
+.bu-table tbody tr {
+    border-bottom: 1px solid var(--bu-border);
+    transition: background-color var(--bu-transition);
+}
+
+.bu-table tbody tr:nth-child(even) {
+    background-color: rgba(192, 138, 78, 0.025);
+}
+
+.bu-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.bu-table tbody tr:hover {
+    background-color: var(--bu-accent-soft);
+}
+
+.bu-table tbody tr.is-selected {
+    background-color: var(--bu-accent-soft);
+}
+
+.bu-table td {
+    padding: 12px 16px;
+    font-size: 13.5px;
+    vertical-align: middle;
+    color: var(--bu-body);
+}
+
+.bu-col-checkbox {
+    width: 42px;
+}
+
+.bu-col-avatar {
+    width: 54px;
+}
+
+.bu-col-actions {
+    width: 50px;
+    text-align: right;
+}
+
+.bu-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--bu-heading);
+    color: #F4EEE3;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.bu-buyer-name {
+    display: block;
+    font-weight: 700;
+    color: var(--bu-heading);
+    white-space: nowrap;
+}
+
+.bu-buyer-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--bu-success);
+    margin-top: 2px;
+}
+
+.bu-username {
+    color: var(--bu-caption);
+    font-weight: 500;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12.5px;
+}
+
+.bu-email-link {
+    color: var(--bu-accent-strong);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bu-email-link:hover {
+    text-decoration: underline;
+}
+
+.bu-contact {
+    color: var(--bu-body);
+    white-space: nowrap;
+}
+
+.bu-orders-count {
+    font-weight: 700;
+    color: var(--bu-heading);
+}
+
+.bu-total-spent {
+    font-weight: 700;
+    color: var(--bu-accent-strong);
+    white-space: nowrap;
+}
+
+.bu-date {
+    color: var(--bu-caption);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.bu-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--bu-caption);
+    transition: background-color var(--bu-transition), color var(--bu-transition);
+}
+
+.bu-icon-btn:hover {
+    background-color: var(--bu-accent-soft);
+    color: var(--bu-accent-strong);
+}
+
+/* ================= 11. BADGES ================= */
+.bu-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: var(--bu-radius-pill);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.bu-badge::before {
+    content: "";
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.bu-badge-active {
+    background-color: var(--bu-success-bg);
+    color: var(--bu-success);
+}
+.bu-badge-active::before { background-color: var(--bu-success); }
+
+.bu-badge-suspended {
+    background-color: var(--bu-warning-bg);
+    color: var(--bu-warning);
+}
+.bu-badge-suspended::before { background-color: var(--bu-warning); }
+
+.bu-badge-blocked {
+    background-color: var(--bu-danger-bg);
+    color: var(--bu-danger);
+}
+.bu-badge-blocked::before { background-color: var(--bu-danger); }
+
+.bu-badge-pending {
+    background-color: var(--bu-muted-bg);
+    color: #6b7458;
+}
+.bu-badge-pending::before { background-color: #6b7458; }
+
+/* ================= 12. EMPTY STATE ================= */
+.bu-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 76px 24px;
+    text-align: center;
+}
+
+.bu-empty-illustration {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background-color: var(--bu-accent-soft);
+    color: var(--bu-accent-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.bu-empty-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--bu-heading);
+    margin: 0 0 6px;
+}
+
+.bu-empty-subtitle {
+    color: var(--bu-caption);
+    margin: 0 0 22px;
+    max-width: 340px;
+    font-size: 13.5px;
+}
+
+/* ================= 13. PAGINATION ================= */
+.bu-pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    border-top: 1px solid var(--bu-border);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.bu-pagination-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.bu-pagination-count {
+    font-size: 13px;
+    color: var(--bu-caption);
+    font-weight: 500;
+}
+
+.bu-pagination-count strong {
+    color: var(--bu-heading);
+}
+
+.bu-pagination {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.bu-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 6px;
+    border-radius: var(--bu-radius-sm);
+    border: 1px solid var(--bu-border);
+    background-color: var(--bu-surface-raised);
+    color: var(--bu-heading);
+    font-size: 13px;
+    font-weight: 600;
+    transition: border-color var(--bu-transition), color var(--bu-transition), background-color var(--bu-transition);
+}
+
+.bu-page-btn:hover:not(:disabled) {
+    border-color: var(--bu-accent);
+    color: var(--bu-accent-strong);
+    background-color: var(--bu-accent-soft);
+}
+
+.bu-page-btn.is-active {
+    background-color: var(--bu-accent);
+    color: #241A17;
+    border-color: var(--bu-accent);
+}
+
+.bu-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.bu-page-ellipsis {
+    color: var(--bu-caption);
+    padding: 0 4px;
+}
+
+/* ================= 14. DELETE CONFIRMATION MODAL ================= */
+.bu-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(33, 27, 34, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+    padding: 20px;
+}
+
+.bu-modal {
+    background-color: var(--bu-surface-raised);
+    border-radius: var(--bu-radius-lg);
+    padding: 30px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--bu-shadow-lg);
+    text-align: center;
+    animation: buScaleIn 0.25s var(--bu-ease);
+}
+
+@keyframes buScaleIn {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.bu-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--bu-danger-bg);
+    color: var(--bu-danger);
+    margin-bottom: 18px;
+}
+
+.bu-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--bu-heading);
+}
+
+.bu-modal-text {
+    font-size: 13.5px;
+    color: var(--bu-caption);
+    line-height: 1.55;
+    margin: 0 0 22px;
+}
+
+.bu-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.bu-modal-actions .bu-btn {
+    flex: 1;
+}
+
+/* ================= 15. TOAST ================= */
+.bu-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 340px;
+}
+
+.bu-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--bu-surface-raised);
+    border: 1px solid var(--bu-border);
+    border-left: 4px solid var(--bu-accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-shadow: var(--bu-shadow-md);
+    font-size: 13.5px;
+    color: var(--bu-heading);
+    animation: buToastIn 0.25s ease;
+}
+
+.bu-toast.bu-toast-success { border-left-color: var(--bu-success); }
+.bu-toast.bu-toast-error { border-left-color: var(--bu-danger); }
+.bu-toast.bu-toast-info { border-left-color: var(--bu-accent); }
+
+.bu-toast.is-leaving {
+    animation: buToastOut 0.22s ease forwards;
+}
+
+@keyframes buToastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes buToastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+/* ================= 16. RESPONSIVE ================= */
+@media (max-width: 1199.98px) {
+    .bu-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .bu-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bu-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bu-toolbar-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .bu-select-wrap,
+    .bu-select {
+        width: 100%;
+    }
+
+    .bu-toolbar-filters .bu-btn {
+        grid-column: span 1;
+        width: 100%;
+    }
+
+    .bu-icon-only {
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .bu-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bu-toolbar-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .bu-header-actions {
+        width: 100%;
+    }
+
+    .bu-header-actions .bu-btn {
+        flex: 1;
+    }
+
+    /* Buyer rows become management cards on mobile */
+    .bu-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .bu-table,
+    .bu-table tbody,
+    .bu-table tr,
+    .bu-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .bu-table tbody tr {
+        position: relative;
+        padding: 44px 14px 12px;
+        border-bottom: 1px solid var(--bu-border);
+    }
+
+    .bu-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: none;
+        white-space: normal;
+        text-align: right;
+    }
+
+    .bu-table td[data-label]::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--bu-caption);
+        margin-right: 12px;
+        text-align: left;
+    }
+
+    .bu-table td[data-label=""]::before {
+        content: none;
+    }
+
+    .bu-col-checkbox {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
+    .bu-col-avatar {
+        position: absolute;
+        top: 8px;
+        left: 40px;
+    }
+
+    .bu-col-actions {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+    }
+
+    .bu-pagination-bar {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .bu-pagination-left {
+        justify-content: space-between;
+    }
+
+    .bu-pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}

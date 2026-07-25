@@ -1,0 +1,1260 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  User Management
+{% endblock %}
+
+{% block active_page %}
+  users
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">User Management</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/overview.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <div class="adu-page" id="aduPage">
+    <!-- ================= 1. PAGE HEADER ================= -->
+    <header class="adu-header adu-reveal">
+      <div class="adu-header-text">
+        <span class="adu-header-eyebrow"><i class="adu-eyebrow-dot"></i> Accounts &amp; Access</span>
+        <h1 class="adu-header-title">User Management</h1>
+        <p class="adu-header-subtitle">Manage buyers, sellers, administrators, and marketplace accounts.</p>
+      </div>
+
+      <div class="adu-header-actions">
+        <button type="button" class="adu-btn adu-btn-secondary" id="aduAddAdminBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>Add Admin
+        </button>
+
+        <button type="button" class="adu-btn adu-btn-primary" id="aduExportBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>Export Users
+        </button>
+
+        <div class="adu-dropdown" id="aduMoreDropdown">
+          <button type="button" class="adu-btn adu-btn-icon-only" id="aduMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More options">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="1.2"></circle>
+              <circle cx="12" cy="12" r="1.2"></circle>
+              <circle cx="12" cy="19" r="1.2"></circle>
+            </svg>
+          </button>
+
+          <div class="adu-dropdown-menu" role="menu">
+            <button type="button" class="adu-dropdown-item" role="menuitem" data-toast="Verification queue isn&#8217;t available yet.">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 12l2 2 4-4"></path>
+                <circle cx="12" cy="12" r="9"></circle>
+              </svg>Verification Queue
+            </button>
+            <button type="button" class="adu-dropdown-item" role="menuitem" data-toast="Bulk import isn&#8217;t available yet.">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>Bulk Import
+            </button>
+            <div class="adu-dropdown-divider" role="separator"></div>
+            <button type="button" class="adu-dropdown-item is-danger" role="menuitem" data-toast="Suspend accounts isn&#8217;t available yet.">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+              </svg>Suspend Accounts
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= 2. USER SUMMARY METRICS ================= -->
+    <section class="adu-metrics-grid" aria-label="User summary metrics">
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="10" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Total Users</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.total_users }}">{{ admin.total_users }}</span>
+          {% if admin.users_increased %}
+            <span class="adu-metric-trend adu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.users_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="adu-metric-trend adu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.users_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 18 2"></path>
+            <path d="M20 22H4a2 2 0 0 1-2-2v-1a8 8 0 0 1 16 0v1a2 2 0 0 1-2 2Z"></path>
+            <circle cx="12" cy="9" r="4"></circle>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Total Buyers</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.total_buyers }}">{{ admin.total_buyers }}</span>
+          <span class="adu-metric-trend adu-trend-up">
+            {% if admin.buyers_increased %}
+              <span class="adu-metric-trend adu-trend-up">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>{{ admin.buyers_change }}% vs last month
+              </span>
+            {% else %}
+              <span class="adu-metric-trend adu-trend-down">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>{{ admin.buyers_change }}% vs last month
+              </span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l1-5h16l1 5"></path>
+            <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+            <path d="M9 21V13h6v8"></path>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Verified Sellers</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.total_verified_sellers }}">{{ admin.total_verified_sellers }}</span>
+          {% if admin.verified_sellers_increased %}
+            <span class="adu-metric-trend adu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.verified_sellers_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="adu-metric-trend adu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.verified_sellers_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-warning" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 3"></path>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Pending Applications</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.pending_sellers }}">{{ admin.pending_sellers }}</span>
+          <span class="adu-metric-trend adu-trend-neutral">Needs review</span>
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Admin Users</span>
+          <span class="adu-metric-value" data-count-to="-">-</span>
+          <span class="adu-metric-trend adu-trend-neutral">- added this month</span>
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Suspended Accounts</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.total_suspended_accounts }}">{{ admin.total_suspended_accounts }}</span>
+          {% if admin.suspended_increased %}
+            <span class="adu-metric-trend adu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.suspended_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="adu-metric-trend adu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.suspended_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <line x1="19" y1="8" x2="19" y2="14"></line>
+            <line x1="22" y1="11" x2="16" y2="11"></line>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">New Users Today</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.new_users_today }}">{{ admin.new_users_today }}</span>
+          {% if admin.new_users_increased %}
+            <span class="adu-metric-trend adu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.new_users_change }}% vs yesterday
+            </span>
+          {% else %}
+            <span class="adu-metric-trend adu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.new_users_change }}% vs yesterday
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"></path>
+            <path d="M7 15l4-5 3 3 5-7"></path>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">User Growth (30d)</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.user_growth_30d }}">{{ admin.user_growth_30d }}%</span>
+          <span class="adu-metric-trend adu-trend-up">{{ admin.growth_trend }} trend</span>
+        </div>
+      </div>
+
+      <div class="adu-metric-card adu-reveal">
+        <div class="adu-metric-icon adu-metric-icon-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"></path>
+            <path d="M7 15l4-5 3 3 5-7"></path>
+          </svg>
+        </div>
+        <div class="adu-metric-body">
+          <span class="adu-metric-label">Active Users (30d)</span>
+          <span class="adu-metric-value" data-count-to="{{ admin.active_users_30d }}">{{ admin.active_users_30d }}%</span>
+          {% if admin.active_users_change %}
+            <span class="adu-metric-trend adu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.active_users_trend }} trend
+            </span>
+          {% else %}
+            <span class="adu-metric-trend adu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.active_users_trend }} trend
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. USER TYPE OVERVIEW ================= -->
+    <section class="adu-section adu-reveal" aria-label="User type overview">
+      <div class="adu-section-head">
+        <div>
+          <h2 class="adu-section-title">User Type Overview</h2>
+          <p class="adu-section-subtitle">Jump into any account category to manage it directly.</p>
+        </div>
+      </div>
+
+      <div class="adu-type-grid">
+        <button type="button" class="adu-type-card" data-toast="Opening Buyers management&#8230;">
+          <div class="adu-type-card-top">
+            <span class="adu-type-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2 18 2"></path>
+                <path d="M20 22H4a2 2 0 0 1-2-2v-1a8 8 0 0 1 16 0v1a2 2 0 0 1-2 2Z"></path>
+                <circle cx="12" cy="9" r="4"></circle>
+              </svg>
+            </span>
+            <span class="adu-type-status adu-type-status-{{ admin.buyer_health_color }}">{{ admin.buyer_health_status }}</span>
+          </div>
+          <div>
+            <h3 class="adu-type-name">Buyers</h3>
+            <p class="adu-type-desc">Customers shopping across the marketplace.</p>
+          </div>
+          <div class="adu-type-count">
+            {{ admin.total_buyers }} <span>total accounts</span>
+          </div>
+          <div class="adu-type-progress">
+            <span class="adu-type-progress-fill" style="--adu-pct: {{ admin.buyers_progress }}%;"></span>
+          </div>
+          <div class="adu-type-meta">
+            <span>{{ admin.active_buyers_percentage }}% active</span><span>Updated {{ admin.last_updated|timesince }} ago</span>
+          </div>
+          <span class="adu-btn adu-btn-primary adu-btn-sm adu-type-cta">Manage Buyers</span>
+        </button>
+
+        <button type="button" class="adu-type-card" data-toast="Opening Sellers management&#8230;">
+          <div class="adu-type-card-top">
+            <span class="adu-type-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l1-5h16l1 5"></path>
+                <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+                <path d="M9 21V13h6v8"></path>
+              </svg>
+            </span>
+            <span class="adu-type-status adu-type-status-{{ admin.seller_health_color }}">{{ admin.seller_health_status }}</span>
+          </div>
+          <div>
+            <h3 class="adu-type-name">Sellers</h3>
+            <p class="adu-type-desc">Verified stores currently listing products.</p>
+          </div>
+          <div class="adu-type-count">
+            {{ admin.total_sellers }} <span>verified stores</span>
+          </div>
+          <div class="adu-type-progress">
+            <span class="adu-type-progress-fill" style="--adu-pct: {{ admin.seller_progress }}%;"></span>
+          </div>
+          <div class="adu-type-meta">
+            <span>{{ admin.sellers_active_percentage }}% active this week</span><span>Updated {{ admin.last_updated|timesince }} ago</span>
+          </div>
+          <span class="adu-btn adu-btn-primary adu-btn-sm">Manage Sellers</span>
+        </button>
+
+        <button type="button" class="adu-type-card" data-toast="Opening Seller Applications&#8230;">
+          <div class="adu-type-card-top">
+            <span class="adu-type-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                <path d="M14 2v6h6"></path>
+                <path d="M9 15h6"></path>
+                <path d="M9 11h6"></path>
+              </svg>
+            </span>
+            <span class="adu-type-status adu-type-status-{{ admin.seller_application_color }}">{{ admin.seller_application_status }}</span>
+          </div>
+          <div>
+            <h3 class="adu-type-name">Seller Applications</h3>
+            <p class="adu-type-desc">Pending requests waiting on approval.</p>
+          </div>
+          <div class="adu-type-count">
+            {{ admin.pending_sellers }} <span>awaiting review</span>
+          </div>
+          <div class="adu-type-progress">
+            <span class="adu-type-progress-fill" style="--adu-pct: {{ admin.seller_review_progress }}%;"></span>
+          </div>
+          <div class="adu-type-meta">
+            <span>{{ admin.reviewed_percentage }}% reviewed today</span><span>Updated Just now</span>
+          </div>
+          <span class="adu-btn adu-btn-primary adu-btn-sm adu-type-cta">Review Applications</span>
+        </button>
+
+        <button type="button" class="adu-type-card" data-toast="Opening Administrators management&#8230;" disabled>
+          <div class="adu-type-card-top">
+            <span class="adu-type-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+              </svg>
+            </span>
+            <span class="adu-type-status adu-type-status-critical">conect backend</span>
+          </div>
+          <div>
+            <h3 class="adu-type-name">Administrators</h3>
+            <p class="adu-type-desc">Team members with platform access.</p>
+          </div>
+          <div class="adu-type-count">
+            -- <span>active admins</span>
+          </div>
+          <div class="adu-type-progress">
+            <span class="adu-type-progress-fill" style="--adu-pct: 100%;"></span>
+          </div>
+          <div class="adu-type-meta">
+            <span>-% active</span><span>Updated 1h ago</span>
+          </div>
+          <span class="adu-btn adu-btn-primary adu-btn-sm adu-type-cta">Manage Admins</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= 4. QUICK ACTIONS ================= -->
+    <section class="adu-section adu-reveal" aria-label="Quick actions">
+      <div class="adu-section-head">
+        <h2 class="adu-section-title">Quick Actions</h2>
+      </div>
+
+      <div class="adu-quick-actions">
+        <button type="button" class="adu-action-card" data-toast="Opening Buyers management&#8230;">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2 18 2"></path>
+              <path d="M20 22H4a2 2 0 0 1-2-2v-1a8 8 0 0 1 16 0v1a2 2 0 0 1-2 2Z"></path>
+              <circle cx="12" cy="9" r="4"></circle>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Manage Buyers</strong><small>View and edit customer accounts</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Opening Sellers management&#8230;">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l1-5h16l1 5"></path>
+              <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
+              <path d="M9 21V13h6v8"></path>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Manage Sellers</strong><small>Review, verify or suspend stores</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Opening the review queue&#8230;">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 12l2 2 4-4"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Review Applications</strong><small>47 seller applications pending</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Opening Administrators management&#8230;">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Manage Admins</strong><small>Roles, permissions and access</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Opening the new admin form&#8230;">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Create Admin</strong><small>Invite a new team member</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" id="aduExportActionBtn">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Export User Data</strong><small>Download a CSV snapshot</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Suspend accounts isn&#8217;t available yet.">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Suspend Accounts</strong><small>Restrict access temporarily</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Opening the verification queue&#8230;">
+          <span class="adu-action-icon">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path>
+              <circle cx="7.5" cy="7.5" r="1.5"></circle>
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>Verification Queue</strong><small>Identity checks awaiting action</small></span>
+        </button>
+
+        <button type="button" class="adu-action-card" data-toast="Opening the verification queue&#8230;">
+          <span class="adu-action-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-flag" viewBox="0 0 16 16">
+              <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001M14 1.221c-.22.078-.48.167-.766.255-.81.252-1.872.523-2.734.523-.886 0-1.592-.286-2.203-.534l-.008-.003C7.662 1.21 7.139 1 6.5 1c-.669 0-1.606.229-2.415.478A21 21 0 0 0 3 1.845v6.433c.22-.078.48-.167.766-.255C4.576 7.77 5.638 7.5 6.5 7.5c.847 0 1.548.28 2.158.525l.028.01C9.32 8.29 9.86 8.5 10.5 8.5c.668 0 1.606-.229 2.415-.478A21 21 0 0 0 14 7.655V1.222z" />
+            </svg>
+          </span>
+          <span class="adu-action-text"><strong>View User Reports</strong><small>Here your customers voices</small></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= 5 & 6. ACTIVITY TIMELINE + STATUS DISTRIBUTION ================= -->
+    <section class="adu-split-grid" aria-label="User activity and account status">
+      <!-- ============ ACTIVITY TIMELINE ============ -->
+      <div class="adu-card adu-reveal">
+        <div class="adu-card-head">
+          <div>
+            <h2 class="adu-card-title">User Activity Timeline</h2>
+            <p class="adu-card-subtitle">Recent account events across the marketplace</p>
+          </div>
+
+          <div class="adu-filter-pills" id="aduTimelineFilters">
+            <button type="button" class="adu-filter-pill is-active" data-filter="all">All</button>
+            <button type="button" class="adu-filter-pill" data-filter="buyer">Buyers</button>
+            <button type="button" class="adu-filter-pill" data-filter="seller">Sellers</button>
+            <button type="button" class="adu-filter-pill" data-filter="admin">Admins</button>
+          </div>
+        </div>
+
+        <ul class="adu-timeline" id="aduTimeline">
+          <li class="adu-timeline-item" data-type="buyer">
+            <span class="adu-timeline-avatar">A</span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">New buyer registered</span>
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </div>
+              <p class="adu-timeline-desc">Ayesha Khan created a new buyer account via email signup.</p>
+              <span class="adu-timeline-time">2 minutes ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="seller">
+            <span class="adu-timeline-avatar adu-timeline-avatar-success is-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Seller approved</span>
+                <span class="adu-status-badge adu-status-badge-approved">Approved</span>
+              </div>
+              <p class="adu-timeline-desc">Urban Threads Co. was verified and can now list products.</p>
+              <span class="adu-timeline-time">18 minutes ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="seller">
+            <span class="adu-timeline-avatar adu-timeline-avatar-danger is-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+              </svg>
+            </span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Application rejected</span>
+                <span class="adu-status-badge adu-status-badge-rejected">Rejected</span>
+              </div>
+              <p class="adu-timeline-desc">Craftline Studio's application was rejected — incomplete documentation.</p>
+              <span class="adu-timeline-time">42 minutes ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="admin">
+            <span class="adu-timeline-avatar">S</span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Admin created</span>
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </div>
+              <p class="adu-timeline-desc">Sana Raza was added as an Administrator by Hammad Ashraf.</p>
+              <span class="adu-timeline-time">1 hour ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="buyer">
+            <span class="adu-timeline-avatar adu-timeline-avatar-warning is-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Buyer suspended</span>
+                <span class="adu-status-badge adu-status-badge-suspended">Suspended</span>
+              </div>
+              <p class="adu-timeline-desc">Bilal Ahmed's account was suspended for repeated policy violations.</p>
+              <span class="adu-timeline-time">2 hours ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="buyer">
+            <span class="adu-timeline-avatar adu-timeline-avatar-info is-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Password reset requested</span>
+                <span class="adu-status-badge adu-status-badge-pending">Pending</span>
+              </div>
+              <p class="adu-timeline-desc">Mahnoor Fatima requested a password reset link.</p>
+              <span class="adu-timeline-time">3 hours ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="seller">
+            <span class="adu-timeline-avatar adu-timeline-avatar-info is-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                <path d="M14 2v6h6"></path>
+              </svg>
+            </span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Seller verification submitted</span>
+                <span class="adu-status-badge adu-status-badge-pending">Pending</span>
+              </div>
+              <p class="adu-timeline-desc">Nova Electronics submitted business documents for review.</p>
+              <span class="adu-timeline-time">5 hours ago</span>
+            </div>
+          </li>
+
+          <li class="adu-timeline-item" data-type="admin">
+            <span class="adu-timeline-avatar">H</span>
+            <div class="adu-timeline-body">
+              <div class="adu-timeline-top">
+                <span class="adu-timeline-title">Permissions updated</span>
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </div>
+              <p class="adu-timeline-desc">Hammad Ashraf updated role permissions for the Support team.</p>
+              <span class="adu-timeline-time">Yesterday</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ============ ACCOUNT STATUS DISTRIBUTION ============ -->
+      <div class="adu-card adu-reveal">
+        <div class="adu-card-head">
+          <div>
+            <h2 class="adu-card-title">Account Status Distribution</h2>
+            <p class="adu-card-subtitle">Share of accounts in each status</p>
+          </div>
+        </div>
+
+        <div class="adu-status-list" id="aduStatusList">
+          {% for status in admin.status_distribution %}
+            <div>
+              <div class="adu-status-row-head">
+                <span>{{ status.label }}</span><span>{{ status.percentage }}%</span>
+              </div>
+              <div class="adu-status-bar">
+                <span class="adu-status-bar-fill c-{{ status.label }}" style="--adu-pct: {{ status.progress|add:1 }}%;"></span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7. GROWTH ANALYTICS ================= -->
+    <section class="adu-section adu-reveal" aria-label="Growth analytics">
+      <div class="adu-section-head">
+        <div>
+          <h2 class="adu-section-title">Growth Analytics</h2>
+          <p class="adu-section-subtitle">Registration trends and account composition</p>
+        </div>
+      </div>
+
+      <div class="adu-analytics-grid">
+        <!-- ============ WEEKLY REGISTRATIONS (line chart) ============ -->
+        <div class="adu-card">
+          <div class="adu-card-head">
+            <div>
+              <h3 class="adu-card-title">Weekly Registrations</h3>
+              <p class="adu-card-subtitle">New signups over the last 7 days</p>
+            </div>
+          </div>
+
+          <div class="adu-line-chart-wrap" id="aduLineChart">
+            <svg viewBox="0 0 560 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="adu-line-gradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#C08A4E" stop-opacity="0.32"></stop>
+                  <stop offset="100%" stop-color="#C08A4E" stop-opacity="0"></stop>
+                </linearGradient>
+              </defs>
+              <path class="adu-line-chart-area" d="M0,150 L80,130 L160,140 L240,95 L320,110 L400,60 L480,75 L560,35 L560,200 L0,200 Z"></path>
+              <path class="adu-line-chart-path" d="M0,150 L80,130 L160,140 L240,95 L320,110 L400,60 L480,75 L560,35"></path>
+              <circle class="adu-line-chart-dot" cx="0" cy="150" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="80" cy="130" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="160" cy="140" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="240" cy="95" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="320" cy="110" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="400" cy="60" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="480" cy="75" r="4"></circle>
+              <circle class="adu-line-chart-dot" cx="560" cy="35" r="4"></circle>
+            </svg>
+          </div>
+          <div class="adu-chart-legend">
+            <span><i></i> New registrations</span>
+          </div>
+        </div>
+
+        <!-- ============ BUYER VS SELLER RATIO (donut) ============ -->
+        <div class="adu-card">
+          <div class="adu-card-head">
+            <div>
+              <h3 class="adu-card-title">Buyer vs Seller Ratio</h3>
+              <p class="adu-card-subtitle">Share of total accounts</p>
+            </div>
+          </div>
+
+          <div class="adu-ratio-wrap">
+            <div class="adu-donut" id="aduDonut" style="--adu-donut-offset: {{ admin.buyers_donut_offset }}px;">
+              <svg viewBox="0 0 140 140" width="150" height="150">
+                <circle class="adu-donut-ring-bg" cx="70" cy="70" r="60"></circle>
+                <circle class="adu-donut-ring" cx="70" cy="70" r="60"></circle>
+              </svg>
+              <div class="adu-donut-center">
+                <strong>{{ admin.buyers_ppercentage }}%</strong>
+                <span>Buyers</span>
+              </div>
+            </div>
+
+            <div class="adu-ratio-legend">
+              <div class="adu-ratio-legend-item c-buyers">
+                <strong>{{ admin.total_pbuyers }}</strong>
+                <span><i></i> Buyers</span>
+              </div>
+              <div class="adu-ratio-legend-item c-sellers">
+                <strong>{{ admin.total_psellers }}</strong>
+                <span><i></i> Sellers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ MONTHLY GROWTH (bar chart) ============ -->
+        <div class="adu-card" style="grid-column: 1 / -1;">
+          <div class="adu-card-head">
+            <div>
+              <h3 class="adu-card-title">Monthly Growth</h3>
+              <p class="adu-card-subtitle">Total account growth over the past 12 months</p>
+            </div>
+          </div>
+
+          <div class="adu-bar-mini-chart" id="aduBarChart">
+            <span style="--adu-bar-h: 30%;"></span>
+            <span style="--adu-bar-h: 38%;"></span>
+            <span style="--adu-bar-h: 34%;"></span>
+            <span style="--adu-bar-h: 46%;"></span>
+            <span style="--adu-bar-h: 52%;"></span>
+            <span style="--adu-bar-h: 48%;"></span>
+            <span style="--adu-bar-h: 60%;"></span>
+            <span style="--adu-bar-h: 66%;"></span>
+            <span style="--adu-bar-h: 58%;"></span>
+            <span style="--adu-bar-h: 74%;"></span>
+            <span style="--adu-bar-h: 84%;"></span>
+            <span style="--adu-bar-h: 100%;"></span>
+          </div>
+          <div class="adu-mini-chart-caption">
+            <span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8. RECENTLY ACTIVE USERS ================= -->
+    <section class="adu-card adu-reveal" aria-label="Recently active users">
+      <div class="adu-card-head">
+        <div>
+          <h2 class="adu-card-title">Recently Active Users</h2>
+          <p class="adu-card-subtitle">The most recently active accounts across every role</p>
+        </div>
+        <a href="#" class="adu-link">
+          View All<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"></path>
+            <path d="M13 6l6 6-6 6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="adu-table-toolbar">
+        <div class="adu-table-search">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input type="search" id="aduTableSearch" placeholder="Search by name, email, or role..." aria-label="Search recently active users" />
+        </div>
+      </div>
+
+      <div class="adu-table-wrap">
+        <table class="adu-table" id="aduUsersTable">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Role</th>
+              <th scope="col">Status</th>
+              <th scope="col">Last Login</th>
+              <th scope="col">Activity</th>
+              <th scope="col">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="aduUsersTableBody">
+            <tr data-search="ayesha khan buyer active">
+              <td data-label="User">
+                <div class="adu-user-cell">
+                  <span class="adu-user-avatar">A</span>
+                  <span><span class="adu-user-name">Ayesha Khan</span><span class="adu-user-email">ayesha.khan@example.com</span></span>
+                </div>
+              </td>
+              <td data-label="Role">
+                <span class="adu-role-badge">Buyer</span>
+              </td>
+              <td data-label="Status">
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </td>
+              <td data-label="Last Login">2 minutes ago</td>
+              <td data-label="Activity">
+                <span class="adu-activity-mini">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+                  </svg>3 orders this week
+                </span>
+              </td>
+              <td data-label="">
+                <button type="button" class="adu-table-action-btn" aria-label="More actions for Ayesha Khan" data-toast="Opening Ayesha Khan&#8217;s profile&#8230;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="1.2"></circle>
+                    <circle cx="12" cy="12" r="1.2"></circle>
+                    <circle cx="12" cy="19" r="1.2"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <tr data-search="urban threads co seller active">
+              <td data-label="User">
+                <div class="adu-user-cell">
+                  <span class="adu-user-avatar">U</span>
+                  <span><span class="adu-user-name">Urban Threads Co.</span><span class="adu-user-email">contact@urbanthreads.com</span></span>
+                </div>
+              </td>
+              <td data-label="Role">
+                <span class="adu-role-badge r-seller">Seller</span>
+              </td>
+              <td data-label="Status">
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </td>
+              <td data-label="Last Login">18 minutes ago</td>
+              <td data-label="Activity">
+                <span class="adu-activity-mini">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                  </svg>Listed 2 new products
+                </span>
+              </td>
+              <td data-label="">
+                <button type="button" class="adu-table-action-btn" aria-label="More actions for Urban Threads Co." data-toast="Opening Urban Threads Co.&#8217;s profile&#8230;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="1.2"></circle>
+                    <circle cx="12" cy="12" r="1.2"></circle>
+                    <circle cx="12" cy="19" r="1.2"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <tr data-search="sana raza admin active">
+              <td data-label="User">
+                <div class="adu-user-cell">
+                  <span class="adu-user-avatar">S</span>
+                  <span><span class="adu-user-name">Sana Raza</span><span class="adu-user-email">sana.raza@marketsphere.com</span></span>
+                </div>
+              </td>
+              <td data-label="Role">
+                <span class="adu-role-badge r-admin">Admin</span>
+              </td>
+              <td data-label="Status">
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </td>
+              <td data-label="Last Login">1 hour ago</td>
+              <td data-label="Activity">
+                <span class="adu-activity-mini">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4"></path>
+                    <circle cx="12" cy="12" r="9"></circle>
+                  </svg>Approved 4 sellers
+                </span>
+              </td>
+              <td data-label="">
+                <button type="button" class="adu-table-action-btn" aria-label="More actions for Sana Raza" data-toast="Opening Sana Raza&#8217;s profile&#8230;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="1.2"></circle>
+                    <circle cx="12" cy="12" r="1.2"></circle>
+                    <circle cx="12" cy="19" r="1.2"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <tr data-search="bilal ahmed buyer suspended">
+              <td data-label="User">
+                <div class="adu-user-cell">
+                  <span class="adu-user-avatar">B</span>
+                  <span><span class="adu-user-name">Bilal Ahmed</span><span class="adu-user-email">bilal.ahmed@example.com</span></span>
+                </div>
+              </td>
+              <td data-label="Role">
+                <span class="adu-role-badge">Buyer</span>
+              </td>
+              <td data-label="Status">
+                <span class="adu-status-badge adu-status-badge-suspended">Suspended</span>
+              </td>
+              <td data-label="Last Login">2 hours ago</td>
+              <td data-label="Activity">
+                <span class="adu-activity-mini">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                  </svg>Flagged for policy violation
+                </span>
+              </td>
+              <td data-label="">
+                <button type="button" class="adu-table-action-btn" aria-label="More actions for Bilal Ahmed" data-toast="Opening Bilal Ahmed&#8217;s profile&#8230;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="1.2"></circle>
+                    <circle cx="12" cy="12" r="1.2"></circle>
+                    <circle cx="12" cy="19" r="1.2"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <tr data-search="nova electronics seller pending">
+              <td data-label="User">
+                <div class="adu-user-cell">
+                  <span class="adu-user-avatar">N</span>
+                  <span><span class="adu-user-name">Nova Electronics</span><span class="adu-user-email">hello@novaelectronics.com</span></span>
+                </div>
+              </td>
+              <td data-label="Role">
+                <span class="adu-role-badge r-seller">Seller</span>
+              </td>
+              <td data-label="Status">
+                <span class="adu-status-badge adu-status-badge-pending">Pending</span>
+              </td>
+              <td data-label="Last Login">5 hours ago</td>
+              <td data-label="Activity">
+                <span class="adu-activity-mini">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                  </svg>Submitted documents
+                </span>
+              </td>
+              <td data-label="">
+                <button type="button" class="adu-table-action-btn" aria-label="More actions for Nova Electronics" data-toast="Opening Nova Electronics&#8217;s profile&#8230;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="1.2"></circle>
+                    <circle cx="12" cy="12" r="1.2"></circle>
+                    <circle cx="12" cy="19" r="1.2"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <tr data-search="mahnoor fatima buyer active">
+              <td data-label="User">
+                <div class="adu-user-cell">
+                  <span class="adu-user-avatar">M</span>
+                  <span><span class="adu-user-name">Mahnoor Fatima</span><span class="adu-user-email">mahnoor.f@example.com</span></span>
+                </div>
+              </td>
+              <td data-label="Role">
+                <span class="adu-role-badge">Buyer</span>
+              </td>
+              <td data-label="Status">
+                <span class="adu-status-badge adu-status-badge-active">Active</span>
+              </td>
+              <td data-label="Last Login">3 hours ago</td>
+              <td data-label="Activity">
+                <span class="adu-activity-mini">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  </svg>Requested password reset
+                </span>
+              </td>
+              <td data-label="">
+                <button type="button" class="adu-table-action-btn" aria-label="More actions for Mahnoor Fatima" data-toast="Opening Mahnoor Fatima&#8217;s profile&#8230;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="1.2"></circle>
+                    <circle cx="12" cy="12" r="1.2"></circle>
+                    <circle cx="12" cy="19" r="1.2"></circle>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="adu-table-empty" id="aduTableEmpty">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <p>No users match your search.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 9. SYSTEM INSIGHTS ================= -->
+    <section class="adu-section adu-reveal" aria-label="System insights">
+      <div class="adu-section-head">
+        <div>
+          <h2 class="adu-section-title">System Insights</h2>
+          <p class="adu-section-subtitle">Health signals worth keeping an eye on</p>
+        </div>
+      </div>
+
+      <div class="adu-insights-grid">
+        <div class="adu-insight-card">
+          <div class="adu-insight-head">
+              <span class="adu-insight-title">Seller Approval Rate</span>
+
+              <span class="adu-insight-dot {% if admin.seller_approval_rate >= 90 %}d-success{% elif admin.seller_approval_rate >= 75 %}d-warning{% else %}d-danger{% endif %}" aria-hidden="true"></span>
+          </div>
+
+          <span class="adu-insight-value">
+              {{ admin.seller_approval_rate }}%
+          </span>
+
+          <div class="adu-insight-spark">
+              {% for height in admin.seller_approval_bars %}
+                  <span
+                      style="--adu-bar-h: {{ height }}%;"
+                      {% if forloop.last %}class="is-peak"{% endif %}>
+                  </span>
+              {% endfor %}
+          </div>
+
+          <p class="adu-insight-caption">
+              {{ admin.approval_caption }}
+          </p>
+        </div>
+     <div class="adu-insight-card">
+    <div class="adu-insight-head">
+        <span class="adu-insight-title">Avg. Verification Time</span>
+
+        <span class="adu-insight-dot {{ admin.verification_status }}"
+              aria-hidden="true"></span>
+    </div>
+
+    <span class="adu-insight-value">
+        {{ admin.avg_verification_time }} hrs
+    </span>
+
+    <div class="adu-insight-spark">
+        {% for height in admin.verification_time_bars %}
+            <span
+                style="--adu-bar-h: {{ height }}%;"
+                {% if forloop.last %}class="is-peak"{% endif %}>
+            </span>
+        {% endfor %}
+    </div>
+
+    <p class="adu-insight-caption">
+        {{ admin.verification_caption }}
+    </p>
+</div>
+
+       <div class="adu-insight-card">
+    <div class="adu-insight-head">
+        <span class="adu-insight-title">Active Marketplace Ratio</span>
+
+        <span class="adu-insight-dot {{ admin.marketplace_status }}"
+              aria-hidden="true"></span>
+    </div>
+
+    <span class="adu-insight-value">
+        {{ admin.active_marketplace_ratio }}%
+    </span>
+
+    <div class="adu-insight-spark">
+        {% for height in admin.active_ratio_bars %}
+            <span
+                style="--adu-bar-h: {{ height }}%;"
+                {% if forloop.last %}class="is-peak"{% endif %}>
+            </span>
+        {% endfor %}
+    </div>
+
+    <p class="adu-insight-caption">
+        {{ admin.marketplace_caption }}
+    </p>
+</div>
+        <div class="adu-insight-card">
+    <div class="adu-insight-head">
+        <span class="adu-insight-title">Fraud Alerts</span>
+        <span class="adu-insight-dot {{ admin.fraud_status }}" aria-hidden="true"></span>
+    </div>
+
+    <span class="adu-insight-value">
+        {{ admin.open_fraud_alerts }} open
+    </span>
+
+    <div class="adu-insight-spark">
+        {% for height in admin.fraud_alert_bars %}
+            <span
+                style="--adu-bar-h: {{ height }}%;"
+                {% if forloop.last %}class="is-peak"{% endif %}>
+            </span>
+        {% endfor %}
+    </div>
+
+    <p class="adu-insight-caption">
+        {{ admin.fraud_caption }}
+    </p>
+</div>
+      <div class="adu-insight-card">
+    <div class="adu-insight-head">
+        <span class="adu-insight-title">Inactive Users (90d)</span>
+        <span class="adu-insight-dot {{ admin.inactive_status }}" aria-hidden="true"></span>
+    </div>
+
+    <span class="adu-insight-value">
+        {{ admin.inactive_users_90d }}
+    </span>
+
+    <div class="adu-insight-spark">
+        {% for height in admin.inactive_user_bars %}
+            <span
+                style="--adu-bar-h: {{ height }}%;"
+                {% if forloop.last %}class="is-peak"{% endif %}>
+            </span>
+        {% endfor %}
+    </div>
+
+    <p class="adu-insight-caption">
+        {{ admin.inactive_caption }}
+    </p>
+</div>
+<div class="adu-insight-card">
+    <div class="adu-insight-head">
+        <span class="adu-insight-title">Security Recommendations</span>
+        <span class="adu-insight-dot {{ admin.security_status }}" aria-hidden="true"></span>
+    </div>
+
+    <span class="adu-insight-value">
+        {{ admin.pending_recommendations }} pending
+    </span>
+
+    <div class="adu-insight-spark">
+        {% for height in admin.security_bars %}
+            <span
+                style="--adu-bar-h: {{ height }}%;"
+                {% if forloop.last %}class="is-peak"{% endif %}>
+            </span>
+        {% endfor %}
+    </div>
+
+    <p class="adu-insight-caption">
+        {{ admin.security_caption }}
+    </p>
+</div>
+      </div>
+    </section>
+
+    <!-- ================= 10. FOOTER PANEL ================= -->
+    <section class="adu-section adu-reveal" aria-label="Administrative tips">
+      <div class="adu-section-head">
+        <h2 class="adu-section-title">Administrative Tips</h2>
+      </div>
+
+      <div class="adu-tips-grid">
+        <div class="adu-tip-card">
+          <span class="adu-tip-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"></path>
+              <path d="M7 15l4-5 3 3 5-7"></path>
+            </svg>
+          </span>
+          <div class="adu-tip-text">
+            <strong>Marketplace Health</strong>
+            <p>Review pending seller applications daily to keep approval times under 24 hours.</p>
+          </div>
+        </div>
+
+        <div class="adu-tip-card">
+          <span class="adu-tip-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+              <path d="M14 2v6h6"></path>
+              <path d="M9 15h6"></path>
+              <path d="M9 11h6"></path>
+            </svg>
+          </span>
+          <div class="adu-tip-text">
+            <strong>Documentation</strong>
+            <p>
+              Need a refresher on account statuses and roles? <a href="#">Read the admin guide</a>.
+            </p>
+          </div>
+        </div>
+
+        <div class="adu-tip-card">
+          <span class="adu-tip-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+          <div class="adu-tip-text">
+            <strong>Security</strong>
+            <p>Review admin accounts and permissions regularly to ensure only authorized staff has access.</p>
+          </div>
+        </div>
+
+        <div class="adu-tip-card">
+          <span class="adu-tip-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </span>
+          <div class="adu-tip-text">
+            <strong>Need Help?</strong>
+            <p>
+              Reach the platform team any time. <a href="#">Contact Support</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="adu-toast-container" id="aduToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/overview.js' %}"></script>
+{% endblock %}
