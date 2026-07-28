@@ -1,0 +1,17 @@
+Hi {{ user.first_name|default:user.username }},
+
+{{ message }}
+
+------------------------------------------------------------
+
+If you have any questions or require assistance, simply reply to this email or contact the MarketSphere support team.
+
+Kind regards,
+
+MarketSphere Administration
+
+------------------------------------------------------------
+
+© 2026 MarketSphere
+
+This email was sent by a MarketSphere administrator regarding your account or marketplace activity.

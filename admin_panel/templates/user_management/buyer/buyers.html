@@ -25,7 +25,6 @@
 
 {% block content %}
   <div class="bu-page" id="buPage">
-
     <!-- ================= 1. PAGE HEADER ================= -->
     <header class="bu-header bu-reveal">
       <div class="bu-header-text">
@@ -33,7 +32,7 @@
           <h1 class="bu-header-title">Buyers</h1>
           <span class="bu-total-badge" id="buTotalBadge">
             <span class="bu-total-badge-dot" aria-hidden="true"></span>
-            <!-- Placeholder value; will render buyer count from Django -->2,348 Total Buyers
+            <!-- Placeholder value; will render buyer count from Django -->{{ admin.total_buyers }} Total Buyers
           </span>
         </div>
         <p class="bu-header-subtitle">View, search, and manage every customer account on MarketSphere.</p>
@@ -70,12 +69,20 @@
         <div class="bu-stat-body">
           <span class="bu-stat-label">Total Buyers</span>
           <!-- Placeholder value; will render User.objects count from Django -->
-          <span class="bu-stat-value" data-count-to="2348">2,348</span>
-          <span class="bu-stat-trend bu-trend-up">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>8.2% vs last month
-          </span>
+          <span class="bu-stat-value" data-count-to="{{ admin.total_buyers }}">{{ admin.total_buyers }}</span>
+          {% if admin.buyers_increased %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.buyers_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.buyers_change }}% vs last month
+            </span>
+          {% endif %}
         </div>
       </div>
 
@@ -88,12 +95,20 @@
         <div class="bu-stat-body">
           <span class="bu-stat-label">Active Buyers</span>
           <!-- Placeholder value; will render active-status count from Django -->
-          <span class="bu-stat-value" data-count-to="2109">2,109</span>
-          <span class="bu-stat-trend bu-trend-up">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>3.1% vs last month
-          </span>
+          <span class="bu-stat-value" data-count-to="{{ admin.active_buyers }}">{{ admin.active_buyers }}</span>
+          {% if admin.active_users_change %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.active_buyers_percentage }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.active_buyers_percentage }}% vs last month
+            </span>
+          {% endif %}
         </div>
       </div>
 
@@ -111,12 +126,20 @@
         <div class="bu-stat-body">
           <span class="bu-stat-label">New This Month</span>
           <!-- Placeholder value; will render current-month join count from Django -->
-          <span class="bu-stat-value" data-count-to="164">164</span>
-          <span class="bu-stat-trend bu-trend-up">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>12% vs last month
-          </span>
+          <span class="bu-stat-value" data-count-to="{{ admin.active_users_30d }}">{{ admin.active_users_30d }}</span>
+          {% if admin.active_users_change %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.active_users_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.active_users_change }}% vs last month
+            </span>
+          {% endif %}
         </div>
       </div>
 
@@ -130,12 +153,20 @@
         <div class="bu-stat-body">
           <span class="bu-stat-label">Suspended Buyers</span>
           <!-- Placeholder value; will render suspended-status count from Django -->
-          <span class="bu-stat-value" data-count-to="27">27</span>
-          <span class="bu-stat-trend bu-trend-down">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>2 fewer than last month
-          </span>
+          <span class="bu-stat-value" data-count-to="{{ admin.total_suspended_accounts }}">{{ admin.total_suspended_accounts }}</span>
+          {% if admin.suspended_increased %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.suspended_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.suspended_change }}% vs last month
+            </span>
+          {% endif %}
         </div>
       </div>
     </section>
@@ -238,7 +269,9 @@
                   <span class="bu-checkbox-box"></span>
                 </label>
               </th>
-              <th scope="col" class="bu-col-avatar"><span class="sr-only">Avatar</span></th>
+              <th scope="col" class="bu-col-avatar">
+                <span class="sr-only">Avatar</span>
+              </th>
               <th scope="col">Buyer</th>
               <th scope="col">Username</th>
               <th scope="col">Email</th>
@@ -247,18 +280,19 @@
               <th scope="col">Total Spent</th>
               <th scope="col">Last Login</th>
               <th scope="col">Joined</th>
-              <th scope="col">Status</th>
-              <th scope="col" class="bu-col-actions"><span class="sr-only">Actions</span></th>
+              <th scope="col" class="bu-col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
 
           <tbody id="buBuyersTableBody">
             <!-- ================= BUYER ROWS ================= -->
-            <!-- Rows will be rendered here by Django from the User/buyer queryset.
-                 Placeholder data below is for frontend preview only. -->
+            <!--    Rows will be rendered here by Django from the User/buyer queryset.
+                 Placeholder data below is for frontend preview only.    -->
 
-            {% for i in "12345678" %}
-              <tr class="bu-row" data-buyer-name="Ayesha Khan" data-buyer-username="ayesha.khan" data-buyer-email="ayesha.khan@example.com" data-status="active" data-orders="18" data-spent="184500" data-joined="2025-11-03">
+            {% for buyer in buyers %}
+              <tr class="bu-row" data-buyer-name="{{ buyer.first_name }}" data-buyer-username="{{ buyer.username }}" data-buyer-email="{{ buyer.email }}" data-status="{{ buyer.account_status }}" data-orders="{{ buyer.orders.count }}" data-spent="184500" data-joined="{{ buyer.date_joined }}">
                 <td data-label="">
                   <label class="bu-checkbox">
                     <input type="checkbox" class="bu-row-checkbox" aria-label="Select Ayesha Khan" />
@@ -267,45 +301,49 @@
                 </td>
                 <td data-label="" class="bu-col-avatar">
                   <span class="bu-avatar" aria-hidden="true">
-                    <!-- buyer.profile_image_url|default:buyer.username|slice:':1' -->AK
+                    {% if buyer.profile_image_url %}
+                      <img src="{{ buyuer.profile_image_url }}" alt="" />
+                    {% else %}
+                      {{ buyer.username|slice:':1' }}
+                    {% endif %}
                   </span>
                 </td>
-                <td data-label="Buyer">
+                <td data-label="Buyer" onclick="window.location.href='{% url "user-buyer" userId=buyer.id %}'">
                   <!-- buyer.first_name buyer.last_name -->
-                  <span class="bu-buyer-name">Ayesha Khan</span>
-                  <span class="bu-buyer-verified"><i class="bi bi-patch-check-fill"></i> Email Verified</span>
+                  <span class="bu-buyer-name">{{ buyer.first_name }} {{ buyer.last_name }}</span>
+                  {% if buyer.account_status == 'VERIFIED' %}
+                    <span class="bu-buyer-Verified"><i class="bi bi-patch-check-fill"></i> Verified</span>
+                  {% else %}
+                    <span class="bu-buyer-Unverified"><i class="bi bi-slash-circle"></i> {{ buyer.account_status }}</span>
+                  {% endif %}
                 </td>
                 <td data-label="Username">
                   <!-- buyer.username -->
-                  <span class="bu-username">@ayesha.khan</span>
+                  <span class="bu-username">@{{ buyer.username }}</span>
                 </td>
                 <td data-label="Email">
                   <!-- buyer.email -->
-                  <a href="mailto:ayesha.khan@example.com" class="bu-email-link">ayesha.khan@example.com</a>
+                  <a href="mailto:{{ buyer.email }}" class="bu-email-link">{{ buyer.email }}</a>
                 </td>
                 <td data-label="Contact">
                   <!-- buyer.contact -->
-                  <span class="bu-contact">+92 300 1234567</span>
+                  <span class="bu-contact">{{ buyer.contact }}</span>
                 </td>
                 <td data-label="Orders">
                   <!-- buyer.orders.count -->
-                  <span class="bu-orders-count">18</span>
+                  <span class="bu-orders-count">{{ buyer.orders.count }}</span>
                 </td>
                 <td data-label="Total Spent">
                   <!-- buyer.total_spent -->
-                  <span class="bu-total-spent">Rs. 184,500</span>
+                  <span class="bu-total-spent">Rs. {{ buyer.total_spent }}</span>
                 </td>
                 <td data-label="Last Login">
                   <!-- buyer.last_login|date -->
-                  <span class="bu-date">Jul 22, 2026</span>
+                  <span class="bu-date">{{ buyer.last_login|date }}</span>
                 </td>
                 <td data-label="Joined">
                   <!-- buyer.date_joined|date -->
-                  <span class="bu-date">Nov 3, 2025</span>
-                </td>
-                <td data-label="Status">
-                  <!-- buyer.account_status -->
-                  <span class="bu-badge bu-badge-active">Active</span>
+                  <span class="bu-date">{{ buyer.date_joined|date }}</span>
                 </td>
                 <td data-label="" class="bu-col-actions">
                   <div class="bu-dropdown">
@@ -316,7 +354,7 @@
                         <circle cx="12" cy="19" r="1.5"></circle>
                       </svg>
                     </button>
-                    <div class="bu-dropdown-menu" role="menu">
+                    <div class="bu-dropdown-menu" role="menu" data-user-id="{{ buyer.id }}">
                       <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="view-profile">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -352,18 +390,12 @@
                           <path d="M20 6 9 17l-5-5"></path>
                         </svg>Activate Buyer
                       </button>
-                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="block">
+                      <div class="bu-dropdown-divider" role="separator"></div>
+                      <button type="button" class="bu-dropdown-item bu-dropdown-item-danger" role="menuitem" data-row-action="block">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <circle cx="12" cy="12" r="10"></circle>
                           <path d="m4.9 4.9 14.2 14.2"></path>
                         </svg>Block Buyer
-                      </button>
-                      <div class="bu-dropdown-divider" role="separator"></div>
-                      <button type="button" class="bu-dropdown-item bu-dropdown-item-danger" role="menuitem" data-row-action="delete">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>Delete Buyer
                       </button>
                     </div>
                   </div>
@@ -441,11 +473,11 @@
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
       </div>
-      <h3 class="bu-modal-title" id="buDeleteModalTitle">Delete this buyer?</h3>
+      <h3 class="bu-modal-title" id="buDeleteModalTitle">Block this buyer?</h3>
       <p class="bu-modal-text" id="buDeleteModalText">This action cannot be undone. The buyer's account and order history will be permanently removed.</p>
       <div class="bu-modal-actions">
-        <button type="button" class="bu-btn bu-btn-secondary" id="buDeleteModalCancel">Cancel</button>
-        <button type="button" class="bu-btn bu-btn-danger" id="buDeleteModalConfirm">Yes, Delete</button>
+        <button type="button" class="bu-btn bu-btn-ghost" id="buDeleteModalCancel">Cancel</button>
+        <button type="button" class="bu-btn bu-btn-danger" id="buDeleteModalConfirm">Yes, Block</button>
       </div>
     </div>
   </div>

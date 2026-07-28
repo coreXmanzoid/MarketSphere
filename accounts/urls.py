@@ -12,6 +12,16 @@ urlpatterns = [
         views.update_seller_address,
         name="update_seller_address",
     ),
+    path(
+        "buyer/address/update/",
+        views.update_user_address,
+        name="update_user_address",
+    ),
+    path(
+        "buyer/address/delete/",
+        views.delete_user_address_view,
+        name="delete_user_address",
+    ),
     path("logout", views.logout_user, name="logout"),
     path(
         "email/resend/",

@@ -325,7 +325,7 @@
           <div class="adu-type-meta">
             <span>{{ admin.active_buyers_percentage }}% active</span><span>Updated {{ admin.last_updated|timesince }} ago</span>
           </div>
-          <span class="adu-btn adu-btn-primary adu-btn-sm adu-type-cta">Manage Buyers</span>
+          <span class="adu-btn adu-btn-primary adu-btn-sm adu-type-cta" onclick="window.location.href='{% url "user-buyers" %}'">Manage Buyers</span>
         </button>
 
         <button type="button" class="adu-type-card" data-toast="Opening Sellers management&#8230;">

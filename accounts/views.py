@@ -232,8 +232,69 @@ def save_user_address(request):
         }
     )
 
+import json
 
 
+
+
+@login_required
+def update_user_address(request):
+    try:
+        data = json.loads(request.body)
+
+        services.update_user_address(request.user, data)
+
+        return JsonResponse({
+            "success": True,
+            "message": "Address updated successfully."
+        })
+
+    except ValueError as e:
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        }, status=400)
+
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "message": "Something went wrong. Please try again."
+        }, status=500)
+
+import json
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+from .services import delete_user_address
+
+
+@login_required
+def delete_user_address_view(request):
+    try:
+        data = json.loads(request.body)
+
+        delete_user_address(request.user, data)
+
+        return JsonResponse({
+            "success": True,
+            "message": "Address deleted successfully."
+        })
+
+    except ValueError as e:
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        }, status=400)
+
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "message": "Something went wrong. Please try again."
+        }, status=500)
+
+    
 @login_required
 def update_shipping_preferences_view(request):
 

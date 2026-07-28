@@ -1,557 +1,732 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // ==========================================
-  // 1. STATE & DOM ELEMENTS
-  // ==========================================
-  const DOM = {
-    searchInput: document.getElementById("buSearchInput"),
-    statusFilter: document.getElementById("buStatusFilter"),
-    sortFilter: document.getElementById("buSortFilter"),
-    resetFiltersBtn: document.getElementById("buResetFiltersBtn"),
-    refreshBtn: document.getElementById("buRefreshBtn"),
-    emptyRefreshBtn: document.getElementById("buEmptyRefreshBtn"),
-    
-    // Table & Selection
-    table: document.getElementById("buBuyersTable"),
-    tableBody: document.getElementById("buBuyersTableBody"),
-    selectAll: document.getElementById("buSelectAll"),
-    rowCheckboxes: () => document.querySelectorAll(".bu-row-checkbox"),
-    rows: () => document.querySelectorAll("#buBuyersTableBody .bu-row"),
-    
-    // Bulk Action Bar
-    bulkBar: document.getElementById("buBulkBar"),
-    bulkCount: document.getElementById("buBulkCount"),
-    clearSelectionBtn: document.getElementById("buClearSelectionBtn"),
-    bulkActionBtns: document.querySelectorAll("[data-bulk-action]"),
-    
-    // Header & Summary
-    totalBadge: document.getElementById("buTotalBadge"),
-    emptyState: document.getElementById("buEmptyState"),
-    
-    // Pagination Elements
-    paginationNav: document.querySelector(".bu-pagination"),
-    rowsPerPageSelect: document.getElementById("buRowsPerPage"),
-    paginationCountText: document.querySelector(".bu-pagination-count"),
-    
-    // Modal & Toast
-    deleteModalOverlay: document.getElementById("buDeleteModalOverlay"),
-    deleteModalCancel: document.getElementById("buDeleteModalCancel"),
-    deleteModalConfirm: document.getElementById("buDeleteModalConfirm"),
-    toastContainer: document.getElementById("buToastContainer"),
-    
-    // Header Actions
-    exportBtn: document.getElementById("buExportBtn"),
-    addBuyerBtn: document.getElementById("buAddBuyerBtn")
-  };
+/* =========================================================================
+   MARKETSPHERE ADMIN — BUYER MANAGEMENT
+   Frontend-only interactions for admin_panel/templates/users/buyers.html.
+   No fetch(), no AJAX, no backend calls, no external libraries. Every
+   action here (search, filter, sort, bulk select, row actions, delete
+   confirmation, pagination) is a pure DOM / UI simulation until the
+   buyer-management backend (views, URLs, models) exists — matching the
+   pattern already used across the seller dashboard (see
+   seller_dashboard/static/js/products.js, orders.js).
 
-  let currentPage = 1;
-  let rowsPerPage = parseInt(DOM.rowsPerPageSelect ? DOM.rowsPerPageSelect.value : 8, 10);
-  let pendingDeleteTarget = null; // Stores target row or 'bulk' for deletion modal
+   Sections:
+     1. DOM Cache
+     2. Toast Helper
+     3. Scroll Reveal / Card Entrance
+     4. Row Dropdown Management
+     5. Checkbox Selection / Bulk Bar
+     6. Bulk Actions
+     7. Individual Row Actions
+     8. Delete Confirmation Modal
+     9. Client-Side Search / Filter / Sort
+    10. Empty State
+    11. Pagination UI
+    12. Toolbar Buttons (reset, refresh, export, add)
+    13. Button Click Feedback (ripple)
+    14. Init
+   ========================================================================= */
 
-  // ==========================================
-  // 2. TOAST NOTIFICATION SYSTEM
-  // ==========================================
-  function showToast(message, type = "info") {
-    if (!DOM.toastContainer) return;
-    
-    const toast = document.createElement("div");
-    toast.className = `bu-toast bu-toast-${type}`;
-    toast.style.cssText = `
-      padding: 12px 16px;
-      margin-top: 8px;
-      border-radius: 6px;
-      background: ${type === 'danger' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
-      color: #fff;
-      font-size: 0.875rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transition: all 0.3s ease;
-      opacity: 0;
-      transform: translateY(10px);
-    `;
-    toast.textContent = message;
+document.addEventListener('DOMContentLoaded', function () {
 
-    DOM.toastContainer.appendChild(toast);
+    /* ================= 1. DOM CACHE ================= */
+    var page = document.getElementById('buPage');
+    if (!page) return; // nothing to control on this page
 
-    // Trigger reflow for animation
-    requestAnimationFrame(() => {
-      toast.style.opacity = "1";
-      toast.style.transform = "translateY(0)";
-    });
+    var table = document.getElementById('buBuyersTable');
+    var tableBody = document.getElementById('buBuyersTableBody');
+    var selectAllCheckbox = document.getElementById('buSelectAll');
+    var bulkBar = document.getElementById('buBulkBar');
+    var bulkCount = document.getElementById('buBulkCount');
+    var clearSelectionBtn = document.getElementById('buClearSelectionBtn');
+    var emptyState = document.getElementById('buEmptyState');
+    var tableCard = document.querySelector('.bu-table-card');
 
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transform = "translateY(-10px)";
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
+    var searchInput = document.getElementById('buSearchInput');
+    var statusFilter = document.getElementById('buStatusFilter');
+    var sortFilter = document.getElementById('buSortFilter');
+    var resetFiltersBtn = document.getElementById('buResetFiltersBtn');
+    var refreshBtn = document.getElementById('buRefreshBtn');
+    var emptyRefreshBtn = document.getElementById('buEmptyRefreshBtn');
+    var exportBtn = document.getElementById('buExportBtn');
+    var addBuyerBtn = document.getElementById('buAddBuyerBtn');
+    var rowsPerPageSelect = document.getElementById('buRowsPerPage');
 
-  // ==========================================
-  // 3. SEARCH, FILTERING, & SORTING
-  // ==========================================
-  function getFilteredAndSortedRows() {
-    const allRows = Array.from(DOM.rows());
-    const query = DOM.searchInput ? DOM.searchInput.value.toLowerCase().trim() : "";
-    const selectedStatus = DOM.statusFilter ? DOM.statusFilter.value.toLowerCase() : "";
-    const selectedSort = DOM.sortFilter ? DOM.sortFilter.value : "newest";
+    var deleteModalOverlay = document.getElementById('buDeleteModalOverlay');
+    var deleteModalTitle = document.getElementById('buDeleteModalTitle');
+    var deleteModalText = document.getElementById('buDeleteModalText');
+    var deleteModalConfirm = document.getElementById('buDeleteModalConfirm');
+    var deleteModalCancel = document.getElementById('buDeleteModalCancel');
 
-    // 1. Filter
-    let filtered = allRows.filter((row) => {
-      const name = (row.dataset.buyerName || "").toLowerCase();
-      const username = (row.dataset.buyerUsername || "").toLowerCase();
-      const email = (row.dataset.buyerEmail || "").toLowerCase();
-      const status = (row.dataset.status || "").toLowerCase();
-      const rowText = row.textContent.toLowerCase();
+    var toastContainer = document.getElementById('buToastContainer');
 
-      const matchesSearch = !query || name.includes(query) || username.includes(query) || email.includes(query) || rowText.includes(query);
-      
-      let matchesStatus = true;
-      if (selectedStatus) {
-        if (selectedStatus === "email-verified") {
-          matchesStatus = row.querySelector(".bu-buyer-verified") !== null;
-        } else {
-          matchesStatus = status === selectedStatus;
-        }
-      }
+    var confirmCallback = null;
+    var rowPendingDelete = null;
 
-      return matchesSearch && matchesStatus;
-    });
+    /* ================= 2. TOAST HELPER ================= */
+    function showToast(message, type) {
+        if (!toastContainer) return;
 
-    // 2. Sort
-    filtered.sort((a, b) => {
-      switch (selectedSort) {
-        case "newest":
-        case "date-joined":
-          return new Date(b.dataset.joined || 0) - new Date(a.dataset.joined || 0);
-        case "oldest":
-          return new Date(a.dataset.joined || 0) - new Date(b.dataset.joined || 0);
-        case "most-orders":
-          return parseInt(b.dataset.orders || 0, 10) - parseInt(a.dataset.orders || 0, 10);
-        case "highest-spending":
-          return parseFloat(b.dataset.spent || 0) - parseFloat(a.dataset.spent || 0);
-        default:
-          return 0;
-      }
-    });
+        var toast = document.createElement('div');
+        toast.className = 'bu-toast bu-toast-' + (type || 'info');
+        toast.setAttribute('role', 'status');
+        toast.textContent = message;
 
-    return filtered;
-  }
+        toastContainer.appendChild(toast);
 
-  function updateTableDisplay() {
-    const allRows = Array.from(DOM.rows());
-    const visibleRows = getFilteredAndSortedRows();
-
-    // Hide all rows initially
-    allRows.forEach((row) => (row.style.display = "none"));
-
-    // Handle empty state
-    if (visibleRows.length === 0) {
-      if (DOM.emptyState) DOM.emptyState.classList.remove("bu-hidden");
-      if (DOM.table) DOM.table.style.display = "none";
-      updatePagination(0);
-      return;
+        window.setTimeout(function () {
+            toast.classList.add('is-leaving');
+            toast.addEventListener('animationend', function () {
+                toast.remove();
+            }, { once: true });
+        }, 3800);
     }
 
-    if (DOM.emptyState) DOM.emptyState.classList.add("bu-hidden");
-    if (DOM.table) DOM.table.style.display = "";
+    /* ================= 3. SCROLL REVEAL / CARD ENTRANCE ================= */
+    var revealTargets = Array.prototype.slice.call(document.querySelectorAll('.bu-reveal'));
 
-    // Paginate visible rows
-    const totalItems = visibleRows.length;
-    const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+    if ('IntersectionObserver' in window && revealTargets.length) {
+        var revealObserver = new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
 
-    if (currentPage > totalPages) currentPage = totalPages;
+                var el = entry.target;
+                var delay = Math.min(revealTargets.indexOf(el) * 45, 260);
 
-    const startIdx = (currentPage - 1) * rowsPerPage;
-    const endIdx = startIdx + rowsPerPage;
-    const pageRows = visibleRows.slice(startIdx, endIdx);
+                window.setTimeout(function () {
+                    el.classList.add('is-visible');
+                }, delay);
 
-    // Render current page rows in sorted order
-    pageRows.forEach((row) => {
-      row.style.display = "";
-      DOM.tableBody.appendChild(row); // Ensures sorted DOM order
-    });
+                obs.unobserve(el);
+            });
+        }, { threshold: 0.08 });
 
-    updatePagination(totalItems, startIdx + 1, Math.min(endIdx, totalItems));
-    updateSelectionState();
-  }
-
-  // ==========================================
-  // 4. PAGINATION CONTROLS
-  // ==========================================
-  function updatePagination(totalItems, startItem = 0, endItem = 0) {
-    if (DOM.paginationCountText) {
-      DOM.paginationCountText.innerHTML = `Showing <strong>${startItem}&ndash;${endItem}</strong> of <strong>${totalItems}</strong> Buyers`;
-    }
-
-    if (!DOM.paginationNav) return;
-
-    const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
-    DOM.paginationNav.innerHTML = "";
-
-    // Prev Button
-    const prevBtn = document.createElement("button");
-    prevBtn.type = "button";
-    prevBtn.className = "bu-page-btn";
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.setAttribute("aria-label", "Previous page");
-    prevBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>`;
-    prevBtn.addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage--;
-        updateTableDisplay();
-      }
-    });
-    DOM.paginationNav.appendChild(prevBtn);
-
-    // Page Numbers
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-        const pageBtn = document.createElement("button");
-        pageBtn.type = "button";
-        pageBtn.className = `bu-page-btn ${i === currentPage ? "is-active" : ""}`;
-        if (i === currentPage) pageBtn.setAttribute("aria-current", "page");
-        pageBtn.textContent = i;
-        pageBtn.addEventListener("click", () => {
-          currentPage = i;
-          updateTableDisplay();
+        revealTargets.forEach(function (el) {
+            revealObserver.observe(el);
         });
-        DOM.paginationNav.appendChild(pageBtn);
-      } else if (
-        (i === 2 && currentPage > 3) ||
-        (i === totalPages - 1 && currentPage < totalPages - 2)
-      ) {
-        const ellipsis = document.createElement("span");
-        ellipsis.className = "bu-page-ellipsis";
-        ellipsis.innerHTML = "&hellip;";
-        DOM.paginationNav.appendChild(ellipsis);
-      }
+    } else {
+        revealTargets.forEach(function (el) {
+            el.classList.add('is-visible');
+        });
     }
 
-    // Next Button
-    const nextBtn = document.createElement("button");
-    nextBtn.type = "button";
-    nextBtn.className = "bu-page-btn";
-    nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-    nextBtn.setAttribute("aria-label", "Next page");
-    nextBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>`;
-    nextBtn.addEventListener("click", () => {
-      if (currentPage < totalPages) {
-        currentPage++;
-        updateTableDisplay();
-      }
-    });
-    DOM.paginationNav.appendChild(nextBtn);
-  }
+    /* ================= 4. ROW DROPDOWN MANAGEMENT ================= */
+    // document.addEventListener('click', function (e) {
+    //     var trigger = e.target.closest('.bu-dropdown-trigger');
 
-  // ==========================================
-  // 5. ROW SELECTION & BULK ACTIONS
-  // ==========================================
-  function updateSelectionState() {
-    const visibleCheckboxes = Array.from(DOM.rowCheckboxes()).filter(
-      (cb) => cb.closest(".bu-row").style.display !== "none"
-    );
-    const checkedCount = visibleCheckboxes.filter((cb) => cb.checked).length;
+    //     if (trigger) {
+    //         e.preventDefault();
+    //         var dropdown = trigger.closest('.bu-dropdown');
+    //         var isActive = dropdown.classList.contains('bu-active');
 
-    if (DOM.selectAll) {
-      DOM.selectAll.checked = visibleCheckboxes.length > 0 && checkedCount === visibleCheckboxes.length;
-      DOM.selectAll.indeterminate = checkedCount > 0 && checkedCount < visibleCheckboxes.length;
-    }
+    //         closeAllDropdowns();
 
-    if (DOM.bulkBar) {
-      if (checkedCount > 0) {
-        DOM.bulkBar.classList.remove("bu-hidden");
-        if (DOM.bulkCount) DOM.bulkCount.textContent = checkedCount;
-      } else {
-        DOM.bulkBar.classList.add("bu-hidden");
-      }
-    }
-  }
+    //         if (!isActive) {
+    //             dropdown.classList.add('bu-active');
+    //             trigger.setAttribute('aria-expanded', 'true');
+    //         }
+    //     } else if (!e.target.closest('.bu-dropdown-menu')) {
+    //         closeAllDropdowns();
+    //     }
+    // });
 
-  if (DOM.selectAll) {
-    DOM.selectAll.addEventListener("change", (e) => {
-      const isChecked = e.target.checked;
-      DOM.rowCheckboxes().forEach((cb) => {
-        if (cb.closest(".bu-row").style.display !== "none") {
-          cb.checked = isChecked;
+    // document.addEventListener('keydown', function (e) {
+    //     if (e.key === 'Escape') {
+    //         closeAllDropdowns();
+    //         closeDeleteModal();
+    //     }
+    // });
+
+    // function closeAllDropdowns() {
+    //     document.querySelectorAll('.bu-dropdown.bu-active').forEach(function (dropdown) {
+    //         dropdown.classList.remove('bu-active');
+    //         var trigger = dropdown.querySelector('.bu-dropdown-trigger');
+    //         if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    //     });
+    // }
+
+    let activeMenu = null;
+    let activePlaceholder = null;
+    let activeTrigger = null;
+
+    function closeMenu() {
+
+        if (!activeMenu) return;
+
+        activeMenu.classList.remove("bu-open");
+
+        activePlaceholder.appendChild(activeMenu);
+
+        activeMenu = null;
+        activePlaceholder = null;
+        if (activeTrigger) {
+            activeTrigger.setAttribute("aria-expanded", "false");
+            activeTrigger = null;
         }
-      });
-      updateSelectionState();
-    });
-  }
-
-  if (DOM.tableBody) {
-    DOM.tableBody.addEventListener("change", (e) => {
-      if (e.target.classList.contains("bu-row-checkbox")) {
-        updateSelectionState();
-      }
-    });
-  }
-
-  if (DOM.clearSelectionBtn) {
-    DOM.clearSelectionBtn.addEventListener("click", () => {
-      DOM.rowCheckboxes().forEach((cb) => (cb.checked = false));
-      if (DOM.selectAll) DOM.selectAll.checked = false;
-      updateSelectionState();
-    });
-  }
-
-  // Handle Bulk Operations
-  DOM.bulkActionBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const action = btn.dataset.bulkAction;
-      const selectedRows = Array.from(DOM.rowCheckboxes())
-        .filter((cb) => cb.checked)
-        .map((cb) => cb.closest(".bu-row"));
-
-      if (selectedRows.length === 0) return;
-
-      if (action === "delete") {
-        pendingDeleteTarget = "bulk";
-        openDeleteModal(`Delete ${selectedRows.length} selected buyers?`);
-      } else if (action === "activate" || action === "suspend") {
-        selectedRows.forEach((row) => updateRowStatus(row, action === "activate" ? "active" : "suspended"));
-        showToast(`Successfully updated ${selectedRows.length} buyers`, "success");
-        clearSelections();
-        updateTableDisplay();
-      } else if (action === "export") {
-        exportRowsToCSV(selectedRows);
-      }
-    });
-  });
-
-  function clearSelections() {
-    DOM.rowCheckboxes().forEach((cb) => (cb.checked = false));
-    if (DOM.selectAll) DOM.selectAll.checked = false;
-    updateSelectionState();
-  }
-
-  // ==========================================
-  // 6. DROPDOWN MENUS & ROW ACTIONS
-  // ==========================================
-  document.addEventListener("click", (e) => {
-    const trigger = e.target.closest(".bu-dropdown-trigger");
-    const activeDropdown = document.querySelector(".bu-dropdown.is-open");
-
-    // Close existing dropdown if clicked outside
-    if (activeDropdown && !e.target.closest(".bu-dropdown")) {
-      activeDropdown.classList.remove("is-open");
-      const btn = activeDropdown.querySelector(".bu-dropdown-trigger");
-      if (btn) btn.setAttribute("aria-expanded", "false");
     }
 
-    // Toggle current dropdown
-    if (trigger) {
-      e.stopPropagation();
-      const parentDropdown = trigger.closest(".bu-dropdown");
-      const isExpanded = trigger.getAttribute("aria-expanded") === "true";
+    document.querySelectorAll(".bu-dropdown-trigger").forEach(button => {
 
-      if (activeDropdown && activeDropdown !== parentDropdown) {
-        activeDropdown.classList.remove("is-open");
-      }
+        button.addEventListener("click", function (e) {
 
-      parentDropdown.classList.toggle("is-open");
-      trigger.setAttribute("aria-expanded", !isExpanded);
+            e.stopPropagation();
+
+            const dropdown = this.closest(".bu-dropdown");
+            const menu = dropdown.querySelector(".bu-dropdown-menu");
+
+            if (activeMenu === menu) {
+                closeMenu();
+                return;
+            }
+
+            closeMenu();
+
+            activePlaceholder = dropdown;
+
+            document.body.appendChild(menu);
+
+            menu.classList.add("bu-open");
+
+            const rect = this.getBoundingClientRect();
+
+            const menuWidth = menu.offsetWidth;
+            const menuHeight = menu.offsetHeight;
+
+            const gap = 8;
+            const padding = 12;
+
+            // Default: menu starts from button's left edge
+            let left = rect.left;
+            let top = rect.bottom + gap;
+
+            // Not enough room on the right?
+            if (left + menuWidth > window.innerWidth - padding) {
+                left = rect.right - menuWidth;
+            }
+
+            // Still overflowing?
+            left = Math.max(
+                padding,
+                Math.min(left, window.innerWidth - menuWidth - padding)
+            );
+
+            // Open upward if needed
+            if (top + menuHeight > window.innerHeight - padding) {
+                top = rect.top - menuHeight - gap;
+            }
+
+            // Clamp to viewport
+            top = Math.max(
+                padding,
+                Math.min(top, window.innerHeight - menuHeight - padding)
+            );
+            activeTrigger = this;
+            this.setAttribute("aria-expanded", "true");
+
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+            activeMenu = menu;
+
+
+        });
+
+    });
+
+    document.addEventListener("click", closeMenu);
+
+    window.addEventListener("resize", closeMenu);
+
+    window.addEventListener("scroll", closeMenu, true);
+
+
+
+    /* ================= 5. CHECKBOX SELECTION / BULK BAR ================= */
+    function getRowCheckboxes() {
+        return Array.prototype.slice.call(tableBody.querySelectorAll('.bu-row-checkbox'));
     }
-  });
 
-  if (DOM.tableBody) {
-    DOM.tableBody.addEventListener("click", (e) => {
-      const actionItem = e.target.closest("[data-row-action]");
-      if (!actionItem) return;
-
-      const action = actionItem.dataset.rowAction;
-      const row = actionItem.closest(".bu-row");
-      const buyerName = row.dataset.buyerName || "Buyer";
-
-      // Close dropdown menu
-      const dropdown = actionItem.closest(".bu-dropdown");
-      if (dropdown) dropdown.classList.remove("is-open");
-
-      switch (action) {
-        case "view-profile":
-          showToast(`Opening profile for ${buyerName}...`, "info");
-          break;
-        case "view-orders":
-          showToast(`Fetching order history for ${buyerName}...`, "info");
-          break;
-        case "view-wishlist":
-          showToast(`Opening wishlist for ${buyerName}...`, "info");
-          break;
-        case "send-email":
-          window.location.href = `mailto:${row.dataset.buyerEmail || ""}`;
-          break;
-        case "activate":
-          updateRowStatus(row, "active");
-          showToast(`${buyerName} activated`, "success");
-          break;
-        case "suspend":
-          updateRowStatus(row, "suspended");
-          showToast(`${buyerName} suspended`, "danger");
-          break;
-        case "block":
-          updateRowStatus(row, "blocked");
-          showToast(`${buyerName} blocked`, "danger");
-          break;
-        case "delete":
-          pendingDeleteTarget = row;
-          openDeleteModal(`Delete buyer account for ${buyerName}?`);
-          break;
-      }
-    });
-  }
-
-  function updateRowStatus(row, newStatus) {
-    row.dataset.status = newStatus;
-    const badge = row.querySelector(".bu-badge");
-    if (badge) {
-      badge.className = `bu-badge bu-badge-${newStatus}`;
-      badge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+    function getVisibleRows() {
+        return Array.prototype.slice.call(tableBody.querySelectorAll('.bu-row')).filter(function (row) {
+            return !row.classList.contains('bu-hidden');
+        });
     }
-  }
 
-  // ==========================================
-  // 7. MODAL DIALOGS
-  // ==========================================
-  function openDeleteModal(message) {
-    if (DOM.deleteModalOverlay) {
-      const text = DOM.deleteModalOverlay.querySelector("#buDeleteModalText");
-      if (text) text.textContent = message;
-      DOM.deleteModalOverlay.classList.remove("bu-hidden");
+    function toggleRowHighlight(row, highlight) {
+        if (!row) return;
+        row.classList.toggle('is-selected', highlight);
     }
-  }
 
-  function closeDeleteModal() {
-    if (DOM.deleteModalOverlay) {
-      DOM.deleteModalOverlay.classList.add("bu-hidden");
+    function updateBulkBarState() {
+        var checkedRows = getRowCheckboxes().filter(function (cb) { return cb.checked; });
+        var totalCount = checkedRows.length;
+
+        if (bulkCount) bulkCount.textContent = String(totalCount);
+        if (bulkBar) bulkBar.classList.toggle('bu-hidden', totalCount === 0);
+
+        if (selectAllCheckbox) {
+            var visibleCheckboxes = getVisibleRows()
+                .map(function (row) { return row.querySelector('.bu-row-checkbox'); })
+                .filter(Boolean);
+            var visibleChecked = visibleCheckboxes.filter(function (cb) { return cb.checked; });
+
+            if (visibleChecked.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (visibleChecked.length === visibleCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
     }
-    pendingDeleteTarget = null;
-  }
 
-  if (DOM.deleteModalCancel) {
-    DOM.deleteModalCancel.addEventListener("click", closeDeleteModal);
-  }
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function () {
+            var isChecked = selectAllCheckbox.checked;
+            getVisibleRows().forEach(function (row) {
+                var cb = row.querySelector('.bu-row-checkbox');
+                if (cb) {
+                    cb.checked = isChecked;
+                    toggleRowHighlight(row, isChecked);
+                }
+            });
+            updateBulkBarState();
+        });
+    }
 
-  if (DOM.deleteModalConfirm) {
-    DOM.deleteModalConfirm.addEventListener("click", () => {
-      if (pendingDeleteTarget === "bulk") {
-        const selectedRows = Array.from(DOM.rowCheckboxes())
-          .filter((cb) => cb.checked)
-          .map((cb) => cb.closest(".bu-row"));
+    if (tableBody) {
+        tableBody.addEventListener('change', function (e) {
+            if (e.target.classList.contains('bu-row-checkbox')) {
+                var row = e.target.closest('.bu-row');
+                toggleRowHighlight(row, e.target.checked);
+                updateBulkBarState();
+            }
+        });
+    }
 
-        selectedRows.forEach((row) => row.remove());
-        showToast(`Deleted ${selectedRows.length} buyers`, "danger");
-        clearSelections();
-      } else if (pendingDeleteTarget instanceof HTMLElement) {
-        const buyerName = pendingDeleteTarget.dataset.buyerName || "Buyer";
-        pendingDeleteTarget.remove();
-        showToast(`Deleted ${buyerName}`, "danger");
-      }
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', function () {
+            getRowCheckboxes().forEach(function (cb) {
+                cb.checked = false;
+                toggleRowHighlight(cb.closest('.bu-row'), false);
+            });
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            updateBulkBarState();
+        });
+    }
 
-      closeDeleteModal();
-      updateTableDisplay();
+    /* ================= 6. BULK ACTIONS ================= */
+    document.querySelectorAll('[data-bulk-action]').forEach(function (button) {
+        button.addEventListener('click', function (e) {
+            var action = e.currentTarget.dataset.bulkAction;
+            var selectedRows = getRowCheckboxes()
+                .filter(function (cb) { return cb.checked; })
+                .map(function (cb) { return cb.closest('.bu-row'); });
+
+            if (!selectedRows.length) return;
+
+            if (action === 'activate') {
+                selectedRows.forEach(function (row) { setRowStatus(row, 'active', 'Active'); });
+                showToast(selectedRows.length + ' buyer(s) marked as Active.', 'success');
+            } else if (action === 'suspend') {
+                selectedRows.forEach(function (row) { setRowStatus(row, 'suspended', 'Suspended'); });
+                showToast(selectedRows.length + ' buyer(s) marked as Suspended.', 'success');
+            } else if (action === 'export') {
+                showToast('Exporting ' + selectedRows.length + ' buyer(s) isn\u2019t available yet \u2014 check back soon.', 'info');
+            } else if (action === 'delete') {
+                openDeleteModal(
+                    'Delete ' + selectedRows.length + ' buyers?',
+                    'Are you sure you want to delete these ' + selectedRows.length + ' selected buyers? This cannot be undone.',
+                    function () {
+                        selectedRows.forEach(function (row) { row.remove(); });
+                        updateBulkBarState();
+                        checkAndShowEmptyState();
+                        showToast('Selected buyers deleted.', 'success');
+                    }
+                );
+            }
+        });
     });
-  }
 
-  // ==========================================
-  // 8. CSV EXPORT UTILITY
-  // ==========================================
-  function exportRowsToCSV(rowsToExport) {
-    const headers = ["Name", "Username", "Email", "Orders", "Spent (PKR)", "Joined", "Status"];
-    const csvRows = [headers.join(",")];
+    function setRowStatus(row, statusClass, statusLabel) {
+        var badge = row.querySelector('.bu-badge');
+        if (!badge) return;
+        badge.className = 'bu-badge bu-badge-' + statusClass;
+        badge.textContent = statusLabel;
+        row.dataset.status = statusClass;
+    }
 
-    rowsToExport.forEach((row) => {
-      const data = [
-        `"${row.dataset.buyerName || ""}"`,
-        `"${row.dataset.buyerUsername || ""}"`,
-        `"${row.dataset.buyerEmail || ""}"`,
-        row.dataset.orders || "0",
-        row.dataset.spent || "0",
-        row.dataset.joined || "",
-        row.dataset.status || ""
-      ];
-      csvRows.push(data.join(","));
+    /* ================= 7. INDIVIDUAL ROW ACTIONS ================= */
+    document.addEventListener('click', function (e) {
+
+        var buyerName = row ? (row.dataset.buyerName || 'this buyer') : 'this buyer';
+        var actionItem = e.target.closest("[data-row-action]");
+        if (!actionItem) return;
+        
+        var menu = actionItem.closest(".bu-dropdown-menu");
+        if (!menu) return;
+        var row = actionItem.closest('.bu-row');
+        var action = actionItem.dataset.rowAction;
+
+        var userId = menu.dataset.userId;
+        if (action === 'view-profile') {
+            window.location.href = "/admin-db/user/buyers/" + userId;
+        } else if (action === 'view-orders') {
+            showToast('Viewing buyer orders isn\u2019t available yet \u2014 check back soon.', 'info');
+        } else if (action === 'view-wishlist') {
+            showToast('Viewing buyer wishlists isn\u2019t available yet \u2014 check back soon.', 'info');
+        } else if (action === 'send-email') {
+            showToast('Sending email to ' + buyerName + ' isn\u2019t available yet \u2014 check back soon.', 'info');
+        } else if (action === 'suspend') {
+
+            fetch('/admin-db/change-account-state/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: new URLSearchParams({
+                    userId: userId,
+                    state: 'SUSPENDED'
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        setRowStatus(row, 'suspended', 'Suspended');
+                        showToast(buyerName + ' has been suspended.', 'success');
+                    } else {
+                        showToast('Failed to suspend buyer.', 'error');
+                    }
+                })
+                .catch(() => {
+                    showToast('Something went wrong.', 'error');
+                });
+
+        } else if (action === 'activate') {
+            fetch('/admin-db/change-account-state/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: new URLSearchParams({
+                    userId: userId,
+                    state: 'VERIFIED'
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        setRowStatus(row, 'active', 'Active');
+                        showToast(buyerName + ' has been activated.', 'success');
+                    } else {
+                        showToast('Failed to suspend buyer.', 'error');
+                    }
+                })
+                .catch(() => {
+                    showToast('Something went wrong.', 'error');
+                });
+        } else if (action === 'block') {
+            rowPendingDelete = row;
+            openDeleteModal(
+                'Block this buyer?',
+                'Are you sure you want to Block "' + buyerName + '"?',
+                function () {
+                    if (rowPendingDelete) {
+                        fetch('/admin-db/change-account-state/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-CSRFToken': getCookie('csrftoken'),
+                            },
+                            body: new URLSearchParams({
+                                userId: userId,
+                                state: 'BLOCKED'
+                            })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    setRowStatus(row, 'blocked', 'Blocked');
+                                    showToast(buyerName + ' has been blocked.', 'success');
+                                } else {
+                                    showToast('Failed to suspend buyer.', 'error');
+                                }
+                            })
+                            .catch(() => {
+                                showToast('Something went wrong.', 'error');
+                            });
+
+                        // rowPendingDelete.remove();
+                        // rowPendingDelete = null;
+                        // updateBulkBarState();
+                        // checkAndShowEmptyState();
+                    }
+                }
+            );
+        }
+
+        closeAllDropdowns();
     });
 
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.style.display = "none";
-    a.href = url;
-    a.download = `buyers_export_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
 
-    showToast(`Exported ${rowsToExport.length} rows to CSV`, "success");
-  }
 
-  if (DOM.exportBtn) {
-    DOM.exportBtn.addEventListener("click", () => {
-      const visibleRows = getFilteredAndSortedRows();
-      if (visibleRows.length === 0) {
-        showToast("No data to export", "info");
-        return;
-      }
-      exportRowsToCSV(visibleRows);
+    /* ================= 8. DELETE CONFIRMATION MODAL ================= */
+    function openDeleteModal(title, text, onConfirm) {
+        if (!deleteModalOverlay) return;
+
+        if (deleteModalTitle) deleteModalTitle.textContent = title;
+        if (deleteModalText) deleteModalText.textContent = text;
+        confirmCallback = onConfirm;
+
+        deleteModalOverlay.classList.remove('bu-hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        if (!deleteModalOverlay || deleteModalOverlay.classList.contains('bu-hidden')) return;
+
+        deleteModalOverlay.classList.add('bu-hidden');
+        document.body.style.overflow = '';
+        confirmCallback = null;
+        rowPendingDelete = null;
+    }
+
+    if (deleteModalCancel) deleteModalCancel.addEventListener('click', closeDeleteModal);
+
+if (deleteModalOverlay) {
+    deleteModalOverlay.addEventListener('click', function (e) {
+        if (e.target === deleteModalOverlay) closeDeleteModal();
     });
-  }
+}
 
-  // ==========================================
-  // 9. EVENT LISTENERS & INITIALIZATION
-  // ==========================================
-  if (DOM.searchInput) {
-    DOM.searchInput.addEventListener("input", () => {
-      currentPage = 1;
-      updateTableDisplay();
+if (deleteModalConfirm) {
+    deleteModalConfirm.addEventListener('click', function () {
+        if (confirmCallback) confirmCallback();
+        closeDeleteModal();
     });
-  }
+}
 
-  if (DOM.statusFilter) {
-    DOM.statusFilter.addEventListener("change", () => {
-      currentPage = 1;
-      updateTableDisplay();
+/* ================= 9. CLIENT-SIDE SEARCH / FILTER / SORT ================= */
+function performFiltering() {
+    var searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    var statusVal = (statusFilter ? statusFilter.value : '').toLowerCase();
+
+    Array.prototype.slice.call(tableBody.querySelectorAll('.bu-row')).forEach(function (row) {
+        var name = (row.dataset.buyerName || '').toLowerCase();
+        var username = (row.dataset.buyerUsername || '').toLowerCase();
+        var email = (row.dataset.buyerEmail || '').toLowerCase();
+        var status = (row.dataset.status || '').toLowerCase();
+
+        var matchesSearch = !searchVal
+            || name.indexOf(searchVal) !== -1
+            || username.indexOf(searchVal) !== -1
+            || email.indexOf(searchVal) !== -1;
+
+        var matchesStatus = !statusVal
+            || (statusVal === 'email-verified'
+                ? !!row.querySelector('.bu-buyer-verified')
+                : status === statusVal);
+
+        if (matchesSearch && matchesStatus) {
+            row.classList.remove('bu-hidden');
+        } else {
+            row.classList.add('bu-hidden');
+            var cb = row.querySelector('.bu-row-checkbox');
+            if (cb) cb.checked = false;
+        }
     });
-  }
 
-  if (DOM.sortFilter) {
-    DOM.sortFilter.addEventListener("change", () => {
-      currentPage = 1;
-      updateTableDisplay();
+    performSorting();
+    updateBulkBarState();
+    checkAndShowEmptyState();
+}
+
+function performSorting() {
+    var sortVal = sortFilter ? sortFilter.value : 'newest';
+    var rows = getVisibleRows();
+
+    rows.sort(function (rowA, rowB) {
+        if (sortVal === 'most-orders') {
+            return (parseInt(rowB.dataset.orders, 10) || 0) - (parseInt(rowA.dataset.orders, 10) || 0);
+        }
+        if (sortVal === 'highest-spending') {
+            return (parseFloat(rowB.dataset.spent) || 0) - (parseFloat(rowA.dataset.spent) || 0);
+        }
+        if (sortVal === 'oldest' || sortVal === 'date-joined') {
+            return new Date(rowA.dataset.joined) - new Date(rowB.dataset.joined);
+        }
+        // "newest" default
+        return new Date(rowB.dataset.joined) - new Date(rowA.dataset.joined);
     });
-  }
 
-  if (DOM.rowsPerPageSelect) {
-    DOM.rowsPerPageSelect.addEventListener("change", (e) => {
-      rowsPerPage = parseInt(e.target.value, 10);
-      currentPage = 1;
-      updateTableDisplay();
+    rows.forEach(function (row) { tableBody.appendChild(row); });
+}
+
+if (searchInput) {
+    var searchDebounce = null;
+    searchInput.addEventListener('input', function () {
+        searchInput.parentElement.classList.add('is-typing');
+        window.clearTimeout(searchDebounce);
+        searchDebounce = window.setTimeout(function () {
+            performFiltering();
+            searchInput.parentElement.classList.remove('is-typing');
+        }, 220);
     });
-  }
+}
 
-  if (DOM.resetFiltersBtn) {
-    DOM.resetFiltersBtn.addEventListener("click", () => {
-      if (DOM.searchInput) DOM.searchInput.value = "";
-      if (DOM.statusFilter) DOM.statusFilter.value = "";
-      if (DOM.sortFilter) DOM.sortFilter.value = "newest";
-      currentPage = 1;
-      updateTableDisplay();
-      showToast("Filters reset", "info");
+if (statusFilter) statusFilter.addEventListener('change', performFiltering);
+if (sortFilter) sortFilter.addEventListener('change', performFiltering);
+
+if (resetFiltersBtn) {
+    resetFiltersBtn.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (statusFilter) statusFilter.value = '';
+        if (sortFilter) sortFilter.value = 'newest';
+        performFiltering();
+        showToast('Filters reset.', 'info');
     });
-  }
+}
 
-  const handleRefresh = () => {
-    updateTableDisplay();
-    showToast("Buyer list refreshed", "info");
-  };
+/* ================= 10. EMPTY STATE ================= */
+function checkAndShowEmptyState() {
+    if (!emptyState) return;
 
-  if (DOM.refreshBtn) DOM.refreshBtn.addEventListener("click", handleRefresh);
-  if (DOM.emptyRefreshBtn) DOM.emptyRefreshBtn.addEventListener("click", handleRefresh);
+    var visibleCount = getVisibleRows().length;
 
-  if (DOM.addBuyerBtn) {
-    DOM.addBuyerBtn.addEventListener("click", () => {
-      showToast("Add Buyer modal feature triggered", "info");
+    if (visibleCount === 0) {
+        if (tableCard) {
+            var wrap = tableCard.querySelector('.bu-table-wrap');
+            if (wrap) wrap.style.display = 'none';
+        }
+        emptyState.classList.remove('bu-hidden');
+    } else {
+        if (tableCard) {
+            var wrapVisible = tableCard.querySelector('.bu-table-wrap');
+            if (wrapVisible) wrapVisible.style.display = '';
+        }
+        emptyState.classList.add('bu-hidden');
+    }
+}
+
+/* ================= 11. PAGINATION UI ================= */
+var paginationButtons = document.querySelectorAll('.bu-page-btn');
+
+paginationButtons.forEach(function (btn) {
+    if (btn.disabled) return;
+
+    btn.addEventListener('click', function () {
+        if (btn.classList.contains('is-active')) return;
+
+        paginationButtons.forEach(function (b) { b.classList.remove('is-active'); });
+
+        // Only page-number buttons (non-icon, non-prev/next) get the active state.
+        var isNumeric = /^\d+$/.test(btn.textContent.trim());
+        if (isNumeric) {
+            btn.classList.add('is-active');
+        }
+
+        if (tableCard) {
+            tableCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     });
-  }
-
-  // Initial Run
-  updateTableDisplay();
 });
+
+if (rowsPerPageSelect) {
+    rowsPerPageSelect.addEventListener('change', function () {
+        showToast('Showing ' + rowsPerPageSelect.value + ' buyers per page.', 'info');
+    });
+}
+
+/* ================= 12. TOOLBAR BUTTONS ================= */
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', function () {
+        refreshBtn.classList.add('is-spinning');
+        window.setTimeout(function () {
+            refreshBtn.classList.remove('is-spinning');
+            showToast('Buyer list refreshed.', 'success');
+        }, 500);
+    });
+}
+
+if (emptyRefreshBtn) {
+    emptyRefreshBtn.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (statusFilter) statusFilter.value = '';
+        performFiltering();
+    });
+}
+
+if (exportBtn) {
+    exportBtn.addEventListener('click', function () {
+        showToast('Exporting buyers isn\u2019t available yet \u2014 check back soon.', 'info');
+    });
+}
+
+if (addBuyerBtn) {
+    addBuyerBtn.addEventListener('click', function () {
+        showToast('Adding a buyer manually isn\u2019t available yet \u2014 check back soon.', 'info');
+    });
+}
+
+/* ================= 13. BUTTON CLICK FEEDBACK (ripple) ================= */
+function bindRipple(el) {
+    el.addEventListener('click', function (e) {
+        var rect = el.getBoundingClientRect();
+        var ripple = document.createElement('span');
+        var size = Math.max(rect.width, rect.height);
+
+        ripple.style.position = 'absolute';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        ripple.style.borderRadius = '50%';
+        ripple.style.background = 'rgba(255, 255, 255, 0.35)';
+        ripple.style.pointerEvents = 'none';
+        ripple.style.transform = 'scale(0)';
+        ripple.style.opacity = '1';
+        ripple.style.transition = 'transform 0.5s ease, opacity 0.6s ease';
+
+        el.style.position = el.style.position || 'relative';
+        el.style.overflow = 'hidden';
+        el.appendChild(ripple);
+
+        window.requestAnimationFrame(function () {
+            ripple.style.transform = 'scale(2.2)';
+            ripple.style.opacity = '0';
+        });
+
+        window.setTimeout(function () {
+            ripple.remove();
+        }, 600);
+    });
+}
+
+document.querySelectorAll('.bu-btn-primary, .bu-btn-danger, .bu-page-btn').forEach(bindRipple);
+
+/* ================= 14. INIT ================= */
+updateBulkBarState();
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}

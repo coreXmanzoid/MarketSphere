@@ -173,7 +173,6 @@
             ripple.style.width = ripple.style.height = size + 'px';
             ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
             ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-
             el.style.position = el.style.position || 'relative';
             el.style.overflow = 'hidden';
             el.appendChild(ripple);

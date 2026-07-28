@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 from .models import Address, Seller
 from . import validator
 
-User = get_user_model()
+# User = get_user_model()
+from .models import User
 
 
 def create_user(user):
@@ -61,6 +62,14 @@ def send_verification_email(request, user, signup=False):
     return True
 
 
+def get_all_buyers():
+    return User.objects.all()
+
+from django.shortcuts import get_object_or_404
+def change_account_state(user_id, state):
+    user = get_object_or_404(User, id=user_id)
+    user.account_status = state
+    user.save(update_fields=["account_status"])
 
 from django.shortcuts import get_object_or_404
 
@@ -289,8 +298,100 @@ def update_seller_address(user, data):
 
     return seller_address
 
+from django.db import transaction
+
+@transaction.atomic
+def update_user_address(user, data):
+    address_id = data.get("addressId", "").strip()
+
+    try:
+        user_address = Address.objects.get(id=address_id, user=user)
+    except Address.DoesNotExist:
+        raise ValueError("Address not found.")
+
+    user_address.full_name = data.get("fullName", "").strip()
+    user_address.phone = data.get("phone", "").strip()
+    user_address.address_line_1 = data.get("address", "").strip()
+    user_address.city = data.get("city", "").strip()
+    user_address.postal_code = data.get("postalCode", "").strip()
+    user_address.address_type = data.get("type", "").strip()
+
+    is_default = data.get("isDefault") == True
+    print(is_default)
+    if is_default:
+        Address.objects.filter(user=user).exclude(id=user_address.id).update(is_default=False)
+
+    user_address.is_default = is_default
+    user_address.save()
+
+    return user_address
+
+
+@transaction.atomic
+def delete_user_address(user, data):
+    address_id = data.get("addressId", "").strip()
+
+    try:
+        address = Address.objects.get(id=address_id, user=user)
+    except Address.DoesNotExist:
+        raise ValueError("Address not found.")
+
+    if address.is_default:
+        next_address = (
+            Address.objects
+            .filter(user=user)
+            .exclude(id=address.id)
+            .first()
+        )
+
+        if next_address:
+            next_address.is_default = True
+            next_address.save(update_fields=["is_default"])
+
+    address.delete()
+
+    return True
+
 def get_bussiness_address(seller):
     business_address = seller.user.addresses.filter(
         address_type=Address.BUSINESS
     ).first()
     return business_address
+
+
+
+
+def update_buyer_profile(request, buyer_id):
+
+    try:
+        buyer = User.objects.get(pk=buyer_id)
+
+    except User.DoesNotExist:
+
+        return False, "Buyer not found.", None
+
+    print("here")
+    buyer.first_name = request.POST.get("first_name", "").strip()
+
+    buyer.last_name = request.POST.get("last_name", "").strip()
+
+    buyer.username = request.POST.get("username", "").strip()
+
+    buyer.email = request.POST.get("email", "").strip()
+
+    buyer.contact = request.POST.get("contact", "").strip()
+
+    buyer.account_status = request.POST.get("account_status").strip()
+
+    profile_image = request.FILES.get("profile_image")
+
+    if profile_image:
+
+        buyer.profile_image_url = profile_image
+    else:
+        buyer.profile_image_url = None
+
+    buyer.save()
+
+
+    return True, "Buyer profile updated successfully.", buyer

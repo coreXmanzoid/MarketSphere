@@ -1,0 +1,997 @@
+/* ==========================================================================
+   MARKETSPHERE ADMIN — EMAIL COMPOSER MODULE (email_composer.css)
+   Standalone stylesheet for email_composer_modal.html. Builds on the admin
+   shell's earth-tone tokens (static/css/admin_base_dashboard.css — --ad-*
+   variables) so it visually matches the rest of the admin dashboard, but
+   does not require any other stylesheet to function — sensible fallbacks
+   are provided for every custom property.
+
+   Every new class introduced by this component is prefixed `ec-` (Email
+   Composer). The modal shell itself reuses the project's shared `bd-*`
+   (Buyer Detail) modal classes; base fallback rules for those are included
+   here as well, scoped narrowly, so this component still renders correctly
+   even if buyer_detail.css hasn't defined them yet.
+
+   Sections:
+     1. Variables (with fallbacks)
+     2. Shared Modal Shell Fallbacks (bd-*)
+     3. Shared Button Fallbacks (bd-*)
+     4. Backdrop / Modal Positioning
+     5. Header
+     6. Body / Sections
+     7. Recipient Card
+     8. Template Select
+     9. Subject / Inputs
+    10. Message Textarea
+    11. Attachments
+    12. Footer
+    13. Preview Modal
+    14. Toast
+    15. Loading / Disabled States
+    16. Responsive
+   ========================================================================== */
+
+/* ================= 1. VARIABLES ================= */
+.ec-backdrop {
+    --ec-bg: var(--ad-bg, #F7F1DE);
+    --ec-surface: var(--ad-surface-raised, #FFFDF9);
+    --ec-accent: var(--ad-accent, #C08A4E);
+    --ec-accent-strong: var(--ad-accent-strong, #A56B34);
+    --ec-accent-soft: var(--ad-accent-soft, rgba(192, 138, 78, 0.14));
+    --ec-accent-ring: var(--ad-accent-ring, rgba(192, 138, 78, 0.28));
+    --ec-heading: var(--ad-heading-color, #241A17);
+    --ec-body: var(--ad-body-color, #5B5142);
+    --ec-caption: var(--ad-caption-color, #948B79);
+    --ec-border: var(--ad-border, #E4DCC8);
+    --ec-success: var(--ad-success, #4f7d54);
+    --ec-success-bg: rgba(79, 125, 84, 0.13);
+    --ec-danger: var(--ad-danger, #b54b3b);
+    --ec-danger-bg: rgba(181, 75, 59, 0.12);
+    --ec-warning: var(--ad-warning, #b7802b);
+    --ec-warning-bg: rgba(183, 128, 43, 0.15);
+    --ec-font: var(--ad-font, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif);
+    --ec-radius-card: var(--ad-radius-card, 12px);
+    --ec-radius-control: var(--ad-radius-control, 8px);
+    --ec-radius-pill: var(--ad-radius-pill, 30px);
+    --ec-ease: var(--ad-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    --ec-transition-fast: 0.16s var(--ec-ease);
+    --ec-transition: 0.26s var(--ec-ease);
+    --ec-shadow-sm: var(--ad-shadow-sm, 0 1px 2px rgba(36, 26, 23, 0.07));
+    --ec-shadow-md: var(--ad-shadow-md, 0 10px 26px rgba(36, 26, 23, 0.10));
+    --ec-shadow-lg: var(--ad-shadow-lg, 0 24px 60px rgba(36, 26, 23, 0.22));
+}
+
+.ec-backdrop,
+.ec-backdrop *,
+.ec-backdrop *::before,
+.ec-backdrop *::after {
+    box-sizing: border-box;
+}
+
+.ec-backdrop {
+    font-family: var(--ec-font);
+}
+
+.ec-backdrop button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.ec-backdrop svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.ec-backdrop :focus-visible {
+    outline: 2px solid var(--ec-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ec-backdrop,
+    .ec-backdrop * {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+.ec-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ================= 2. SHARED MODAL SHELL FALLBACKS ================= */
+.bd-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(33, 27, 34, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity var(--ec-transition);
+}
+
+.bd-modal-backdrop[hidden] {
+    display: none;
+}
+
+.bd-modal-backdrop.is-open {
+    opacity: 1;
+}
+
+.bd-modal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: min(88vh, 860px);
+    background-color: var(--ec-surface);
+    border-radius: 16px;
+    box-shadow: var(--ec-shadow-lg);
+    overflow: hidden;
+    transform: translateY(18px) scale(0.98);
+    opacity: 0;
+    transition: transform var(--ec-transition), opacity var(--ec-transition);
+}
+
+.bd-modal-backdrop.is-open .bd-modal.is-active {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.bd-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 26px;
+    border-bottom: 1px solid var(--ec-border);
+    flex-shrink: 0;
+}
+
+.bd-modal-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ec-heading);
+    line-height: 1.3;
+    margin: 0;
+}
+
+.bd-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 26px;
+}
+
+.bd-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 26px;
+    border-top: 1px solid var(--ec-border);
+    background-color: var(--ec-bg);
+    flex-shrink: 0;
+}
+
+.bd-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bd-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* ================= 3. SHARED BUTTON FALLBACKS ================= */
+.bd-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: var(--ec-radius-control);
+    border: 1.5px solid transparent;
+    white-space: nowrap;
+    background-color: transparent;
+    color: var(--ec-heading);
+    transition: background-color var(--ec-transition-fast), color var(--ec-transition-fast),
+        border-color var(--ec-transition-fast), transform var(--ec-transition-fast), box-shadow var(--ec-transition-fast);
+}
+
+.bd-btn:active {
+    transform: scale(0.97);
+}
+
+.bd-btn-primary {
+    background-color: var(--ec-accent);
+    color: #241A17;
+    border-color: var(--ec-accent);
+}
+
+.bd-btn-primary:hover {
+    background-color: var(--ec-accent-strong);
+    border-color: var(--ec-accent-strong);
+    color: #F4EEE3;
+}
+
+.bd-btn-secondary {
+    background-color: transparent;
+    color: var(--ec-heading);
+    border: 1.5px solid var(--ec-border);
+}
+
+.bd-btn-secondary:hover {
+    border-color: var(--ec-accent);
+    color: var(--ec-accent-strong);
+}
+
+.bd-btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--ec-caption);
+    border: none;
+}
+
+.bd-btn-icon:hover {
+    background-color: var(--ec-accent-soft);
+    color: var(--ec-accent-strong);
+}
+
+.bd-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ================= 4. BACKDROP / MODAL POSITIONING ================= */
+.ec-modal {
+    width: 980px;
+    max-width: 100%;
+}
+
+.ec-preview-modal[hidden] {
+    display: none;
+}
+
+/* ================= 5. HEADER ================= */
+.ec-header-text {
+    min-width: 0;
+}
+
+.ec-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--ec-caption);
+}
+
+.ec-close-btn {
+    flex-shrink: 0;
+}
+
+/* ================= 6. BODY / SECTIONS ================= */
+.ec-body {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+
+.ec-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ec-section-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ec-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.ec-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ec-required {
+    color: var(--ec-danger);
+    font-weight: 700;
+}
+
+.ec-optional {
+    color: var(--ec-caption);
+    text-transform: none;
+    font-weight: 500;
+    letter-spacing: normal;
+}
+
+.ec-field-hint {
+    font-size: 12px;
+    color: var(--ec-caption);
+    line-height: 1.5;
+}
+
+.ec-char-counter {
+    flex-shrink: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ec-caption);
+    white-space: nowrap;
+}
+
+.ec-char-counter.is-near-limit {
+    color: var(--ec-warning);
+}
+
+.ec-char-counter.is-at-limit {
+    color: var(--ec-danger);
+}
+
+.ec-field-error {
+    display: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ec-danger);
+}
+
+.ec-field-error.is-visible {
+    display: block;
+}
+
+/* ================= 7. RECIPIENT CARD ================= */
+.ec-recipient-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background-color: var(--ec-bg);
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-control);
+    padding: 14px 16px;
+}
+
+.ec-recipient-avatar {
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ec-heading);
+    color: #F4EEE3;
+    font-size: 15px;
+    font-weight: 700;
+    overflow: hidden;
+}
+
+.ec-recipient-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ec-recipient-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ec-recipient-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ec-heading);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ec-recipient-email {
+    font-size: 12.5px;
+    color: var(--ec-caption);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ec-status-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: var(--ec-radius-pill);
+    text-transform: capitalize;
+    background-color: var(--ec-success-bg);
+    color: var(--ec-success);
+}
+
+.ec-status-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.ec-status-badge.ec-status-suspended,
+.ec-status-badge.ec-status-blocked {
+    background-color: var(--ec-danger-bg);
+    color: var(--ec-danger);
+}
+
+.ec-status-badge.ec-status-pending {
+    background-color: var(--ec-warning-bg);
+    color: var(--ec-warning);
+}
+
+/* ================= 8. TEMPLATE SELECT ================= */
+.ec-select-wrap {
+    position: relative;
+}
+
+.ec-select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    background-color: var(--ec-bg);
+    color: var(--ec-body);
+    border: 1.5px solid var(--ec-border);
+    border-radius: var(--ec-radius-control);
+    padding: 11px 40px 11px 14px;
+    font-size: 13.5px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color var(--ec-transition-fast), box-shadow var(--ec-transition-fast), background-color var(--ec-transition-fast);
+}
+
+.ec-select:focus {
+    outline: none;
+    background-color: var(--ec-surface);
+    border-color: var(--ec-accent);
+    box-shadow: 0 0 0 3px var(--ec-accent-ring);
+}
+
+.ec-select-caret {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ec-caption);
+    pointer-events: none;
+}
+
+/* ================= 9. SUBJECT / INPUTS ================= */
+.ec-input {
+    width: 100%;
+    background-color: var(--ec-bg);
+    color: var(--ec-heading);
+    border: 1.5px solid var(--ec-border);
+    border-radius: var(--ec-radius-control);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color var(--ec-transition-fast), box-shadow var(--ec-transition-fast), background-color var(--ec-transition-fast);
+}
+
+.ec-input::placeholder {
+    color: var(--ec-caption);
+}
+
+.ec-input:focus {
+    outline: none;
+    background-color: var(--ec-surface);
+    border-color: var(--ec-accent);
+    box-shadow: 0 0 0 3px var(--ec-accent-ring);
+}
+
+.ec-input.is-invalid,
+.ec-textarea.is-invalid {
+    border-color: var(--ec-danger);
+}
+
+.ec-input.is-invalid:focus,
+.ec-textarea.is-invalid:focus {
+    box-shadow: 0 0 0 3px var(--ec-danger-bg);
+}
+
+/* ================= 10. MESSAGE TEXTAREA ================= */
+.ec-textarea {
+    width: 100%;
+    min-height: 320px;
+    background-color: var(--ec-bg);
+    color: var(--ec-heading);
+    border: 1.5px solid var(--ec-border);
+    border-radius: var(--ec-radius-control);
+    padding: 14px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.65;
+    resize: vertical;
+    transition: border-color var(--ec-transition-fast), box-shadow var(--ec-transition-fast), background-color var(--ec-transition-fast);
+}
+
+.ec-textarea::placeholder {
+    color: var(--ec-caption);
+}
+
+.ec-textarea:focus {
+    outline: none;
+    background-color: var(--ec-surface);
+    border-color: var(--ec-accent);
+    box-shadow: 0 0 0 3px var(--ec-accent-ring);
+}
+
+/* ================= 11. ATTACHMENTS ================= */
+.ec-upload-zone {
+    border: 2px dashed var(--ec-border);
+    border-radius: var(--ec-radius-control);
+    background-color: var(--ec-bg);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--ec-transition-fast), background-color var(--ec-transition-fast), transform var(--ec-transition-fast);
+}
+
+.ec-upload-zone:hover,
+.ec-upload-zone:focus-visible {
+    border-color: var(--ec-accent);
+    background-color: var(--ec-accent-soft);
+}
+
+.ec-upload-zone.is-dragover {
+    border-color: var(--ec-accent);
+    background-color: var(--ec-accent-soft);
+    transform: scale(0.995);
+}
+
+.ec-upload-icon {
+    color: var(--ec-accent-strong);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.ec-upload-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ec-heading);
+    margin: 0 0 3px;
+}
+
+.ec-upload-subtitle {
+    font-size: 12.5px;
+    color: var(--ec-caption);
+    margin: 0 0 8px;
+}
+
+.ec-upload-link {
+    color: var(--ec-accent-strong);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.ec-upload-guidelines {
+    font-size: 11.5px;
+    color: var(--ec-caption);
+    margin: 0;
+}
+
+.ec-attachment-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.ec-attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--ec-surface);
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-control);
+    padding: 10px 12px;
+    animation: ecItemIn 0.2s var(--ec-ease);
+}
+
+@keyframes ecItemIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ec-attachment-item.is-removing {
+    opacity: 0;
+    transform: translateX(8px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.ec-attachment-icon {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ec-accent-soft);
+    color: var(--ec-accent-strong);
+}
+
+.ec-attachment-icon.ec-icon-image {
+    background-color: rgba(79, 125, 84, 0.13);
+    color: var(--ec-success);
+}
+
+.ec-attachment-icon.ec-icon-pdf {
+    background-color: var(--ec-danger-bg);
+    color: var(--ec-danger);
+}
+
+.ec-attachment-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.ec-attachment-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ec-heading);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ec-attachment-meta {
+    font-size: 11.5px;
+    color: var(--ec-caption);
+}
+
+.ec-attachment-meta.is-error {
+    color: var(--ec-danger);
+    font-weight: 600;
+}
+
+.ec-attachment-remove {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--ec-caption);
+    transition: background-color var(--ec-transition-fast), color var(--ec-transition-fast);
+}
+
+.ec-attachment-remove:hover {
+    background-color: var(--ec-danger-bg);
+    color: var(--ec-danger);
+}
+
+.ec-attachment-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    padding: 14px;
+    font-size: 12.5px;
+    color: var(--ec-caption);
+    border: 1px dashed var(--ec-border);
+    border-radius: var(--ec-radius-control);
+}
+
+.ec-attachment-empty[hidden] {
+    display: none;
+}
+
+/* ================= 12. FOOTER ================= */
+.ec-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ec-btn-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ================= 13. PREVIEW MODAL ================= */
+.ec-preview-email {
+    background-color: var(--ec-bg);
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-card);
+    overflow: hidden;
+}
+
+.ec-preview-email-head {
+    background-color: var(--ec-surface);
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--ec-border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ec-preview-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.ec-preview-label {
+    flex: 0 0 auto;
+    width: 64px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ec-caption);
+}
+
+.ec-preview-value {
+    font-size: 13.5px;
+    color: var(--ec-heading);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.ec-preview-subject {
+    font-weight: 700;
+}
+
+.ec-preview-email-body {
+    padding: 24px 22px;
+    font-size: 14px;
+    color: var(--ec-heading);
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    min-height: 160px;
+    background-color: var(--ec-surface);
+}
+
+.ec-preview-attachments {
+    padding: 16px 22px 20px;
+    border-top: 1px solid var(--ec-border);
+    background-color: var(--ec-surface);
+}
+
+.ec-preview-attachments[hidden] {
+    display: none;
+}
+
+.ec-preview-attachments-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ec-caption);
+    margin-bottom: 10px;
+}
+
+.ec-preview-attachment-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.ec-preview-attachment-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ec-accent-strong);
+    background-color: var(--ec-accent-soft);
+    padding: 6px 12px;
+    border-radius: var(--ec-radius-pill);
+}
+
+/* ================= 14. TOAST ================= */
+.ec-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1400;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 340px;
+    pointer-events: none;
+}
+
+.ec-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background-color: var(--ec-surface);
+    border: 1px solid var(--ec-border);
+    border-left: 4px solid var(--ec-accent);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: var(--ec-shadow-md);
+    font-size: 13px;
+    color: var(--ec-heading);
+    animation: ecToastIn 0.25s var(--ec-ease);
+}
+
+.ec-toast-icon {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: var(--ec-accent);
+}
+
+.ec-toast.ec-toast-success {
+    border-left-color: var(--ec-success);
+}
+
+.ec-toast.ec-toast-success .ec-toast-icon {
+    color: var(--ec-success);
+}
+
+.ec-toast.ec-toast-error {
+    border-left-color: var(--ec-danger);
+}
+
+.ec-toast.ec-toast-error .ec-toast-icon {
+    color: var(--ec-danger);
+}
+
+.ec-toast.is-leaving {
+    animation: ecToastOut 0.2s ease forwards;
+}
+
+@keyframes ecToastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ecToastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(8px); }
+}
+
+/* ================= 15. LOADING / DISABLED STATES ================= */
+#ecSendBtn.is-loading .ec-btn-label,
+#ecPreviewSendBtn.is-loading .ec-btn-label {
+    visibility: hidden;
+}
+
+#ecSendBtn.is-loading,
+#ecPreviewSendBtn.is-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+#ecSendBtn.is-loading::after,
+#ecPreviewSendBtn.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border-radius: 50%;
+    border: 2px solid rgba(36, 26, 23, 0.35);
+    border-top-color: #241A17;
+    animation: ecSpin 0.7s linear infinite;
+}
+
+@keyframes ecSpin {
+    to { transform: rotate(360deg); }
+}
+
+.ec-upload-zone.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+/* ================= 16. RESPONSIVE ================= */
+@media (max-width: 1040px) {
+    .ec-modal {
+        width: 90%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .bd-modal-backdrop {
+        padding: 0;
+    }
+
+    .ec-modal {
+        width: 100%;
+        max-height: 100vh;
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .bd-modal-header,
+    .bd-modal-body,
+    .bd-modal-footer {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .ec-footer-right {
+        flex: 1;
+    }
+
+    .bd-modal-footer {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .bd-modal-footer .bd-btn {
+        flex: 1;
+    }
+
+    .ec-textarea {
+        min-height: 220px;
+    }
+
+    .ec-preview-label {
+        width: 52px;
+    }
+
+    .ec-toast-container {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .ec-recipient-card {
+        flex-wrap: wrap;
+    }
+
+    .ec-status-badge {
+        margin-left: 56px;
+    }
+}
