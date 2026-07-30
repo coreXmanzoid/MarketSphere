@@ -32,7 +32,9 @@ def get_user_by_identifier(identifier):
 def get_or_create_primary_email_address(user):
     email = (user.email or "").strip().lower()
     if not email:
-        raise ValueError("User must have an email address before verification can be sent.")
+        raise ValueError(
+            "User must have an email address before verification can be sent."
+        )
 
     email_address, created = EmailAddress.objects.get_or_create(
         user=user,
@@ -65,11 +67,35 @@ def send_verification_email(request, user, signup=False):
 def get_all_buyers():
     return User.objects.all()
 
+
+from orders.models import SellerOrder
+
+from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models.functions import Coalesce
+from decimal import Decimal
+
+
+def get_all_sellers():
+    return Seller.objects.annotate(
+        total_sales=Coalesce(
+            Sum(
+                "orders__total",
+                filter=Q(orders__status=SellerOrder.Status.DELIVERED),
+            ),
+            Value(Decimal("0.00")),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+    )
+
+
 from django.shortcuts import get_object_or_404
+
+
 def change_account_state(user_id, state):
     user = get_object_or_404(User, id=user_id)
     user.account_status = state
     user.save(update_fields=["account_status"])
+
 
 from django.shortcuts import get_object_or_404
 
@@ -102,7 +128,8 @@ def save_user_address(user, address_data):
 
     address.save()
 
-    return address    
+    return address
+
 
 def delete_address(user, address_id):
     address = get_object_or_404(
@@ -121,6 +148,7 @@ def get_default_address(user):
     return user.addresses.filter(
         is_default=True,
     ).first()
+
 
 from django.db import transaction
 from django.utils.text import slugify
@@ -167,7 +195,7 @@ def create_seller_application(user, data, files):
     # --------------------------------------------------
     if hasattr(user, "seller_profile"):
         raise ValueError("Seller profile already exists.")
-    
+
     seller = Seller.objects.create(
         user=user,
         store_name=data.get("store_name"),
@@ -179,6 +207,7 @@ def create_seller_application(user, data, files):
     )
 
     return seller
+
 
 def update_seller_information(user, data, files):
     seller = user.seller_profile
@@ -216,11 +245,12 @@ def update_seller_information(user, data, files):
     seller.save()
     return seller
 
+
 from .models import SellerSettings
+
+
 def update_shipping_preferences(seller, data):
-    settings, created = SellerSettings.objects.get_or_create(
-        seller=seller
-    )
+    settings, created = SellerSettings.objects.get_or_create(seller=seller)
 
     settings.default_courier = data.get("default_courier", "")
     settings.default_handling_time = int(
@@ -231,9 +261,7 @@ def update_shipping_preferences(seller, data):
     )
     settings.return_address = data.get("return_address", "").strip()
     settings.shipping_notes = data.get("shipping_notes", "").strip()
-    settings.auto_mark_shipped = (
-        str(data.get("auto_mark_shipped")).lower() == "true"
-    )
+    settings.auto_mark_shipped = str(data.get("auto_mark_shipped")).lower() == "true"
 
     settings.save()
 
@@ -243,9 +271,7 @@ def update_shipping_preferences(seller, data):
 def update_notification_preferences(seller, data):
     settings, _ = SellerSettings.objects.get_or_create(seller=seller)
 
-    settings.email_new_order = (
-        str(data.get("email_new_order")).lower() == "true"
-    )
+    settings.email_new_order = str(data.get("email_new_order")).lower() == "true"
 
     settings.email_cancelled_order = (
         str(data.get("email_cancelled_order")).lower() == "true"
@@ -255,9 +281,7 @@ def update_notification_preferences(seller, data):
         str(data.get("email_delivered_order")).lower() == "true"
     )
 
-    settings.email_low_stock = (
-        str(data.get("email_low_stock")).lower() == "true"
-    )
+    settings.email_low_stock = str(data.get("email_low_stock")).lower() == "true"
 
     settings.weekly_sales_summary = (
         str(data.get("weekly_sales_summary")).lower() == "true"
@@ -275,6 +299,7 @@ def update_notification_preferences(seller, data):
 def deactivate_seller_account(seller):
     seller.status = Seller.Status.DEACTIVATED
     seller.save(update_fields=["status"])
+
 
 def reactivate_seller_account(seller):
     seller.status = Seller.Status.VERIFIED
@@ -298,7 +323,9 @@ def update_seller_address(user, data):
 
     return seller_address
 
+
 from django.db import transaction
+
 
 @transaction.atomic
 def update_user_address(user, data):
@@ -319,7 +346,9 @@ def update_user_address(user, data):
     is_default = data.get("isDefault") == True
     print(is_default)
     if is_default:
-        Address.objects.filter(user=user).exclude(id=user_address.id).update(is_default=False)
+        Address.objects.filter(user=user).exclude(id=user_address.id).update(
+            is_default=False
+        )
 
     user_address.is_default = is_default
     user_address.save()
@@ -337,12 +366,7 @@ def delete_user_address(user, data):
         raise ValueError("Address not found.")
 
     if address.is_default:
-        next_address = (
-            Address.objects
-            .filter(user=user)
-            .exclude(id=address.id)
-            .first()
-        )
+        next_address = Address.objects.filter(user=user).exclude(id=address.id).first()
 
         if next_address:
             next_address.is_default = True
@@ -352,13 +376,12 @@ def delete_user_address(user, data):
 
     return True
 
+
 def get_bussiness_address(seller):
     business_address = seller.user.addresses.filter(
         address_type=Address.BUSINESS
     ).first()
     return business_address
-
-
 
 
 def update_buyer_profile(request, buyer_id):
@@ -392,6 +415,5 @@ def update_buyer_profile(request, buyer_id):
         buyer.profile_image_url = None
 
     buyer.save()
-
 
     return True, "Buyer profile updated successfully.", buyer

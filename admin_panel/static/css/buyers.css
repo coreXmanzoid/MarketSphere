@@ -114,7 +114,7 @@
     }
 }
 .bu-reveal {
-    opacity: 0;
+    /* opacity: 0; */
     margin-top: 20px;
     transition:
         opacity .35s ease,
@@ -764,10 +764,15 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background-color: var(--bu-heading);
+    background-color: #A56B34;
     color: #F7F1DE;
     font-size: 12.5px;
     font-weight: 700;
+}
+
+.bu-avatar img{
+    height: 100% !important;
+    width: 100% !important;
 }
 
 .bu-buyer-name {

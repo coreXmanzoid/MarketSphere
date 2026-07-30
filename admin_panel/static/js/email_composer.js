@@ -472,8 +472,6 @@ function initEmailComposer() {
         if (!validateForm()) {
             return;
         }
-        alert("hi");
-
         [sendBtn, previewSendBtn].forEach(btn => {
 
             if (!btn) return;
@@ -540,7 +538,6 @@ function initEmailComposer() {
             attachments.forEach(file => {
                 formData.append("attachments", file);
             });
-            alert(currentUserId);
 
             const response = await fetch(`/admin-db/buyers/${currentUserId}/send-email/`, {
                 method: "POST",

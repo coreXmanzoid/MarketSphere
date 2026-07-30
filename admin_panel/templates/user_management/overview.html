@@ -352,7 +352,7 @@
           <div class="adu-type-meta">
             <span>{{ admin.sellers_active_percentage }}% active this week</span><span>Updated {{ admin.last_updated|timesince }} ago</span>
           </div>
-          <span class="adu-btn adu-btn-primary adu-btn-sm">Manage Sellers</span>
+          <span class="adu-btn adu-btn-primary adu-btn-sm" onclick="window.location.href='{% url "user-sellers" %}'">Manage Sellers</span>
         </button>
 
         <button type="button" class="adu-type-card" data-toast="Opening Seller Applications&#8230;">

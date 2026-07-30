@@ -1,38 +1,10 @@
 /* ==========================================================================
    MARKETSPHERE ADMIN — EMAIL COMPOSER MODULE (email_composer.css)
-   Standalone stylesheet for email_composer_modal.html. Builds on the admin
-   shell's earth-tone tokens (static/css/admin_base_dashboard.css — --ad-*
-   variables) so it visually matches the rest of the admin dashboard, but
-   does not require any other stylesheet to function — sensible fallbacks
-   are provided for every custom property.
-
-   Every new class introduced by this component is prefixed `ec-` (Email
-   Composer). The modal shell itself reuses the project's shared `bd-*`
-   (Buyer Detail) modal classes; base fallback rules for those are included
-   here as well, scoped narrowly, so this component still renders correctly
-   even if buyer_detail.css hasn't defined them yet.
-
-   Sections:
-     1. Variables (with fallbacks)
-     2. Shared Modal Shell Fallbacks (bd-*)
-     3. Shared Button Fallbacks (bd-*)
-     4. Backdrop / Modal Positioning
-     5. Header
-     6. Body / Sections
-     7. Recipient Card
-     8. Template Select
-     9. Subject / Inputs
-    10. Message Textarea
-    11. Attachments
-    12. Footer
-    13. Preview Modal
-    14. Toast
-    15. Loading / Disabled States
-    16. Responsive
+   Standalone namespaced stylesheet for email_composer_modal.html.
    ========================================================================== */
 
 /* ================= 1. VARIABLES ================= */
-.ec-backdrop {
+.ms-ec-backdrop {
     --ec-bg: var(--ad-bg, #F7F1DE);
     --ec-surface: var(--ad-surface-raised, #FFFDF9);
     --ec-accent: var(--ad-accent, #C08A4E);
@@ -42,7 +14,7 @@
     --ec-heading: var(--ad-heading-color, #241A17);
     --ec-body: var(--ad-body-color, #5B5142);
     --ec-caption: var(--ad-caption-color, #948B79);
-    --ec-border: var(--ad-border, #E4DCC8);
+    --ec-border: var(--ec-warning);
     --ec-success: var(--ad-success, #4f7d54);
     --ec-success-bg: rgba(79, 125, 84, 0.13);
     --ec-danger: var(--ad-danger, #b54b3b);
@@ -61,42 +33,43 @@
     --ec-shadow-lg: var(--ad-shadow-lg, 0 24px 60px rgba(36, 26, 23, 0.22));
 }
 
-.ec-backdrop,
-.ec-backdrop *,
-.ec-backdrop *::before,
-.ec-backdrop *::after {
+.ms-ec-backdrop,
+.ms-ec-backdrop *,
+.ms-ec-backdrop *::before,
+.ms-ec-backdrop *::after {
     box-sizing: border-box;
 }
 
-.ec-backdrop {
+.ms-ec-backdrop {
     font-family: var(--ec-font);
 }
 
-.ec-backdrop button {
+.ms-ec-backdrop button {
     font-family: inherit;
     cursor: pointer;
 }
 
-.ec-backdrop svg {
+.ms-ec-backdrop svg {
     display: block;
     flex-shrink: 0;
 }
 
-.ec-backdrop :focus-visible {
+.ms-ec-backdrop :focus-visible {
     outline: 2px solid var(--ec-accent);
     outline-offset: 2px;
     border-radius: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ec-backdrop,
-    .ec-backdrop * {
+
+    .ms-ec-backdrop,
+    .ms-ec-backdrop * {
         animation-duration: 0.001ms !important;
         transition-duration: 0.001ms !important;
     }
 }
 
-.ec-visually-hidden {
+.ms-ec-visually-hidden {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -108,8 +81,8 @@
     border: 0;
 }
 
-/* ================= 2. SHARED MODAL SHELL FALLBACKS ================= */
-.bd-modal-backdrop {
+/* ================= 2. NAMESPACED MODAL SHELL ================= */
+.ms-ec-modal-backdrop {
     position: fixed;
     inset: 0;
     z-index: 1200;
@@ -124,35 +97,36 @@
     transition: opacity var(--ec-transition);
 }
 
-.bd-modal-backdrop[hidden] {
+.ms-ec-modal-backdrop[hidden] {
     display: none;
 }
 
-.bd-modal-backdrop.is-open {
+.ms-ec-modal-backdrop.is-open {
     opacity: 1;
 }
 
-.bd-modal {
+.ms-ec-modal {
     position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
     max-height: min(88vh, 860px);
     background-color: var(--ec-surface);
-    border-radius: 16px;
+    border-radius: 4px;
     box-shadow: var(--ec-shadow-lg);
     overflow: hidden;
     transform: translateY(18px) scale(0.98);
     opacity: 0;
     transition: transform var(--ec-transition), opacity var(--ec-transition);
+    border: 1.5px solid #b7802b;
 }
 
-.bd-modal-backdrop.is-open .bd-modal.is-active {
+.ms-ec-modal-backdrop.is-open .ms-ec-modal.is-active {
     transform: translateY(0) scale(1);
     opacity: 1;
 }
 
-.bd-modal-header {
+.ms-ec-modal-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -162,22 +136,22 @@
     flex-shrink: 0;
 }
 
-.bd-modal-title {
+.ms-ec-modal-title {
     font-size: 19px;
     font-weight: 700;
-    color: var(--ec-heading);
+    color: #C08A4E;
     line-height: 1.3;
     margin: 0;
 }
 
-.bd-modal-body {
+.ms-ec-modal-body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     padding: 24px 26px;
 }
 
-.bd-modal-footer {
+.ms-ec-modal-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -188,20 +162,8 @@
     flex-shrink: 0;
 }
 
-.bd-form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.bd-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-/* ================= 3. SHARED BUTTON FALLBACKS ================= */
-.bd-btn {
+/* ================= 3. NAMESPACED BUTTONS ================= */
+.ms-ec-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -218,34 +180,37 @@
         border-color var(--ec-transition-fast), transform var(--ec-transition-fast), box-shadow var(--ec-transition-fast);
 }
 
-.bd-btn:active {
+.ms-ec-btn:active {
     transform: scale(0.97);
 }
 
-.bd-btn-primary {
-    background-color: var(--ec-accent);
-    color: #241A17;
+.ms-ec-btn-primary {
     border-color: var(--ec-accent);
+    color: #F4EEE3 !important;
+    border-radius: 2px;
+    background-color: var(--ec-accent-strong) !important;
+    border: 1.5px solid #b7802b !important;
 }
 
-.bd-btn-primary:hover {
-    background-color: var(--ec-accent-strong);
-    border-color: var(--ec-accent-strong);
-    color: #F4EEE3;
+.ms-ec-btn-primary:hover {
+    color: #241A17 !important;
+    background-color: transparent !important;
 }
 
-.bd-btn-secondary {
-    background-color: transparent;
-    color: var(--ec-heading);
-    border: 1.5px solid var(--ec-border);
+.ms-ec-btn-secondary {
+    color: #241A17 !important;
+    background-color: transparent !important;
+    border-radius: 2px;
+    border: 1.5px solid #b7802b !important;
 }
 
-.bd-btn-secondary:hover {
+.ms-ec-btn-secondary:hover {
     border-color: var(--ec-accent);
-    color: var(--ec-accent-strong);
+    background-color: var(--ec-accent-strong) !important;
+    color: #F4EEE3 !important;
 }
 
-.bd-btn-icon {
+.ms-ec-btn-icon {
     width: 36px;
     height: 36px;
     padding: 0;
@@ -254,89 +219,89 @@
     border: none;
 }
 
-.bd-btn-icon:hover {
+.ms-ec-btn-icon:hover {
     background-color: var(--ec-accent-soft);
     color: var(--ec-accent-strong);
 }
 
-.bd-btn:disabled {
+.ms-ec-btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
     transform: none !important;
 }
 
 /* ================= 4. BACKDROP / MODAL POSITIONING ================= */
-.ec-modal {
+.ms-ec-modal {
     width: 980px;
-    max-width: 100%;
+    max-width: 40%;
 }
 
-.ec-preview-modal[hidden] {
+.ms-ec-preview-modal[hidden] {
     display: none;
 }
 
 /* ================= 5. HEADER ================= */
-.ec-header-text {
+.ms-ec-header-text {
     min-width: 0;
 }
 
-.ec-subtitle {
+.ms-ec-subtitle {
     margin: 4px 0 0;
     font-size: 13px;
     color: var(--ec-caption);
 }
 
-.ec-close-btn {
+.ms-ec-close-btn {
     flex-shrink: 0;
 }
 
 /* ================= 6. BODY / SECTIONS ================= */
-.ec-body {
+.ms-ec-body {
     display: flex;
     flex-direction: column;
     gap: 26px;
 }
 
-.ec-section {
+.ms-ec-section {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.ec-section-label {
+.ms-ec-section-label {
     font-size: 12.5px;
     font-weight: 700;
-    color: var(--ec-heading);
+    color: #B0BA99;
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
 
-.ec-label-row {
+.ms-ec-label-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
 }
 
-.ec-required {
+.ms-ec-required {
     color: var(--ec-danger);
     font-weight: 700;
 }
 
-.ec-optional {
+.ms-ec-optional {
     color: var(--ec-caption);
     text-transform: none;
     font-weight: 500;
     letter-spacing: normal;
 }
 
-.ec-field-hint {
+.ms-ec-field-hint {
     font-size: 12px;
     color: var(--ec-caption);
     line-height: 1.5;
 }
 
-.ec-char-counter {
+.ms-ec-char-counter {
     flex-shrink: 0;
     font-size: 11.5px;
     font-weight: 600;
@@ -344,27 +309,27 @@
     white-space: nowrap;
 }
 
-.ec-char-counter.is-near-limit {
+.ms-ec-char-counter.is-near-limit {
     color: var(--ec-warning);
 }
 
-.ec-char-counter.is-at-limit {
+.ms-ec-char-counter.is-at-limit {
     color: var(--ec-danger);
 }
 
-.ec-field-error {
+.ms-ec-field-error {
     display: none;
     font-size: 12px;
     font-weight: 600;
     color: var(--ec-danger);
 }
 
-.ec-field-error.is-visible {
+.ms-ec-field-error.is-visible {
     display: block;
 }
 
 /* ================= 7. RECIPIENT CARD ================= */
-.ec-recipient-card {
+.ms-ec-recipient-card {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -374,7 +339,7 @@
     padding: 14px 16px;
 }
 
-.ec-recipient-avatar {
+.ms-ec-recipient-avatar {
     flex: 0 0 auto;
     width: 42px;
     height: 42px;
@@ -389,13 +354,13 @@
     overflow: hidden;
 }
 
-.ec-recipient-avatar img {
+.ms-ec-recipient-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.ec-recipient-info {
+.ms-ec-recipient-info {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -403,7 +368,7 @@
     gap: 2px;
 }
 
-.ec-recipient-name {
+.ms-ec-recipient-name {
     font-size: 14.5px;
     font-weight: 700;
     color: var(--ec-heading);
@@ -412,7 +377,7 @@
     white-space: nowrap;
 }
 
-.ec-recipient-email {
+.ms-ec-recipient-email {
     font-size: 12.5px;
     color: var(--ec-caption);
     overflow: hidden;
@@ -420,7 +385,7 @@
     white-space: nowrap;
 }
 
-.ec-status-badge {
+.ms-ec-status-badge {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -434,7 +399,7 @@
     color: var(--ec-success);
 }
 
-.ec-status-badge::before {
+.ms-ec-status-badge::before {
     content: "";
     width: 6px;
     height: 6px;
@@ -442,23 +407,23 @@
     background-color: currentColor;
 }
 
-.ec-status-badge.ec-status-suspended,
-.ec-status-badge.ec-status-blocked {
+.ms-ec-status-badge.ms-ec-status-suspended,
+.ms-ec-status-badge.ms-ec-status-blocked {
     background-color: var(--ec-danger-bg);
     color: var(--ec-danger);
 }
 
-.ec-status-badge.ec-status-pending {
+.ms-ec-status-badge.ms-ec-status-pending {
     background-color: var(--ec-warning-bg);
     color: var(--ec-warning);
 }
 
 /* ================= 8. TEMPLATE SELECT ================= */
-.ec-select-wrap {
+.ms-ec-select-wrap {
     position: relative;
 }
 
-.ec-select {
+.ms-ec-select {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
@@ -474,14 +439,14 @@
     transition: border-color var(--ec-transition-fast), box-shadow var(--ec-transition-fast), background-color var(--ec-transition-fast);
 }
 
-.ec-select:focus {
+.ms-ec-select:focus {
     outline: none;
     background-color: var(--ec-surface);
     border-color: var(--ec-accent);
     box-shadow: 0 0 0 3px var(--ec-accent-ring);
 }
 
-.ec-select-caret {
+.ms-ec-select-caret {
     position: absolute;
     right: 14px;
     top: 50%;
@@ -491,7 +456,7 @@
 }
 
 /* ================= 9. SUBJECT / INPUTS ================= */
-.ec-input {
+.ms-ec-input {
     width: 100%;
     background-color: var(--ec-bg);
     color: var(--ec-heading);
@@ -503,29 +468,29 @@
     transition: border-color var(--ec-transition-fast), box-shadow var(--ec-transition-fast), background-color var(--ec-transition-fast);
 }
 
-.ec-input::placeholder {
+.ms-ec-input::placeholder {
     color: var(--ec-caption);
 }
 
-.ec-input:focus {
+.ms-ec-input:focus {
     outline: none;
     background-color: var(--ec-surface);
     border-color: var(--ec-accent);
     box-shadow: 0 0 0 3px var(--ec-accent-ring);
 }
 
-.ec-input.is-invalid,
-.ec-textarea.is-invalid {
+.ms-ec-input.is-invalid,
+.ms-ec-textarea.is-invalid {
     border-color: var(--ec-danger);
 }
 
-.ec-input.is-invalid:focus,
-.ec-textarea.is-invalid:focus {
+.ms-ec-input.is-invalid:focus,
+.ms-ec-textarea.is-invalid:focus {
     box-shadow: 0 0 0 3px var(--ec-danger-bg);
 }
 
 /* ================= 10. MESSAGE TEXTAREA ================= */
-.ec-textarea {
+.ms-ec-textarea {
     width: 100%;
     min-height: 320px;
     background-color: var(--ec-bg);
@@ -540,11 +505,11 @@
     transition: border-color var(--ec-transition-fast), box-shadow var(--ec-transition-fast), background-color var(--ec-transition-fast);
 }
 
-.ec-textarea::placeholder {
+.ms-ec-textarea::placeholder {
     color: var(--ec-caption);
 }
 
-.ec-textarea:focus {
+.ms-ec-textarea:focus {
     outline: none;
     background-color: var(--ec-surface);
     border-color: var(--ec-accent);
@@ -552,7 +517,7 @@
 }
 
 /* ================= 11. ATTACHMENTS ================= */
-.ec-upload-zone {
+.ms-ec-upload-zone {
     border: 2px dashed var(--ec-border);
     border-radius: var(--ec-radius-control);
     background-color: var(--ec-bg);
@@ -562,51 +527,51 @@
     transition: border-color var(--ec-transition-fast), background-color var(--ec-transition-fast), transform var(--ec-transition-fast);
 }
 
-.ec-upload-zone:hover,
-.ec-upload-zone:focus-visible {
+.ms-ec-upload-zone:hover,
+.ms-ec-upload-zone:focus-visible {
     border-color: var(--ec-accent);
     background-color: var(--ec-accent-soft);
 }
 
-.ec-upload-zone.is-dragover {
+.ms-ec-upload-zone.is-dragover {
     border-color: var(--ec-accent);
     background-color: var(--ec-accent-soft);
     transform: scale(0.995);
 }
 
-.ec-upload-icon {
+.ms-ec-upload-icon {
     color: var(--ec-accent-strong);
     margin-bottom: 10px;
     display: flex;
     justify-content: center;
 }
 
-.ec-upload-title {
+.ms-ec-upload-title {
     font-size: 13.5px;
     font-weight: 700;
     color: var(--ec-heading);
     margin: 0 0 3px;
 }
 
-.ec-upload-subtitle {
+.ms-ec-upload-subtitle {
     font-size: 12.5px;
     color: var(--ec-caption);
     margin: 0 0 8px;
 }
 
-.ec-upload-link {
+.ms-ec-upload-link {
     color: var(--ec-accent-strong);
     font-weight: 700;
     text-decoration: underline;
 }
 
-.ec-upload-guidelines {
+.ms-ec-upload-guidelines {
     font-size: 11.5px;
     color: var(--ec-caption);
     margin: 0;
 }
 
-.ec-attachment-list {
+.ms-ec-attachment-list {
     list-style: none;
     display: flex;
     flex-direction: column;
@@ -615,7 +580,7 @@
     padding: 0;
 }
 
-.ec-attachment-item {
+.ms-ec-attachment-item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -623,21 +588,28 @@
     border: 1px solid var(--ec-border);
     border-radius: var(--ec-radius-control);
     padding: 10px 12px;
-    animation: ecItemIn 0.2s var(--ec-ease);
+    animation: msEcItemIn 0.2s var(--ec-ease);
 }
 
-@keyframes ecItemIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes msEcItemIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.ec-attachment-item.is-removing {
+.ms-ec-attachment-item.is-removing {
     opacity: 0;
     transform: translateX(8px);
     transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
-.ec-attachment-icon {
+.ms-ec-attachment-icon {
     flex: 0 0 auto;
     width: 36px;
     height: 36px;
@@ -649,17 +621,17 @@
     color: var(--ec-accent-strong);
 }
 
-.ec-attachment-icon.ec-icon-image {
+.ms-ec-attachment-icon.ms-ec-icon-image {
     background-color: rgba(79, 125, 84, 0.13);
     color: var(--ec-success);
 }
 
-.ec-attachment-icon.ec-icon-pdf {
+.ms-ec-attachment-icon.ms-ec-icon-pdf {
     background-color: var(--ec-danger-bg);
     color: var(--ec-danger);
 }
 
-.ec-attachment-info {
+.ms-ec-attachment-info {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -667,7 +639,7 @@
     gap: 1px;
 }
 
-.ec-attachment-name {
+.ms-ec-attachment-name {
     font-size: 13px;
     font-weight: 600;
     color: var(--ec-heading);
@@ -676,17 +648,17 @@
     white-space: nowrap;
 }
 
-.ec-attachment-meta {
+.ms-ec-attachment-meta {
     font-size: 11.5px;
     color: var(--ec-caption);
 }
 
-.ec-attachment-meta.is-error {
+.ms-ec-attachment-meta.is-error {
     color: var(--ec-danger);
     font-weight: 600;
 }
 
-.ec-attachment-remove {
+.ms-ec-attachment-remove {
     flex: 0 0 auto;
     width: 28px;
     height: 28px;
@@ -700,12 +672,12 @@
     transition: background-color var(--ec-transition-fast), color var(--ec-transition-fast);
 }
 
-.ec-attachment-remove:hover {
+.ms-ec-attachment-remove:hover {
     background-color: var(--ec-danger-bg);
     color: var(--ec-danger);
 }
 
-.ec-attachment-empty {
+.ms-ec-attachment-empty {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -717,32 +689,32 @@
     border-radius: var(--ec-radius-control);
 }
 
-.ec-attachment-empty[hidden] {
+.ms-ec-attachment-empty[hidden] {
     display: none;
 }
 
 /* ================= 12. FOOTER ================= */
-.ec-footer-right {
+.ms-ec-footer-right {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.ec-btn-label {
+.ms-ec-btn-label {
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
 /* ================= 13. PREVIEW MODAL ================= */
-.ec-preview-email {
+.ms-ec-preview-email {
     background-color: var(--ec-bg);
     border: 1px solid var(--ec-border);
     border-radius: var(--ec-radius-card);
     overflow: hidden;
 }
 
-.ec-preview-email-head {
+.ms-ec-preview-email-head {
     background-color: var(--ec-surface);
     padding: 18px 20px;
     border-bottom: 1px solid var(--ec-border);
@@ -751,13 +723,13 @@
     gap: 10px;
 }
 
-.ec-preview-row {
+.ms-ec-preview-row {
     display: flex;
     align-items: baseline;
     gap: 10px;
 }
 
-.ec-preview-label {
+.ms-ec-preview-label {
     flex: 0 0 auto;
     width: 64px;
     font-size: 11.5px;
@@ -767,18 +739,18 @@
     color: var(--ec-caption);
 }
 
-.ec-preview-value {
+.ms-ec-preview-value {
     font-size: 13.5px;
     color: var(--ec-heading);
     font-weight: 500;
     word-break: break-word;
 }
 
-.ec-preview-subject {
+.ms-ec-preview-subject {
     font-weight: 700;
 }
 
-.ec-preview-email-body {
+.ms-ec-preview-email-body {
     padding: 24px 22px;
     font-size: 14px;
     color: var(--ec-heading);
@@ -789,17 +761,17 @@
     background-color: var(--ec-surface);
 }
 
-.ec-preview-attachments {
+.ms-ec-preview-attachments {
     padding: 16px 22px 20px;
     border-top: 1px solid var(--ec-border);
     background-color: var(--ec-surface);
 }
 
-.ec-preview-attachments[hidden] {
+.ms-ec-preview-attachments[hidden] {
     display: none;
 }
 
-.ec-preview-attachments-label {
+.ms-ec-preview-attachments-label {
     display: block;
     font-size: 11.5px;
     font-weight: 700;
@@ -809,7 +781,7 @@
     margin-bottom: 10px;
 }
 
-.ec-preview-attachment-list {
+.ms-ec-preview-attachment-list {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
@@ -818,7 +790,7 @@
     padding: 0;
 }
 
-.ec-preview-attachment-chip {
+.ms-ec-preview-attachment-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -831,7 +803,7 @@
 }
 
 /* ================= 14. TOAST ================= */
-.ec-toast-container {
+.ms-ec-toast-container {
     position: fixed;
     bottom: 24px;
     right: 24px;
@@ -843,7 +815,7 @@
     pointer-events: none;
 }
 
-.ec-toast {
+.ms-ec-toast {
     pointer-events: auto;
     display: flex;
     align-items: flex-start;
@@ -856,48 +828,62 @@
     box-shadow: var(--ec-shadow-md);
     font-size: 13px;
     color: var(--ec-heading);
-    animation: ecToastIn 0.25s var(--ec-ease);
+    animation: msEcToastIn 0.25s var(--ec-ease);
 }
 
-.ec-toast-icon {
+.ms-ec-toast-icon {
     flex: 0 0 auto;
     margin-top: 1px;
     color: var(--ec-accent);
 }
 
-.ec-toast.ec-toast-success {
+.ms-ec-toast.ms-ec-toast-success {
     border-left-color: var(--ec-success);
 }
 
-.ec-toast.ec-toast-success .ec-toast-icon {
+.ms-ec-toast.ms-ec-toast-success .ms-ec-toast-icon {
     color: var(--ec-success);
 }
 
-.ec-toast.ec-toast-error {
+.ms-ec-toast.ms-ec-toast-error {
     border-left-color: var(--ec-danger);
 }
 
-.ec-toast.ec-toast-error .ec-toast-icon {
+.ms-ec-toast.ms-ec-toast-error .ms-ec-toast-icon {
     color: var(--ec-danger);
 }
 
-.ec-toast.is-leaving {
-    animation: ecToastOut 0.2s ease forwards;
+.ms-ec-toast.is-leaving {
+    animation: msEcToastOut 0.2s ease forwards;
 }
 
-@keyframes ecToastIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes msEcToastIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-@keyframes ecToastOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(8px); }
+@keyframes msEcToastOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(8px);
+    }
 }
 
 /* ================= 15. LOADING / DISABLED STATES ================= */
-#ecSendBtn.is-loading .ec-btn-label,
-#ecPreviewSendBtn.is-loading .ec-btn-label {
+#ecSendBtn.is-loading .ms-ec-btn-label,
+#ecPreviewSendBtn.is-loading .ms-ec-btn-label {
     visibility: hidden;
 }
 
@@ -919,66 +905,68 @@
     border-radius: 50%;
     border: 2px solid rgba(36, 26, 23, 0.35);
     border-top-color: #241A17;
-    animation: ecSpin 0.7s linear infinite;
+    animation: msEcSpin 0.7s linear infinite;
 }
 
-@keyframes ecSpin {
-    to { transform: rotate(360deg); }
+@keyframes msEcSpin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.ec-upload-zone.is-disabled {
+.ms-ec-upload-zone.is-disabled {
     opacity: 0.55;
     pointer-events: none;
 }
 
 /* ================= 16. RESPONSIVE ================= */
 @media (max-width: 1040px) {
-    .ec-modal {
+    .ms-ec-modal {
         width: 90%;
     }
 }
 
 @media (max-width: 767.98px) {
-    .bd-modal-backdrop {
+    .ms-ec-modal-backdrop {
         padding: 0;
     }
 
-    .ec-modal {
+    .ms-ec-modal {
         width: 100%;
         max-height: 100vh;
         height: 100%;
         border-radius: 0;
     }
 
-    .bd-modal-header,
-    .bd-modal-body,
-    .bd-modal-footer {
+    .ms-ec-modal-header,
+    .ms-ec-modal-body,
+    .ms-ec-modal-footer {
         padding-left: 18px;
         padding-right: 18px;
     }
 
-    .ec-footer-right {
+    .ms-ec-footer-right {
         flex: 1;
     }
 
-    .bd-modal-footer {
+    .ms-ec-modal-footer {
         flex-wrap: wrap;
         gap: 10px;
     }
 
-    .bd-modal-footer .bd-btn {
+    .ms-ec-modal-footer .ms-ec-btn {
         flex: 1;
     }
 
-    .ec-textarea {
+    .ms-ec-textarea {
         min-height: 220px;
     }
 
-    .ec-preview-label {
+    .ms-ec-preview-label {
         width: 52px;
     }
 
-    .ec-toast-container {
+    .ms-ec-toast-container {
         left: 16px;
         right: 16px;
         bottom: 16px;
@@ -987,11 +975,11 @@
 }
 
 @media (max-width: 480px) {
-    .ec-recipient-card {
+    .ms-ec-recipient-card {
         flex-wrap: wrap;
     }
 
-    .ec-status-badge {
+    .ms-ec-status-badge {
         margin-left: 56px;
     }
 }

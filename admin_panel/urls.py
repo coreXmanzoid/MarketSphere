@@ -5,7 +5,9 @@ urlpatterns = [
     path("", views.dashboard, name="admin-dasboard"),
     path("user/", views.user_management, name="user-management"),
     path("user/buyers/", views.user_buyers, name="user-buyers"),
+    path("user/sellers/", views.user_sellers, name="user-sellers"),
     path("user/buyers/<int:userId>", views.user_buyer, name="user-buyer"),
+    path("user/sellers/<int:sellerId>", views.user_seller, name="user-seller"),
     path("change-account-state/", views.change_state, name="change-account-state"),
     path(
         "user/buyers/<int:user_id>/reset-password/",
@@ -17,15 +19,24 @@ urlpatterns = [
         views.logout_all_devices,
         name="logout-all-devices",
     ),
-    path('buyers/<int:user_id>/export/', views.export_buyer_profile, name='export_buyer_profile'),
+    path(
+        "buyers/<int:user_id>/export/",
+        views.export_buyer_profile,
+        name="export_buyer_profile",
+    ),
     path(
         "user/buyers/<int:buyer_id>/update-profile/",
         views.update_buyer_profile_view,
         name="update_buyer_profile",
     ),
     path(
-    "buyers/<int:buyer_id>/send-email/",
-    views.send_buyer_email,
-    name="send_buyer_email",
-),
+        "buyers/<int:buyer_id>/send-email/",
+        views.send_buyer_email,
+        name="send_buyer_email",
+    ),
+    path(
+        "buyers/<int:user_id>/export-orders/",
+        views.export_order_history,
+        name="export-order-history",
+    ),
 ]

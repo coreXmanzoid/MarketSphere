@@ -1,0 +1,542 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Sellers
+{% endblock %}
+
+{% block active_page %}
+  users
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span>User Management</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">Sellers</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static '/css/buyers.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <div class="bu-page" id="buPage">
+    <!-- ================= 1. PAGE HEADER ================= -->
+    <header class="bu-header bu-reveal">
+      <div class="bu-header-text">
+        <div class="bu-header-title-row">
+          <h1 class="bu-header-title">Sellers</h1>
+          <span class="bu-total-badge" id="buTotalBadge">
+            <span class="bu-total-badge-dot" aria-hidden="true"></span>
+            <!-- Placeholder value; will render buyer count from Django -->{{ admin.total_sellers }} Total Sellers
+          </span>
+        </div>
+        <p class="bu-header-subtitle">View, search, and manage every seller account on MarketSphere.</p>
+      </div>
+
+      <div class="bu-header-actions">
+        <button type="button" class="bu-btn bu-btn-secondary" id="buAddSellerBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>Add Seller
+        </button>
+        <button type="button" class="bu-btn bu-btn-primary" id="buExportBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>Export Sellers
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= 2. SUMMARY CARDS ================= -->
+    <section class="bu-stats-grid" aria-label="Seller statistics">
+      <div class="bu-stat-card bu-reveal">
+        <div class="bu-stat-icon bu-stat-icon-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="10" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="bu-stat-body">
+          <span class="bu-stat-label">Total Sellers</span>
+          <!-- Placeholder value; will render User.objects count from Django -->
+          <span class="bu-stat-value" data-count-to="{{ admin.total_sellers }}">{{ admin.total_sellers }}</span>
+          {% if admin.sellers_increased %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.sellers_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.sellers_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="bu-stat-card bu-reveal">
+        <div class="bu-stat-icon bu-stat-icon-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </div>
+        <div class="bu-stat-body">
+          <span class="bu-stat-label">Active Sellers</span>
+          <!-- Placeholder value; will render active-status count from Django -->
+          <span class="bu-stat-value" data-count-to="{{ admin.total_verified_sellers }}">{{ admin.total_verified_sellers }}</span>
+          {% if admin.verified_sellers_increased %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.verified_sellers_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.verified_sellers_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="bu-stat-card bu-reveal">
+        <div class="bu-stat-icon bu-stat-icon-info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v4"></path>
+            <path d="M16 2v4"></path>
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <path d="M3 10h18"></path>
+            <path d="M12 15v3"></path>
+            <path d="M10.5 16.5h3"></path>
+          </svg>
+        </div>
+        <div class="bu-stat-body">
+          <span class="bu-stat-label">Pending Sellers</span>
+          <!-- Placeholder value; will render current-month join count from Django -->
+          <span class="bu-stat-value" data-count-to="{{ admin.pending_sellers }}">{{ admin.pending_sellers }}</span>
+          {% if admin.pending_sellers_increased %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.pending_sellers_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.pending_sellers_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="bu-stat-card bu-reveal">
+        <div class="bu-stat-icon bu-stat-icon-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+          </svg>
+        </div>
+        <div class="bu-stat-body">
+          <span class="bu-stat-label">Suspended Buyers</span>
+          <!-- Placeholder value; will render suspended-status count from Django -->
+          <span class="bu-stat-value" data-count-to="{{ admin.suspended_sellers }}">{{ admin.suspended_sellers }}</span>
+          {% if admin.suspended_sellers_increased %}
+            <span class="bu-stat-trend bu-trend-up">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>{{ admin.suspended_sellers_change }}% vs last month
+            </span>
+          {% else %}
+            <span class="bu-stat-trend bu-trend-down">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>{{ admin.suspended_sellers_change }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. SEARCH & FILTER TOOLBAR ================= -->
+    <section class="bu-toolbar-card bu-reveal" aria-label="Buyer filters">
+      <div class="bu-toolbar">
+        <div class="bu-search">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input type="search" id="buSearchInput" class="bu-search-input" placeholder="Search by name, username, email..." aria-label="Search buyers" />
+        </div>
+
+        <div class="bu-toolbar-filters">
+          <div class="bu-select-wrap">
+            <select id="buStatusFilter" class="bu-select" aria-label="Filter by status">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="verified">Verified</option>
+              <option value="deactivated">Deactivated</option>
+              <option value="suspended">Suspended</option>
+              <option value="blocked">Blocked</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div class="bu-select-wrap">
+            <select id="buSortFilter" class="bu-select" aria-label="Sort sellers">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="most-products">Most Products</option>
+              <option value="highest-sales">Highest Sales</option>
+              <option value="verified">Verified First</option>
+            </select>
+          </div>
+
+          <button type="button" class="bu-btn bu-btn-secondary bu-btn-sm" id="buResetFiltersBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>Reset
+          </button>
+
+          <button type="button" class="bu-btn bu-btn-ghost bu-btn-sm bu-icon-only" id="buRefreshBtn" aria-label="Refresh buyer list">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+              <polyline points="21 3 21 9 15 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= BULK ACTION BAR ================= -->
+      <!-- Hidden by default; JS reveals it once one or more row checkboxes are checked -->
+      <div class="bu-bulk-bar bu-hidden" id="buBulkBar">
+        <div class="bu-bulk-info">
+          <span class="bu-bulk-count" id="buBulkCount">0</span>
+          <span>sellers selected</span>
+        </div>
+
+        <div class="bu-bulk-actions">
+          <button type="button" class="bu-btn bu-btn-secondary bu-btn-sm" data-bulk-action="verify">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>Verify
+          </button>
+          <button type="button" class="bu-btn bu-btn-secondary bu-btn-sm" data-bulk-action="suspend">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+            </svg>Suspend
+          </button>
+          <button type="button" class="bu-btn bu-btn-secondary bu-btn-sm" data-bulk-action="export">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>Export
+          </button>
+          <button type="button" class="bu-btn bu-btn-danger bu-btn-sm" data-bulk-action="block">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>Block
+          </button>
+          <button type="button" class="bu-btn bu-btn-ghost bu-btn-sm" id="buClearSelectionBtn">Clear Selection</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. BUYERS TABLE ================= -->
+    <section class="bu-table-card bu-reveal" aria-label="Buyers table">
+      <div class="bu-table-wrap">
+        <table class="bu-table" id="buBuyersTable">
+          <thead>
+            <tr>
+              <th scope="col" class="bu-col-checkbox">
+                <label class="bu-checkbox">
+                  <input type="checkbox" id="buSelectAll" aria-label="Select all buyers" />
+                  <span class="bu-checkbox-box"></span>
+                </label>
+              </th>
+              <th scope="col" class="bu-col-avatar">
+                <span class="sr-only">Store Logo</span>
+              </th>
+              <th scope="col">Store Name</th>
+              <th scope="col">Owner</th>
+              <th scope="col">Store Email</th>
+              <th scope="col">Contact</th>
+              <th scope="col">Products</th>
+              <th scope="col">Total Sales</th>
+              <th scope="col">Status</th>
+              <th scope="col">Joined</th>
+              <th scope="col" class="bu-col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody id="buBuyersTableBody">
+            <!-- ================= BUYER ROWS ================= -->
+            <!--       Rows will be rendered here by Django from the User/buyer queryset.
+                 Placeholder data below is for frontend preview only.       -->
+
+            {% for seller in sellers %}
+              <tr class="bu-row" data-store-name="{{ seller.store_name }}" data-owner="{{ seller.user.get_full_name|default:seller.user.username }}" data-username="{{ seller.user.username }}" data-email="{{ seller.store_email }}" data-status="{{ seller.status }}" data-products="{{ seller.products.count }}" data-sales="{{ seller.total_sales|default:0 }}" data-joined="{{ seller.created_at|date:'Y-m-d' }}">
+                <!-- Checkbox -->
+                <td data-label="">
+                  <label class="bu-checkbox">
+                    <input type="checkbox" class="bu-row-checkbox" aria-label="Select {{ seller.store_name }}" />
+                    <span class="bu-checkbox-box"></span>
+                  </label>
+                </td>
+
+                <!-- Store Logo -->
+                <td data-label="" class="bu-col-avatar">
+                  <span class="bu-avatar" aria-hidden="true">
+                    {% if seller.store_logo %}
+                      <img src="{{ seller.store_logo.url }}" alt="{{ seller.store_name }}" />
+                    {% else %}
+                      {{ seller.store_name|slice:':1'|upper }}
+                    {% endif %}
+                  </span>
+                </td>
+
+                <!-- Store -->
+                <td data-label="Store" onclick="window.location.href='/'">
+                  <span class="bu-buyer-name">{{ seller.store_name }}</span>
+
+                  {% if seller.status == 'verified' %}
+                    <span class="bu-buyer-Verified">
+                      <i class="bi bi-patch-check-fill"></i>
+                      Verified
+                    </span>
+                  {% elif seller.status == 'pending' %}
+                    <span class="bu-buyer-Unverified">
+                      <i class="bi bi-hourglass-split"></i>
+                      Pending
+                    </span>
+                  {% elif seller.status == 'suspended' %}
+                    <span class="bu-buyer-Unverified">
+                      <i class="bi bi-pause-circle"></i>
+                      Suspended
+                    </span>
+                  {% elif seller.status == 'blocked' %}
+                    <span class="bu-buyer-Unverified">
+                      <i class="bi bi-slash-circle"></i>
+                      Blocked
+                    </span>
+                  {% elif seller.status == 'rejected' %}
+                    <span class="bu-buyer-Unverified">
+                      <i class="bi bi-x-circle"></i>
+                      Rejected
+                    </span>
+                  {% elif seller.status == 'deactivated' %}
+                    <span class="bu-buyer-Unverified">
+                      <i class="bi bi-power"></i>
+                      Deactivated
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Owner -->
+                <td data-label="Owner">
+                  <span class="bu-username">{{ seller.user.get_full_name|default:seller.user.username }}</span>
+                </td>
+
+                <!-- Store Email -->
+                <td data-label="Store Email">
+                  <a href="mailto:{{ seller.store_email }}" class="bu-email-link">{{ seller.store_email }}</a>
+                </td>
+
+                <!-- Contact -->
+                <td data-label="Contact">
+                  <span class="bu-contact">{{ seller.user.contact|default:'—' }}</span>
+                </td>
+
+                <!-- Products -->
+                <td data-label="Products">
+                  <span class="bu-orders-count">{{ seller.products.count }}</span>
+                </td>
+
+                <!-- Total Sales -->
+                <td data-label="Total Sales">
+                  <span class="bu-total-spent">Rs. {{ seller.total_sales|default:'0' }}</span>
+                </td>
+
+                <!-- Status -->
+                <td data-label="Status">
+                  <span class="bu-date">{{ seller.get_status_display }}</span>
+                </td>
+
+                <!-- Joined -->
+                <td data-label="Joined">
+                  <span class="bu-date">{{ seller.created_at|date }}</span>
+                </td>
+
+                <!-- Actions -->
+                <td data-label="" class="bu-col-actions">
+                  <div class="bu-dropdown">
+                    <button type="button" class="bu-icon-btn bu-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for {{ seller.store_name }}">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="5" r="1.5"></circle>
+                        <circle cx="12" cy="12" r="1.5"></circle>
+                        <circle cx="12" cy="19" r="1.5"></circle>
+                      </svg>
+                    </button>
+
+                    <div class="bu-dropdown-menu" role="menu" data-user-id="{{ seller.user.id }}">
+                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="view-profile">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>View Seller
+                      </button>
+
+                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="view-products">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 7 12 3 4 7l8 4 8-4Z"></path>
+                          <path d="M4 7v10l8 4 8-4V7"></path>
+                          <path d="M12 11v10"></path>
+                        </svg>View Products
+                      </button>
+
+                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="view-orders">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
+                          <path d="M14 2v5h5"></path>
+                        </svg>View Orders
+                      </button>
+
+                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="send-email">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                          <path d="m22 7-10 5L2 7"></path>
+                        </svg>Send Email
+                      </button>
+
+                      <div class="bu-dropdown-divider"></div>
+
+                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="verify">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 6 9 17l-5-5"></path>
+                        </svg>Verify Seller
+                      </button>
+
+                      <button type="button" class="bu-dropdown-item" role="menuitem" data-row-action="suspend">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+                        </svg>Suspend Seller
+                      </button>
+
+                      <button type="button" class="bu-dropdown-item bu-dropdown-item-danger" role="menuitem" data-row-action="block">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="m4.9 4.9 14.2 14.2"></path>
+                        </svg>Block Seller
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================= EMPTY STATE ================= -->
+      <!-- Hidden by default — shown once Django reports zero buyers for the active filters -->
+      <div class="bu-empty-state bu-hidden" id="buEmptyState">
+        <div class="bu-empty-illustration" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="10" cy="7" r="4"></circle>
+            <line x1="16.5" y1="12.5" x2="21.5" y2="17.5"></line>
+            <line x1="21.5" y1="12.5" x2="16.5" y2="17.5"></line>
+          </svg>
+        </div>
+        <h3 class="bu-empty-title">No Buyers Found</h3>
+        <p class="bu-empty-subtitle">We couldn't find any buyers matching your current search or filters.</p>
+        <button type="button" class="bu-btn bu-btn-primary" id="buEmptyRefreshBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+            <polyline points="21 3 21 9 15 9"></polyline>
+          </svg>Refresh Buyers
+        </button>
+      </div>
+
+      <!-- ================= 5. PAGINATION ================= -->
+      <div class="bu-pagination-bar">
+        <div class="bu-pagination-left">
+          <span class="bu-pagination-count">Showing <strong>1&ndash;8</strong> of <strong>2,348</strong> Buyers</span>
+
+          <div class="bu-select-wrap bu-rows-select-wrap">
+            <select id="buRowsPerPage" class="bu-select bu-select-sm" aria-label="Rows per page">
+              <option value="8">8 / page</option>
+              <option value="20">20 / page</option>
+              <option value="50">50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
+        </div>
+
+        <nav class="bu-pagination" aria-label="Buyers pagination">
+          <button type="button" class="bu-page-btn" disabled aria-label="Previous page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+          </button>
+          <button type="button" class="bu-page-btn is-active" aria-current="page">1</button>
+          <button type="button" class="bu-page-btn">2</button>
+          <button type="button" class="bu-page-btn">3</button>
+          <button type="button" class="bu-page-btn">4</button>
+          <span class="bu-page-ellipsis">&hellip;</span>
+          <button type="button" class="bu-page-btn">294</button>
+          <button type="button" class="bu-page-btn" aria-label="Next page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= DELETE CONFIRMATION MODAL (frontend placeholder) ================= -->
+  <div class="bu-modal-overlay bu-hidden" id="buDeleteModalOverlay">
+    <div class="bu-modal" role="dialog" aria-modal="true" aria-labelledby="buDeleteModalTitle">
+      <div class="bu-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </div>
+      <h3 class="bu-modal-title" id="buDeleteModalTitle">Block this buyer?</h3>
+      <p class="bu-modal-text" id="buDeleteModalText">This action cannot be undone. The buyer's account and order history will be permanently removed.</p>
+      <div class="bu-modal-actions">
+        <button type="button" class="bu-btn bu-btn-ghost" id="buDeleteModalCancel">Cancel</button>
+        <button type="button" class="bu-btn bu-btn-danger" id="buDeleteModalConfirm">Yes, Block</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="bu-toast-container" id="buToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static '/js/buyers_detail.js' %}"></script>
+{% endblock %}

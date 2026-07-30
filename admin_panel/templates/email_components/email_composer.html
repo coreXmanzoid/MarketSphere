@@ -12,13 +12,12 @@
      be set directly on #ecModalRoot before opening):
        data-buyer-name, data-buyer-email, data-buyer-avatar,
        data-buyer-status, data-buyer-initial
-     ========================================================================= */
+     ========================================================================= -->
 
-     
      <!-- ================= SEND EMAIL MODAL ================= -->
-     <div class="bd-modal-backdrop ec-backdrop" id="ecBackdrop" hidden>
-     <div
-    class="bd-modal ec-modal"
+<div class="ms-ec-modal-backdrop ms-ec-backdrop" id="ecBackdrop" hidden>
+  <div
+    class="ms-ec-modal ms-ec-root-modal"
     id="ecModalRoot"
     role="dialog"
     aria-modal="true"
@@ -27,13 +26,13 @@
     tabindex="-1"
   >
     <!-- ============ HEADER ============ -->
-    <header class="bd-modal-header ec-header">
-      <div class="ec-header-text">
-        <h2 class="bd-modal-title" id="ecModalTitle">Send Email</h2>
-        <p class="ec-subtitle" id="ecModalSubtitle">Compose a professional email for this buyer.</p>
+    <header class="ms-ec-modal-header ms-ec-header">
+      <div class="ms-ec-header-text">
+        <h2 class="ms-ec-modal-title" id="ecModalTitle">Send Email</h2>
+        <p class="ms-ec-subtitle" id="ecModalSubtitle">Compose a professional email for this buyer.</p>
       </div>
 
-      <button type="button" class="bd-btn bd-btn-icon ec-close-btn" id="ecCloseBtn" aria-label="Close email composer">
+      <button type="button" class="ms-ec-btn ms-ec-btn-icon ms-ec-close-btn" id="ecCloseBtn" aria-label="Close email composer">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -42,30 +41,30 @@
     </header>
 
     <!-- ============ BODY ============ -->
-    <div class="bd-modal-body ec-body" id="ecBody">
+    <div class="ms-ec-modal-body ms-ec-body" id="ecBody">
 
       <!-- ---- Recipient (read-only) ---- -->
-      <section class="ec-section" aria-label="Recipient">
-        <span class="ec-section-label">Recipient</span>
+      <section class="ms-ec-section" aria-label="Recipient">
+        <span class="ms-ec-section-label">Recipient</span>
 
-        <div class="ec-recipient-card">
-          <span class="ec-recipient-avatar" id="ecRecipientAvatar" aria-hidden="true">A</span>
+        <div class="ms-ec-recipient-card">
+          <span class="ms-ec-recipient-avatar" id="ecRecipientAvatar" aria-hidden="true">A</span>
 
-          <div class="ec-recipient-info">
-            <span class="ec-recipient-name" id="ecRecipientName">Buyer Name</span>
-            <span class="ec-recipient-email" id="ecRecipientEmail">buyer@example.com</span>
+          <div class="ms-ec-recipient-info">
+            <span class="ms-ec-recipient-name" id="ecRecipientName">Buyer Name</span>
+            <span class="ms-ec-recipient-email" id="ecRecipientEmail">buyer@example.com</span>
           </div>
 
-          <span class="ec-status-badge" id="ecRecipientStatus">Active</span>
+          <span class="ms-ec-status-badge" id="ecRecipientStatus">Active</span>
         </div>
       </section>
 
       <!-- ---- Template ---- -->
-      <section class="ec-section" aria-label="Email template">
-        <label class="ec-section-label" for="ecTemplateSelect">Email Template</label>
+      <section class="ms-ec-section" aria-label="Email template">
+        <label class="ms-ec-section-label" for="ecTemplateSelect">Email Template</label>
 
-        <div class="ec-select-wrap">
-          <select id="ecTemplateSelect" class="ec-select">
+        <div class="ms-ec-select-wrap">
+          <select id="ecTemplateSelect" class="ms-ec-select">
             <option value="custom" selected>Custom</option>
             <option value="welcome">Welcome Email</option>
             <option value="account_verified">Account Verified</option>
@@ -75,56 +74,56 @@
             <option value="order_support">Order Support</option>
             <option value="general_announcement">General Announcement</option>
           </select>
-          <svg class="ec-select-caret" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg class="ms-ec-select-caret" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </div>
-        <span class="ec-field-hint">Choosing a template fills the subject and message below — you can still edit both.</span>
+        <span class="ms-ec-field-hint">Choosing a template fills the subject and message below — you can still edit both.</span>
       </section>
 
       <!-- ---- Subject ---- -->
-      <section class="ec-section" aria-label="Subject">
-        <div class="ec-label-row">
-          <label class="ec-section-label" for="ecSubjectInput">Subject <span class="ec-required" aria-hidden="true">*</span></label>
-          <span class="ec-char-counter" id="ecSubjectCounter">0 / 150</span>
+      <section class="ms-ec-section" aria-label="Subject">
+        <div class="ms-ec-label-row">
+          <label class="ms-ec-section-label" for="ecSubjectInput">Subject <span class="ms-ec-required" aria-hidden="true">*</span></label>
+          <span class="ms-ec-char-counter" id="ecSubjectCounter">0 / 150</span>
         </div>
 
         <input
           type="text"
           id="ecSubjectInput"
-          class="ec-input"
+          class="ms-ec-input"
           maxlength="150"
           placeholder="Write a clear, specific subject line"
           autocomplete="off"
           required
         />
-        <span class="ec-field-error" id="ecSubjectError" role="alert"></span>
+        <span class="ms-ec-field-error" id="ecSubjectError" role="alert"></span>
       </section>
 
       <!-- ---- Message ---- -->
-      <section class="ec-section" aria-label="Message">
-        <div class="ec-label-row">
-          <label class="ec-section-label" for="ecMessageInput">Message <span class="ec-required" aria-hidden="true">*</span></label>
-          <span class="ec-char-counter" id="ecMessageCounter">0 characters</span>
+      <section class="ms-ec-section" aria-label="Message">
+        <div class="ms-ec-label-row">
+          <label class="ms-ec-section-label" for="ecMessageInput">Message <span class="ms-ec-required" aria-hidden="true">*</span></label>
+          <span class="ms-ec-char-counter" id="ecMessageCounter">0 characters</span>
         </div>
 
         <textarea
           id="ecMessageInput"
-          class="ec-textarea"
+          class="ms-ec-textarea"
           placeholder="Write your message to the buyer..."
           required
         ></textarea>
-        <span class="ec-field-error" id="ecMessageError" role="alert"></span>
+        <span class="ms-ec-field-error" id="ecMessageError" role="alert"></span>
       </section>
 
       <!-- ---- Attachments ---- -->
-      <section class="ec-section" aria-label="Attachments">
-        <span class="ec-section-label">Attachments <span class="ec-optional">(optional)</span></span>
+      <section class="ms-ec-section" aria-label="Attachments">
+        <span class="ms-ec-section-label">Attachments <span class="ms-ec-optional">(optional)</span></span>
 
-        <div class="ec-upload-zone" id="ecUploadZone" tabindex="0" role="button" aria-label="Upload attachments">
-          <input type="file" id="ecFileInput" class="ec-visually-hidden" accept=".pdf,.docx,.png,.jpg,.jpeg,.webp" multiple />
+        <div class="ms-ec-upload-zone" id="ecUploadZone" tabindex="0" role="button" aria-label="Upload attachments">
+          <input type="file" id="ecFileInput" class="ms-ec-visually-hidden" accept=".pdf,.docx,.png,.jpg,.jpeg,.webp" multiple />
 
-          <div class="ec-upload-icon" aria-hidden="true">
+          <div class="ms-ec-upload-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="17 8 12 3 7 8"></polyline>
@@ -132,14 +131,14 @@
             </svg>
           </div>
 
-          <p class="ec-upload-title">Drag &amp; drop files here</p>
-          <p class="ec-upload-subtitle">or <span class="ec-upload-link">browse from your device</span></p>
-          <p class="ec-upload-guidelines">PDF, DOCX, PNG, JPG or WEBP &middot; up to 10&nbsp;MB each</p>
+          <p class="ms-ec-upload-title">Drag &amp; drop files here</p>
+          <p class="ms-ec-upload-subtitle">or <span class="ms-ec-upload-link">browse from your device</span></p>
+          <p class="ms-ec-upload-guidelines">PDF, DOCX, PNG, JPG or WEBP &middot; up to 10&nbsp;MB each</p>
         </div>
 
-        <ul class="ec-attachment-list" id="ecAttachmentList"></ul>
+        <ul class="ms-ec-attachment-list" id="ecAttachmentList"></ul>
 
-        <div class="ec-attachment-empty" id="ecAttachmentEmpty">
+        <div class="ms-ec-attachment-empty" id="ecAttachmentEmpty">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95L9.42 17.4a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49"></path>
           </svg>
@@ -149,19 +148,19 @@
     </div>
 
     <!-- ============ FOOTER ============ -->
-    <footer class="bd-modal-footer ec-footer">
-      <button type="button" class="bd-btn bd-btn-secondary" id="ecCancelBtn">Cancel</button>
+    <footer class="ms-ec-modal-footer ms-ec-footer">
+      <button type="button" class="ms-ec-btn ms-ec-btn-secondary" id="ecCancelBtn">Cancel</button>
 
-      <div class="ec-footer-right">
-        <button type="button" class="bd-btn bd-btn-secondary" id="ecPreviewBtn">
+      <div class="ms-ec-footer-right">
+        <button type="button" class="ms-ec-btn ms-ec-btn-secondary" id="ecPreviewBtn">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>Preview
         </button>
 
-        <button type="button" class="bd-btn bd-btn-primary" id="ecSendBtn">
-          <span class="ec-btn-label">
+        <button type="button" class="ms-ec-btn ms-ec-btn-primary" id="ecSendBtn">
+          <span class="ms-ec-btn-label">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -174,7 +173,7 @@
 
   <!-- ================= PREVIEW MODAL ================= -->
   <div
-    class="bd-modal ec-modal ec-preview-modal"
+    class="ms-ec-modal ms-ec-preview-modal"
     id="ecPreviewModal"
     role="dialog"
     aria-modal="true"
@@ -182,13 +181,13 @@
     tabindex="-1"
     hidden
   >
-    <header class="bd-modal-header ec-header">
-      <div class="ec-header-text">
-        <h2 class="bd-modal-title" id="ecPreviewTitle">Preview Email</h2>
-        <p class="ec-subtitle">This is how the email will appear to the buyer.</p>
+    <header class="ms-ec-modal-header ms-ec-header">
+      <div class="ms-ec-header-text">
+        <h2 class="ms-ec-modal-title" id="ecPreviewTitle">Preview Email</h2>
+        <p class="ms-ec-subtitle">This is how the email will appear to the buyer.</p>
       </div>
 
-      <button type="button" class="bd-btn bd-btn-icon ec-close-btn" id="ecPreviewCloseBtn" aria-label="Close preview">
+      <button type="button" class="ms-ec-btn ms-ec-btn-icon ms-ec-close-btn" id="ecPreviewCloseBtn" aria-label="Close preview">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -196,38 +195,38 @@
       </button>
     </header>
 
-    <div class="bd-modal-body ec-body">
-      <div class="ec-preview-email">
-        <div class="ec-preview-email-head">
-          <div class="ec-preview-row">
-            <span class="ec-preview-label">To</span>
-            <span class="ec-preview-value" id="ecPreviewTo">&mdash;</span>
+    <div class="ms-ec-modal-body ms-ec-body">
+      <div class="ms-ec-preview-email">
+        <div class="ms-ec-preview-email-head">
+          <div class="ms-ec-preview-row">
+            <span class="ms-ec-preview-label">To</span>
+            <span class="ms-ec-preview-value" id="ecPreviewTo">&mdash;</span>
           </div>
-          <div class="ec-preview-row">
-            <span class="ec-preview-label">Subject</span>
-            <span class="ec-preview-value ec-preview-subject" id="ecPreviewSubject">&mdash;</span>
+          <div class="ms-ec-preview-row">
+            <span class="ms-ec-preview-label">Subject</span>
+            <span class="ms-ec-preview-value ms-ec-preview-subject" id="ecPreviewSubject">&mdash;</span>
           </div>
         </div>
 
-        <div class="ec-preview-email-body" id="ecPreviewMessage">&mdash;</div>
+        <div class="ms-ec-preview-email-body" id="ecPreviewMessage">&mdash;</div>
 
-        <div class="ec-preview-attachments" id="ecPreviewAttachments" hidden>
-          <span class="ec-preview-attachments-label">Attachments</span>
-          <ul class="ec-preview-attachment-list" id="ecPreviewAttachmentList"></ul>
+        <div class="ms-ec-preview-attachments" id="ecPreviewAttachments" hidden>
+          <span class="ms-ec-preview-attachments-label">Attachments</span>
+          <ul class="ms-ec-preview-attachment-list" id="ecPreviewAttachmentList"></ul>
         </div>
       </div>
     </div>
 
-    <footer class="bd-modal-footer ec-footer">
-      <button type="button" class="bd-btn bd-btn-secondary" id="ecPreviewBackBtn">
+    <footer class="ms-ec-modal-footer ms-ec-footer">
+      <button type="button" class="ms-ec-btn ms-ec-btn-secondary" id="ecPreviewBackBtn">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 12H5"></path>
           <path d="M12 19l-7-7 7-7"></path>
         </svg>Back
       </button>
 
-      <button type="button" class="bd-btn bd-btn-primary" id="ecPreviewSendBtn">
-        <span class="ec-btn-label">
+      <button type="button" class="ms-ec-btn ms-ec-btn-primary" id="ecPreviewSendBtn">
+        <span class="ms-ec-btn-label">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -238,5 +237,5 @@
   </div>
 
   <!-- ================= TOAST CONTAINER ================= -->
-  <div class="ec-toast-container" id="ecToastContainer" aria-live="polite"></div>
+  <div class="ms-ec-toast-container" id="ecToastContainer" aria-live="polite"></div>
 </div>

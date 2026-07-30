@@ -268,3 +268,83 @@ def send_admin_email(
             )
 
     email.send(fail_silently=False)
+
+
+
+
+
+import csv
+
+from django.http import HttpResponse
+from django.utils import timezone
+
+
+
+def export_order_history(user_id):
+    orders = (
+        Order.objects.filter(user_id=user_id)
+        .prefetch_related(
+            "seller_orders__seller",
+            "seller_orders__items__product",
+        )
+        .order_by("-created_at")
+    )
+
+    response = HttpResponse(content_type="text/csv")
+
+    filename = (
+        f"order-history-user-{user_id}-"
+        f"{timezone.now().strftime('%Y-%m-%d')}.csv"
+    )
+
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+
+    writer.writerow(
+        [
+            "Order Number",
+            "Order Date",
+            "Overall Status",
+            "Payment Status",
+            "Seller",
+            "Products",
+            "Subtotal",
+            "Shipping",
+            "Discount",
+            "Tax",
+            "Total",
+            "Tracking Number",
+            "Courier",
+        ]
+    )
+
+    for order in orders:
+        for seller_order in order.seller_orders.all():
+
+            products = ", ".join(
+                [
+                    f"{item.product.name} (x{item.quantity})"
+                    for item in seller_order.items.all()
+                ]
+            )
+
+            writer.writerow(
+                [
+                    order.order_number,
+                    order.created_at.strftime("%Y-%m-%d %H:%M"),
+                    order.get_overall_status_display(),
+                    order.get_payment_status_display(),
+                    seller_order.seller.store_name,
+                    products,
+                    seller_order.subtotal,
+                    seller_order.shipping_cost,
+                    seller_order.discount,
+                    seller_order.tax,
+                    seller_order.total,
+                    seller_order.tracking_number,
+                    seller_order.courier,
+                ]
+            )
+
+    return response

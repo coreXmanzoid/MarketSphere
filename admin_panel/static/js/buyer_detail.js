@@ -745,10 +745,13 @@
             });
         }
 
-        var blockBtn = document.getElementById('bdBlockBtn');
+        var blockBtn = document.getElementById("bdBlockBtn");
+        var blockBtnDown = document.getElementById("blockBtnDown");
 
-        if (blockBtn) {
-            blockBtn.addEventListener('click', function () {
+        [blockBtn, blockBtnDown].forEach(function (button) {
+            if (!button) return;
+
+            button.addEventListener("click", function () {
 
                 if (blockBtn.classList.contains('is-loading')) return;
 
@@ -804,12 +807,15 @@
                 );
 
             });
-        }
+        });
 
-        var deactivateBtn = document.getElementById('bdDeactivateBtn');
+        var deactivateBtn = document.getElementById("bdDeactivateBtn");
+        var deactivateBtnDown = document.getElementById("deactivateaccount");
 
-        if (deactivateBtn) {
-            deactivateBtn.addEventListener('click', function () {
+        [deactivateBtn, deactivateBtnDown].forEach(function (button) {
+            if (!button) return;
+
+            button.addEventListener("click", function () {
 
                 if (deactivateBtn.classList.contains('is-loading')) return;
 
@@ -865,13 +871,14 @@
                 );
 
             });
-        }
-
+        });
         var logoutDevicesBtn = document.getElementById("bdLogoutDevicesBtn");
+        var logoutDevicesBtnDown = document.getElementById("logoutAllDevices");
 
-        if (logoutDevicesBtn) {
-            logoutDevicesBtn.addEventListener("click", async function () {
+        [logoutDevicesBtn, logoutDevicesBtnDown].forEach(function (button) {
+            if (!button) return;
 
+            button.addEventListener("click", async function () {
                 setButtonLoading(logoutDevicesBtn, true, "Logging out...");
 
                 try {
@@ -903,16 +910,15 @@
                     showToast("Something went wrong.", "error");
                 }
 
-            }
-
-            )
-        };
-
+            });
+        });
         var exportProfileBtn = document.getElementById("bdExportProfileBtn");
+        var exportProfileBtnDown = document.getElementById("exportProfileDown");
 
-        if (exportProfileBtn) {
+        [exportProfileBtn, exportProfileBtnDown].forEach(function (button) {
+            if (!button) return;
 
-            exportProfileBtn.addEventListener("click", function () {
+            button.addEventListener("click", function () {
 
                 if (exportProfileBtn.classList.contains("is-loading")) return;
 
@@ -928,7 +934,7 @@
 
             });
 
-        }
+        });
         var deleteBtn = document.getElementById('bdDeleteBtn');
         var dangerDeleteBtn = document.getElementById('bdDangerDeleteBtn');
 
@@ -1278,6 +1284,21 @@
         });
 
     });
+
+    var exportOrdersBtn = document.getElementById("exportOrdersCSV");
+
+    if (exportOrdersBtn) {
+        exportOrdersBtn.addEventListener("click", function () {
+            var userId = this.dataset.userId;
+
+            if (!userId) {
+                console.error("User ID not found.");
+                return;
+            }
+
+            window.location.href = `/admin-db/buyers/${userId}/export-orders/`;
+        });
+    }
 
 
     document.getElementById("bdCloseEditAddressModal").addEventListener("click", closeEditModal);

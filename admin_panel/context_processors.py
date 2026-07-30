@@ -184,7 +184,66 @@ def admin_context(request):
         seller_health_status = "Critical"
         seller_health_color = "critical"
 
-    pending_sellers = Seller.objects.filter(status=Seller.Status.PENDING).count()
+    # =====================================================
+    # Pending Sellers
+    # =====================================================
+
+    pending_sellers = Seller.objects.filter(
+        status=Seller.Status.PENDING
+    ).count()
+
+    current_month_pending = Seller.objects.filter(
+        status=Seller.Status.PENDING,
+        created_at__gte=current_month_start,
+    ).count()
+
+    previous_month_pending = Seller.objects.filter(
+        status=Seller.Status.PENDING,
+        created_at__gte=previous_month_start,
+        created_at__lt=current_month_start,
+    ).count()
+
+    if previous_month_pending > 0:
+        pending_sellers_change = round(
+            ((current_month_pending - previous_month_pending) / previous_month_pending) * 100,
+            1,
+        )
+    else:
+        pending_sellers_change = 100 if current_month_pending > 0 else 0
+
+    pending_sellers_increased = current_month_pending >= previous_month_pending
+
+
+    # =====================================================
+    # Suspended Sellers
+    # =====================================================
+
+    suspended_sellers = Seller.objects.filter(
+        status=Seller.Status.SUSPENDED
+    ).count()
+
+    current_month_suspended = Seller.objects.filter(
+        status=Seller.Status.SUSPENDED,
+        created_at__gte=current_month_start,
+    ).count()
+
+    previous_month_suspended = Seller.objects.filter(
+        status=Seller.Status.SUSPENDED,
+        created_at__gte=previous_month_start,
+        created_at__lt=current_month_start,
+    ).count()
+
+    if previous_month_suspended > 0:
+        suspended_sellers_change = round(
+            ((current_month_suspended - previous_month_suspended) / previous_month_suspended) * 100,
+            1,
+        )
+    else:
+        suspended_sellers_change = 100 if current_month_suspended > 0 else 0
+
+    suspended_sellers_increased = current_month_suspended >= previous_month_suspended
+
+
     reviewed_today = (
         Seller.objects.filter(created_at__gte=today_start)
         .exclude(status=Seller.Status.PENDING)
@@ -612,6 +671,11 @@ def admin_context(request):
             "buyers_change": round(buyers_change, 1),
             "buyers_increased": buyers_change >= 0,
             "pending_sellers": pending_sellers,
+            "pending_sellers_change": pending_sellers_change,
+            "pending_sellers_increased": pending_sellers_increased,
+            "suspended_sellers": suspended_sellers,
+            "suspended_sellers_change": suspended_sellers_change,
+            "suspended_sellers_increased": suspended_sellers_increased,
             "pending_products": pending_products,
             "low_stock_products": low_stock_products,
             "today_sales": today_sales,
