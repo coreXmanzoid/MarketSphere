@@ -162,6 +162,7 @@
     background-color: #9D6638 !important;
     color: #F7F1DE !important;
     border-color: var(--pf-accent);
+    border-radius: 2px;
     border: 1.5px solid #9D6638 !important;
 }
 
@@ -174,6 +175,7 @@
 .pm-btn-secondary {
     background-color: transparent;
     color: #9D6638 !important;
+    border-radius: 2px;
     border: 1.5px solid #9D6638 !important;
 }
 

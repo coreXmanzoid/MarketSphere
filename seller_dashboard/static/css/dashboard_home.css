@@ -473,6 +473,10 @@
     color: #6b7458;
 }
 
+.dh-badge-shipped {
+    background-color: rgba(79, 125, 84, 0.15);
+    color: var(--sd-info);
+}
 .dh-badge-delivered {
     background-color: rgba(79, 125, 84, 0.15);
     color: var(--sd-success);

@@ -265,11 +265,24 @@ def get_seller_orders(seller):
     )
 
 
+from django.utils import timezone
+
+
 def update_order_status(seller, order_number, status):
+    update_fields = {
+        "status": status,
+    }
+
+    if status == SellerOrder.Status.SHIPPED:
+        update_fields["shipped_at"] = timezone.now()
+
+    elif status == SellerOrder.Status.DELIVERED:
+        update_fields["delivered_at"] = timezone.now()
+
     return SellerOrder.objects.filter(
         order__order_number=order_number,
         seller=seller,
-    ).update(status=status)
+    ).update(**update_fields)
 
 
 from django.utils.dateparse import parse_date

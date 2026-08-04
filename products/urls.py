@@ -5,6 +5,11 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("search", views.search, name="search"),
     path("product/<slug:product_slug>/", views.product, name="product"),
+    path(
+        "seller/<int:seller_id>/export-products/",
+        views.export_products_csv,
+        name="export_products_csv",
+    ),
     path("wishlist/", views.wishlist, name="wishlist"),
     path(
         "wishlist/toggle/<slug:product_slug>/",

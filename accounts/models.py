@@ -157,6 +157,126 @@ class Seller(models.Model):
     def __str__(self):
         return self.store_name
 
+class SellerApplication(models.Model):
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        SUBMITTED = "submitted", "Submitted"
+        UNDER_REVIEW = "under_review", "Under Review"
+        CHANGES_REQUESTED = "changes_requested", "Changes Requested"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    class Priority(models.TextChoices):
+        LOW = "low", "Low"
+        NORMAL = "normal", "Normal"
+        HIGH = "high", "High"
+        URGENT = "urgent", "Urgent"
+
+    seller = models.OneToOneField(
+        Seller,
+        on_delete=models.CASCADE,
+        related_name="application",
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+    priority = models.CharField(
+        max_length=20,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+    )
+
+    submitted_at = models.DateTimeField(null=True, blank=True)
+
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assigned_applications",
+    )
+
+    application_source = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    referral_code = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    admin_notes = models.TextField(blank=True)
+
+    rejection_reason = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+class SellerApplicationDocument(models.Model):
+
+    class DocumentType(models.TextChoices):
+        CNIC_FRONT = "cnic_front", "CNIC Front"
+        CNIC_BACK = "cnic_back", "CNIC Back"
+        BUSINESS_CERTIFICATE = "business_certificate", "Business Registration Certificate"
+        NTN = "ntn", "NTN Certificate"
+        BANK_STATEMENT = "bank_statement", "Bank Statement"
+        STORE_PHOTO = "store_photo", "Store Photo"
+
+    application = models.ForeignKey(
+        SellerApplication,
+        related_name="documents",
+        on_delete=models.CASCADE,
+    )
+
+    document_type = models.CharField(
+        max_length=50,
+        choices=DocumentType.choices,
+    )
+
+    file = models.FileField(
+        upload_to="seller_documents/",
+    )
+
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    verified = models.BooleanField(default=False)
+
+    verification_note = models.TextField(blank=True)
+
+class SellerApplicationFlag(models.Model):
+
+    class Severity(models.TextChoices):
+        LOW = "low"
+        MEDIUM = "medium"
+        HIGH = "high"
+
+    application = models.ForeignKey(
+        SellerApplication,
+        related_name="flags",
+        on_delete=models.CASCADE,
+    )
+
+    title = models.CharField(max_length=200)
+
+    description = models.TextField()
+
+    severity = models.CharField(
+        max_length=20,
+        choices=Severity.choices,
+    )
+
+    resolved = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class SellerSettings(models.Model):
     seller = models.OneToOneField(
@@ -188,6 +308,74 @@ class SellerSettings(models.Model):
     email_low_stock = models.BooleanField(default=True)
     weekly_sales_summary = models.BooleanField(default=False)
     monthly_store_report = models.BooleanField(default=True)
+
+    business_registration_number = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    tax_id = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    business_registration_verified = models.BooleanField(default=False)
+
+    bank_account_verified = models.BooleanField(default=False)
+
+    address_verified = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class SellerProfile(models.Model):
+    seller = models.OneToOneField(
+        Seller,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
+
+    business_category = models.CharField(max_length=100, blank=True)
+
+    business_type = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    national_id_number = models.CharField(
+        max_length=30,
+        blank=True,
+    )
+
+    years_in_business = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    expected_monthly_volume = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    product_categories = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Comma-separated categories",
+    )
+
+    website = models.URLField(blank=True)
+
+    facebook_label = models.CharField(max_length=100, blank=True)
+    facebook_url = models.URLField(blank=True)
+
+    linkedin_label = models.CharField(max_length=100, blank=True)
+    linkedin_url = models.URLField(blank=True)
+
+    instagram_label = models.CharField(max_length=100, blank=True)
+    instagram_url = models.URLField(blank=True)
+
+    twitter_label = models.CharField(max_length=100, blank=True)
+    twitter_url = models.URLField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

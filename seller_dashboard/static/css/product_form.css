@@ -179,6 +179,7 @@
     background-color: #9D6638 !important;
     color: #F7F1DE;
     border-color: var(--pf-accent);
+    border-radius: 2px !important;
     border: 1.5px solid #9D6638 !important;
 }
 
@@ -1250,11 +1251,12 @@
 
 .sd-shell.is-collapsed~.pf-sticky-footer,
 .sd-shell.is-collapsed+* .pf-sticky-footer {
-    left: var(--sd-sidebar-width-collapsed, 80px);
+    left: var(--sd-sidebar-width-collapsed, 80px) !important;
 }
 
 .pf-sticky-footer-inner {
-    max-width: 1400px;
+    /* max-width: 1400px; */
+    width: auto;
     margin: 0 auto;
     padding: 14px 24px;
     display: flex;

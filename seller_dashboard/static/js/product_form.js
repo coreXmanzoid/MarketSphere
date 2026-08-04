@@ -712,7 +712,7 @@ let deletedImageIds = [];
         updateButtons.forEach(function (btn) {
 
             if (!btn) return;
-
+            
             btn.addEventListener("click", async function () {
 
                 const product = getFormData();

@@ -39,6 +39,29 @@ urlpatterns = [
         views.update_notification_preferences_view,
         name="update_notification_preferences",
     ),
-    path("deactivate-seller-account", views.deactivate_seller_account, name="deactivate_seller_account"),
-    path("reactivate-seller-account", views.reactivate_seller_account, name="reactivate_seller_account"),
+    path(
+        "deactivate-seller-account",
+        views.deactivate_seller_account,
+        name="deactivate_seller_account",
+    ),
+    path(
+        "reactivate-seller-account",
+        views.reactivate_seller_account,
+        name="reactivate_seller_account",
+    ),
+    path(
+        "change-store-banner/",
+        views.change_store_banner,
+        name="change-store-banner",
+    ),
+    path(
+        "change-seller-status/",
+        views.change_seller_status,
+        name="change-seller-status",
+    ),
+    path(
+    "<int:seller_id>/update-store/",
+    views.update_store_information,
+    name="update_store_information",
+),
 ]

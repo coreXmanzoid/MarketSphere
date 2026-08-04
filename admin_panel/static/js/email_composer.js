@@ -15,7 +15,7 @@ function initEmailComposer() {
         },
         account_verified: {
             subject: 'Your MarketSphere Account Has Been Verified',
-            message: 'Hello,\n\nWe are pleased to inform you that your MarketSphere account has been successfully verified. You now have full access to all buyer features and services.\n\nThank you for verifying your identity with us.\n\nBest regards,\nThe MarketSphere Team'
+            message: 'Hello,\n\nWe are pleased to inform you that your MarketSphere account has been successfully verified. You now have full access to all user features and services.\n\nThank you for verifying your identity with us.\n\nBest regards,\nThe MarketSphere Team'
         },
         account_suspended: {
             subject: 'Important Notice Regarding Your MarketSphere Account',
@@ -114,11 +114,11 @@ function initEmailComposer() {
         if (!backdrop || !modalRoot) return;
 
         if (triggerEl) {
-            const name = triggerEl.getAttribute('data-buyer-name') || 'Buyer Name';
-            const email = triggerEl.getAttribute('data-buyer-email') || 'buyer@example.com';
-            const avatar = triggerEl.getAttribute('data-buyer-avatar') || '';
-            const status = triggerEl.getAttribute('data-buyer-status') || 'Active';
-            const initial = triggerEl.getAttribute('data-buyer-initial') || name.charAt(0).toUpperCase();
+            const name = triggerEl.getAttribute('data-user-name') || 'User Name';
+            const email = triggerEl.getAttribute('data-user-email') || 'user@example.com';
+            const avatar = triggerEl.getAttribute('data-user-avatar') || '';
+            const status = triggerEl.getAttribute('data-user-status') || 'Active';
+            const initial = triggerEl.getAttribute('data-user-initial') || name.charAt(0).toUpperCase();
             currentUserId = triggerEl.dataset.userId;
             if (recipientName) recipientName.textContent = name;
             if (recipientEmail) recipientEmail.textContent = email;
@@ -444,8 +444,8 @@ function initEmailComposer() {
         }
 
         // Hide composer
-        modalRoot.hidden = true;
-        modalRoot.classList.remove("is-active");
+        // modalRoot.hidden = true;
+        // modalRoot.classList.remove("is-active");
 
         // Show preview
         previewModal.hidden = false;
@@ -539,7 +539,7 @@ function initEmailComposer() {
                 formData.append("attachments", file);
             });
 
-            const response = await fetch(`/admin-db/buyers/${currentUserId}/send-email/`, {
+            const response = await fetch(`/admin-db/user/${currentUserId}/send-email/`, {
                 method: "POST",
 
                 headers: {

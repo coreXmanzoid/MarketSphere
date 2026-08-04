@@ -166,18 +166,25 @@
 .sld-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
 .sld-btn-primary {
-    background-color: var(--sld-accent); color: #241A17;
+    background-color: var(--sld-accent) !important; color: #F7F1DE !important;
     border: 1.5px solid var(--sld-accent) !important; border-radius: 2px !important;
 }
 .sld-btn-primary:hover:not(:disabled) {
-    background-color: var(--sld-accent-strong); border-color: var(--sld-accent-strong); color: #F4EEE3;
+    background-color: transparent !important; color: #9D6638 !important;
+}
+.sld-btn-secondary:hover:not(:disabled) {
+    background-color: var(--sld-accent) !important; color: #F7F1DE !important;
+}
+.sld-btn-secondary {
+    background-color: transparent !important; color: #9D6638 !important;
+    border: 1.5px solid var(--sld-accent) !important; border-radius: 2px !important;
 }
 
-.sld-btn-secondary {
+.sld-btn-warning {
     background-color: transparent; color: var(--sld-heading);
     border: 1.5px solid var(--sld-border) !important; border-radius: 2px !important;
 }
-.sld-btn-secondary:hover:not(:disabled) { border-color: var(--sld-accent); color: var(--sld-accent-strong); }
+.sld-btn-warning:hover:not(:disabled) { border-color: var(--sld-accent); color: var(--sld-accent-strong); }
 
 .sld-btn-ghost { background-color: transparent; color: var(--sld-body); }
 .sld-btn-ghost:hover:not(:disabled) { background-color: var(--sld-muted-bg); color: var(--sld-heading); }
@@ -185,8 +192,8 @@
 .sld-btn-success { background-color: var(--sld-success-bg); color: var(--sld-success); border: 1.5px solid rgba(79,125,84,.3); }
 .sld-btn-success:hover:not(:disabled) { background-color: var(--sld-success); color: #F7F1DE; }
 
-.sld-btn-warning { background-color: var(--sld-warning-bg); color: var(--sld-warning); border: 1.5px solid rgba(183,128,43,.3); }
-.sld-btn-warning:hover:not(:disabled) { background-color: var(--sld-warning); color: #F7F1DE; }
+/* .sld-btn-warning { background-color: var(--sld-warning-bg); color: var(--sld-warning); border: 1.5px solid rgba(183,128,43,.3); }
+.sld-btn-warning:hover:not(:disabled) { background-color: var(--sld-warning); color: #F7F1DE; } */
 
 .sld-btn-danger { background-color: var(--sld-danger); color: #F7F1DE; border: 1.5px solid #9D6638 !important; }
 .sld-btn-danger:hover:not(:disabled) { background-color: #93372a; border-color: #93372a; }
@@ -214,7 +221,7 @@
 /* ================= 4. HEADER ================= */
 .sld-header {
     background-color: var(--sld-surface-raised); border: 1px solid var(--sld-border);
-    border-radius: var(--sld-radius-md); overflow: hidden; box-shadow: var(--sld-shadow-sm);
+    border-radius: var(--sld-radius-md); overflow: visible; box-shadow: var(--sld-shadow-sm);
 }
 
 .sld-header-top {
@@ -263,9 +270,9 @@
 .sld-logo-wrap { position: relative; flex: 0 0 auto; }
 
 .sld-logo {
-    width: 104px; height: 104px; border-radius: 20px; background-color: var(--sld-heading);
+    width: 104px; height: 104px; border-radius: 16px; background-color: var(--sld-heading);
     color: #F4EEE3; font-size: 34px; font-weight: 700; display: flex; align-items: center;
-    justify-content: center; cursor: pointer; border: 4px solid var(--sld-surface-raised);
+    justify-content: center; cursor: pointer; border: 2px solid var(--sld-surface-raised);
     box-shadow: var(--sld-shadow-md); overflow: hidden;
     transition: transform var(--sld-transition), box-shadow var(--sld-transition);
 }
@@ -324,16 +331,27 @@
 .sld-quickstat span { font-size: 11.5px; font-weight: 600; color: var(--sld-caption); text-transform: uppercase; letter-spacing: .3px; }
 
 /* ================= 5. OVERVIEW METRICS GRID ================= */
+.sld-header {
+    position: relative;
+    z-index: 100;
+}
+
+.sld-metrics-grid {
+    position: relative;
+    z-index: 1;
+}
+
 .sld-metrics-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
 }
 .sld-metric-card {
-    position: relative; overflow: hidden; display: flex; align-items: flex-start; gap: 13px;
+    position: relative; overflow: visible; display: flex; align-items: flex-start; gap: 13px; z-index: 1;
     background-color: var(--sld-surface-raised); border: 1px solid var(--sld-border);
     border-radius: var(--sld-radius-md); padding: 18px; box-shadow: var(--sld-shadow-sm);
     transition: transform var(--sld-transition), box-shadow var(--sld-transition), border-color var(--sld-transition);
 }
-.sld-metric-card:hover { transform: translateY(-3px); box-shadow: var(--sld-shadow-md); border-color: var(--sld-accent-ring); }
+
+.sld-metric-card:hover { box-shadow: var(--sld-shadow-md); border-color: var(--sld-accent-ring); }
 .sld-metric-icon {
     flex: 0 0 auto; width: 40px; height: 40px; border-radius: 11px; display: flex;
     align-items: center; justify-content: center; background-color: var(--sld-accent-soft); color: var(--sld-accent-strong);
@@ -399,7 +417,7 @@
 .sld-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .sld-card-title { font-size: 16px; font-weight: 700; color: var(--sld-heading); display: flex; align-items: center; gap: 9px; }
 .sld-card-title svg { color: var(--sld-accent); }
-.sld-card-subtitle-title { font-size: 14.5px; font-weight: 700; color: var(--sld-heading); }
+.sld-card-subtitle-title { font-size: 14.5px; font-weight: 700; color: var(--sld-accent); margin-bottom: 8px; }
 .sld-card-desc { font-size: 12.5px; color: var(--sld-caption); margin-top: 2px; }
 
 .sld-subtle-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
@@ -496,7 +514,42 @@
 .sld-progress-bar { width: 100%; height: 6px; border-radius: var(--sld-radius-pill); background-color: var(--sld-bg); overflow: hidden; }
 .sld-progress-fill { display: block; height: 100%; width: 0; border-radius: var(--sld-radius-pill); background: linear-gradient(90deg, var(--sld-accent), var(--sld-accent-strong)); transition: width .8s var(--sld-ease); }
 .sld-progress-fill.is-filled { width: var(--sld-pct, 0%); }
+/* ================= TABLE SCROLLBAR ================= */
 
+.sld-table-wrap {
+    overflow: auto;
+    max-width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sld-accent) transparent;
+}
+
+/* Chrome, Edge, Safari */
+.sld-table-wrap::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.sld-table-wrap::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.sld-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--sld-accent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color .2s ease;
+}
+
+.sld-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--sld-text-muted);
+    background-clip: padding-box;
+}
+
+.sld-table-wrap::-webkit-scrollbar-corner {
+    background: transparent;
+}
 /* ================= 10. ORDERS TAB / 11. CUSTOMERS TAB ================= */
 .sld-customers-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
 .sld-customer-list { display: flex; flex-direction: column; gap: 2px; }
@@ -522,7 +575,7 @@
 .sld-location-row span:first-child { flex: 0 0 auto; width: 90px; font-size: 12.5px; font-weight: 600; color: var(--sld-body); }
 .sld-location-bar { flex: 1; height: 8px; border-radius: var(--sld-radius-pill); background-color: var(--sld-bg); overflow: hidden; }
 .sld-location-bar-fill { display: block; height: 100%; border-radius: var(--sld-radius-pill); background: linear-gradient(90deg, var(--sld-accent), var(--sld-accent-strong)); }
-.sld-location-row span:last-child { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: var(--sld-heading); width: 34px; text-align: right; }
+.sld-location-row span:last-child { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: #B0BA99; width: 34px; text-align: right; }
 
 /* ================= 12. ANALYTICS TAB ================= */
 .sld-analytics-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
@@ -544,7 +597,7 @@
 .sld-chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .sld-chart-legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background-color: var(--sld-accent); }
 
-.sld-donut { position: relative; width: 150px; height: 150px; margin: 0 auto; }
+.sld-donut { position: relative; width: 150px; height: 150px; margin: 20px auto 0px auto; }
 .sld-donut svg { transform: rotate(-90deg); }
 .sld-donut-ring-bg { fill: none; stroke: var(--sld-bg); stroke-width: 14; }
 .sld-donut-ring { fill: none; stroke: var(--sld-accent); stroke-width: 14; stroke-linecap: round; stroke-dasharray: 377; stroke-dashoffset: 377; transition: stroke-dashoffset 1.2s var(--sld-ease); }
@@ -748,7 +801,7 @@
 .sld-mini-progress-list { display: flex; flex-direction: column; gap: 14px; }
 .sld-mini-progress-item { display: flex; flex-direction: column; gap: 6px; }
 .sld-mini-progress-head { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--sld-body); }
-.sld-mini-progress-head strong { color: var(--sld-heading); }
+.sld-mini-progress-head strong { color: #B0BA99; font-weight: 600; }
 
 .sld-risk-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--sld-radius-pill); font-size: 13px; font-weight: 700; width: fit-content; }
 .sld-risk-low { background-color: var(--sld-success-bg); color: var(--sld-success); }
@@ -818,14 +871,45 @@
 @keyframes sldScaleIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 .sld-modal-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background-color: var(--sld-danger-bg); color: var(--sld-danger); margin-bottom: 18px; }
 .sld-modal-icon.c-accent { background-color: var(--sld-accent-soft); color: var(--sld-accent-strong); }
-.sld-modal-title { font-size: 18px; font-weight: 700; margin: 0 0 8px; color: var(--sld-heading); }
-.sld-modal-text { font-size: 13.5px; color: var(--sld-caption); line-height: 1.55; margin: 0 0 22px; }
+.sld-modal-title { font-size: 18px; font-weight: 700; margin: 0 0 8px; color: #9D6638; }
+.sld-modal-text { font-size: 13.5px; color: #B0BA99; line-height: 1.55; margin: 0 0 22px; }
 .sld-modal-actions { display: flex; gap: 10px; }
 .sld-modal-actions .sld-btn { flex: 1; }
+.modal-overlay-inputs input, .modal-overlay-inputs textarea{ border: 1.5px solid #9D6638 !important; border-radius: 2px !important;}
+.sld-modal-actions .sld-btn-primary {
+    background-color: #9D6638 !important; color: #F7F1DE !important;
+    border: 1.5px solid #9D6638 !important; border-radius: 2px !important;
+}
+.sld-modal-actions .sld-btn-secondary {
+    background-color: transparent !important; color: #9D6638 !important;
+    border: 1.5px solid #9D6638 !important; border-radius: 2px !important;
+}
+.sld-modal-actions .sld-btn-secondary:hover {
+    background-color: #9D6638 !important; color: #F7F1DE !important;
+}
+
 .sld-modal-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--sld-caption); transition: background-color var(--sld-transition); }
 .sld-modal-close:hover { background-color: var(--sld-bg); color: var(--sld-heading); }
 .sld-modal-preview-img { width: 100%; max-height: 60vh; object-fit: contain; border-radius: var(--sld-radius-sm); background-color: var(--sld-bg); }
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
 
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9D6638;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ad-accent-strong);
+}
 /* ================= 25. TOAST ================= */
 .sld-toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1080; display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
 .sld-toast {

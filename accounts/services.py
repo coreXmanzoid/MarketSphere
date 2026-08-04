@@ -1,10 +1,11 @@
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
-from .models import Address, Seller
+from .models import Address, Seller, SellerApplication, SellerApplicationDocument, SellerSettings, SellerProfile
+from django.utils import timezone
 from . import validator
 
 # User = get_user_model()
-from .models import User
+from .models import User, SellerProfile
 
 
 def create_user(user):
@@ -153,18 +154,20 @@ def get_default_address(user):
 from django.db import transaction
 from django.utils.text import slugify
 
+from django.db import transaction
+from django.utils.text import slugify
 
 @transaction.atomic
 def create_seller_application(user, data, files):
     # --------------------------------------------------
-    # Update user contact number (if your User model has it)
+    # Update user contact
     # --------------------------------------------------
     if hasattr(user, "contact"):
         user.contact = data.get("phone", "").strip()
         user.save(update_fields=["contact"])
 
     # --------------------------------------------------
-    # Create or Update Business Address
+    # Create / Update Business Address
     # --------------------------------------------------
     Address.objects.update_or_create(
         user=user,
@@ -180,7 +183,7 @@ def create_seller_application(user, data, files):
     )
 
     # --------------------------------------------------
-    # Create unique slug
+    # Generate Unique Store Slug
     # --------------------------------------------------
     base_slug = slugify(data.get("store_name"))
     slug = base_slug
@@ -191,11 +194,14 @@ def create_seller_application(user, data, files):
         counter += 1
 
     # --------------------------------------------------
-    # Create Seller
+    # Prevent Duplicate Seller
     # --------------------------------------------------
     if hasattr(user, "seller_profile"):
         raise ValueError("Seller profile already exists.")
 
+    # --------------------------------------------------
+    # Create Seller
+    # --------------------------------------------------
     seller = Seller.objects.create(
         user=user,
         store_name=data.get("store_name"),
@@ -206,8 +212,80 @@ def create_seller_application(user, data, files):
         store_banner=files.get("store_banner"),
     )
 
-    return seller
+    # --------------------------------------------------
+    # Create Seller Application
+    # --------------------------------------------------
+    application = SellerApplication.objects.create(
+        seller=seller,
+        status=SellerApplication.Status.SUBMITTED,
+        submitted_at=timezone.now(),
+        application_source="Website",
+        referral_code=data.get("referral_code", ""),
+    )
 
+    # --------------------------------------------------
+    # Upload Documents
+    # --------------------------------------------------
+    document_mapping = {
+        SellerApplicationDocument.DocumentType.CNIC_FRONT: "cnic_front",
+        SellerApplicationDocument.DocumentType.CNIC_BACK: "cnic_back",
+        SellerApplicationDocument.DocumentType.BUSINESS_CERTIFICATE: "business_certificate",
+        SellerApplicationDocument.DocumentType.NTN: "ntn_certificate",
+        SellerApplicationDocument.DocumentType.BANK_STATEMENT: "bank_statement",
+        SellerApplicationDocument.DocumentType.STORE_PHOTO: "store_photo",
+    }
+
+    for document_type, input_name in document_mapping.items():
+        uploaded_file = files.get(input_name)
+
+        if uploaded_file:
+            SellerApplicationDocument.objects.create(
+                application=application,
+                document_type=document_type,
+                file=uploaded_file,
+            )
+
+    # --------------------------------------------------
+    # Create Seller Settings
+    # --------------------------------------------------
+    SellerSettings.objects.create(
+        seller=seller,
+        business_registration_number=data.get(
+            "business_registration_number",
+            "",
+        ),
+        tax_id=data.get("tax_id", ""),
+    )
+
+    # --------------------------------------------------
+    # Create Seller Profile
+    # --------------------------------------------------
+    SellerProfile.objects.create(
+        seller=seller,
+        business_category=data.get("business_category", ""),
+        business_type=data.get("business_type", ""),
+        national_id_number=data.get("national_id_number", ""),
+        years_in_business=data.get("years_in_business") or None,
+        expected_monthly_volume=data.get(
+            "expected_monthly_volume",
+            "",
+        ),
+        product_categories=data.get(
+            "product_categories",
+            "",
+        ),
+        website=data.get("website", ""),
+        facebook_label=data.get("facebook_label", ""),
+        facebook_url=data.get("facebook_url", ""),
+        linkedin_label=data.get("linkedin_label", ""),
+        linkedin_url=data.get("linkedin_url", ""),
+        instagram_label=data.get("instagram_label", ""),
+        instagram_url=data.get("instagram_url", ""),
+        twitter_label=data.get("twitter_label", ""),
+        twitter_url=data.get("twitter_url", ""),
+    )
+
+    return seller
 
 def update_seller_information(user, data, files):
     seller = user.seller_profile
@@ -245,6 +323,67 @@ def update_seller_information(user, data, files):
     seller.save()
     return seller
 
+
+from accounts.models import Seller, SellerSettings, Address
+
+
+def update_store_information(seller, data):
+    print(data)
+    seller.store_name = data.get("store_name", "")
+    seller.slug = data.get("slug", "")
+    seller.store_email = data.get("store_email", "")
+    seller.store_description = data.get("store_description", "")
+    seller.business_registration_number = data.get("business_registration_number", "")
+    seller.tax_id = data.get("tax_id", "")
+    seller.save()
+
+    seller.user.contact = data.get("store_phone", "")
+    seller.user.save(update_fields=["contact"])
+
+
+    profile, _ = SellerProfile.objects.get_or_create(seller=seller)
+    profile.business_category = data.get("business_category", "")
+    profile.website = data.get("website", "")
+
+    profile.facebook_label = data.get("facebook_label", "")
+    profile.facebook_url = data.get("facebook_url", "")
+
+    profile.instagram_label = data.get("instagram_label", "")
+    profile.instagram_url = data.get("instagram_url", "")
+
+    profile.linkedin_label = data.get("linkedin_label", "")
+    profile.linkedin_url = data.get("linkedin_url", "")
+
+    profile.twitter_label = data.get("twitter_label", "")
+    profile.twitter_url = data.get("twitter_url", "")
+
+    profile.save()
+    address, _ = Address.objects.get_or_create(
+        user=seller.user,
+        address_type=Address.BUSINESS,
+    )
+
+    address.city = data.get("city", "")
+    address.address_line_1 = data.get("address_line_1", "")
+    address.postal_code = data.get("postal_code", "")
+    address.save()
+
+    return seller
+
+def update_seller_status(seller, status):
+    seller.status = status
+    seller.save(update_fields=["status"])
+
+def change_store_banner(seller_id, banner):
+    seller = Seller.objects.filter(id=seller_id).first()
+
+    if not seller:
+        return None
+
+    seller.store_banner = banner
+    seller.save(update_fields=["store_banner"])
+
+    return seller.store_banner.url
 
 from .models import SellerSettings
 

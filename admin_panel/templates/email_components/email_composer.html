@@ -3,15 +3,15 @@
      Standalone component. Include with:
        {% comment %} {% include "admin_dashboard/components/email_composer_modal.html" %} {% endcomment %}
      Depends only on email_composer.css and email_composer.js.
-     Does NOT depend on buyer_detail.js or any other script on the page.
+     Does NOT depend on user_detail.js or any other script on the page.
 
      Trigger: any element with [data-ec-open] opens this modal, e.g.
        <button type="button" data-ec-open>Send Email</button>
 
-     Buyer info is read from data attributes on the trigger element (or can
+     User info is read from data attributes on the trigger element (or can
      be set directly on #ecModalRoot before opening):
-       data-buyer-name, data-buyer-email, data-buyer-avatar,
-       data-buyer-status, data-buyer-initial
+       data-user-name, data-user-email, data-user-avatar,
+       data-user-status, data-user-initial
      ========================================================================= -->
 
      <!-- ================= SEND EMAIL MODAL ================= -->
@@ -29,7 +29,7 @@
     <header class="ms-ec-modal-header ms-ec-header">
       <div class="ms-ec-header-text">
         <h2 class="ms-ec-modal-title" id="ecModalTitle">Send Email</h2>
-        <p class="ms-ec-subtitle" id="ecModalSubtitle">Compose a professional email for this buyer.</p>
+        <p class="ms-ec-subtitle" id="ecModalSubtitle">Compose a professional email for this user.</p>
       </div>
 
       <button type="button" class="ms-ec-btn ms-ec-btn-icon ms-ec-close-btn" id="ecCloseBtn" aria-label="Close email composer">
@@ -43,7 +43,7 @@
     <!-- ============ BODY ============ -->
     <div class="ms-ec-modal-body ms-ec-body" id="ecBody">
 
-      <!-- ---- Recipient (read-only) ---- -->
+      <!--  Recipient (read-only)-->
       <section class="ms-ec-section" aria-label="Recipient">
         <span class="ms-ec-section-label">Recipient</span>
 
@@ -51,8 +51,8 @@
           <span class="ms-ec-recipient-avatar" id="ecRecipientAvatar" aria-hidden="true">A</span>
 
           <div class="ms-ec-recipient-info">
-            <span class="ms-ec-recipient-name" id="ecRecipientName">Buyer Name</span>
-            <span class="ms-ec-recipient-email" id="ecRecipientEmail">buyer@example.com</span>
+            <span class="ms-ec-recipient-name" id="ecRecipientName">User Name</span>
+            <span class="ms-ec-recipient-email" id="ecRecipientEmail">user@example.com</span>
           </div>
 
           <span class="ms-ec-status-badge" id="ecRecipientStatus">Active</span>
@@ -110,7 +110,7 @@
         <textarea
           id="ecMessageInput"
           class="ms-ec-textarea"
-          placeholder="Write your message to the buyer..."
+          placeholder="Write your message to the user..."
           required
         ></textarea>
         <span class="ms-ec-field-error" id="ecMessageError" role="alert"></span>
@@ -184,7 +184,7 @@
     <header class="ms-ec-modal-header ms-ec-header">
       <div class="ms-ec-header-text">
         <h2 class="ms-ec-modal-title" id="ecPreviewTitle">Preview Email</h2>
-        <p class="ms-ec-subtitle">This is how the email will appear to the buyer.</p>
+        <p class="ms-ec-subtitle">This is how the email will appear to the user.</p>
       </div>
 
       <button type="button" class="ms-ec-btn ms-ec-btn-icon ms-ec-close-btn" id="ecPreviewCloseBtn" aria-label="Close preview">

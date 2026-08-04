@@ -147,10 +147,10 @@
                 </div>
                 <div class="product-price">
                   {% if product.discount_price %}
-                    <span class="price-current">Rs. {{ product.discount_price }}</span>
-                    <span class="price-original">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
+                    <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
                   {% else %}
-                    <span class="price-current">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
                   {% endif %}
                 </div>
                 {% if product.stock_quantity <= 0 %}
@@ -158,9 +158,9 @@
                 {% elif product.stock_quantity <= 80 %}
                   <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
                 {% else %}
-                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                  <span class="stock-badge in-stock">In Stock ({{ product.total_sold|default:'0' }} sold)</span>
                 {% endif %}
-                <button class="btn add-to-cart-tn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
+                <button class="btn add-to-cart-btn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
             </div>
           </div>
@@ -245,10 +245,10 @@
                 </div>
                 <div class="product-price">
                   {% if product.discount_price %}
-                    <span class="price-current">Rs. {{ product.discount_price }}</span>
-                    <span class="price-original">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
+                    <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
                   {% else %}
-                    <span class="price-current">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
                   {% endif %}
                 </div>
                 {% if product.stock_quantity <= 0 %}
@@ -256,9 +256,9 @@
                 {% elif product.stock_quantity <= 80 %}
                   <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
                 {% else %}
-                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                  <span class="stock-badge in-stock">In Stock ({{ product.total_sold|default:'0' }} sold)</span>
                 {% endif %}
-                <button class="btn add-to-cart-tn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
+                <button class="btn add-to-cart-btn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
             </div>
           </div>

@@ -189,7 +189,7 @@
     var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.bd-tab'));
     var tabPanels = Array.prototype.slice.call(document.querySelectorAll('.bd-tab-panel'));
 
-    function activateTab(tabName) {
+    function activateTab(tabName, scroll) {
         tabButtons.forEach(function (btn) {
             btn.classList.toggle('is-active', btn.getAttribute('data-tab') === tabName);
         });
@@ -197,6 +197,20 @@
         tabPanels.forEach(function (panel) {
             panel.classList.toggle('is-active', panel.getAttribute('data-panel') === tabName);
         });
+
+        if (scroll) {
+            var activePanel = document.querySelector('.bd-tab-panel[data-panel="' + tabName + '"]');
+
+            if (activePanel) {
+                var headerOffset = 88; // Sticky header height
+                var y = activePanel.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: y,
+                    behavior: 'smooth'
+                });
+            }
+        }
     }
 
     function initTabs() {
@@ -205,25 +219,33 @@
         tabsNav.addEventListener('click', function (e) {
             var btn = e.target.closest('.bd-tab');
             if (!btn) return;
-            activateTab(btn.getAttribute('data-tab'));
+
+            activateTab(btn.getAttribute('data-tab'), true);
         });
 
-        // "View All Orders" style links inside panels jump to another tab.
+        // "View All Orders" or any element with data-goto-tab
         document.addEventListener('click', function (e) {
             var jumpBtn = e.target.closest('[data-goto-tab]');
             if (!jumpBtn) return;
 
             var targetTab = jumpBtn.getAttribute('data-goto-tab');
-            activateTab(targetTab);
+            activateTab(targetTab, true);
 
             var targetButton = tabButtons.find(function (btn) {
                 return btn.getAttribute('data-tab') === targetTab;
             });
+
             if (targetButton) {
-                targetButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                targetButton.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
             }
         });
     }
+
+
 
     /* ================= 7. DROPDOWN MENUS ================= */
     function closeAllDropdowns(exceptEl) {

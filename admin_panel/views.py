@@ -51,7 +51,12 @@ def user_sellers(request):
     )
 
 def user_seller(request, sellerId):
-    return render(request, "user_management/seller/detail.html")
+    context = services.get_seller_detail(sellerId)
+    return render(request, "user_management/seller/detail.html", context)
+
+def seller_application(request, sellerId):
+    context = services.get_pending_seller(sellerId)
+    return render(request, "user_management/seller/application.html", context)
 
 def change_state(request):
     if request.method == "POST":
@@ -70,13 +75,24 @@ from . import services
 def export_order_history(request, user_id):
     return services.export_order_history(user_id)
 
+from accounts.models import Seller
+@staff_member_required
+def export_seller_orders(request, seller_id):
+    seller = get_object_or_404(Seller, id=seller_id)
+    return services.export_seller_orders(seller)
+
+from .revenue_report import export_revenue_report
+# @staff_member_required
+def export_revenue_report_view(request, seller_id):
+    """
+    Admin-only endpoint to export a seller's complete revenue report as a PDF.
+    """
+    seller = get_object_or_404(Seller, pk=seller_id)
+    
+    # The service function handles calculations, PDF building, and the HTTP Response
+    return export_revenue_report(seller)
 
 from django.contrib.sessions.models import Session
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-
-
-@require_POST
 def logout_all_devices(request):
 
     user_id = request.POST.get("userId")
@@ -153,6 +169,31 @@ def export_buyer_profile(request, user_id):
     return response
 
 
+from accounts.seller_pdf import export_seller_profile_snapshot
+# =============================================================
+# DJANGO VIEW
+# =============================================================
+# @staff_member_required
+def export_seller_profile(request, seller_id):
+    """
+    Admin-only endpoint to export a seller's complete profile snapshot as a PDF.
+    """
+    # Assuming Seller model is imported at the top. 
+    # Use apps.get_model as a robust fallback for generic code execution.
+    from django.apps import apps
+    Seller = apps.get_model('accounts', 'Seller')
+    
+    seller = get_object_or_404(
+        Seller.objects.select_related(
+            "user",
+            "profile",
+            "settings",
+        ),
+        pk=seller_id,
+    )
+    
+    return export_seller_profile_snapshot(seller)
+
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -218,9 +259,9 @@ def admin_reset_password(request, user_id):
     )
 
 
-def send_buyer_email(request, buyer_id):
+def send_user_email(request, user_id):
     try:
-        buyer = User.objects.get(pk=buyer_id)
+        user = User.objects.get(pk=user_id)
 
     except User.DoesNotExist:
         return JsonResponse(
@@ -258,7 +299,7 @@ def send_buyer_email(request, buyer_id):
 
     try:
         services.send_admin_email(
-            user=buyer,
+            user=user,
             subject=subject,
             message=message,
             button_text=button_text or None,

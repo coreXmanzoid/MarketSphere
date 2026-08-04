@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         btn.addEventListener('click', function () {
             btn.classList.add('pd-btn-pulse');
-            window.location.href = `/order/checkout`;
+            window.location.href = `/order/checkout/`;
             window.setTimeout(function () {
                 btn.classList.remove('pd-btn-pulse');
             }, 400);

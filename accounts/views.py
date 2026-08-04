@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 import json
+
+from accounts.seller_pdf import export_seller_profile_snapshot
 from .decorators import verified_seller, verified_user, only_seller
 from django.http import JsonResponse
 
@@ -368,3 +370,75 @@ def resend_verification_email_view(request):
         messages.info(request, "Your email address is already verified.")
 
     return redirect(settings.LOGIN_REDIRECT_URL)
+
+from django.http import JsonResponse
+
+def change_store_banner(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False}, status=405)
+
+    seller_id = request.POST.get("seller_id")
+    banner = request.FILES.get("banner")
+
+    banner_url = services.change_store_banner(
+        seller_id=seller_id,
+        banner=banner,
+    )
+
+    if banner_url:
+        return JsonResponse({
+            "success": True,
+            "banner_url": banner_url,
+        })
+
+    return JsonResponse({
+        "success": False,
+        "message": "Unable to update banner.",
+    })
+
+from .models import Seller
+
+def change_seller_status(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False}, status=405)
+
+    seller = Seller.objects.filter(
+        id=request.POST.get("seller_id")
+    ).first()
+
+    if not seller:
+        return JsonResponse({
+            "success": False,
+            "message": "Seller not found.",
+        })
+
+    services.update_seller_status(
+        seller,
+        request.POST.get("status"),
+    )
+
+    return JsonResponse({"success": True})
+
+import json
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
+from django.contrib.admin.views.decorators import staff_member_required
+
+from accounts.models import Seller
+from . import services
+
+
+@require_POST
+def update_store_information(request, seller_id):
+    seller = get_object_or_404(Seller, id=seller_id)
+
+    data = json.loads(request.body)
+
+    services.update_store_information(seller, data)
+
+    return JsonResponse({
+        "success": True,
+        "message": "Store information updated successfully."
+    })

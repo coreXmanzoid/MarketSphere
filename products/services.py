@@ -26,18 +26,31 @@ def get_all_brands():
     brands = Brand.objects.filter(is_active=True)
     return brands
 
-
+from django.db.models import Sum, Q, IntegerField
+from django.db.models.functions import Coalesce
+from orders.models import SellerOrder
 def get_featured_products():
     return (
         Product.objects.select_related("category", "brand")
         .prefetch_related("images")
+        .annotate(
+            total_sold=Coalesce(
+                Sum(
+                    "order_items__quantity",
+                    filter=Q(
+                        order_items__seller_order__status=SellerOrder.Status.DELIVERED
+                    ),
+                ),
+                0,
+                output_field=IntegerField(),
+            )
+        )
         .filter(
             status=Product.Status.PUBLISHED,
             is_featured=True,
             seller__status=Seller.Status.VERIFIED,
         )
     )
-
 
 def get_frequent_products(product):
     return Product.objects.filter(
@@ -54,18 +67,28 @@ def get_related_products(product):
         status=Product.Status.PUBLISHED,
     ).exclude(id=product.id)
 
-
 def get_new_products(limit=8):
     return (
         Product.objects.select_related("category", "brand", "seller")
         .prefetch_related("images")
+        .annotate(
+            total_sold=Coalesce(
+                Sum(
+                    "order_items__quantity",
+                    filter=Q(
+                        order_items__seller_order__status=SellerOrder.Status.DELIVERED
+                    ),
+                ),
+                0,
+                output_field=IntegerField(),
+            )
+        )
         .filter(
             status=Product.Status.PUBLISHED,
             seller__status=Seller.Status.VERIFIED,
         )
         .order_by("-created_at")[:limit]
     )
-
 
 def get_product_by_slug(product_slug):
     return get_object_or_404(
@@ -298,6 +321,7 @@ def edit_product(seller, product, post_data, files):
     product.min_stock_level = nullable(post_data.get("min_stock_level")) or 5
     product.weight = nullable(post_data.get("weight"))
     product.is_featured = post_data.get("is_featured") == "true"
+    product.status = post_data.get("visibility")
 
     product.save()
 
@@ -761,3 +785,71 @@ def get_user_cart(user):
 
     cart = Cart.objects.filter(user=user).prefetch_related("items__product").first()
     return cart
+
+
+import csv
+
+from django.http import HttpResponse
+
+
+def export_products_csv(seller):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="{seller.store_name}_products.csv"'
+    )
+
+    writer = csv.writer(response)
+
+    writer.writerow([
+        "ID",
+        "Name",
+        "Slug",
+        "SKU",
+        "Barcode",
+        "Category",
+        "Brand",
+        "Seller",
+        "Price",
+        "Discount Price",
+        "Discount %",
+        "Stock",
+        "Minimum Stock",
+        "Weight",
+        "Status",
+        "Featured",
+        "Primary Image",
+        "Created",
+        "Updated",
+    ])
+
+    products = (
+        seller.products.select_related("category", "brand")
+        .prefetch_related("images")
+    )
+
+    for product in products:
+        image = product.primary_image
+
+        writer.writerow([
+            product.id,
+            product.name,
+            product.slug,
+            product.sku,
+            product.barcode,
+            product.category.name if product.category else "",
+            product.brand.name if product.brand else "",
+            seller.store_name,
+            product.price,
+            product.discount_price,
+            product.discount_percentage,
+            product.stock_quantity,
+            product.min_stock_level,
+            product.weight,
+            product.get_status_display(),
+            "Yes" if product.is_featured else "No",
+            image.image.url if image else "",
+            product.created_at.strftime("%Y-%m-%d %H:%M"),
+            product.updated_at.strftime("%Y-%m-%d %H:%M"),
+        ])
+
+    return response

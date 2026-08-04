@@ -167,6 +167,15 @@ def toggle_wishlist(request, product_slug):
         }
     )
 
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import get_object_or_404
+
+from accounts.models import Seller
+
+# @staff_member_required
+def export_products_csv(request, seller_id):
+    seller = get_object_or_404(Seller, id=seller_id)
+    return services.export_products_csv(seller)
 
 @login_required
 def cart(request):
