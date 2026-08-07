@@ -60,8 +60,18 @@ urlpatterns = [
         name="change-seller-status",
     ),
     path(
-    "<int:seller_id>/update-store/",
-    views.update_store_information,
-    name="update_store_information",
-),
+        "update-seller-profile/",
+        views.update_seller_profile,
+        name="update_seller_profile",
+    ),
+    path(
+        "<int:seller_id>/update-store/",
+        views.update_store_information,
+        name="update_store_information",
+    ),
+    path(
+        "update-seller-document/",
+        views.update_seller_document,
+        name="update_seller_document",
+    ),
 ]

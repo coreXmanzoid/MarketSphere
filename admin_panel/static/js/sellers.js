@@ -34,29 +34,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var deleteModalConfirm = document.getElementById('sellerDeleteModalConfirm');
     var deleteModalCancel = document.getElementById('sellerDeleteModalCancel');
 
-    var toastContainer = document.getElementById('sellerToastContainer');
 
     var confirmCallback = null;
     var rowPendingDelete = null;
 
-    /* ================= 2. TOAST HELPER ================= */
-    function showToast(message, type) {
-        if (!toastContainer) return;
-
-        var toast = document.createElement('div');
-        toast.className = 'bu-toast bu-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-        toast.textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, 3800);
-    }
 
     /* ================= 3. SCROLL REVEAL / CARD ENTRANCE ================= */
     var revealTargets = Array.prototype.slice.call(document.querySelectorAll('.js-seller-reveal'));
@@ -305,6 +286,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (action === 'view-profile') {
             window.location.href = "/admin-db/user/sellers/" + userId;
+        } else if (action === 'view-application') {
+            window.location.href = "/admin-db/user/sellers/" + userId + "/application";
         } else if (action === 'view-products') {
             showToast('Viewing seller products isn\u2019t available yet \u2014 check back soon.', 'info');
         } else if (action === 'view-orders') {

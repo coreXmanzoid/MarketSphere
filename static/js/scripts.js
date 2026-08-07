@@ -15,7 +15,69 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 10000);
     });
 });
+function showToast(message, type = "info", autoHide = true) {
+    const messageRow = document.querySelector(".header-message-row .container");
 
+    if (!messageRow) {
+        console.warn("Toast container not found.");
+        return;
+    }
+
+    const config = {
+        success: {
+            icon: "bi-check2-circle",
+            label: "Success"
+        },
+        error: {
+            icon: "bi-exclamation-triangle",
+            label: "Action needed"
+        },
+        warning: {
+            icon: "bi-exclamation-circle",
+            label: "Warning"
+        },
+        info: {
+            icon: "bi-info-circle",
+            label: "Notice"
+        }
+    };
+
+    const toastType = config[type] || config.info;
+
+    const toast = document.createElement("div");
+    toast.className = `app-message app-message-${type} alert alert-dismissible fade show temp-message`;
+    toast.setAttribute("role", "alert");
+
+    toast.innerHTML = `
+        <div class="app-message__icon" aria-hidden="true">
+            <i class="bi ${toastType.icon}"></i>
+        </div>
+
+        <div class="app-message__content">
+            <span class="app-message__label">${toastType.label}</span>
+            <span class="app-message__text">${message}</span>
+        </div>
+
+        <button
+            type="button"
+            class="btn-close app-message__close"
+            data-bs-dismiss="alert"
+            aria-label="Close">
+        </button>
+    `;
+
+    messageRow.appendChild(toast);
+
+    if (autoHide) {
+        setTimeout(() => {
+            toast.classList.remove("show");
+
+            setTimeout(() => {
+                toast.remove();
+            }, 150);
+        }, 5000);
+    }
+}
 function clearActiveMenuState() {
     document.querySelectorAll(".category-item, .child-item").forEach((item) => {
         item.classList.remove("is-active");

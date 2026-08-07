@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function () {
 
     /* =========================================================
@@ -11,37 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
        the surrounding DOM/animation logic.
        ========================================================= */
 
-    const TOAST_DURATION_MS = 4000;
-    const toastContainer = document.getElementById('saToastContainer');
 
-    /* =========================================================
-       TOAST HELPER (mirrors od-toast / co-toast / cf-toast pattern)
-       ========================================================= */
-    function showToast(message, type) {
-        if (!toastContainer) return;
-
-        const toast = document.createElement('div');
-        toast.className = 'sa-toast sa-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-
-        const iconClass = type === 'error'
-            ? 'bi-exclamation-triangle'
-            : type === 'success'
-                ? 'bi-check2-circle'
-                : 'bi-info-circle';
-
-        toast.innerHTML = '<i class="bi ' + iconClass + '"></i><span></span>';
-        toast.querySelector('span').textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, TOAST_DURATION_MS);
-    }
 
     /* =========================================================
        BUTTON LOADING STATE HELPER
@@ -270,6 +241,156 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* =========================================================
+   UPDATE SELLER PROFILE
+   ========================================================= */
+    /* =========================================================
+     UPDATE SELLER PROFILE
+     ========================================================= */
+
+    const profileModalEl = document.getElementById("saProfileModal");
+    const saveProfileBtn = document.getElementById("saProfileSaveBtn");
+
+    let profileModal = null;
+
+    if (profileModalEl && window.bootstrap?.Modal) {
+        profileModal = new window.bootstrap.Modal(profileModalEl);
+    }
+
+    if (saveProfileBtn) {
+
+        saveProfileBtn.addEventListener("click", function () {
+
+            if (saveProfileBtn.classList.contains("is-loading")) {
+                return;
+            }
+
+            const formData = new FormData();
+
+            formData.append(
+                "business_category",
+                document.getElementById("saBusinessCategoryInput").value.trim()
+            );
+
+            formData.append(
+                "business_type",
+                document.getElementById("saBusinessTypeInput").value.trim()
+            );
+
+            formData.append(
+                "national_id_number",
+                document.getElementById("saNationalIdInput").value.trim()
+            );
+
+            formData.append(
+                "years_in_business",
+                document.getElementById("saYearsBusinessInput").value.trim()
+            );
+
+            formData.append(
+                "expected_monthly_volume",
+                document.getElementById("saMonthlyVolumeInput").value.trim()
+            );
+
+            formData.append(
+                "website",
+                document.getElementById("saWebsiteInput").value.trim()
+            );
+
+            formData.append(
+                "product_categories",
+                document.getElementById("saProductCategoriesInput").value.trim()
+            );
+
+            formData.append(
+                "facebook_label",
+                document.getElementById("saFacebookLabelInput").value.trim()
+            );
+
+            formData.append(
+                "facebook_url",
+                document.getElementById("saFacebookUrlInput").value.trim()
+            );
+
+            formData.append(
+                "linkedin_label",
+                document.getElementById("saLinkedinLabelInput").value.trim()
+            );
+
+            formData.append(
+                "linkedin_url",
+                document.getElementById("saLinkedinUrlInput").value.trim()
+            );
+
+            formData.append(
+                "instagram_label",
+                document.getElementById("saInstagramLabelInput").value.trim()
+            );
+
+            formData.append(
+                "instagram_url",
+                document.getElementById("saInstagramUrlInput").value.trim()
+            );
+
+            formData.append(
+                "twitter_label",
+                document.getElementById("saTwitterLabelInput").value.trim()
+            );
+
+            formData.append(
+                "twitter_url",
+                document.getElementById("saTwitterUrlInput").value.trim()
+            );
+
+            setButtonLoading(saveProfileBtn, true, "Saving...");
+
+            fetch("/accounts/update-seller-profile/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: formData,
+            })
+                .then(async (response) => {
+
+                    const data = await response.json();
+
+                    setButtonLoading(saveProfileBtn, false);
+
+                    if (!response.ok) {
+                        showToast(data.message || "Unable to update seller profile.", "error");
+                        return;
+                    }
+
+                    if (data.success) {
+
+                        profileModal.hide();
+
+                        showToast(data.message, "success");
+
+                        window.location.reload();
+
+                    } else {
+
+                        showToast(data.message || "Unable to update seller profile.", "error");
+
+                    }
+
+                })
+                .catch((error) => {
+
+                    console.error(error);
+
+                    setButtonLoading(saveProfileBtn, false);
+
+                    showToast("Something went wrong. Please try again.", "error");
+
+                });
+
+        });
+
+    }
+
+    /* =========================================================
        GO TO SELLER DASHBOARD (placeholder — no dashboard yet)
        ========================================================= */
     const dashboardBtn = document.getElementById('saDashboardBtn');
@@ -423,3 +544,382 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+/* =========================================================
+   SELLER APPLICATION DOCUMENTS (Frontend Only)
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const documentCards = document.querySelectorAll(".sa-document-card");
+
+    documentCards.forEach(card => {
+
+        /* ---------------------------------------------
+           Create hidden file input
+        --------------------------------------------- */
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*,.pdf";
+        fileInput.hidden = true;
+
+        card.appendChild(fileInput);
+
+        /* ---------------------------------------------
+           Buttons
+        --------------------------------------------- */
+
+        const uploadBtn = card.querySelector(".btn-hero-primary");
+        const changeBtn = card.querySelector(".btn-hero-primary");
+        const previewArea = card.querySelector(".sa-document-preview");
+
+        if (uploadBtn) {
+            uploadBtn.addEventListener("click", () => fileInput.click());
+        }
+
+        if (changeBtn && changeBtn !== uploadBtn) {
+            changeBtn.addEventListener("click", () => fileInput.click());
+        }
+
+        /* ---------------------------------------------
+           Drag & Drop
+        --------------------------------------------- */
+
+        previewArea.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            previewArea.classList.add("drag-over");
+        });
+
+        previewArea.addEventListener("dragleave", function () {
+            previewArea.classList.remove("drag-over");
+        });
+
+        previewArea.addEventListener("drop", function (e) {
+
+            e.preventDefault();
+
+            previewArea.classList.remove("drag-over");
+
+            if (!e.dataTransfer.files.length) return;
+
+            handleSelectedFile(e.dataTransfer.files[0], card);
+
+        });
+
+        /* ---------------------------------------------
+           File Picker
+        --------------------------------------------- */
+
+        fileInput.addEventListener("change", function () {
+
+            if (!this.files.length) return;
+
+            handleSelectedFile(this.files[0], card);
+
+        });
+
+    });
+
+});
+/* =========================================================
+   Seller Application Documents Module
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+    attachDocumentEvents();
+});
+
+/**
+ * Attach event listeners to all document cards (click, change, drag & drop)
+ */
+function attachDocumentEvents() {
+    const documentCards = document.querySelectorAll(".sa-document-card");
+
+    documentCards.forEach((card) => {
+        const previewArea = card.querySelector(".sa-document-preview");
+        let fileInput = card.querySelector('input[type="file"]');
+
+        if (!fileInput) {
+            fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.accept = ".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf";
+            fileInput.style.display = "none";
+            card.appendChild(fileInput);
+        }
+
+        // Event delegation for action buttons inside the card
+        card.addEventListener("click", function (e) {
+            const uploadBtn = e.target.closest(".btn-hero-primary, .sa-upload-document");
+            const changeBtn = e.target.closest(".sa-change-document");
+            const viewBtn = e.target.closest(".sa-view-document");
+
+            if (uploadBtn || changeBtn) {
+                const targetBtn = uploadBtn || changeBtn;
+                fileInput._triggerBtn = targetBtn;
+                fileInput.click();
+            } else if (viewBtn) {
+                openDocument(card);
+            }
+        });
+
+        // File input selection event
+        fileInput.addEventListener("change", function () {
+            const file = fileInput.files[0];
+            if (file) {
+                const triggerBtn = fileInput._triggerBtn || card.querySelector(".btn-hero-primary");
+                handleSelectedFile(file, card, triggerBtn);
+            }
+            fileInput.value = ""; // Reset input
+        });
+
+        // Drag & Drop functionality
+        if (previewArea) {
+            previewArea.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                previewArea.classList.add("drag-over");
+            });
+
+            previewArea.addEventListener("dragleave", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                previewArea.classList.remove("drag-over");
+            });
+
+            previewArea.addEventListener("drop", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                previewArea.classList.remove("drag-over");
+
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    const triggerBtn = card.querySelector(".btn-hero-primary, .sa-change-document");
+                    handleSelectedFile(file, card, triggerBtn);
+                }
+            });
+        }
+    });
+}
+
+/**
+ * Handle document selection and trigger validation/upload
+ */
+function handleSelectedFile(file, card, triggerBtn) {
+    if (!validateDocument(file)) {
+        return;
+    }
+    uploadSellerDocument(file, card, triggerBtn);
+}
+
+/**
+ * Validate document type and file size
+ */
+function validateDocument(file) {
+    const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "application/pdf"
+    ];
+
+    const fileName = file.name.toLowerCase();
+    const validExtension = /\.(jpg|jpeg|png|webp|pdf)$/.test(fileName);
+
+    if (!allowedTypes.includes(file.type) && !validExtension) {
+        showToast("Only JPG, PNG, WEBP and PDF files are allowed.", "error");
+        return false;
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10 MB
+    if (file.size > maxSize) {
+        showToast("Maximum file size is 10 MB.", "error");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Upload document to backend via fetch
+ */
+function uploadSellerDocument(file, card, triggerBtn) {
+    const documentType = card.dataset.documentType;
+
+    if (!documentType) {
+        showToast("Document type is missing on card.", "error");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("document", file);
+    formData.append("document_type", documentType);
+
+    if (triggerBtn) {
+        setButtonLoading(triggerBtn, true, "Uploading...");
+    }
+
+    fetch("/accounts/update-seller-document/", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: formData,
+    })
+        .then(async (response) => {
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                // Response was not JSON (e.g. 500 HTML page)
+            }
+
+            if (!response.ok) {
+                const errorMessage =
+                    data.message ||
+                    data.error ||
+                    data.detail ||
+                    `Server error (${response.status}).`;
+                throw new Error(errorMessage);
+            }
+
+            if (data.success !== false) {
+                updateDocumentCard(card, file, data);
+                showToast(data.message || "Document uploaded successfully.", "success");
+            } else {
+                showToast(data.message || "Unable to upload document.", "error");
+            }
+        })
+        .catch((error) => {
+            console.error("Upload Error:", error);
+            showToast(error.message || "Something went wrong.", "error");
+        })
+        .finally(() => {
+            if (triggerBtn) {
+                setButtonLoading(triggerBtn, false);
+            }
+        });
+}
+
+/**
+ * Update UI elements only after successful upload
+ */
+/**
+ * Update UI elements only after successful upload
+ */
+function updateDocumentCard(card, file, responseData) {
+    const previewArea = card.querySelector(".sa-document-preview");
+    const metaValue = card.querySelector(".sa-document-meta-value");
+    const statusBadge = card.querySelector(".sa-document-status");
+    const actions = card.querySelector(".sa-document-actions");
+
+    // Assign fileUrl and fileName to dataset for the View action
+    if (responseData && responseData.document_url) {
+        card.dataset.fileUrl = responseData.document_url;
+    } else {
+        card.dataset.fileUrl = URL.createObjectURL(file);
+    }
+    
+    // Store the filename (fallback to the uploaded file name if not returned by backend)
+    card.dataset.fileName = (responseData && responseData.file_name) ? responseData.file_name : file.name;
+
+    // Status Badge
+    if (statusBadge) {
+        statusBadge.className = "sa-document-status pending";
+        statusBadge.innerHTML = '<i class="bi bi-hourglass-split"></i> Pending Verification';
+    }
+
+    // Upload Date
+    if (metaValue) {
+        metaValue.textContent = responseData && responseData.uploaded_at
+            ? responseData.uploaded_at
+            : new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    // Preview Area
+    if (previewArea) {
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+            previewArea.innerHTML = `
+                <div class="sa-document-pdf">
+                    <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                    <span class="sa-document-file-name">${file.name}</span>
+                </div>
+            `;
+        } else {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewArea.innerHTML = `<img class="sa-document-image" src="${e.target.result}" alt="Document Preview">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Action Buttons
+    if (actions) {
+        actions.innerHTML = `
+            <button type="button" class="btn sa-edit-btn sa-view-document">
+                <i class="bi bi-eye"></i> View
+            </button>
+            <button type="button" class="btn btn-hero-primary sa-change-document">
+                <i class="bi bi-arrow-repeat"></i> Update
+            </button>
+        `;
+    }
+}
+
+/**
+ * Open uploaded document
+ */
+function openDocument(card) {
+    const fileUrl = card.dataset.fileUrl;
+    const fileName = (card.dataset.fileName || "").toLowerCase();
+
+    if (!fileUrl) {
+        showToast("No document available to view.", "error");
+        return;
+    }
+
+    const isPdf = fileName.endsWith(".pdf") || fileUrl.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
+        window.open(fileUrl, "_blank");
+        return;
+    }
+
+    // Open image in a new tab with dark background and centered content
+    const imageWindow = window.open("");
+
+    if (imageWindow) {
+        imageWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Document Preview</title>
+                <style>
+                    body {
+                        margin: 0;
+                        background: #111;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                    }
+                    img {
+                        max-width: 100%;
+                        max-height: 100vh;
+                        object-fit: contain;
+                    }
+                </style>
+            </head>
+            <body>
+                <img src="${fileUrl}" alt="Document Preview">
+            </body>
+            </html>
+        `);
+        imageWindow.document.close();
+    } else {
+        // Fallback if popup blocker stops document write 
+        window.open(fileUrl, "_blank");
+    }
+}

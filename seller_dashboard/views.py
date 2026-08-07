@@ -14,11 +14,14 @@ import json
 # Create your views here.
 
 
+from django.contrib import messages
+
 def dashboard(request):
     seller = request.user.seller_profile
     context = {}
-    return render(request, "dashboard.html", context)
+    messages.success(request, "sample error message")
 
+    return render(request, "dashboard.html", context)
 
 def products(request):
     return render(request, "products/list.html")

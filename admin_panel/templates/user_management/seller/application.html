@@ -4,6 +4,7 @@
 {% block title %}Seller Application — {{ seller.user.first_name }} MarketSphere Admin{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/email_composer.css' %}">
 <link rel="stylesheet" href="{% static '/css/seller_application.css' %}">
 {% endblock %}
 
@@ -24,13 +25,17 @@
 <div class="sad-page" id="sadPage">
 
     <!-- ============ HEADER ============ -->
-    <header class="sad-header sad-reveal">
+    <header class="sad-header sad-reveal" data-sad-application-id="{{ seller.id }}">
         <div class="sad-profile-row">
             <div class="sad-profile-left">
                 <div class="sad-avatar-wrap">
                     <div class="sad-avatar" id="sadAvatarTrigger" data-sad-doc-preview data-doc-src="{{ seller.user.profile_image_url }}" data-doc-title="Applicant Photo">
                         <!-- application.applicant_initials -->
-                        <img src="{{ seller.user.profile_image_url }}" alt="" class="sad-hidden">
+                         {% if seller.user.profile_image.url %}
+                         <img src="{{ seller.user.profile_image_url }}" alt="" class="sad-hidden">
+                         {% else %}
+                         <strong>{{ seller.user.first_name|first  }}{{seller.user.last_name|first }}</strong>
+                         {% endif %}
                     </div>
                 </div>
                 <div class="sad-profile-text">
@@ -55,20 +60,20 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                             Submitted {{ seller.created_at|date:"M d, Y"}}
                         </span>
-                        <span class="sad-meta-chip">
+                        {% comment %} <span class="sad-meta-chip">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                             Waiting {{ seller.created_at|timesince }}
-                        </span>
+                        </span> {% endcomment %}
                         <span class="sad-meta-chip">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            Reviewer: {{ request.user.first_name|default:"Unassigned" }}
+                            Reviewer: {{ request.user.username|default:"Unassigned" }}
                         </span>
                     </div>
                 </div>
             </div>
 
             <div class="sad-header-actions">
-                <button type="button" class="sad-btn sad-btn-danger-outline" data-sad-open-modal="sadRejectModal">
+                <button type="button" class="sad-btn sad-btn-outline" data-sad-open-modal="sadRejectModal">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     Reject
                 </button>
@@ -85,11 +90,11 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
                     </button>
                     <div class="sad-dropdown-menu">
-                        <button type="button" class="sad-dropdown-item" data-sad-toast="info" data-sad-toast-msg="Application link copied">
+                        <button type="button" class="sad-dropdown-item" data-sad-copy="{{ request.build_absolute_uri }}">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                             Copy Link
                         </button>
-                        <button type="button" class="sad-dropdown-item" data-sad-toast="info" data-sad-toast-msg="Exporting application PDF…">
+                        <button type="button" class="sad-dropdown-item" id="ExportSellerDataPdf" data-sad-toast-msg="Exporting application PDF…" data-seller-id="{{ seller.id }}">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                             Export as PDF
                         </button>
@@ -197,6 +202,9 @@
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v4M12 17h.01"/></svg>
                                 Unverified
                             </span>
+                            <button type="button" class="sad-copy-btn" data-sad-copy="{{ seller.user.contact }}" aria-label="Copy phone number">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            </button>
                         </span>
                     </div>
                     <div class="sad-info-item">
@@ -229,7 +237,7 @@
                 </div>
                 <div class="sad-store-logo-row">
                     <div class="sad-store-logo" data-sad-doc-preview data-doc-src="{{ seller.store_logo.url }}" data-doc-title="Store Logo">
-                        {{ seller.slug }}
+                        <img src="{{ seller.store_logo.url }}" alt="Store Logo">
                     </div>
                     <div>
                         <div class="sad-card-subtitle-title">{{ seller.store_name }}</div>
@@ -267,21 +275,21 @@
                     </div>
                 </div>
                 <div class="sad-social-row">
-                    <span class="sad-social-chip">
+                    <span class="sad-social-chip" onclick="window.open('{{ seller.profile.facebook_url}}', '_blank')">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                         {{ seller.profile.facebook_label }}
                     </span>
-                    <span class="sad-social-chip">
+                    <span class="sad-social-chip" onclick="window.open('{{ seller.profile.instagram_url}}', '_blank')">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/></svg>
                         {{ seller.profile.instagram_label}}
                     </span>
-                    <span class="sad-social-chip">
+                    <span class="sad-social-chip" onclick="window.open('{{ seller.profile.twitter_url}}', '_blank')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 16 16">
                           <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
                         </svg>   
                        {{ seller.profile.twitter_label}}
                     </span>
-                    <span class="sad-social-chip">
+                    <span class="sad-social-chip" onclick="window.open('{{ seller.profile.website}}', '_blank')">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2H7a2 2 0 0 0-2 2v16l7-4 7 4V4a2 2 0 0 0-2-2z"/></svg>
                         {{ seller.profile.website }}
                     </span>
@@ -300,7 +308,7 @@
 
             <div class="sad-tab-panels">
 
-                <!-- ============ DOCUMENTS TAB ============ -->
+                 <!-- ============ DOCUMENTS TAB ============ -->
                 <section class="sad-tab-panel is-active" data-sad-panel="documents" role="tabpanel">
                     <div class="sad-card">
                         <div class="sad-docs-toolbar">
@@ -313,106 +321,22 @@
                                 Download All
                             </button>
                         </div>
+                        
                         <div class="sad-docs-grid">
-                          {% for doc in seller.application.documents.all %}
-                          <div class="sad-doc-card">
+                            {% include "user_management/seller/document_card.html" with document=documents.cnic_front document_key="cnic_front" title="CNIC Front" %}
 
-                              <div class="sad-doc-preview"
-                                  data-sad-doc-preview
-                                  data-doc-src="{{ doc.file.url }}"
-                                  data-doc-title="{{ doc.get_document_type_display }}">
+                            {% include "user_management/seller/document_card.html" with document=documents.cnic_back document_key="cnic_back" title="CNIC Back" %}
 
-                                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                      <path d="M14 2v6h6"/>
-                                  </svg>
+                            {% include "user_management/seller/document_card.html" with document=documents.business_certificate document_key="business_certificate" title="Business Registration Certificate" %}
 
-                                  <div class="sad-doc-zoom-hint">
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                          <circle cx="11" cy="11" r="8"/>
-                                          <path d="M21 21l-4.35-4.35"/>
-                                      </svg>
-                                      Click to preview
-                                  </div>
-                              </div>
+                            {% include "user_management/seller/document_card.html" with document=documents.ntn document_key="ntn" title="NTN Certificate" %}
 
-                              <div class="sad-doc-head">
-                                  <span class="sad-doc-title">
-                                      {{ doc.get_document_type_display }}
-                                  </span>
+                            {% include "user_management/seller/document_card.html" with document=documents.bank_statement document_key="bank_statement" title="Bank Statement" %}
 
-                                  {% if doc.verified %}
-                                      <span class="sad-badge c-success">Verified</span>
-                                  {% else %}
-                                      <span class="sad-badge c-warning">Pending Review</span>
-                                  {% endif %}
-                              </div>
-
-                              <span class="sad-doc-meta">
-                                  {{ doc.uploaded_at|date:"M d, Y" }}
-                              </span>
-
-                              <span class="sad-doc-type">
-                                  {{ doc.file.name|slice:"-3:"|upper }}
-                              </span>
-
-                              <div class="sad-doc-actions">
-
-                                  <button
-                                      type="button"
-                                      class="sad-btn sad-btn-secondary sad-btn-sm"
-                                      data-sad-doc-preview
-                                      data-doc-src="{{ doc.file.url }}"
-                                      data-doc-title="{{ doc.get_document_type_display }}">
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                          <circle cx="12" cy="12" r="3"/>
-                                      </svg>
-                                      Preview
-                                  </button>
-
-                                  <a href="{{ doc.file.url }}"
-                                    download
-                                    class="sad-btn sad-btn-secondary sad-btn-sm">
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                          <path d="M7 10l5 5 5-5"/>
-                                          <path d="M12 15V3"/>
-                                      </svg>
-                                      Download
-                                  </a>
-
-                              </div>
-
-                              <div class="sad-doc-actions-row2">
-
-                                  <button
-                                      type="button"
-                                      class="sad-btn sad-btn-success sad-btn-sm"
-                                      data-document-id="{{ doc.id }}">
-                                      Mark Verified
-                                  </button>
-
-                                  <button
-                                      type="button"
-                                      class="sad-btn sad-btn-danger-outline sad-btn-sm"
-                                      data-document-id="{{ doc.id }}">
-                                      Flag Issue
-                                  </button>
-
-                              </div>
-
-                          </div>
-
-                          {% empty %}
-                          <div class="sad-empty-state">
-                              <p>No documents have been uploaded yet.</p>
-                          </div>
-                          {% endfor %}
-                      </div>
+                            {% include "user_management/seller/document_card.html" with document=documents.store_photo document_key="store_photo" title="Store Photo" %}
+                        </div>
                     </div>
                 </section>
-
                 <!-- ============ VERIFICATION TAB ============ -->
                 <section class="sad-tab-panel" data-sad-panel="verification" role="tabpanel">
                     <div class="sad-verification-grid">
@@ -427,224 +351,176 @@
                               </h2>
                           </div>
 
-                          <div class="sad-checklist">
+                     <div class="sad-checklist">
 
-                              <!-- Identity Documents -->
-                              <div class="sad-checklist-item {% if identity_verified %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if identity_verified %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
+                        <!-- Identity Documents -->
+                        <div class="sad-checklist-item {% if identity_verified %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if identity_verified %}3{% else %}2{% endif %}">
+                                    {% if identity_verified %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Identity Documents</strong>
+                                <small>CNIC Front & Back reviewed</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                <span class="sad-badge {% if identity_verified %}c-success{% else %}c-warning{% endif %}">
+                                    {% if identity_verified %}Passed{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+                        </div>
 
-                                  <div class="sad-checklist-text">
-                                      <strong>Identity Documents</strong>
-                                      <small>CNIC Front & Back reviewed</small>
-                                  </div>
+                        <!-- Email Verification -->
+                        <div class="sad-checklist-item {% if email_verified %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if email_verified %}3{% else %}2{% endif %}">
+                                    {% if email_verified %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Email Verification</strong>
+                                <small>Verified using django-allauth</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                <span class="sad-badge {% if email_verified %}c-success{% else %}c-warning{% endif %}">
+                                    {% if email_verified %}Passed{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+                        </div>
 
-                                  <div class="sad-checklist-action">
-                                      {% if identity_verified %}
-                                          <span class="sad-badge c-success">Passed</span>
-                                      {% else %}
-                                          <span class="sad-badge c-warning">Pending</span>
-                                      {% endif %}
-                                  </div>
-                              </div>
+                        <!-- Business Registration -->
+                        <div class="sad-checklist-item {% if seller.settings.business_registration_verified %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if seller.settings.business_registration_verified %}3{% else %}2{% endif %}">
+                                    {% if seller.settings.business_registration_verified %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Business Registration</strong>
+                                <small>{{ seller.settings.business_registration_number|default:"Registration number not provided" }}</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                {% if seller.settings.business_registration_verified %}
+                                    <span class="sad-badge c-success">Passed</span>
+                                {% else %}
+                                    <button type="button" class="sad-btn sad-btn-success sad-btn-sm" id="verifyBusinessBtn">Verify</button>
+                                {% endif %}
+                            </div>
+                        </div>
 
-                              <!-- Email Verification -->
-                              <div class="sad-checklist-item {% if email_verified %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if email_verified %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
+                        <!-- Tax / NTN Information -->
+                        <div class="sad-checklist-item {% if seller.settings.tax_id %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if seller.settings.tax_id %}3{% else %}2{% endif %}">
+                                    {% if seller.settings.tax_id %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Tax / NTN Information</strong>
+                                <small>{{ seller.settings.tax_id|default:"NTN not submitted" }}</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                <span class="sad-badge {% if seller.settings.tax_id %}c-success{% else %}c-warning{% endif %}">
+                                    {% if seller.settings.tax_id %}Submitted{% else %}Missing{% endif %}
+                                </span>
+                            </div>
+                        </div>
 
-                                  <div class="sad-checklist-text">
-                                      <strong>Email Verification</strong>
-                                      <small>Verified using django-allauth</small>
-                                  </div>
+                        <!-- Bank Account -->
+                        <div class="sad-checklist-item {% if seller.settings.bank_account_verified %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if seller.settings.bank_account_verified %}3{% else %}2{% endif %}">
+                                    {% if seller.settings.bank_account_verified %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Bank Account</strong>
+                                <small>Bank statement reviewed</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                {% if seller.settings.bank_account_verified %}
+                                    <span class="sad-badge c-success">Passed</span>
+                                {% else %}
+                                    <button type="button" class="sad-btn sad-btn-success sad-btn-sm" id="verifyBankBtn">Verify</button>
+                                {% endif %}
+                            </div>
+                        </div>
 
-                                  <div class="sad-checklist-action">
-                                      {% if email_verified %}
-                                          <span class="sad-badge c-success">Passed</span>
-                                      {% else %}
-                                          <span class="sad-badge c-warning">Pending</span>
-                                      {% endif %}
-                                  </div>
-                              </div>
+                        <!-- Business Address -->
+                        <div class="sad-checklist-item {% if seller.settings.address_verified %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if seller.settings.address_verified %}3{% else %}2{% endif %}">
+                                    {% if seller.settings.address_verified %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Business Address</strong>
+                                <small>{{ seller.business_address|default:"Business address not added" }}</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                {% if seller.settings.address_verified %}
+                                    <span class="sad-badge c-success">Passed</span>
+                                {% else %}
+                                    <button type="button" class="sad-btn sad-btn-secondary sad-btn-sm" id="verifyAddressBtn">Verify</button>
+                                {% endif %}
+                            </div>
+                        </div>
 
-                              <!-- Business Registration -->
-                              <div class="sad-checklist-item {% if seller.settings.business_registration_verified %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if seller.settings.business_registration_verified %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
+                        <!-- Store Profile -->
+                        <div class="sad-checklist-item {% if store_profile_complete %}is-complete{% else %}is-pending{% endif %}">
+                            <div class="sad-checklist-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if store_profile_complete %}3{% else %}2{% endif %}">
+                                    {% if store_profile_complete %}
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    {% else %}
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8v4l3 3"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="sad-checklist-text">
+                                <strong>Store Profile</strong>
+                                <small>Logo, banner and description completed</small>
+                            </div>
+                            <div class="sad-checklist-action">
+                                <span class="sad-badge {% if store_profile_complete %}c-success{% else %}c-warning{% endif %}">
+                                    {% if store_profile_complete %}Complete{% else %}Incomplete{% endif %}
+                                </span>
+                            </div>
+                        </div>
 
-                                  <div class="sad-checklist-text">
-                                      <strong>Business Registration</strong>
-                                      <small>{{ seller.settings.business_registration_number|default:"Registration number not provided" }}</small>
-                                  </div>
-
-                                  <div class="sad-checklist-action">
-                                      {% if seller.settings.business_registration_verified %}
-                                          <span class="sad-badge c-success">Passed</span>
-                                      {% else %}
-                                          <button type="button"
-                                                  class="sad-btn sad-btn-success sad-btn-sm"
-                                                  id="verifyBusinessBtn">
-                                              Verify
-                                          </button>
-                                      {% endif %}
-                                  </div>
-                              </div>
-
-                              <!-- Tax Information -->
-                              <div class="sad-checklist-item {% if seller.settings.tax_id %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if seller.settings.tax_id %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
-
-                                  <div class="sad-checklist-text">
-                                      <strong>Tax / NTN Information</strong>
-                                      <small>{{ seller.settings.tax_id|default:"NTN not submitted" }}</small>
-                                  </div>
-
-                                  <div class="sad-checklist-action">
-                                      {% if seller.settings.tax_id %}
-                                          <span class="sad-badge c-success">Submitted</span>
-                                      {% else %}
-                                          <span class="sad-badge c-warning">Missing</span>
-                                      {% endif %}
-                                  </div>
-                              </div>
-
-                              <!-- Bank Account -->
-                              <div class="sad-checklist-item {% if seller.settings.bank_account_verified %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if seller.settings.bank_account_verified %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
-
-                                  <div class="sad-checklist-text">
-                                      <strong>Bank Account</strong>
-                                      <small>Bank statement reviewed</small>
-                                  </div>
-
-                                  <div class="sad-checklist-action">
-                                      {% if seller.settings.bank_account_verified %}
-                                          <span class="sad-badge c-success">Passed</span>
-                                      {% else %}
-                                          <button type="button"
-                                                  class="sad-btn sad-btn-success sad-btn-sm"
-                                                  id="verifyBankBtn">
-                                              Verify
-                                          </button>
-                                      {% endif %}
-                                  </div>
-                              </div>
-
-                              <!-- Business Address -->
-                              <div class="sad-checklist-item {% if seller.settings.address_verified %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if seller.settings.address_verified %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
-
-                                  <div class="sad-checklist-text">
-                                      <strong>Business Address</strong>
-                                      <small>{{ seller.business_address|default:"Business address not added" }}</small>
-                                  </div>
-
-                                  <div class="sad-checklist-action">
-                                      {% if seller.settings.address_verified %}
-                                          <span class="sad-badge c-success">Passed</span>
-                                      {% else %}
-                                          <button type="button"
-                                                  class="sad-btn sad-btn-secondary sad-btn-sm"
-                                                  id="verifyAddressBtn">
-                                              Verify
-                                          </button>
-                                      {% endif %}
-                                  </div>
-                              </div>
-
-                              <!-- Store Profile -->
-                              <div class="sad-checklist-item {% if store_profile_complete %}is-complete{% else %}is-pending{% endif %}">
-                                  <div class="sad-checklist-icon">
-                                      {% if store_profile_complete %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                              <path d="M20 6L9 17l-5-5"/>
-                                          </svg>
-                                      {% else %}
-                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                              <circle cx="12" cy="12" r="10"/>
-                                              <path d="M12 8v4l3 3"/>
-                                          </svg>
-                                      {% endif %}
-                                  </div>
-
-                                  <div class="sad-checklist-text">
-                                      <strong>Store Profile</strong>
-                                      <small>Logo, banner and description completed</small>
-                                  </div>
-
-                                  <div class="sad-checklist-action">
-                                      {% if store_profile_complete %}
-                                          <span class="sad-badge c-success">Complete</span>
-                                      {% else %}
-                                          <span class="sad-badge c-warning">Incomplete</span>
-                                      {% endif %}
-                                  </div>
-                              </div>
-
-                          </div>
+                    </div>
                       </div>
                         <div class="sad-card">
                           <div class="sad-card-head">
@@ -812,51 +688,7 @@
 
                           </div>
 
-                          <div class="sad-mini-progress-list" style="margin-top:18px;">
-
-                              <div class="sad-mini-progress-item">
-                                  <div class="sad-mini-progress-head">
-                                      <span>Document Completeness</span>
-                                      <strong>{{ document_completeness }}%</strong>
-                                  </div>
-
-                                  <div class="sad-progress-bar">
-                                      <span class="sad-progress-fill"
-                                            data-sad-progress
-                                            style="--sad-pct: {{ document_completeness }}%;">
-                                      </span>
-                                  </div>
-                              </div>
-
-                              <div class="sad-mini-progress-item">
-                                  <div class="sad-mini-progress-head">
-                                      <span>Profile Completeness</span>
-                                      <strong>{{ profile_completeness }}%</strong>
-                                  </div>
-
-                                  <div class="sad-progress-bar">
-                                      <span class="sad-progress-fill"
-                                            data-sad-progress
-                                            style="--sad-pct: {{ profile_completeness }}%;">
-                                      </span>
-                                  </div>
-                              </div>
-
-                              <div class="sad-mini-progress-item">
-                                  <div class="sad-mini-progress-head">
-                                      <span>Compliance Score</span>
-                                      <strong>{{ compliance_score }}%</strong>
-                                  </div>
-
-                                  <div class="sad-progress-bar">
-                                      <span class="sad-progress-fill"
-                                            data-sad-progress
-                                            style="--sad-pct: {{ compliance_score }}%;">
-                                      </span>
-                                  </div>
-                              </div>
-
-                          </div>
+                         
                       </div>
                     </div>
                 </section>
@@ -871,7 +703,7 @@
                             </h2>
                         </div>
                         <div class="sad-comm-quick-grid">
-                            <button type="button" class="sad-comm-quick-btn" data-sad-open-modal="sadEmailModal">
+                            <button type="button" class="sad-comm-quick-btn" data-ec-open data-user-name="{{ seller.store_name }}" data-user-email="{{ seller.business_email|default:seller.user.email }}" data-user-avatar="{{ seller.store_logo }}" data-user-status="{{ seller.status }}" data-user-initial="{{ seller.shop_name|slice:':1'|upper }}" data-user-id="{{ seller.user.id }}">
                                 <div class="sad-comm-quick-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg></div>
                                 <strong>Send Email</strong>
                                 <small>Compose a message to the applicant</small>
@@ -990,65 +822,97 @@
                 <!-- ============ ADMIN NOTES TAB ============ -->
                 <section class="sad-tab-panel" data-sad-panel="notes" role="tabpanel">
                     <div class="sad-card">
+
                         <div class="sad-card-head">
                             <h2 class="sad-card-title">
-                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                                </svg>
                                 Admin Notes
                             </h2>
-                            <span class="sad-card-desc">Internal only — never visible to the applicant</span>
+
+                            <span class="sad-card-desc">
+                                Internal only — never visible to the applicant
+                            </span>
                         </div>
 
                         <div class="sad-note-composer">
-                            <textarea id="sadNoteInput" placeholder="Add an internal note about this application…"></textarea>
+
+                            <textarea
+                                id="sadNoteInput"
+                                placeholder="Add an internal note about this application...">{{ application.admin_notes }}</textarea>
+
                             <div class="sad-note-composer-foot">
+
                                 <label class="sad-checkbox">
-                                    <input type="checkbox" id="sadNoteFlag">
+                                    <input type="checkbox" disabled>
                                     <span class="sad-checkbox-box"></span>
-                                    <span class="sad-checkbox-text">Flag as important</span>
+                                    <span class="sad-checkbox-text">
+                                        Internal Notes
+                                    </span>
                                 </label>
+
                                 <div class="sad-note-composer-actions">
-                                    <button type="button" class="sad-btn sad-btn-secondary sad-btn-sm" id="sadNoteClear">Clear</button>
-                                    <button type="button" class="sad-btn sad-btn-primary sad-btn-sm" id="sadNoteAdd">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                                        Add Note
+
+                                    <button
+                                        type="button"
+                                        class="sad-btn sad-btn-secondary sad-btn-sm"
+                                        id="sadNoteClear">
+
+                                        Reset
+
                                     </button>
+
+                                    <button
+                                        type="button"
+                                        class="sad-btn sad-btn-primary sad-btn-sm"
+                                        id="sadNoteAdd">
+
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M17 3v18"/>
+                                            <path d="M7 3v18"/>
+                                            <path d="M3 7h18"/>
+                                            <path d="M3 17h18"/>
+                                        </svg>
+
+                                        Save Notes
+
+                                    </button>
+
                                 </div>
+
                             </div>
+
                         </div>
 
-                        <div class="sad-notes-list" id="sadNotesList">
-                            <!-- for note in application.admin_notes.all -->
+                        {% if application.admin_notes %}
+                        <div class="sad-notes-list">
+
                             <div class="sad-note-card">
+
                                 <div class="sad-note-head">
-                                    <div class="sad-note-avatar"><!-- note.author.initials --></div>
-                                    <div class="sad-note-meta">
-                                        <strong><!-- note.author.get_full_name --></strong>
-                                        <span><!-- note.created_at|date:"M d, Y H:i" --></span>
+
+                                    <div class="sad-note-avatar">
+                                        A
                                     </div>
-                                    <span class="sad-badge c-warning">Important</span>
-                                </div>
-                                <p class="sad-note-content"><!-- note.content --></p>
-                                <div class="sad-note-actions">
-                                    <button type="button" class="sad-link-btn" data-sad-toast="info" data-sad-toast-msg="Edit note coming soon">Edit</button>
-                                    <button type="button" class="sad-link-btn c-danger" data-sad-toast="danger" data-sad-toast-msg="Note removed">Delete</button>
-                                </div>
-                            </div>
-                            <div class="sad-note-card">
-                                <div class="sad-note-head">
-                                    <div class="sad-note-avatar"><!-- note.author.initials --></div>
+
                                     <div class="sad-note-meta">
-                                        <strong><!-- note.author.get_full_name --></strong>
-                                        <span><!-- note.created_at|date:"M d, Y H:i" --></span>
+                                        <strong>Current Notes</strong>
+                                        <span>Saved with this application</span>
                                     </div>
+
                                 </div>
-                                <p class="sad-note-content"><!-- note.content --></p>
-                                <div class="sad-note-actions">
-                                    <button type="button" class="sad-link-btn" data-sad-toast="info" data-sad-toast-msg="Edit note coming soon">Edit</button>
-                                    <button type="button" class="sad-link-btn c-danger" data-sad-toast="danger" data-sad-toast-msg="Note removed">Delete</button>
-                                </div>
+
+                                <p class="sad-note-content">
+                                    {{ application.admin_notes|linebreaksbr }}
+                                </p>
+
                             </div>
-                            <!-- endfor -->
+
                         </div>
+                        {% endif %}
+
                     </div>
                 </section>
 
@@ -1150,16 +1014,50 @@
             </div>
 
             <div class="sad-card sad-sidebar-card">
-                <div class="sad-card-head"><span class="sad-card-subtitle-title">Still Required</span></div>
-                <div class="sad-required-list">
-                    <div class="sad-required-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                        Phone number verification
-                    </div>
-                    <div class="sad-required-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                        Clarify tax certificate discrepancy
-                    </div>
+                <div class="sad-mini-progress-list" style="margin-top:18px;">
+
+                              <div class="sad-mini-progress-item">
+                                  <div class="sad-mini-progress-head">
+                                      <span>Document Completeness</span>
+                                      <strong>{{ document_completeness }}%</strong>
+                                  </div>
+
+                                  <div class="sad-progress-bar">
+                                      <span class="sad-progress-fill"
+                                            data-sad-progress
+                                            style="--sad-pct: {{ document_completeness }}%;">
+                                      </span>
+                                  </div>
+                              </div>
+
+                              <div class="sad-mini-progress-item">
+                                  <div class="sad-mini-progress-head">
+                                      <span>Profile Completeness</span>
+                                      <strong>{{ profile_completeness }}%</strong>
+                                  </div>
+
+                                  <div class="sad-progress-bar">
+                                      <span class="sad-progress-fill"
+                                            data-sad-progress
+                                            style="--sad-pct: {{ profile_completeness }}%;">
+                                      </span>
+                                  </div>
+                              </div>
+
+                              <div class="sad-mini-progress-item">
+                                  <div class="sad-mini-progress-head">
+                                      <span>Compliance Score</span>
+                                      <strong>{{ compliance_score }}%</strong>
+                                  </div>
+
+                                  <div class="sad-progress-bar">
+                                      <span class="sad-progress-fill"
+                                            data-sad-progress
+                                            style="--sad-pct: {{ compliance_score }}%;">
+                                      </span>
+                                  </div>
+                              </div>
+
                 </div>
             </div>
 
@@ -1238,7 +1136,7 @@
         </div>
         <div class="sad-modal-actions">
             <button type="button" class="sad-btn sad-btn-secondary" data-sad-close-modal>Cancel</button>
-            <button type="button" class="sad-btn sad-btn-danger" data-sad-confirm-action data-sad-toast="danger" data-sad-toast-msg="Application rejected">
+            <button type="button" class="sad-btn sad-btn-danger" data-sad-confirm-action>
                 <span class="sad-btn-label">Confirm Rejection</span>
             </button>
         </div>
@@ -1356,33 +1254,7 @@
 </div>
 
 <!-- Email Composer Modal -->
-<div class="sad-modal-overlay is-hidden" id="sadEmailModal" data-sad-modal>
-    <div class="sad-modal sad-modal-lg" role="dialog" aria-modal="true" aria-labelledby="sadEmailModalTitle">
-        <button type="button" class="sad-modal-close" data-sad-close-modal aria-label="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-        <div class="sad-modal-icon c-accent"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg></div>
-        <h3 class="sad-modal-title" id="sadEmailModalTitle">Send Email to Applicant</h3>
-        <div class="sad-form-group">
-            <label for="sadEmailTo">To</label>
-            <input type="text" id="sadEmailTo" value="{# application.applicant_email #}" readonly>
-        </div>
-        <div class="sad-form-group">
-            <label for="sadEmailSubject">Subject</label>
-            <input type="text" id="sadEmailSubject" placeholder="Regarding your seller application…">
-        </div>
-        <div class="sad-form-group">
-            <label for="sadEmailBody">Message</label>
-            <textarea id="sadEmailBody" placeholder="Write your message…"></textarea>
-        </div>
-        <div class="sad-modal-actions">
-            <button type="button" class="sad-btn sad-btn-secondary" data-sad-close-modal>Cancel</button>
-            <button type="button" class="sad-btn sad-btn-primary" data-sad-confirm-action data-sad-toast="success" data-sad-toast-msg="Email sent to applicant">
-                <span class="sad-btn-label">Send Email</span>
-            </button>
-        </div>
-    </div>
-</div>
+{% include "email_components/email_composer.html" %}
 
 <!-- Document Preview / Zoom Modal -->
 <div class="sad-modal-overlay is-hidden" id="sadDocPreviewModal" data-sad-modal>
@@ -1402,11 +1274,226 @@
     </div>
 </div>
 
+<!-- Flag Document Issue Modal -->
+<div class="sad-modal-overlay is-hidden" id="sadFlagIssueModal" data-sad-modal data-document-id="" data-document-type="">
+    <div class="sad-modal sad-modal-lg"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="sadFlagIssueModalTitle">
+
+        <button type="button"
+                class="sad-modal-close"
+                data-sad-close-modal
+                aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+        </button>
+
+        <div class="sad-modal-icon c-warning">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18A2 2 0 0 0 3.55 21h16.9a2 2 0 0 0 1.73-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        </div>
+
+        <h3 class="sad-modal-title" id="sadFlagIssueModalTitle">
+            Flag Document Issue
+        </h3>
+
+        <p class="sad-modal-text">
+            Explain what is wrong with this document. The seller will be asked to upload a corrected version.
+        </p>
+
+
+        <div class="sad-form-group">
+            <label for="sadFlagReason">
+                Issue Category
+            </label>
+
+            <select id="sadFlagReason">
+                <option value="Document image is blurry">
+                    Document image is blurry
+                </option>
+
+                <option value="Document is cropped or incomplete">
+                    Document is cropped or incomplete
+                </option>
+
+                <option value="Document has expired">
+                    Document has expired
+                </option>
+
+                <option value="Information does not match application">
+                    Information does not match application
+                </option>
+
+                <option value="Invalid or unreadable document">
+                    Invalid or unreadable document
+                </option>
+
+                <option value="Wrong document uploaded">
+                    Wrong document uploaded
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+            </select>
+        </div>
+
+        <div class="sad-form-group">
+            <label for="sadFlagNote">
+                Verification Notes
+            </label>
+
+            <textarea
+                id="sadFlagNote"
+                placeholder="Explain exactly what the seller needs to correct before uploading again..."></textarea>
+        </div>
+
+        <div class="sad-modal-actions">
+            <button
+                type="button"
+                class="sad-btn sad-btn-secondary"
+                data-sad-close-modal>
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="sad-btn sad-btn-primary"
+                id="sadFlagIssueConfirm">
+
+                <span class="sad-btn-label" >
+                    Request Re-upload
+                </span>
+
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Request Missing Document Modal -->
+<div class="sad-modal-overlay is-hidden" id="sadRequestDocumentModal" data-sad-modal data-document-type="">
+    <div class="sad-modal sad-modal-lg"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="sadRequestDocumentModalTitle">
+
+        <button type="button"
+                class="sad-modal-close"
+                data-sad-close-modal
+                aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+        </button>
+
+        <div class="sad-modal-icon c-accent">
+            <svg width="26" height="26" viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <path d="M17 8l-5-5-5 5"/>
+                <path d="M12 3v12"/>
+            </svg>
+        </div>
+
+        <h3 class="sad-modal-title"
+            id="sadRequestDocumentModalTitle">
+
+            Request Missing Document
+
+        </h3>
+
+        <p class="sad-modal-text">
+            Ask the seller to upload the required document before the application can continue.
+        </p>
+
+        <div class="sad-form-group">
+
+            <label for="sadRequestReason">
+                Request Reason
+            </label>
+
+            <select id="sadRequestReason">
+
+                <option value="Document is required for verification">
+                    Document is required for verification
+                </option>
+
+                <option value="Document was not uploaded">
+                    Document was not uploaded
+                </option>
+
+                <option value="Additional supporting document required">
+                    Additional supporting document required
+                </option>
+
+                <option value="Compliance requirement">
+                    Compliance requirement
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="sad-form-group">
+
+            <label for="sadRequestNote">
+                Message to Seller
+            </label>
+
+            <textarea
+                id="sadRequestNote"
+                placeholder="Provide instructions about what document should be uploaded..."></textarea>
+
+        </div>
+
+        <div class="sad-modal-actions">
+
+            <button
+                type="button"
+                class="sad-btn sad-btn-secondary"
+                data-sad-close-modal>
+
+                Cancel
+
+            </button>
+
+            <button
+                type="button"
+                class="sad-btn sad-btn-primary"
+                id="sadRequestDocumentConfirmBtn">
+
+                <span class="sad-btn-label">
+                    Send Request
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
 <!-- Toast Container -->
 <div class="sad-toast-container" id="sadToastContainer" aria-live="polite"></div>
 
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static '/js/email_composer.js' %}"></script>
 <script src="{% static '/js/seller_application.js' %}" defer></script>
 {% endblock %}

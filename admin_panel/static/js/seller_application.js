@@ -27,6 +27,8 @@
     var root = document.getElementById("sadPage");
     if (!root) return;
 
+    const SELLER_APPLICATION_ID = document.getElementsByClassName("sad-header")[0].getAttribute("data-sad-application-id");
+
     /* ================= 2. HELPERS ================= */
 
     function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -57,28 +59,6 @@
 
     function initRipples() {
         qsa(".sad-btn, .sad-action-btn, .sad-comm-quick-btn").forEach(attachRipple);
-    }
-
-    // Toast notifications
-    var toastContainer = qs("#sadToastContainer");
-    var TOAST_ICONS = {
-        success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
-        danger: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',
-        info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>'
-    };
-
-    function showToast(message, type) {
-        if (!toastContainer || !message) return;
-        type = type && TOAST_ICONS[type] ? type : "info";
-        var toast = document.createElement("div");
-        toast.className = "sad-toast sad-toast-" + type;
-        toast.setAttribute("role", "status");
-        toast.innerHTML = TOAST_ICONS[type] + "<span>" + message + "</span>";
-        toastContainer.appendChild(toast);
-        setTimeout(function () {
-            toast.classList.add("is-leaving");
-            setTimeout(function () { toast.remove(); }, 240);
-        }, 3600);
     }
 
     // Simulated async loading state on a button (no network calls — just a local delay)
@@ -333,37 +313,95 @@
             deleteInput.addEventListener("input", function () {
                 deleteBtn.disabled = deleteInput.value.trim().toUpperCase() !== "DELETE";
             });
-            deleteBtn.addEventListener("click", function () {
+            deleteBtn.addEventListener("click", async function () {
+
                 if (deleteBtn.disabled) return;
-                var overlay = deleteBtn.closest(".sad-modal-overlay");
-                var message = deleteBtn.getAttribute("data-sad-toast-msg");
-                runWithLoadingState(deleteBtn, function () {
-                    closeModal(overlay);
-                    showToast(message, "danger");
-                    deleteInput.value = "";
-                    deleteBtn.disabled = true;
+
+                const overlay = deleteBtn.closest(".sad-modal-overlay");
+
+                runWithLoadingState(deleteBtn, async function () {
+
+                    try {
+
+                        const response = await fetch(
+                            `/admin-db/user/seller/${SELLER_ID}/delete/`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRFToken": getCSRFToken(),
+                                },
+                            }
+                        );
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.message || "Unable to delete seller.");
+                        }
+
+                        closeModal(overlay);
+
+                        showToast("success", data.message);
+
+                        deleteInput.value = "";
+                        deleteBtn.disabled = true;
+
+                        setTimeout(function () {
+                            window.location.href = "/admin-db/user/sellers/";
+                        }, 1200);
+
+                    } catch (error) {
+                        showToast("danger", error.message);
+                    }
+
                 }, 800);
+
             });
         }
     }
 
     /* ================= 9. DOCUMENT PREVIEW / ZOOM MODAL ================= */
     function initDocPreview() {
-        var previewModal = qs("#sadDocPreviewModal");
-        var previewImg = qs("#sadDocPreviewImg");
-        var previewTitle = qs("#sadDocPreviewTitle");
+
+        const previewModal = qs("#sadDocPreviewModal");
+        const previewImg = qs("#sadDocPreviewImg");
+        const previewTitle = qs("#sadDocPreviewTitle");
+
         if (!previewModal || !previewImg) return;
 
         qsa("[data-sad-doc-preview]").forEach(function (trigger) {
-            trigger.addEventListener("click", function () {
-                var src = trigger.getAttribute("data-doc-src") || "";
-                var title = trigger.getAttribute("data-doc-title") || "Document Preview";
+
+            trigger.addEventListener("click", function (e) {
+
+                e.preventDefault();
+
+                const src = trigger.getAttribute("data-doc-src");
+                const title = trigger.getAttribute("data-doc-title") || "Document Preview";
+
+                if (!src) return;
+
+                // Detect PDF
+                const extension = src.split(".").pop().toLowerCase();
+
+                if (extension === "pdf") {
+                    window.open(src, "_blank");
+                    return;
+                }
+
+                // Image Preview
                 previewImg.src = src;
                 previewImg.alt = title;
-                if (previewTitle) previewTitle.textContent = title;
+
+                if (previewTitle) {
+                    previewTitle.textContent = title;
+                }
+
                 openModal("sadDocPreviewModal");
+
             });
+
         });
+
     }
 
     /* ================= 10. COPY TO CLIPBOARD ================= */
@@ -393,63 +431,75 @@
         });
     }
 
-    /* ================= 11. ADMIN NOTES (LOCAL ONLY) ================= */
+    /* ================= 11. ADMIN NOTES ================= */
     function initNotes() {
         var input = qs("#sadNoteInput");
-        var flagCheckbox = qs("#sadNoteFlag");
         var addBtn = qs("#sadNoteAdd");
         var clearBtn = qs("#sadNoteClear");
-        var list = qs("#sadNotesList");
-        if (!input || !addBtn || !list) return;
+
+        if (!input || !addBtn) return;
 
         function resetComposer() {
             input.value = "";
-            if (flagCheckbox) flagCheckbox.checked = false;
         }
 
-        clearBtn && clearBtn.addEventListener("click", resetComposer);
+        if (clearBtn) {
+            clearBtn.addEventListener("click", resetComposer);
+        }
 
-        addBtn.addEventListener("click", function () {
-            var text = input.value.trim();
-            if (!text) {
-                input.focus();
-                return;
-            }
-            var isFlagged = flagCheckbox && flagCheckbox.checked;
-            var card = document.createElement("div");
-            card.className = "sad-note-card";
-            card.innerHTML =
-                '<div class="sad-note-head">' +
-                    '<div class="sad-note-avatar">YOU</div>' +
-                    '<div class="sad-note-meta"><strong>You</strong><span>Just now</span></div>' +
-                    (isFlagged ? '<span class="sad-badge c-warning">Important</span>' : "") +
-                '</div>' +
-                '<p class="sad-note-content"></p>' +
-                '<div class="sad-note-actions">' +
-                    '<button type="button" class="sad-link-btn" data-sad-toast="info" data-sad-toast-msg="Edit note coming soon">Edit</button>' +
-                    '<button type="button" class="sad-link-btn c-danger" data-sad-note-delete>Delete</button>' +
-                '</div>';
-            card.querySelector(".sad-note-content").textContent = text;
-            list.insertBefore(card, list.firstChild);
-            resetComposer();
-            showToast("Note added", "success");
-        });
+        addBtn.addEventListener("click", async function () {
 
-        // Event delegation for dynamically added delete buttons
-        list.addEventListener("click", function (e) {
-            var deleteBtn = e.target.closest("[data-sad-note-delete]");
-            if (!deleteBtn) return;
-            var card = deleteBtn.closest(".sad-note-card");
-            if (card) {
-                card.style.transition = "opacity .2s ease, transform .2s ease";
-                card.style.opacity = "0";
-                card.style.transform = "translateY(-6px)";
-                setTimeout(function () { card.remove(); }, 200);
+            var notes = input.value.trim();
+
+            addBtn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    "/admin-db/user/seller/application/save-notes/",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken(),
+                        },
+                        body: JSON.stringify({
+                            application_id: SELLER_APPLICATION_ID,
+                            notes: notes,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Unable to save notes."
+                    );
+                }
+
+                showToast(
+                    "Notes saved successfully.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    error.message || "Something went wrong.",
+                    "danger"
+                );
+
+            } finally {
+
+                addBtn.disabled = false;
+
             }
-            showToast("Note removed", "danger");
+
         });
     }
-
     /* ================= 12. ACTIVITY TIMELINE FILTERS ================= */
     function initTimelineFilters() {
         var pills = qsa("#sadTimelineFilters .sad-pill");
@@ -523,6 +573,437 @@
             openModal("sadDocPreviewModal");
         });
     }
+    function getCSRFToken() {
+        const name = "csrftoken";
+        const cookies = document.cookie.split(";");
+
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+
+            if (cookie.startsWith(name + "=")) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+
+        return "";
+    }
+
+    function initRejectApplication() {
+        const rejectBtn = document.querySelector("#sadRejectModal [data-sad-confirm-action]");
+        if (!rejectBtn) return;
+
+        rejectBtn.addEventListener("click", async function () {
+            const reason = document.getElementById("sadRejectReason").value;
+            const notes = document.getElementById("sadRejectNote").value.trim();
+
+            rejectBtn.disabled = true;
+            try {
+                const response = await fetch(
+                    `/admin-db/user/seller/${SELLER_APPLICATION_ID}/application/reject/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken(),
+                        },
+                        body: JSON.stringify({
+                            reason: reason,
+                            notes: notes,
+                        }),
+                    }
+                );
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Unable to reject application.");
+                }
+
+                showToast("danger", data.message);
+
+                closeModal(document.getElementById("sadRejectModal"));
+
+                setTimeout(function () {
+                    location.reload();
+                }, 1200);
+
+            } catch (error) {
+                console.error("Error rejecting application:", error);
+                showToast("danger", error.message || "An error occurred while rejecting the application.");
+            } finally {
+                rejectBtn.disabled = false;
+            }
+        });
+    }
+
+    function initRequestChanges() {
+        const sendBtn = document.querySelector(
+            "#sadChangesModal [data-sad-confirm-action]"
+        );
+
+        if (!sendBtn) return;
+
+        sendBtn.addEventListener("click", async function () {
+
+            const note = document
+                .getElementById("sadChangesNote")
+                .value
+                .trim();
+
+            const requestedChanges = [];
+
+            document
+                .querySelectorAll("#sadChangesModal .sad-checkbox")
+                .forEach(function (item) {
+
+                    const checkbox = item.querySelector("input[type='checkbox']");
+
+                    if (checkbox.checked) {
+                        requestedChanges.push(
+                            item.querySelector(".sad-checkbox-text").textContent.trim()
+                        );
+                    }
+                });
+
+            sendBtn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    `/admin-db/user/seller/${SELLER_APPLICATION_ID}/application/request-changes/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken(),
+                        },
+                        body: JSON.stringify({
+                            requested_changes: requestedChanges,
+                            notes: note,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Unable to send request.");
+                }
+
+                showToast("info", data.message);
+
+                closeModal(document.getElementById("sadChangesModal"));
+
+                setTimeout(function () {
+                    location.reload();
+                }, 1000);
+
+            } catch (error) {
+                showToast("danger", error.message);
+            } finally {
+                sendBtn.disabled = false;
+            }
+
+        });
+    }
+
+    function initApproveApplication() {
+        const approveBtn = document.querySelector(
+            "#sadApproveModal [data-sad-confirm-action]"
+        );
+
+        if (!approveBtn) return;
+
+        approveBtn.addEventListener("click", async function () {
+
+            approveBtn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    `/admin-db/user/seller/${SELLER_APPLICATION_ID}/application/approve/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken(),
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Unable to approve application.");
+                }
+
+                showToast("success", data.message);
+
+                closeModal(document.getElementById("sadApproveModal"));
+                window.location.href = `/admin-db/user/seller/${SELLER_APPLICATION_ID}/application/`;
+
+                setTimeout(function () {
+                    location.reload();
+                }, 1000);
+
+            } catch (error) {
+                showToast("danger", error.message);
+            } finally {
+                approveBtn.disabled = false;
+            }
+
+        });
+    }
+
+    function initExportSellerPdf() {
+        const exportBtn = document.getElementById("ExportSellerDataPdf");
+
+        if (!exportBtn) return;
+
+        exportBtn.addEventListener("click", function () {
+            const SELLER_ID = exportBtn.dataset.sellerId;
+            window.location.href = `/admin-db/sellers/${SELLER_ID}/export/`;
+        });
+    }
+
+
+    function initDocumentActions() {
+
+        document.addEventListener("click", async function (e) {
+
+            const button = e.target.closest("[data-document-action]");
+            if (!button) return;
+
+            const action = button.dataset.documentAction;
+
+            // Preview is already handled by initDocPreview()
+            if (action === "preview") {
+                return;
+            }
+
+            e.preventDefault();
+
+            const documentId = button.dataset.documentId;
+            const documentType = button.dataset.documentType;
+            // alert(`Action: ${action}\nDocument ID: ${documentId}\nDocument Type: ${documentType}`);
+
+            switch (action) {
+
+                case "verify":
+                    await verifyDocument(documentId, documentType);
+                    break;
+
+                case "flag":
+                    openFlagIssueModal(documentId, documentType);
+                    break;
+
+                case "request":
+                    openRequestDocumentModal(button);
+                    break;
+
+                default:
+                    console.warn("Unknown document action:", action);
+            }
+
+        });
+
+    }
+    async function verifyDocument(documentId, documentType) {
+        try {
+            const response = await fetch(
+                `/admin-db/user/seller/document/${documentId}/verify/`,
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCSRFToken(),
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        document_type: documentType,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            showToast("success", data.message);
+
+            setTimeout(() => location.reload(), 700);
+
+        } catch (err) {
+            showToast("danger", err.message);
+        }
+    }
+    function openFlagIssueModal(documentId, documentType) {
+
+        const modal = document.getElementById("sadFlagIssueModal");
+
+        modal.dataset.documentId = documentId;
+        modal.dataset.documentType = documentType;
+
+        openModal("sadFlagIssueModal");
+    }
+
+    function openRequestDocumentModal(button) {
+
+        const modal = document.getElementById("sadRequestDocumentModal");
+        if (!modal) return;
+
+        modal.dataset.documentType = button.dataset.documentType || "";
+
+        const title = modal.querySelector("#sadRequestDocumentTitle");
+        if (title) {
+            title.textContent = button.dataset.documentType
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        const textarea = modal.querySelector("#sadRequestDocumentNote");
+        if (textarea) {
+            textarea.value = "";
+        }
+
+        openModal("sadRequestDocumentModal");
+
+    }
+    function initFlagIssueSubmit() {
+
+        const btn = document.getElementById("sadFlagIssueConfirm");
+        if (!btn) return;
+
+        btn.addEventListener("click", async function () {
+
+            const modal = document.getElementById("sadFlagIssueModal");
+
+            const documentId = modal.dataset.documentId;
+            const issue = document.getElementById("sadFlagReason").value;
+            const note = document.getElementById("sadFlagNote").value.trim();
+
+            btn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    `/admin-db/user/seller/document/${documentId}/flag/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken(),
+                        },
+                        body: JSON.stringify({
+                            issue,
+                            note,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+                showToast("success", data.message);
+
+                closeModal(modal);
+
+                setTimeout(function () {
+                    location.reload();
+                }, 800);
+
+            } catch (error) {
+
+                showToast("danger", error.message);
+
+            } finally {
+
+                btn.disabled = false;
+
+            }
+
+        });
+
+    }
+
+    function initRequestDocumentSubmit() {
+
+        const submitBtn = document.getElementById("sadRequestDocumentConfirmBtn");
+
+        if (!submitBtn) return;
+
+        submitBtn.addEventListener("click", async function () {
+
+            const modal = document.getElementById("sadRequestDocumentModal");
+
+            const documentType = modal.dataset.documentType;
+            const reason = document.getElementById("sadRequestReason").value;
+            const note = document.getElementById("sadRequestNote").value.trim();
+
+            submitBtn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    `/admin-db/user/seller/document/request/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken(),
+                        },
+                        body: JSON.stringify({
+                            application_id: SELLER_APPLICATION_ID,
+                            document_type: documentType,
+                            reason: reason,
+                            note: note,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Unable to send document request."
+                    );
+                }
+
+                showToast("success", data.message);
+
+                closeModal(modal);
+
+                document.getElementById("sadRequestReason").selectedIndex = 0;
+                document.getElementById("sadRequestNote").value = "";
+
+                setTimeout(function () {
+                    location.reload();
+                }, 1000);
+
+            } catch (error) {
+
+                showToast("danger", error.message);
+
+            } finally {
+
+                submitBtn.disabled = false;
+
+            }
+
+        });
+
+    }
+    initRequestDocumentSubmit();
+    initFlagIssueSubmit();
+
+    initDocumentActions();
+    initExportSellerPdf();
+    initApproveApplication();
+    initRequestChanges();
+    initRejectApplication();
 
     /* ================= INIT ================= */
     function init() {

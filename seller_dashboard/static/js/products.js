@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (rowToHide) {
                         var csrfToken = getCSRFToken();
                         if (!csrfToken) {
-                            alert('Missing CSRF token. Please refresh the page and try again.');
+                            showToast('Missing CSRF token. Please refresh the page and try again.');
                             return;
                         }
 
@@ -246,13 +246,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                     } else {
                                         setRowStatus(row, 'published', "Published");
                                     }
-                                    alert(response.message);
+                                    showToast(response.message);
                                 } else {
-                                    alert(response.message || `Unable to ${action} product.`);
+                                    showToast(response.message || `Unable to ${action} product.`);
                                 }
                             })
                             .catch(function () {
-                                alert('An error occurred. Please try again.');
+                                showToast('An error occurred. Please try again.');
                             });
                     }
                 }
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var csrfToken = getCSRFToken();
 
                     if (!csrfToken) {
-                        alert('Missing CSRF token. Please refresh the page and try again.');
+                        showToast('Missing CSRF token. Please refresh the page and try again.');
                         return;
                     }
 
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         })
                         .then(function (result) {
                             if (!result.ok || result.data.status !== 'success') {
-                                alert(result.data.message || 'Unable to delete product.');
+                                showToast(result.data.message || 'Unable to delete product.');
                                 return;
                             }
                             console.log(rowToDelete);
@@ -305,11 +305,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             rowToDelete = null;
                             checkAndShowEmptyState();
 
-                            alert(result.data.message);
+                            showToast(result.data.message);
                         })
                         .catch(function (error) {
                             console.error(error);
-                            alert('An unexpected error occurred. Please try again.');
+                            showToast('An unexpected error occurred. Please try again.');
                         });
 
                 }

@@ -70,8 +70,10 @@
 
             <!-- Status Badge -->
             <div class="sa-status-badge-wrap">
-              {% if seller.status == 'pending' %}
-                <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Pending Review</span>
+              {% if seller.status == 'draft' %}
+              <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Incomplete Application</span>
+              {% elif seller.status == 'pending' %}
+                <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
               {% elif seller.status == 'verified' %}
                 <span class="sa-status-badge sa-status-verified"><i class="bi bi-patch-check-fill"></i> Verified</span>
               {% elif seller.status == 'rejected' %}
@@ -83,7 +85,7 @@
               {% elif seller.status == 'deactivated' %}
                 <span class="sa-status-badge sa-status-deactivated"><i class="bi bi-power"></i> Deactivated</span>
               {% else %}
-                <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Pending Review</span>
+                <span class="sa-status-badge sa-status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
               {% endif %}
             </div>
 
@@ -121,102 +123,127 @@
         <!-- ================= MAIN CONTENT (~70%) ================= -->
         <div class="col-lg-8 col-12 sa-right-col">
           <!-- ============ SECTION 1: APPLICATION STATUS ============ -->
-          {% if seller.status == 'pending' %}
-            <div class="sa-card sa-status-card sa-status-card-pending">
-              <div class="sa-status-card-icon sa-status-card-icon-pending">
-                <i class="bi bi-hourglass-split"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Application Under Review</h3>
-                <p class="sa-status-card-desc">Your seller application has been submitted successfully. Our team is reviewing your information. You will be notified once your application has been reviewed.</p>
-              </div>
-            </div>
-          {% elif seller.status == 'verified' %}
-            <div class="sa-card sa-status-card sa-status-card-verified">
-              <div class="sa-status-card-icon sa-status-card-icon-verified">
-                <i class="bi bi-patch-check-fill"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Seller Account Verified</h3>
-                <p class="sa-status-card-desc">Congratulations! Your seller account has been verified and is ready to sell.</p>
-                <!-- Links to the future seller dashboard once it exists -->
-                <a href="{% url "dashboard" %}" class="btn btn-hero-primary sa-status-card-btn" id="saDashboardBtn"><i class="bi bi-speedometer2"></i> Go to Seller Dashboard</a>
-              </div>
-            </div>
-          {% elif seller.status == 'rejected' %}
-            <div class="sa-card sa-status-card sa-status-card-rejected">
-              <div class="sa-status-card-icon sa-status-card-icon-rejected">
-                <i class="bi bi-x-circle-fill"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Application Rejected</h3>
-                <p class="sa-status-card-desc">Unfortunately your application could not be approved.</p>
+{% if seller.application.status == 'draft' %}
+<!-- ============ APPLICATION PROGRESS ============ --> <div class="sa-card"> <div class="sa-card-head"> <div> <h2 class="sa-card-title"> <i class="bi bi-clipboard-check"></i> Application Progress </h2> </div> <div class="sa-progress-percentage"> {{ application_progress.progress }}% </div> </div> <p class="sa-progress-subtitle"> {{ application_progress.completed }} of {{ application_progress.total }} required items completed </p> <div class="sa-progress-bar"> <div class="sa-progress-fill" style="width: {{ application_progress.progress }}%;"> </div> </div> {% if application_progress.is_complete %} <div class="sa-progress-success"> <i class="bi bi-check-circle-fill"></i> <div> <strong>Application Complete</strong> <p> Your application has been submitted successfully and is now waiting for review. </p> </div> </div> {% else %} <div class="sa-progress-warning"> <i class="bi bi-exclamation-circle-fill"></i> <div> <strong>Complete your application before approval</strong> <p> Please complete all required information below before your application can be submitted. </p> </div> </div> {% if application_progress.missing %} <div class="sa-progress-missing"> <h6 class="sa-card-title"> <i class="bi bi-list-check"></i> Missing Required Items </h6> <ul> {% for item in application_progress.missing %} <li>{{ item }}</li> {% endfor %} </ul> </div> {% endif %} {% endif %} </div>
+{% elif seller.application.status == 'submitted' %}
+  <div class="sa-card sa-status-card sa-status-card-pending">
+    <div class="sa-status-card-icon sa-status-card-icon-pending">
+      <i class="bi bi-hourglass-split"></i>
+    </div>
+    <div class="sa-status-card-body">
+      <h3 class="sa-status-card-title">Application Submitted</h3>
+      <p class="sa-status-card-desc">Your seller application has been submitted successfully. Our team will review your information shortly.</p>
+    </div>
+  </div>
 
-                <div class="sa-reason-box sa-reason-box-rejected">
-                  <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason for Rejection</span>
-                  <!-- seller.verification_notes -->
-                  <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
-                </div>
+{% elif seller.application.status == 'changes_requested' %}
+  <div class="sa-card sa-status-card sa-status-card-rejected">
+    <div class="sa-status-card-icon sa-status-card-icon-rejected">
+      <i class="bi bi-exclamation-circle-fill"></i>
+    </div>
+    <div class="sa-status-card-body">
+      <h3 class="sa-status-card-title">Changes Requested</h3>
+      <p class="sa-status-card-desc">Our team has requested modifications to your application before proceeding.</p>
 
-                <a href="{% url 'seller-signup' %}" class="btn btn-hero-primary sa-status-card-btn"><i class="bi bi-pencil-square"></i> Edit &amp; Resubmit Application</a>
-              </div>
-            </div>
-          {% elif seller.status == 'suspended' %}
-            <div class="sa-card sa-status-card sa-status-card-suspended">
-              <div class="sa-status-card-icon sa-status-card-icon-suspended">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Account Suspended</h3>
-                <p class="sa-status-card-desc">Your seller account has been temporarily suspended.</p>
+      <div class="sa-reason-box sa-reason-box-rejected">
+        <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reviewer Notes</span>
+        <p class="sa-reason-text">{{ seller.application.admin_notes|default:'No specific details provided.'|linebreaksbr }}</p>
+      </div>
 
-                <div class="sa-reason-box sa-reason-box-suspended">
-                  <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason</span>
-                  <!-- seller.verification_notes -->
-                  <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
-                </div>
-              </div>
-            </div>
-          {% elif seller.status == 'blocked' %}
-            <div class="sa-card sa-status-card sa-status-card-blocked">
-              <div class="sa-status-card-icon sa-status-card-icon-blocked">
-                <i class="bi bi-slash-circle-fill"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Account Blocked</h3>
-                <p class="sa-status-card-desc">Your seller account has been permanently blocked.</p>
+    </div>
+  </div>
 
-                <div class="sa-reason-box sa-reason-box-blocked">
-                  <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason</span>
-                  <!-- seller.verification_notes -->
-                  <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
-                </div>
-              </div>
-            </div>
-          {% elif seller.status == 'deactivated' %}
-            <div class="sa-card sa-status-card sa-status-card-deactivated">
-              <div class="sa-status-card-icon sa-status-card-icon-deactivated">
-                <i class="bi bi-power"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Store Deactivated</h3>
-                <p class="sa-status-card-desc">Your store is currently inactive.</p>
+{% elif seller.application.status == 'rejected' %}
+  <div class="sa-card sa-status-card sa-status-card-rejected">
+    <div class="sa-status-card-icon sa-status-card-icon-rejected">
+      <i class="bi bi-x-circle-fill"></i>
+    </div>
+    <div class="sa-status-card-body">
+      <h3 class="sa-status-card-title">Application Rejected</h3>
+      <p class="sa-status-card-desc">Unfortunately your application could not be approved.</p>
 
-                <button type="button" class="btn btn-hero-primary sa-status-card-btn" id="saReactivateBtn"><i class="bi bi-arrow-clockwise"></i> Reactivate Store</button>
-              </div>
-            </div>
-          {% else %}
-            <div class="sa-card sa-status-card sa-status-card-pending">
-              <div class="sa-status-card-icon sa-status-card-icon-pending">
-                <i class="bi bi-hourglass-split"></i>
-              </div>
-              <div class="sa-status-card-body">
-                <h3 class="sa-status-card-title">Application Under Review</h3>
-                <p class="sa-status-card-desc">Your seller application has been submitted successfully. Our team is reviewing your information.</p>
-              </div>
-            </div>
-          {% endif %}
+      <div class="sa-reason-box sa-reason-box-rejected">
+        <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason for Rejection</span>
+        <p class="sa-reason-text">{{ seller.application.rejection_reason|default:'No reason provided.' }}</p>
+        <span class="sa-reason-label mt-1"><i class="bi bi-card-heading"></i> Reviewer Notes</span>
+        <p class="sa-reason-text">{{ seller.application.admin_notes|default:'No specific details provided.' }}</p>
+      </div>
+    </div>
+  </div>
 
+{% elif seller.application.status == 'approved' %}
+
+  {% if seller.status == 'verified' %}
+    <div class="sa-card sa-status-card sa-status-card-verified">
+      <div class="sa-status-card-icon sa-status-card-icon-verified">
+        <i class="bi bi-patch-check-fill"></i>
+      </div>
+      <div class="sa-status-card-body">
+        <h3 class="sa-status-card-title">Seller Account Verified</h3>
+        <p class="sa-status-card-desc">Congratulations! Your seller account has been verified and is ready to sell.</p>
+
+        <a href="{% url 'dashboard' %}" class="btn btn-hero-primary sa-status-card-btn" id="saDashboardBtn"><i class="bi bi-speedometer2"></i> Go to Seller Dashboard</a>
+      </div>
+    </div>
+
+  {% elif seller.status == 'suspended' %}
+    <div class="sa-card sa-status-card sa-status-card-suspended">
+      <div class="sa-status-card-icon sa-status-card-icon-suspended">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="sa-status-card-body">
+        <h3 class="sa-status-card-title">Account Suspended</h3>
+        <p class="sa-status-card-desc">Your seller account has been temporarily suspended.</p>
+
+        <div class="sa-reason-box sa-reason-box-suspended">
+          <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason</span>
+          <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
+        </div>
+      </div>
+    </div>
+
+  {% elif seller.status == 'blocked' %}
+    <div class="sa-card sa-status-card sa-status-card-blocked">
+      <div class="sa-status-card-icon sa-status-card-icon-blocked">
+        <i class="bi bi-slash-circle-fill"></i>
+      </div>
+      <div class="sa-status-card-body">
+        <h3 class="sa-status-card-title">Account Blocked</h3>
+        <p class="sa-status-card-desc">Your seller account has been permanently blocked.</p>
+
+        <div class="sa-reason-box sa-reason-box-blocked">
+          <span class="sa-reason-label"><i class="bi bi-info-circle"></i> Reason</span>
+          <p class="sa-reason-text">{{ seller.verification_notes|default:'No reason provided.' }}</p>
+        </div>
+      </div>
+    </div>
+
+  {% elif seller.status == 'deactivated' %}
+    <div class="sa-card sa-status-card sa-status-card-deactivated">
+      <div class="sa-status-card-icon sa-status-card-icon-deactivated">
+        <i class="bi bi-power"></i>
+      </div>
+      <div class="sa-status-card-body">
+        <h3 class="sa-status-card-title">Store Deactivated</h3>
+        <p class="sa-status-card-desc">Your store is currently inactive.</p>
+
+        <button type="button" class="btn btn-hero-primary sa-status-card-btn" id="saReactivateBtn"><i class="bi bi-arrow-clockwise"></i> Reactivate Store</button>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="sa-card sa-status-card sa-status-card-pending">
+      <div class="sa-status-card-icon sa-status-card-icon-pending">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="sa-status-card-body">
+        <h3 class="sa-status-card-title">Application Approved</h3>
+        <p class="sa-status-card-desc">Your seller application was approved. Store verification is currently pending.</p>
+      </div>
+    </div>
+  {% endif %}
+
+{% endif %}
           <!-- ============ SECTION 2: STORE INFORMATION ============ -->
           <div class="sa-card">
             <div class="sa-card-head">
@@ -314,77 +341,841 @@
               </div>
             </div>
           </div>
+          <!-- ============ SECTION 5: SELLER PROFILE ============ -->
+          <div class="sa-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title">
+                <i class="bi bi-person-vcard"></i>
+                Seller Profile
+              </h2>
 
+              <button type="button" class="btn sa-edit-btn" id="saProfileEditBtn" data-bs-toggle="modal" data-bs-target="#saProfileModal">
+                <i class="bi bi-pencil-square"></i>
+                Update Profile
+              </button>
+            </div>
+
+            <div class="sa-info-grid">
+              <div class="sa-info-item">
+                <span class="sa-info-label">Business Category</span>
+                <span class="sa-info-value">{{ seller.profile.business_category|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Business Type</span>
+                <span class="sa-info-value">{{ seller.profile.business_type|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">National ID Number</span>
+                <span class="sa-info-value">{{ seller.profile.national_id_number|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Years in Business</span>
+                <span class="sa-info-value">{{ seller.profile.years_in_business|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Expected Monthly Volume</span>
+                <span class="sa-info-value">{{ seller.profile.expected_monthly_volume|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Product Categories</span>
+                <span class="sa-info-value">{{ seller.profile.product_categories|default:'—' }}</span>
+              </div>
+
+              <div class="sa-info-item sa-info-item-wide">
+                <span class="sa-info-label">Website</span>
+                <span class="sa-info-value">
+                  {% if seller.profile.website %}
+                    <a href="https://{{ seller.profile.website }}" target="_blank">{{ seller.profile.website }}</a>
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Facebook</span>
+                <a href="{{ seller.profile.facebook_url }}" target="_blank" class="sa-info-value">{{ seller.profile.facebook_label|default:'—' }}</a>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">LinkedIn</span>
+                <a href="{{ seller.profile.linkedin_url }}" target="_blank" class="sa-info-value">{{ seller.profile.linkedin_label|default:'—' }}</a>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Instagram</span>
+                <a href="{{ seller.profile.instagram_url }}" target="_blank" class="sa-info-value">{{ seller.profile.instagram_label|default:'—' }}</a>
+              </div>
+
+              <div class="sa-info-item">
+                <span class="sa-info-label">Twitter / X</span>
+                <a href="{{ seller.profile.twitter_url }}" target="_blank" class="sa-info-value">{{ seller.profile.twitter_label|default:'—' }}</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ SECTION: APPLICATION DOCUMENTS ============ -->
+          <div class="sa-card">
+            <div class="sa-card-head">
+              <h2 class="sa-card-title"><i class="bi bi-file-earmark-text"></i> Application Documents</h2>
+              <button type="button" class="btn sa-edit-btn" id="saManageDocsBtn" data-bs-toggle="modal" data-bs-target="#saManageDocsModal"><i class="bi bi-pencil-square"></i> Manage Documents</button>
+            </div>
+
+            <div class="sa-documents-grid">
+              <!-- Document 1: CNIC Front -->
+            <div class="sa-document-card"
+              data-document-type="cnic_front"
+              {% if documents.cnic_front and documents.cnic_front.file %}
+              data-file-url="{{ documents.cnic_front.file.url }}"
+              data-file-name="{{ documents.cnic_front.file.name }}"
+              {% endif %}>
+
+              <div class="sa-document-header">
+                  <h3 class="sa-document-title">CNIC Front</h3>
+
+                  {% if documents.cnic_front %}
+
+                      {% if documents.cnic_front.verified %}
+                          <span class="sa-document-status verified">
+                              <i class="bi bi-check-circle-fill"></i>
+                              Verified
+                          </span>
+
+                      {% elif documents.cnic_front.verification_note %}
+                          <span class="sa-document-status rejected">
+                              <i class="bi bi-exclamation-triangle-fill"></i>
+                              Changes Requested
+                          </span>
+
+                      {% else %}
+                          <span class="sa-document-status pending">
+                              <i class="bi bi-hourglass-split"></i>
+                              Pending Review
+                          </span>
+                      {% endif %}
+
+                  {% else %}
+                      <span class="sa-document-status missing">
+                          <i class="bi bi-exclamation-circle-fill"></i>
+                          Not Uploaded
+                      </span>
+                  {% endif %}
+              </div>
+
+              <div class="sa-document-preview">
+
+                  {% if documents.cnic_front %}
+
+                      {% if documents.cnic_front.is_image %}
+                          <img class="sa-document-image"
+                              src="{{ documents.cnic_front.file.url }}"
+                              alt="CNIC Front">
+                      {% else %}
+                          <div class="sa-document-pdf">
+                              <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                              <span class="sa-document-file-name">
+                                  {{ documents.cnic_front.file.name }}
+                              </span>
+                          </div>
+                      {% endif %}
+
+                  {% else %}
+
+                      <div class="sa-document-empty">
+                          <i class="bi bi-cloud-arrow-up"></i>
+                          <span class="sa-document-empty-text">
+                              No Document Uploaded
+                          </span>
+                          <span class="sa-document-empty-helper">
+                              Upload a clear copy of this document.
+                          </span>
+                      </div>
+
+                  {% endif %}
+
+              </div>
+
+              {% if documents.cnic_front and documents.cnic_front.verification_note %}
+                <div class="sa-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="sa-document-feedback-message">
+                        {{ documents.cnic_front.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+              {% endif %}
+
+              <div class="sa-document-meta">
+
+                  <span class="sa-document-meta-label">
+                      {% if documents.cnic_front and documents.cnic_front.verification_note %}
+                          Last Upload:
+                      {% else %}
+                          Uploaded:
+                      {% endif %}
+                  </span>
+
+                  <span class="sa-document-meta-value uploaded-date">
+                      {{ documents.cnic_front.uploaded_at|date:"M j, Y"|default:"—" }}
+                  </span>
+
+              </div>
+
+              <div class="sa-document-actions">
+
+                  {% if documents.cnic_front %}
+
+                      <button type="button" class="btn sa-edit-btn sa-view-document">
+                          <i class="bi bi-eye"></i>
+                          View
+                      </button>
+
+                          <button type="button"
+                                  class="btn btn-hero-primary sa-change-document">
+                              <i class="bi bi-arrow-repeat"></i>
+                              Update
+                          </button>
+                  {% else %}
+
+                      <button type="button"
+                              class="btn btn-hero-primary sa-upload-document w-100">
+                          <i class="bi bi-upload"></i>
+                          Upload Document
+                      </button>
+
+                  {% endif %}
+
+              </div>
+
+            </div>
+
+           <!-- Document 2: CNIC Back -->
+            <div class="sa-document-card"
+                data-document-type="cnic_back"
+                {% if documents.cnic_back and documents.cnic_back.file %}
+                data-file-url="{{ documents.cnic_back.file.url }}"
+                data-file-name="{{ documents.cnic_back.file.name }}"
+                {% endif %}>
+
+                <div class="sa-document-header">
+                    <h3 class="sa-document-title">CNIC Back</h3>
+
+                    {% if documents.cnic_back %}
+
+                        {% if documents.cnic_back.verified %}
+                            <span class="sa-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.cnic_back.verification_note %}
+                            <span class="sa-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="sa-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="sa-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="sa-document-preview">
+                    {% if documents.cnic_back %}
+                        {% if documents.cnic_back.is_image %}
+                            <img
+                                class="sa-document-image"
+                                src="{{ documents.cnic_back.file.url }}"
+                                alt="CNIC Back">
+                        {% else %}
+                            <div class="sa-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                                <span class="sa-document-file-name">
+                                    {{ documents.cnic_back.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="sa-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="sa-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="sa-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.cnic_back and documents.cnic_back.verification_note %}
+                <div class="sa-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="sa-document-feedback-message">
+                        {{ documents.cnic_back.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="sa-document-meta">
+                    <span class="sa-document-meta-label">Uploaded:</span>
+                    <span class="sa-document-meta-value uploaded-date">
+                        {{ documents.cnic_back.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="sa-document-actions">
+                    {% if documents.cnic_back %}
+                        <button type="button" class="btn sa-edit-btn sa-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary sa-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary sa-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+              <!-- Document 3: Business Registration Certificate -->
+            <div class="sa-document-card"
+                data-document-type="business_certificate"
+                {% if documents.business_certificate and documents.business_certificate.file %}
+                data-file-url="{{ documents.business_certificate.file.url }}"
+                data-file-name="{{ documents.business_certificate.file.name }}"
+                {% endif %}>
+
+                <div class="sa-document-header">
+                    <h3 class="sa-document-title">Business Certificate</h3>
+
+                    {% if documents.business_certificate %}
+
+                        {% if documents.business_certificate.verified %}
+                            <span class="sa-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.business_certificate.verification_note %}
+                            <span class="sa-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="sa-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="sa-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="sa-document-preview">
+                    {% if documents.business_certificate %}
+                        {% if documents.business_certificate.is_image %}
+                            <img
+                                class="sa-document-image"
+                                src="{{ documents.business_certificate.file.url }}"
+                                alt="Business Certificate">
+                        {% else %}
+                            <div class="sa-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                                <span class="sa-document-file-name">
+                                    {{ documents.business_certificate.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="sa-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="sa-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="sa-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.business_certificate and documents.business_certificate.verification_note %}
+                <div class="sa-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="sa-document-feedback-message">
+                        {{ documents.business_certificate.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="sa-document-meta">
+                    <span class="sa-document-meta-label">Uploaded:</span>
+                    <span class="sa-document-meta-value uploaded-date">
+                        {{ documents.business_certificate.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="sa-document-actions">
+                    {% if documents.business_certificate %}
+                        <button type="button" class="btn sa-edit-btn sa-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary sa-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary sa-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+
+
+            <!-- Document 4: NTN Certificate -->
+            <div class="sa-document-card"
+                data-document-type="ntn"
+                {% if documents.ntn and documents.ntn.file %}
+                data-file-url="{{ documents.ntn.file.url }}"
+                data-file-name="{{ documents.ntn.file.name }}"
+                {% endif %}>
+
+                <div class="sa-document-header">
+                    <h3 class="sa-document-title">NTN Certificate</h3>
+
+                    {% if documents.ntn %}
+
+                        {% if documents.ntn.verified %}
+                            <span class="sa-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.ntn.verification_note %}
+                            <span class="sa-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="sa-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="sa-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="sa-document-preview">
+                    {% if documents.ntn %}
+                        {% if documents.ntn.is_image %}
+                            <img
+                                class="sa-document-image"
+                                src="{{ documents.ntn.file.url }}"
+                                alt="NTN Certificate">
+                        {% else %}
+                            <div class="sa-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                                <span class="sa-document-file-name">
+                                    {{ documents.ntn.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="sa-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="sa-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="sa-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.ntn and documents.ntn.verification_note %}
+                <div class="sa-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="sa-document-feedback-message">
+                        {{ documents.ntn.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="sa-document-meta">
+                    <span class="sa-document-meta-label">Uploaded:</span>
+                    <span class="sa-document-meta-value uploaded-date">
+                        {{ documents.ntn.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="sa-document-actions">
+                    {% if documents.ntn %}
+                        <button type="button" class="btn sa-edit-btn sa-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary sa-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary sa-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+
+
+            <!-- Document 5: Bank Statement -->
+            <div class="sa-document-card"
+                data-document-type="bank_statement"
+                {% if documents.bank_statement and documents.bank_statement.file %}
+                data-file-url="{{ documents.bank_statement.file.url }}"
+                data-file-name="{{ documents.bank_statement.file.name }}"
+                {% endif %}>
+
+                <div class="sa-document-header">
+                    <h3 class="sa-document-title">Bank Statement</h3>
+
+                    {% if documents.bank_statement %}
+
+                        {% if documents.bank_statement.verified %}
+                            <span class="sa-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.bank_statement.verification_note %}
+                            <span class="sa-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="sa-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="sa-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="sa-document-preview">
+                    {% if documents.bank_statement %}
+                        {% if documents.bank_statement.is_image %}
+                            <img
+                                class="sa-document-image"
+                                src="{{ documents.bank_statement.file.url }}"
+                                alt="Bank Statement">
+                        {% else %}
+                            <div class="sa-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                                <span class="sa-document-file-name">
+                                    {{ documents.bank_statement.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="sa-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="sa-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="sa-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.bank_statement and documents.bank_statement.verification_note %}
+                <div class="sa-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="sa-document-feedback-message">
+                        {{ documents.bank_statement.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="sa-document-meta">
+                    <span class="sa-document-meta-label">Uploaded:</span>
+                    <span class="sa-document-meta-value uploaded-date">
+                        {{ documents.bank_statement.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="sa-document-actions">
+                    {% if documents.bank_statement %}
+                        <button type="button" class="btn sa-edit-btn sa-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary sa-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary sa-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+
+              <!-- Document 6: Store Photo -->
+            <div class="sa-document-card"
+                data-document-type="store_photo"
+                {% if documents.store_photo and documents.store_photo.file %}
+                data-file-url="{{ documents.store_photo.file.url }}"
+                data-file-name="{{ documents.store_photo.file.name }}"
+                {% endif %}>
+
+                <div class="sa-document-header">
+                    <h3 class="sa-document-title">Store Photo</h3>
+
+                    {% if documents.store_photo %}
+
+                        {% if documents.store_photo.verified %}
+                            <span class="sa-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.store_photo.verification_note %}
+                            <span class="sa-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="sa-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="sa-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="sa-document-preview">
+                    {% if documents.store_photo %}
+                        {% if documents.store_photo.is_image %}
+                            <img
+                                class="sa-document-image"
+                                src="{{ documents.store_photo.file.url }}"
+                                alt="Store Photo">
+                        {% else %}
+                            <div class="sa-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill sa-doc-icon"></i>
+                                <span class="sa-document-file-name">
+                                    {{ documents.store_photo.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="sa-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="sa-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="sa-document-empty-helper">
+                                Upload a clear photo of your physical store.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.store_photo and documents.store_photo.verification_note %}
+                <div class="sa-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="sa-document-feedback-message">
+                        {{ documents.store_photo.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="sa-document-meta">
+                    <span class="sa-document-meta-label">Uploaded:</span>
+                    <span class="sa-document-meta-value uploaded-date">
+                        {{ documents.store_photo.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="sa-document-actions">
+                    {% if documents.store_photo %}
+                        <button type="button" class="btn sa-edit-btn sa-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary sa-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary sa-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+            </div>
+          </div>
           <!-- ============ SECTION 4: VERIFICATION TIMELINE ============ -->
           <div class="sa-card">
             <div class="sa-card-head">
               <h2 class="sa-card-title"><i class="bi bi-signpost-split"></i> Verification Timeline</h2>
             </div>
 
-            <ul class="sa-timeline">
-              <!-- Application Submitted: always complete once a seller record exists -->
-              <li class="sa-timeline-step is-complete">
-                <span class="sa-timeline-icon"><i class="bi bi-send-check"></i></span>
-                <div class="sa-timeline-body">
-                  <span class="sa-timeline-title">Application Submitted</span>
-                  <!-- seller.created_at -->
-                  <span class="sa-timeline-date">{{ seller.created_at|date:'M j, Y, g:i A'|default:'—' }}</span>
-                </div>
-              </li>
+           <ul class="sa-timeline">
 
-              <!-- Review Started: complete once status has moved past pending -->
-              <li class="sa-timeline-step {% if seller.status != 'pending' %}
-                  is-complete
+    <!-- Application Submitted -->
+    <li class="sa-timeline-step is-complete">
+        <span class="sa-timeline-icon">
+            <i class="bi bi-send-check"></i>
+        </span>
+
+        <div class="sa-timeline-body">
+            <span class="sa-timeline-title">Application Submitted</span>
+
+            <span class="sa-timeline-date">
+                {{ seller.created_at|date:'M j, Y, g:i A' }}
+            </span>
+        </div>
+    </li>
+
+    <!-- Complete Application -->
+    {% if seller.status == "draft" %}
+    <li class="sa-timeline-step is-current">
+        <span class="sa-timeline-icon">
+            <i class="bi bi-pencil-square"></i>
+        </span>
+
+        <div class="sa-timeline-body">
+            <span class="sa-timeline-title">
+                Complete Your Application
+            </span>
+
+            <span class="sa-timeline-date">
+                {{ application_progress }}% Complete
+            </span>
+        </div>
+    </li>
+    {% else %}
+    <li class="sa-timeline-step is-complete">
+        <span class="sa-timeline-icon">
+            <i class="bi bi-pencil-square"></i>
+        </span>
+
+        <div class="sa-timeline-body">
+            <span class="sa-timeline-title">
+                Application Completed
+            </span>
+
+            <span class="sa-timeline-date">
+                Ready for review
+            </span>
+        </div>
+    </li>
+    {% endif %}
+
+    <!-- Review Started -->
+    <li class="sa-timeline-step
+        {% if seller.status == 'pending' %}
+            is-current
+        {% elif seller.status == 'verified' or seller.status == 'rejected' or seller.status == 'suspended' %}
+            is-complete
+        {% endif %}">
+
+        <span class="sa-timeline-icon">
+            <i class="bi bi-search"></i>
+        </span>
+
+        <div class="sa-timeline-body">
+            <span class="sa-timeline-title">
+                Review Started
+            </span>
+
+            <span class="sa-timeline-date">
+                {% if seller.status == 'draft' %}
+                    Waiting for submission
+                {% elif seller.application.submitted_at %}
+                    {{ seller.application.submitted_at|date:'M j, Y, g:i A' }}
                 {% else %}
-                  is-current
-                {% endif %}">
-                <span class="sa-timeline-icon"><i class="bi bi-search"></i></span>
-                <div class="sa-timeline-body">
-                  <span class="sa-timeline-title">Review Started</span>
-                  <span class="sa-timeline-date">
-                    {% if seller.status != 'pending' %}
-                      <!-- seller.updated_at -->{{ seller.updated_at|date:'M j, Y, g:i A' }}
-                    {% else %}
-                      Pending
-                    {% endif %}
-                  </span>
-                </div>
-              </li>
+                    Under Review
+                {% endif %}
+            </span>
+        </div>
+    </li>
 
-              {% if seller.status == 'rejected' %}
-                <li class="sa-timeline-step is-complete sa-timeline-step-rejected">
-                  <span class="sa-timeline-icon"><i class="bi bi-x-lg"></i></span>
-                  <div class="sa-timeline-body">
-                    <span class="sa-timeline-title">Rejected</span>
-                    <!-- seller.updated_at -->
-                    <span class="sa-timeline-date">{{ seller.updated_at|date:'M j, Y, g:i A' }}</span>
-                  </div>
-                </li>
-              {% elif seller.status == 'suspended' %}
-                <li class="sa-timeline-step is-complete sa-timeline-step-suspended">
-                  <span class="sa-timeline-icon"><i class="bi bi-exclamation-triangle"></i></span>
-                  <div class="sa-timeline-body">
-                    <span class="sa-timeline-title">Suspended</span>
-                    <!-- seller.updated_at -->
-                    <span class="sa-timeline-date">{{ seller.updated_at|date:'M j, Y, g:i A' }}</span>
-                  </div>
-                </li>
-              {% else %}
-                <li class="sa-timeline-step {% if seller.status == 'verified' %}is-complete{% endif %}">
-                  <span class="sa-timeline-icon"><i class="bi bi-check-lg"></i></span>
-                  <div class="sa-timeline-body">
-                    <span class="sa-timeline-title">Verification Complete</span>
-                    <span class="sa-timeline-date">
-                      {% if seller.status == 'verified' %}
-                        <!-- seller.updated_at -->{{ seller.updated_at|date:'M j, Y, g:i A' }}
-                      {% else %}
-                        Awaiting Review
-                      {% endif %}
-                    </span>
-                  </div>
-                </li>
-              {% endif %}
-            </ul>
+    <!-- Keep your existing Verified / Rejected / Suspended block unchanged -->
+
+</ul>
           </div>
 
           <!-- ============ SECTION 5: MARKETPLACE TIPS ============ -->
@@ -510,7 +1301,7 @@
                   <span class="label-text">Upload Logo</span>
                   <span id="logo-file-name" class="file-name-pill"></span>
                 </label>
-                <input type="file" id="store_logo" name="store_logo" accept="image/*"/>
+                <input type="file" id="store_logo" name="store_logo" accept="image/*" />
               </div>
 
               <div class="upload-compact-box ms-auto">
@@ -520,7 +1311,7 @@
                   <span class="label-text">Upload Banner</span>
                   <span id="banner-file-name" class="file-name-pill"></span>
                 </label>
-                <input type="file" id="store_banner" name="store_banner" accept="image/*"/>
+                <input type="file" id="store_banner" name="store_banner" accept="image/*" />
               </div>
             </div>
           </div>
@@ -574,6 +1365,109 @@
         <div class="modal-footer">
           <button type="button" class="btn sa-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-hero-primary" style="height: 40px !important;" id="saSaveAddressBtn">Save Address</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= UPDATE SELLER PROFILE MODAL ================= -->
+  <div class="modal fade sa-edit-modal" id="saProfileModal" tabindex="-1" aria-labelledby="saProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="saProfileModalLabel">
+            <i class="bi bi-person-vcard"></i>
+            Update Seller Profile
+          </h5>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="saBusinessCategoryInput" class="form-label">Business Category</label>
+              <input type="text" class="form-control" id="saBusinessCategoryInput" value="{{ seller.profile.business_category|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saBusinessTypeInput" class="form-label">Business Type</label>
+              <input type="text" class="form-control" id="saBusinessTypeInput" value="{{ seller.profile.business_type|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saNationalIdInput" class="form-label">National ID Number</label>
+              <input type="text" class="form-control" id="saNationalIdInput" value="{{ seller.profile.national_id_number|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saYearsBusinessInput" class="form-label">Years in Business</label>
+              <input type="number" class="form-control" id="saYearsBusinessInput" value="{{ seller.profile.years_in_business|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saMonthlyVolumeInput" class="form-label">Expected Monthly Volume</label>
+              <input type="text" class="form-control" id="saMonthlyVolumeInput" value="{{ seller.profile.expected_monthly_volume|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saWebsiteInput" class="form-label">Website</label>
+              <input type="url" class="form-control" id="saWebsiteInput" value="{{ seller.profile.website|default:'' }}" />
+            </div>
+
+            <div class="col-12">
+              <label for="saProductCategoriesInput" class="form-label">Product Categories</label>
+              <input type="text" class="form-control" id="saProductCategoriesInput" value="{{ seller.profile.product_categories|default:'' }}" placeholder="Electronics, Clothing, Books" />
+            </div>
+
+            <hr class="my-2" />
+
+            <div class="col-md-6">
+              <label for="saFacebookLabelInput" class="form-label">Facebook Name</label>
+              <input type="text" class="form-control" id="saFacebookLabelInput" value="{{ seller.profile.facebook_label|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saFacebookUrlInput" class="form-label">Facebook URL</label>
+              <input type="url" class="form-control" id="saFacebookUrlInput" value="{{ seller.profile.facebook_url|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saLinkedinLabelInput" class="form-label">LinkedIn Name</label>
+              <input type="text" class="form-control" id="saLinkedinLabelInput" value="{{ seller.profile.linkedin_label|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saLinkedinUrlInput" class="form-label">LinkedIn URL</label>
+              <input type="url" class="form-control" id="saLinkedinUrlInput" value="{{ seller.profile.linkedin_url|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saInstagramLabelInput" class="form-label">Instagram Username</label>
+              <input type="text" class="form-control" id="saInstagramLabelInput" value="{{ seller.profile.instagram_label|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saInstagramUrlInput" class="form-label">Instagram URL</label>
+              <input type="url" class="form-control" id="saInstagramUrlInput" value="{{ seller.profile.instagram_url|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saTwitterLabelInput" class="form-label">X / Twitter Username</label>
+              <input type="text" class="form-control" id="saTwitterLabelInput" value="{{ seller.profile.twitter_label|default:'' }}" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="saTwitterUrlInput" class="form-label">X / Twitter URL</label>
+              <input type="url" class="form-control" id="saTwitterUrlInput" value="{{ seller.profile.twitter_url|default:'' }}" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn sa-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+
+          <button type="button" class="btn btn-hero-primary" style="height:40px !important;" id="saProfileSaveBtn">Save Profile</button>
         </div>
       </div>
     </div>

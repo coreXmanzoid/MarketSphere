@@ -85,28 +85,6 @@ function initEmailComposer() {
     const previewAttachmentsSection = document.getElementById('ecPreviewAttachments');
     const previewAttachmentList = document.getElementById('ecPreviewAttachmentList');
 
-    // Toast container
-    const toastContainer = document.getElementById('ecToastContainer');
-
-    // Helper: Show toast notification
-    function showToast(message, type = 'success') {
-        if (!toastContainer) return;
-        const toast = document.createElement('div');
-        toast.className = `ec-toast ec-toast-${type}`;
-        toast.style.cssText = `background: ${type === 'success' ? '#10b981' : '#ef4444'}; color: #fff; padding: 12px 16px; border-radius: 6px; margin-top: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 14px; transition: opacity 0.3s ease;`;
-        toast.innerHTML = `
-            <div class="ec-toast-content">
-                <span>${message}</span>
-            </div>
-        `;
-
-        toastContainer.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
     let currentUserId = null;
     // Open Modal
     function openModal(triggerEl = null) {

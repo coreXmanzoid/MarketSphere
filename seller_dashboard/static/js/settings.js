@@ -46,25 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var navLinks = Array.prototype.slice.call(document.querySelectorAll('.se-nav-link'));
     var sections = Array.prototype.slice.call(document.querySelectorAll('[data-se-section]'));
 
-    /* ================= 2. TOAST HELPER ================= */
-    function showToast(message, type) {
-        if (!toastContainer) return;
-
-        var toast = document.createElement('div');
-        toast.className = 'se-toast se-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-        toast.textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, 3200);
-    }
-
     /* ================= 3. SCROLL REVEAL ================= */
     var revealTargets = Array.prototype.slice.call(document.querySelectorAll('.se-reveal'));
 
@@ -257,7 +238,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // ================= BUSINESS ADDRESS =================
             if (section?.id === "businessAddress") {
 
-                alert("yes");
                 const fullName = document.getElementById("seBizName");
                 const phone = document.getElementById("seBizPhone");
                 const address1 = document.getElementById("seBizAddr1");

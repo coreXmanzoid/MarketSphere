@@ -40,38 +40,6 @@
             t = setTimeout(function () { fn.apply(ctx, args); }, wait || 200);
         };
     }
-
-    var toastContainer = document.getElementById("sldToastContainer");
-    var toastIcons = {
-        success: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>',
-        danger: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
-        info: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
-    };
-
-    function showToast(message, type) {
-        if (!toastContainer || !message) return;
-        type = type || "info";
-        var toast = document.createElement("div");
-        toast.className = "sld-toast sld-toast-" + type;
-        toast.setAttribute("role", "status");
-        toast.innerHTML = (toastIcons[type] || toastIcons.info) + "<span>" + message + "</span>";
-        toastContainer.appendChild(toast);
-        var life = setTimeout(function () { dismissToast(toast); }, 3600);
-        toast.addEventListener("click", function () {
-            clearTimeout(life);
-            dismissToast(toast);
-        });
-    }
-
-    function dismissToast(toast) {
-        if (!toast || toast.classList.contains("is-leaving")) return;
-        toast.classList.add("is-leaving");
-        setTimeout(function () {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 220);
-    }
-    window.sldShowToast = showToast;
-
     /* Ripple feedback on buttons */
     function attachRipple(el) {
         el.addEventListener("click", function (e) {
@@ -821,16 +789,19 @@
     })();
 
     /* ========================================================
-       11. DOCUMENTS PREVIEW MODAL
-       ======================================================== */
-    (function initDocPreview() {
-        var overlay = document.getElementById("sldImageModalOverlay");
-        var closeBtn = document.getElementById("sldImageModalClose");
-        var caption = document.getElementById("sldImageModalCaption");
-        var previewImg = document.getElementById("sldImageModalImg");
-        if (!overlay) return;
+       11. DOCUMENTS
+    ======================================================== */
+    (function initDocuments() {
+
+        const overlay = document.getElementById("sldImageModalOverlay");
+        const closeBtn = document.getElementById("sldImageModalClose");
+        const caption = document.getElementById("sldImageModalCaption");
+        const previewImg = document.getElementById("sldImageModalImg");
 
         function openModal(title, imageSrc) {
+
+            if (!overlay) return;
+
             if (caption) {
                 caption.textContent = title || "Preview";
             }
@@ -842,46 +813,469 @@
 
             overlay.classList.remove("is-hidden");
             document.body.style.overflow = "hidden";
+
         }
+
         function closeModal() {
+
+            if (!overlay) return;
+
             overlay.classList.add("is-hidden");
             document.body.style.overflow = "";
+
         }
 
-        qsa("[data-doc-preview]").forEach(function (el) {
-            el.addEventListener("click", function () { openModal(el.getAttribute("data-doc-title")); });
+        /* ------------------------------------
+           Preview
+        ------------------------------------ */
+
+        document.addEventListener("click", function (e) {
+
+            const preview = e.target.closest("[data-doc-preview]");
+
+            if (!preview) return;
+
+            const title = preview.dataset.docTitle || "Document";
+            const fileUrl = preview.dataset.fileUrl;
+
+            if (!fileUrl) return;
+
+            const extension = fileUrl.split(".").pop().toLowerCase();
+
+            if (extension === "pdf") {
+
+                window.open(fileUrl, "_blank");
+                return;
+
+            }
+
+            openModal(title, fileUrl);
+
         });
 
-        var logoTrigger = document.getElementById("sldLogoTrigger");
+        /* ------------------------------------
+           Document Actions
+        ------------------------------------ */
+
+        document.addEventListener("click", function (e) {
+
+            const btn = e.target.closest("[data-action]");
+
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+            const documentId = btn.dataset.documentId;
+
+            switch (action) {
+
+                case "view":
+
+                    const card = btn.closest(".sld-doc-card");
+                    const preview = card.querySelector("[data-doc-preview]");
+
+                    if (!preview) return;
+
+                    preview.click();
+
+                    break;
+
+                case "approve":
+
+                    approveDocument(documentId, btn);
+
+                    break;
+
+                case "reject":
+
+                    rejectDocument(documentId, btn);
+
+                    break;
+
+                case "request-reupload":
+
+                    requestReupload(btn);
+
+                    break;
+            }
+
+        });
+
+        /* ------------------------------------
+           AJAX PLACEHOLDERS
+        ------------------------------------ */
+        function approveDocument(documentId, button) {
+
+            if (!documentId) return;
+
+            button.disabled = true;
+            showToast("Approving document...", "info");
+
+            fetch(`/admin-db/user/seller/document/${documentId}/verify/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({
+                    document_type: button.dataset.documentType,
+                }),
+            })
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        return {
+                            ok: response.ok,
+                            data: data,
+                        };
+                    });
+                })
+                .then(function (result) {
+
+                    if (!result.ok || !result.data.success) {
+                        throw new Error(result.data.message || "Unable to verify document.");
+                    }
+
+                    showToast(result.data.message, "success");
+
+                    // Refresh UI to reflect new status
+                    window.location.reload();
+
+                })
+                .catch(function (error) {
+
+                    console.error(error);
+
+                    showToast(
+                        error.message || "Failed to verify document.",
+                        "danger"
+                    );
+
+                    button.disabled = false;
+
+                });
+
+        }
+
+        let currentRejectDocumentId = null;
+
+        /* ------------------------------------
+           Reject Modal
+        ------------------------------------ */
+
+        function rejectDocument(documentId) {
+
+            currentRejectDocumentId = documentId;
+
+            const modal = document.getElementById("sadRejectModal");
+            if (!modal) return;
+
+            document.getElementById("sadRejectReason").selectedIndex = 0;
+            document.getElementById("sadRejectNote").value = "";
+
+            modal.classList.remove("is-hidden");
+            document.body.style.overflow = "hidden";
+
+        }
+        (function initRejectModal() {
+
+            const modal = document.getElementById("sadRejectModal");
+            if (!modal) return;
+
+            const confirmBtn = modal.querySelector("[data-sad-confirm-action]");
+            const closeBtns = modal.querySelectorAll("[data-sad-close-modal]");
+            const reasonInput = document.getElementById("sadRejectReason");
+            const noteInput = document.getElementById("sadRejectNote");
+
+            function closeModal() {
+                modal.classList.add("is-hidden");
+                document.body.style.overflow = "";
+                currentRejectDocumentId = null;
+            }
+
+            // Close buttons
+            closeBtns.forEach(function (btn) {
+                btn.addEventListener("click", closeModal);
+            });
+
+            // Click outside
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Escape key
+            document.addEventListener("keydown", function (e) {
+                if (
+                    e.key === "Escape" &&
+                    !modal.classList.contains("is-hidden")
+                ) {
+                    closeModal();
+                }
+            });
+
+            // Confirm rejection
+            confirmBtn.addEventListener("click", async function () {
+
+                if (!currentRejectDocumentId) return;
+
+                confirmBtn.disabled = true;
+
+                try {
+
+                    const response = await fetch(
+                        `/admin-db/user/seller/document/${currentRejectDocumentId}/flag/`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": getCSRFToken(),
+                            },
+                            body: JSON.stringify({
+                                issue: reasonInput.value,
+                                note: noteInput.value.trim(),
+                            }),
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || "Unable to reject document.");
+                    }
+
+                    showToast("success", data.message);
+
+                    closeModal();
+
+                    setTimeout(function () {
+                        location.reload();
+                    }, 800);
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    showToast(
+                        "danger",
+                        error.message || "Failed to reject document."
+                    );
+
+                } finally {
+
+                    confirmBtn.disabled = false;
+
+                }
+
+            });
+
+        })();
+
+
+        let currentRequestApplicationId = null;
+        let currentRequestDocumentType = null;
+
+        function requestReupload(button) {
+            console.log(button);
+            console.log(button.dataset);
+
+            currentRequestApplicationId = button.dataset.applicationId;
+            currentRequestDocumentType = button.dataset.documentType;
+
+            console.log(currentRequestApplicationId);
+            console.log(currentRequestDocumentType);
+
+
+            const modal = document.getElementById("sadRequestDocumentModal");
+            if (!modal) return;
+
+            document.getElementById("sadRequestReason").selectedIndex = 0;
+            document.getElementById("sadRequestNote").value = "";
+
+            modal.classList.remove("is-hidden");
+            document.body.style.overflow = "hidden";
+
+        }
+        /* ------------------------------------
+           Request Document Modal
+        ------------------------------------ */
+        (function initRequestDocumentModal() {
+
+            const modal = document.getElementById("sadRequestDocumentModal");
+            if (!modal) return;
+
+            const confirmBtn = document.getElementById("sadRequestDocumentConfirmBtn");
+            const closeBtns = modal.querySelectorAll("[data-sad-close-modal]");
+            const reasonInput = document.getElementById("sadRequestReason");
+            const noteInput = document.getElementById("sadRequestNote");
+
+            function closeModal() {
+                modal.classList.add("is-hidden");
+                document.body.style.overflow = "";
+
+                currentRequestApplicationId = null;
+                currentRequestDocumentType = null;
+            }
+
+            /* Close buttons */
+            closeBtns.forEach(function (btn) {
+                btn.addEventListener("click", closeModal);
+            });
+
+            /* Click outside */
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            /* Escape key */
+            document.addEventListener("keydown", function (e) {
+                if (
+                    e.key === "Escape" &&
+                    !modal.classList.contains("is-hidden")
+                ) {
+                    closeModal();
+                }
+            });
+
+            /* Confirm */
+            confirmBtn.addEventListener("click", async function () {
+
+                if (!currentRequestApplicationId || !currentRequestDocumentType) {
+                    return;
+                }
+
+                alert(4);
+                confirmBtn.disabled = true;
+
+                try {
+
+                    const response = await fetch(
+                        "/admin-db/user/seller/document/request/",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": getCSRFToken(),
+                            },
+                            body: JSON.stringify({
+                                application_id: currentRequestApplicationId,
+                                document_type: currentRequestDocumentType,
+                                reason: reasonInput.value,
+                                note: noteInput.value.trim(),
+                            }),
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || "Unable to send request.");
+                    }
+
+                    showToast("success", data.message);
+
+                    closeModal();
+
+                    setTimeout(function () {
+                        location.reload();
+                    }, 800);
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    showToast(
+                        "danger",
+                        error.message || "Failed to send request."
+                    );
+
+                } finally {
+
+                    confirmBtn.disabled = false;
+
+                }
+
+            });
+
+        })();
+
+        /* ------------------------------------
+           Store Logo
+        ------------------------------------ */
+
+        const logoTrigger = document.getElementById("sldLogoTrigger");
 
         if (logoTrigger) {
 
             function openLogoModal() {
-                var storeName = logoTrigger.dataset.storeName || "Store";
-                var img = logoTrigger.querySelector("img");
+
+                const storeName = logoTrigger.dataset.storeName || "Store";
+                const img = logoTrigger.querySelector("img");
+
+                if (!img) return;
 
                 openModal(
                     "Store Logo — " + storeName,
-                    img ? img.src : ""
+                    img.src
                 );
+
             }
 
             logoTrigger.addEventListener("click", openLogoModal);
 
             logoTrigger.addEventListener("keydown", function (e) {
+
                 if (e.key === "Enter" || e.key === " ") {
+
                     e.preventDefault();
                     openLogoModal();
-                }
-            });
-        }
-        if (closeBtn) closeBtn.addEventListener("click", closeModal);
-        overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
-        document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape" && !overlay.classList.contains("is-hidden")) closeModal();
-        });
-    })();
 
+                }
+
+            });
+
+        }
+
+        /* ------------------------------------
+           Close Modal
+        ------------------------------------ */
+
+        if (closeBtn) {
+
+            closeBtn.addEventListener("click", closeModal);
+
+        }
+
+        if (overlay) {
+
+            overlay.addEventListener("click", function (e) {
+
+                if (e.target === overlay) {
+
+                    closeModal();
+
+                }
+
+            });
+
+        }
+
+        document.addEventListener("keydown", function (e) {
+
+            if (
+                overlay &&
+                e.key === "Escape" &&
+                !overlay.classList.contains("is-hidden")
+            ) {
+
+                closeModal();
+
+            }
+
+        });
+
+    })();
     /* ========================================================
        12. ADMIN NOTES COMPOSER
        ======================================================== */

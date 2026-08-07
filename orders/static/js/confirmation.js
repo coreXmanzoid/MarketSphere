@@ -5,39 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
        created the order, so there's nothing to submit or fetch
        here — just small presentation enhancements.
        ========================================================= */
-
-    const TOAST_DURATION_MS = 3500;
-    const toastContainer = document.getElementById('cfToastContainer');
-
-    /* =========================================================
-       TOAST HELPER
-       ========================================================= */
-    function showToast(message, type) {
-        if (!toastContainer) return;
-
-        const toast = document.createElement('div');
-        toast.className = 'cf-toast cf-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-
-        const iconClass = type === 'error'
-            ? 'bi-exclamation-triangle'
-            : type === 'success'
-                ? 'bi-check2-circle'
-                : 'bi-info-circle';
-
-        toast.innerHTML = '<i class="bi ' + iconClass + '"></i><span></span>';
-        toast.querySelector('span').textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, TOAST_DURATION_MS);
-    }
-
     /* =========================================================
        COPY ORDER NUMBER
        ========================================================= */

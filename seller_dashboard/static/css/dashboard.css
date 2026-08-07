@@ -432,6 +432,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 70px;
     gap: 16px;
     padding: 0 24px;
     background-color: var(--sd-surface-raised);
@@ -590,50 +591,141 @@ body {
 }
 
 /* ================= 7. FLASH MESSAGES ================= */
-.sd-flash-area {
-    padding: 0 24px;
+.header-message-row {
+    position: sticky;
+    top: var(--ad-topbar-height, 70px);
+    z-index: 2;
+    padding: 10px 0;
+    background-color: rgba(247, 241, 222, 0.96);
+    border-top: 1px solid rgba(157, 102, 56, 0.14);
+    border-bottom: 1px solid rgba(157, 102, 56, 0.14);
 }
 
-.sd-flash-area:empty {
-    display: none;
-}
-
-.sd-flash {
-    display: flex;
+.app-message {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
-    margin-top: 18px;
+    margin: 0;
     padding: 12px 16px;
-    background-color: var(--sd-surface);
-    border: 1px solid var(--sd-border);
-    border-left: 4px solid var(--sd-accent);
-    border-radius: 10px;
-    font-size: 13.5px;
-    color: var(--sd-heading-color);
-    box-shadow: var(--sd-shadow-sm);
+    background: #fffaf0;
+    border: 1px solid rgba(157, 102, 56, 0.22);
+    border-left: 4px solid #9D6638;
+    border-radius: 6px;
+    color: #4E220F;
+    box-shadow: 0 8px 22px rgba(78, 34, 15, 0.08);
+    text-align: left;
 }
 
-.sd-flash-success { border-left-color: var(--sd-success); }
-.sd-flash-error { border-left-color: var(--sd-danger); }
-.sd-flash-warning { border-left-color: var(--sd-warning); }
+.app-message+.app-message {
+    margin-top: 8px;
+}
 
-.sd-flash-close {
-    margin-left: auto;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    color: var(--sd-caption-color);
-    display: flex;
+.app-message__icon {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    background-color: rgba(157, 102, 56, 0.12);
+    border-radius: 50%;
+    color: #9D6638;
+    font-size: 18px;
 }
 
-.sd-flash-close:hover {
-    background-color: var(--sd-accent-soft);
-    color: var(--sd-accent);
+.app-message__content {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 10px;
+    background: transparent;
 }
 
+.app-message__label {
+    color: #9D6638;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.app-message__text {
+    color: #4E220F;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.app-message__close {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+}
+
+.app-message__close:hover {
+    background-color: rgba(157, 102, 56, 0.12) !important;
+    border: 0 !important;
+}
+
+.app-message-success {
+    border-left-color: #4f7d54;
+}
+
+.app-message-success .app-message__icon,
+.app-message-success .app-message__label {
+    color: #4f7d54;
+}
+
+.app-message-success .app-message__icon {
+    background-color: rgba(79, 125, 84, 0.13);
+}
+
+.app-message-error {
+    border-left-color: #b54b3b;
+}
+
+.app-message-error .app-message__icon,
+.app-message-error .app-message__label {
+    color: #b54b3b;
+}
+
+.app-message-error .app-message__icon {
+    background-color: rgba(181, 75, 59, 0.13);
+}
+
+.app-message-warning {
+    border-left-color: #b7802b;
+}
+
+.app-message-warning .app-message__icon,
+.app-message-warning .app-message__label {
+    color: #b7802b;
+}
+
+.app-message-warning .app-message__icon {
+    background-color: rgba(183, 128, 43, 0.15);
+}
+
+@media (max-width: 767.98px) {
+    .header-message-row {
+        padding: 8px 0;
+    }
+
+    .app-message {
+        grid-template-columns: 32px minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .app-message__icon {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+}
 /* ================= 8. CONTENT / CARDS ================= */
 .sd-content {
     flex: 1;

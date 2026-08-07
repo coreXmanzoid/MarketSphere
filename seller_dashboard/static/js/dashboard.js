@@ -21,7 +21,6 @@
     var overlay = document.getElementById('sdSidebarOverlay');
     var collapseBtn = document.getElementById('sdCollapseBtn');
     var hamburgerBtn = document.getElementById('sdHamburgerBtn');
-    var flashArea = document.getElementById('sdFlashArea');
 
     if (!shell || !sidebar) {
         return; // shell markup not present on this page
@@ -178,28 +177,109 @@
     });
 
     /* =====================================================
-       4. FLASH MESSAGE DISMISSAL (frontend placeholder)
-       Works for any .sd-flash markup that gets inserted into
-       #sdFlashArea later (e.g. once Django messages are wired
-       up) — delegated so it needs no re-binding.
-       ===================================================== */
-    if (flashArea) {
-        flashArea.addEventListener('click', function (event) {
-            var closeBtn = event.target.closest('.sd-flash-close');
-            if (!closeBtn) return;
+       4. FLASH MESSAGE / TOAST HANDLING
+       Supports:
+       - Close button dismissal
+       - Auto-hide messages
+       - Dynamically inserted toasts
+    ===================================================== */
 
-            var flash = closeBtn.closest('.sd-flash');
-            if (!flash) return;
+    (function () {
 
-            flash.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-            flash.style.opacity = '0';
-            flash.style.transform = 'translateY(-6px)';
+        function removeMessage(message) {
+            if (!message) return;
+
+            message.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+            message.style.opacity = "0";
+            message.style.transform = "translateY(-6px)";
 
             window.setTimeout(function () {
-                flash.remove();
+                message.remove();
             }, 200);
+        }
+        function showToast(message, type = "info", autoHide = true) {
+            const container = document.querySelector(".header-message-row .container, .header-message-row .container-fluid");
+
+            if (!container) {
+                console.warn("Toast container not found.");
+                return;
+            }
+
+            const config = {
+                success: {
+                    icon: "bi-check2-circle",
+                    label: "Success"
+                },
+                error: {
+                    icon: "bi-exclamation-triangle",
+                    label: "Action needed"
+                },
+                warning: {
+                    icon: "bi-exclamation-circle",
+                    label: "Warning"
+                },
+                info: {
+                    icon: "bi-info-circle",
+                    label: "Notice"
+                }
+            };
+
+            const toastConfig = config[type] || config.info;
+
+            const toast = document.createElement("div");
+            toast.className = `app-message app-message-${type} alert alert-dismissible fade show`;
+            toast.setAttribute("role", "alert");
+
+            if (autoHide) {
+                toast.dataset.autoHide = "true";
+            }
+
+            toast.innerHTML = `
+        <div class="app-message__icon" aria-hidden="true">
+            <i class="bi ${toastConfig.icon}"></i>
+        </div>
+
+        <div class="app-message__content">
+            <span class="app-message__label">${toastConfig.label}</span>
+            <span class="app-message__text">${message}</span>
+        </div>
+
+        <button type="button"
+                class="btn-close app-message__close"
+                aria-label="Close">
+        </button>
+    `;
+
+            container.appendChild(toast);
+
+            if (autoHide) {
+                setTimeout(function () {
+                    removeMessage(toast);
+                }, 5000);
+            }
+
+            return toast;
+        }
+
+        // Close button (works for dynamically added messages too)
+        document.addEventListener("click", function (event) {
+            var closeBtn = event.target.closest(".app-message__close");
+            if (!closeBtn) return;
+
+            var message = closeBtn.closest(".app-message");
+            removeMessage(message);
         });
-    }
+
+        // Auto-hide existing messages
+        document.querySelectorAll(".app-message[data-auto-hide='true']").forEach(function (message) {
+            window.setTimeout(function () {
+                removeMessage(message);
+            }, 5000);
+        });
+
+        window.showToast = showToast;
+        window.removeMessage = removeMessage;
+    })();
 
     /* =====================================================
        INIT

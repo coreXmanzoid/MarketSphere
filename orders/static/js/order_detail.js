@@ -8,39 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
        those will be wired up once the corresponding backend
        endpoints exist.
        ========================================================= */
-
-    const TOAST_DURATION_MS = 4000;
-    const toastContainer = document.getElementById('odToastContainer');
-
-    /* =========================================================
-       TOAST HELPER (mirrors cf-toast / co-toast pattern)
-       ========================================================= */
-    function showToast(message, type) {
-        if (!toastContainer) return;
-
-        const toast = document.createElement('div');
-        toast.className = 'od-toast od-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-
-        const iconClass = type === 'error'
-            ? 'bi-exclamation-triangle'
-            : type === 'success'
-                ? 'bi-check2-circle'
-                : 'bi-info-circle';
-
-        toast.innerHTML = '<i class="bi ' + iconClass + '"></i><span></span>';
-        toast.querySelector('span').textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, TOAST_DURATION_MS);
-    }
-
     /* =========================================================
        CANCEL ORDER (opens confirm modal, frontend feedback only)
        ========================================================= */

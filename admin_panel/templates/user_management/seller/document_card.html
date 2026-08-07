@@ -1,0 +1,219 @@
+<div class="sad-doc-card" data-document-type="{{ document_key }}">
+
+    <div class="sad-doc-preview"
+         {% if document and document.file %}
+            data-sad-doc-preview
+            data-doc-src="{{ document.file.url }}"
+         {% endif %}
+         data-doc-title="{{ title }}">
+
+        {% if document and document.file %}
+
+            {% if document.file.url|lower|slice:"-4:" == ".pdf" %}
+
+                <svg width="30" height="30" viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.6">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                </svg>
+
+            {% else %}
+
+                <img src="{{ document.file.url }}" alt="{{ title }}">
+
+            {% endif %}
+
+            <div class="sad-doc-zoom-hint">
+                <svg width="14"
+                     height="14"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+
+                Click to preview
+            </div>
+
+        {% else %}
+
+            <svg width="30"
+                 height="30"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.6">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+            </svg>
+
+        {% endif %}
+
+    </div>
+
+    <div class="sad-doc-head">
+
+        <span class="sad-doc-title">
+            {{ title }}
+        </span>
+
+        {% if document and document.file %}
+
+            {% if document.verified %}
+                <span class="sad-badge c-success">
+                    Verified
+                </span>
+
+            {% elif document.verification_note %}
+                <span class="sad-badge c-danger">
+                    Re-upload Requested
+                </span>
+
+            {% else %}
+                <span class="sad-badge c-warning">
+                    Pending Review
+                </span>
+
+            {% endif %}
+
+        {% else %}
+
+            {% if document and document.verification_note %}
+                <span class="sad-badge c-info">
+                    Requested
+                </span>
+
+            {% else %}
+                <span class="sad-badge c-secondary">
+                    Not Uploaded
+                </span>
+
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+
+    <span class="sad-doc-meta">
+
+        {% if document and document.file %}
+            Uploaded {{ document.uploaded_at|date:"M d, Y" }}
+
+        {% elif document and document.verification_note %}
+            Waiting for seller upload
+
+        {% else %}
+            No document uploaded
+
+        {% endif %}
+
+    </span>
+
+    <span class="sad-doc-type">
+
+        {% if document and document.file %}
+            {{ document.file.name|slice:"-3:"|upper }}
+
+        {% else %}
+            —
+
+        {% endif %}
+
+    </span>
+
+    <div class="sad-doc-actions">
+
+        {% if document and document.file %}
+
+            <button
+                type="button"
+                class="sad-btn sad-btn-secondary sad-btn-sm"
+                data-sad-doc-preview
+                data-doc-src="{{ document.file.url }}"
+                data-doc-title="{{ title }}"
+                data-document-type="{{ document_key }}"
+                data-document-id="{{ document.id }}"
+                data-document-action="preview">
+
+                Preview
+
+            </button>
+
+            <a
+                href="{{ document.file.url }}"
+                download
+                class="sad-btn sad-btn-secondary sad-btn-sm">
+
+                Download
+
+            </a>
+
+        {% else %}
+
+            <button
+                type="button"
+                class="sad-btn sad-btn-secondary sad-btn-sm"
+                data-document-type="{{ document_key }}"
+                data-document-action="request">
+
+                {% if document and document.verification_note %}
+                    Send Reminder
+                {% else %}
+                    Request Document
+                {% endif %}
+
+            </button>
+
+        {% endif %}
+
+    </div>
+
+    {% if document and document.file and not document.verified %}
+
+        <div class="sad-doc-actions-row2">
+
+            <button
+                type="button"
+                class="sad-btn sad-btn-success sad-btn-sm"
+                data-document-id="{{ document.id }}"
+                data-document-type="{{ document_key }}"
+                data-document-action="verify">
+
+                Mark Verified
+
+            </button>
+
+            {% if not document.verification_note %}
+
+                <button
+                    type="button"
+                    class="sad-btn sad-btn-outline sad-btn-sm"
+                    data-document-id="{{ document.id }}"
+                    data-document-type="{{ document_key }}"
+                    data-document-action="flag">
+
+                    Flag Issue
+
+                </button>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+    {% if document and document.verification_note %}
+
+        <div class="sad-doc-feedback">
+            <span>Feedback:</span>
+            {{ document.verification_note|linebreaksbr }}
+
+        </div>
+
+    {% endif %}
+
+</div>

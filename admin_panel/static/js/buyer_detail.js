@@ -30,35 +30,6 @@
     var page = document.getElementById('bdPage');
     if (!page) return; // not on the buyer detail page
 
-    /* ================= 1. DOM CACHE ================= */
-    var toastContainer = document.getElementById('bdToastContainer');
-
-    /* ================= 2. TOAST HELPER ================= */
-    function showToast(message, type) {
-        if (!toastContainer || !message) return;
-
-        var toast = document.createElement('div');
-        toast.className = 'bd-toast bd-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-
-        var iconMarkup = type === 'success'
-            ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>'
-            : type === 'danger'
-                ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
-                : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
-
-        toast.innerHTML = iconMarkup + '<span></span>';
-        toast.querySelector('span').textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, 3600);
-    }
 
     /* ================= 3. SCROLL REVEAL ================= */
     function initScrollReveal() {
@@ -1479,7 +1450,7 @@
                             }, 300);
                         }
                     } else {
-                        alert("Could not remove item from wishlist.");
+                        showToast("Could not remove item from wishlist.");
                     }
                 })
                 .catch(error => {

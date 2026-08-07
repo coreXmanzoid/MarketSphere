@@ -723,7 +723,7 @@ let deletedImageIds = [];
                     const percentEl = document.getElementById("pfCompletionPercent").textContent;
 
                     if (percentEl !== "100%") {
-                        alert("Please complete the product data first.");
+                        showToast("Please complete the product data first.");
                         return;
                     }
                 }
@@ -786,14 +786,14 @@ let deletedImageIds = [];
                     } else {
 
                         console.error(result);
-                        alert(result.message || "Failed to update product.");
+                        showToast(result.message || "Failed to update product.");
 
                     }
 
                 } catch (error) {
 
                     console.error(error);
-                    alert("Something went wrong while updating the product.");
+                    showToast("Something went wrong while updating the product.");
 
                 }
 
@@ -809,7 +809,7 @@ let deletedImageIds = [];
                 const product = getFormData();
                 const formData = new FormData();
                 if (!product.name.trim()) {
-                    alert("Please enter a product name.");
+                    showToast("Please enter a product name.");
                     return;
                 }
 
@@ -855,12 +855,12 @@ let deletedImageIds = [];
                         simulateSave(btn, "Draft saved");
                     } else {
                         console.error(result);
-                        alert(result.message || "Failed to save draft.");
+                        showToast(result.message || "Failed to save draft.");
                     }
 
                 } catch (error) {
                     console.error(error);
-                    alert("Something went wrong while saving the draft.");
+                    showToast("Something went wrong while saving the draft.");
                 }
 
             });
@@ -875,7 +875,7 @@ let deletedImageIds = [];
 
                 var percentEl = document.getElementById('pfCompletionPercent').textContent;
                 if (percentEl != "100%") {
-                    alert("Please Complete the product data first.", "error");
+                    showToast("Please Complete the product data first.", "error");
                     return;
                 }
 
@@ -924,12 +924,12 @@ let deletedImageIds = [];
                         simulateSave(btn, "Product published");
                     } else {
                         console.error(result);
-                        alert(result.message || "Failed to publish product.");
+                        showToast(result.message || "Failed to publish product.");
                     }
 
                 } catch (error) {
                     console.error(error);
-                    alert("Something went wrong while publishing the product.");
+                    showToast("Something went wrong while publishing the product.");
                 }
 
             });

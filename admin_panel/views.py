@@ -7,10 +7,11 @@ from django.shortcuts import render
 from accounts import services as account_services
 from accounts.models import User, Address
 from orders.models import Order
-
+from django.contrib import messages
 
 # Create your views here.
 def dashboard(request):
+    
     return render(request, "admin_dashboard.html")
 
 
@@ -68,6 +69,247 @@ def change_state(request):
     return JsonResponse({"status": "invalid request"})
 
 
+
+
+
+import json
+def reject_seller_application(request, application_id):
+    print("hi")
+    try:
+        payload = json.loads(request.body)
+
+        account_services.reject_seller_application_service(
+            application_id=application_id,
+            reason=payload.get("reason"),
+            notes=payload.get("notes"),
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Application rejected successfully.",
+        })
+
+    except Exception as exc:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+
+from django.views.decorators.http import require_POST
+
+
+@require_POST
+def request_application_changes(request, application_id):
+
+    try:
+        payload = json.loads(request.body)
+
+        account_services.request_application_changes_service(
+            application_id=application_id,
+            requested_changes=payload.get("requested_changes", []),
+            notes=payload.get("notes", ""),
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Change request sent successfully.",
+            }
+        )
+
+    except Exception as exc:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+
+@require_POST
+def approve_seller_application(request, application_id):
+
+    try:
+
+        account_services.approve_seller_application_service(
+            application_id=application_id,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Seller application approved successfully.",
+            }
+        )
+
+    except Exception as exc:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+
+@require_POST
+def delete_seller_application(request, seller_id):
+    try:
+
+        account_services.delete_seller_account_service(seller_id)
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Seller account deleted successfully.",
+            }
+        )
+
+    except Exception as exc:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+import json
+
+from django.http import JsonResponse
+
+
+def flag_seller_document(request, document_id):
+
+    try:
+
+        payload = json.loads(request.body)
+
+        account_services.flag_seller_document_service(
+            document_id=document_id,
+            issue=payload.get("issue"),
+            note=payload.get("note"),
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Document has been flagged successfully.",
+        })
+
+    except Exception as exc:
+
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+import json
+from django.http import JsonResponse
+
+
+def verify_seller_document(request, document_id):
+    try:
+        payload = json.loads(request.body)
+
+        account_services.verify_seller_document_service(
+            document_id=document_id,
+            document_type=payload.get("document_type"),
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Document verified successfully.",
+            }
+        )
+
+    except Exception as exc:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+
+import json
+from django.http import JsonResponse
+
+
+def request_missing_document(request):
+    try:
+        payload = json.loads(request.body)
+        print(payload)
+
+        account_services.request_missing_document_service(
+            application_id=payload.get("application_id"),
+            document_type=payload.get("document_type"),
+            reason=payload.get("reason"),
+            note=payload.get("note"),
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Document request sent successfully.",
+            }
+        )
+
+    except Exception as exc:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(exc),
+            },
+            status=400,
+        )
+
+
+from django.views.decorators.http import require_POST
+
+
+@require_POST
+def save_application_notes(request):
+
+    try:
+
+        payload = json.loads(request.body)
+
+        account_services.save_application_notes_service(
+            application_id=payload.get("application_id"),
+            notes=payload.get("notes", ""),
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Notes saved successfully.",
+        })
+
+    except Exception as e:
+
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(e),
+            },
+            status=400,
+        )
+    
 from django.contrib.admin.views.decorators import staff_member_required
 from . import services
 

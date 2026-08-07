@@ -248,34 +248,6 @@
         // grid's is-updating class is cleared by the enter animation itself
     }
 
-    function showInlineError(message) {
-        const container = document.querySelector('.header-message-row .container');
-        if (!container) {
-            console.warn('[MarketSphere Search]', message);
-            return;
-        }
-
-        const alertEl = document.createElement('div');
-        alertEl.className = 'app-message app-message-error alert alert-dismissible fade show temp-message';
-        alertEl.setAttribute('role', 'alert');
-        alertEl.innerHTML = [
-            '<div class="app-message__icon" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></div>',
-            '<div class="app-message__content">',
-            '<span class="app-message__label">Action needed</span>',
-            '<span class="app-message__text"></span>',
-            '</div>',
-            '<button type="button" class="btn-close app-message__close" aria-label="Close"></button>'
-        ].join('');
-        alertEl.querySelector('.app-message__text').textContent = message;
-        container.prepend(alertEl);
-
-        const dismiss = function () {
-            alertEl.classList.remove('show');
-            window.setTimeout(function () { alertEl.remove(); }, 150);
-        };
-        alertEl.querySelector('.btn-close').addEventListener('click', dismiss);
-        window.setTimeout(dismiss, CONFIG.TOAST_DURATION_MS);
-    }
 
     function handleRequestError(err) {
         if (err && err.name === 'AbortError') return; // superseded by a newer request, not a real failure
@@ -293,7 +265,7 @@
             message = 'The request timed out. Please try again.';
         }
 
-        showInlineError(message);
+        showToast(message, "error");
     }
 
     /* =====================================================================
@@ -878,7 +850,7 @@
             }
         } catch (err) {
             console.error('[MarketSphere Search] add to cart failed:', err);
-            showInlineError('Could not add this item to your cart. Please try again.');
+            showToast('Could not add this item to your cart. Please try again.', "error");
         } finally {
             window.setTimeout(function () {
                 btn.innerHTML = originalHTML;

@@ -93,6 +93,7 @@ from django.db import models
 class Seller(models.Model):
 
     class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
         PENDING = "pending", "Pending"
         VERIFIED = "verified", "Verified"
         DEACTIVATED = "deactivated", "Deactivated"
@@ -119,7 +120,7 @@ class Seller(models.Model):
     store_banner = models.ImageField(upload_to="store_banners/", blank=True, null=True)
 
     status = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.PENDING
+        max_length=20, choices=Status.choices, default=Status.DRAFT
     )
 
     verification_notes = models.TextField(
@@ -162,7 +163,6 @@ class SellerApplication(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         SUBMITTED = "submitted", "Submitted"
-        UNDER_REVIEW = "under_review", "Under Review"
         CHANGES_REQUESTED = "changes_requested", "Changes Requested"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
@@ -243,7 +243,7 @@ class SellerApplicationDocument(models.Model):
     )
 
     file = models.FileField(
-        upload_to="seller_documents/",
+        upload_to="seller_documents/", null=True, blank=True
     )
 
     uploaded_at = models.DateTimeField(auto_now_add=True)

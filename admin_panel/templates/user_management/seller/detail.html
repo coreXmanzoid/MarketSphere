@@ -1,7 +1,7 @@
 {% extends 'admin_base_dashboard.html' %}
 {% load static %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static '/css/email_composer.css' %}">
+  <link rel="stylesheet" href="{% static '/css/email_composer.css' %}" />
   <link rel="stylesheet" href="{% static '/css/seller_detail.css' %}" />
 {% endblock %}
 {% block active_page %}
@@ -126,13 +126,7 @@
               </svg>
             </button>
             <div class="sld-dropdown-menu" role="menu">
-              <button type="button" class="sld-dropdown-item" role="menuitem" data-ec-open
-              data-user-name="{{ seller.store_name}}"
-                 data-user-email="{{ seller.business_email|default:seller.user.email}}"
-                 data-user-avatar="{{ seller.store_logo}}"
-                 data-user-status="{{ seller.status}}"
-                 data-user-initial="{{ seller.shop_name|slice:":1"|upper }}"
-                 data-user-id="{{ seller.user.id }}">
+              <button type="button" class="sld-dropdown-item" role="menuitem" data-ec-open data-user-name="{{ seller.store_name }}" data-user-email="{{ seller.business_email|default:seller.user.email }}" data-user-avatar="{{ seller.store_logo }}" data-user-status="{{ seller.status }}" data-user-initial="{{ seller.shop_name|slice:':1'|upper }}" data-user-id="{{ seller.user.id }}">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                   <path d="m22 7-10 5L2 7"></path>
@@ -476,12 +470,12 @@
               <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path>
             </svg>Edit Store
           </button>
-          <button type="button" class="sld-btn sld-btn-primary sld-btn-sm" id="sldApproveBtnDown"  data-seller-id="{{seller.id}}">
+          <button type="button" class="sld-btn sld-btn-primary sld-btn-sm" id="sldApproveBtnDown" data-seller-id="{{ seller.id }}">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 6 9 17l-5-5"></path>
             </svg>Approve Store
           </button>
-          <button type="button" class="sld-btn sld-btn-warning sld-btn-sm" id="sldSuspendBtnDown" data-seller-id="{{seller.id}}">
+          <button type="button" class="sld-btn sld-btn-warning sld-btn-sm" id="sldSuspendBtnDown" data-seller-id="{{ seller.id }}">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
@@ -719,7 +713,7 @@
                       <option value="out-of-stock">Out of Stock</option>
                     </select>
                   </div>
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" onclick="window.location.href='{% url "export_products_csv" seller_id=seller.id %}'">
+                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" onclick="window.location.href='{% url 'export_products_csv' seller_id=seller.id %}'">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7 10 12 15 17 10"></polyline>
@@ -796,8 +790,8 @@
                               </svg>
                             </button>
                             <div class="sld-dropdown-menu" role="menu">
-                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url "product" product_slug=product.slug %}', '_blank')">Open Product</button>
-                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url "edit-product" product_slug=product.slug %}', '_blank')">Edit</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'product' product_slug=product.slug %}', '_blank')">Open Product</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'edit-product' product_slug=product.slug %}', '_blank')">Edit</button>
                               <button type="button" class="sld-dropdown-item hide-product" data-product-slug="{{ product.slug }}">Hide</button>
                               <div class="sld-dropdown-divider"></div>
                               <button type="button" class="sld-dropdown-item delete-product" data-product-slug="{{ product.slug }}">Archive</button>
@@ -901,9 +895,9 @@
                                 <circle cx="12" cy="19" r="1.2"></circle>
                               </svg>
                             </button><div class="sld-dropdown-menu" role="menu">
-                              <button type="button" class="sld-dropdown-item" onclick="window.location.href='{% url "order" order_number=order.order.order_number %}'">View Order</button>
-                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url "download_invoice" order_number=order.order.order_number %}', '_blank')">Invoice</button>
-                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url "download-shipping-label" order_number=order.order.order_number %}', '_blank')">Shipping Label</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.location.href='{% url 'order' order_number=order.order.order_number %}'">View Order</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'download_invoice' order_number=order.order.order_number %}', '_blank')">Invoice</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'download-shipping-label' order_number=order.order.order_number %}', '_blank')">Shipping Label</button>
                               <button type="button" class="sld-dropdown-item" data-toast="Tracking isn&#8217;t available for delivered orders.">Track</button>
                             </div>
                           </div>
@@ -998,11 +992,23 @@
                         <td data-label="Repeat">
                           <span class="sld-badge {% if customer.repeat_buyer %}
                               
+                              
+                              
+                              
                               c-success
+
+
+
 
                             {% else %}
                               
+                              
+                              
+                              
                               c-muted
+
+
+
 
                             {% endif %}">
                             {% if customer.repeat_buyer %}
@@ -1140,86 +1146,25 @@
           <!-- ============ DOCUMENTS PANEL ============ -->
           <section class="sld-tab-panel" data-panel="documents" aria-label="Documents">
             <div class="sld-docs-grid">
-              <div class="sld-doc-card">
-                <div class="sld-doc-preview" data-doc-preview data-doc-title="Government ID">
-                  <i class="bi bi-file-earmark-image" style="font-size:32px;"></i>
-                </div>
-                <div class="sld-doc-head">
-                  <span class="sld-doc-title">Government ID</span><span class="sld-badge c-success">Verified</span>
-                </div>
-                <span class="sld-doc-meta">Uploaded Mar 15, 2025</span>
-                <div class="sld-doc-actions">
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-doc-preview data-doc-title="Government ID">View</button>
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-toast="Downloading document&hellip;">Download</button>
-                </div>
-              </div>
-              <div class="sld-doc-card">
-                <div class="sld-doc-preview" data-doc-preview data-doc-title="Business License">
-                  <i class="bi bi-file-earmark-text" style="font-size:32px;"></i>
-                </div>
-                <div class="sld-doc-head">
-                  <span class="sld-doc-title">Business License</span><span class="sld-badge c-success">Verified</span>
-                </div>
-                <span class="sld-doc-meta">Uploaded Mar 15, 2025</span>
-                <div class="sld-doc-actions">
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-doc-preview data-doc-title="Business License">View</button>
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-toast="Downloading document&hellip;">Download</button>
-                </div>
-              </div>
-              <div class="sld-doc-card">
-                <div class="sld-doc-preview" data-doc-preview data-doc-title="Tax Certificate">
-                  <i class="bi bi-file-earmark-check" style="font-size:32px;"></i>
-                </div>
-                <div class="sld-doc-head">
-                  <span class="sld-doc-title">Tax Certificate</span><span class="sld-badge c-warning">Pending</span>
-                </div>
-                <span class="sld-doc-meta">Uploaded Jul 2, 2026</span>
-                <div class="sld-doc-actions">
-                  <button type="button" class="sld-btn sld-btn-success sld-btn-sm" data-toast="Document approved.">Approve</button>
-                  <button type="button" class="sld-btn sld-btn-danger-outline sld-btn-sm" data-toast="Document rejected.">Reject</button>
-                </div>
-              </div>
-              <div class="sld-doc-card">
-                <div class="sld-doc-preview" data-doc-preview data-doc-title="Address Proof">
-                  <i class="bi bi-geo-alt" style="font-size:32px;"></i>
-                </div>
-                <div class="sld-doc-head">
-                  <span class="sld-doc-title">Address Proof</span><span class="sld-badge c-success">Verified</span>
-                </div>
-                <span class="sld-doc-meta">Uploaded Mar 16, 2025</span>
-                <div class="sld-doc-actions">
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-doc-preview data-doc-title="Address Proof">View</button>
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-toast="Downloading document&hellip;">Download</button>
-                </div>
-              </div>
-              <div class="sld-doc-card">
-                <div class="sld-doc-preview" data-doc-preview data-doc-title="Bank Verification">
-                  <i class="bi bi-bank" style="font-size:32px;"></i>
-                </div>
-                <div class="sld-doc-head">
-                  <span class="sld-doc-title">Bank Verification</span><span class="sld-badge c-success">Verified</span>
-                </div>
-                <span class="sld-doc-meta">Uploaded Mar 18, 2025</span>
-                <div class="sld-doc-actions">
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-doc-preview data-doc-title="Bank Verification">View</button>
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-toast="Downloading document&hellip;">Download</button>
-                </div>
-              </div>
-              <div class="sld-doc-card">
-                <div class="sld-doc-preview" data-doc-preview data-doc-title="Identity Verification">
-                  <i class="bi bi-person-badge" style="font-size:32px;"></i>
-                </div>
-                <div class="sld-doc-head">
-                  <span class="sld-doc-title">Identity Verification</span><span class="sld-badge c-danger">Re-upload Requested</span>
-                </div>
-                <span class="sld-doc-meta">Uploaded Jan 4, 2026</span>
-                <div class="sld-doc-actions">
-                  <button type="button" class="sld-btn sld-btn-secondary sld-btn-sm" data-toast="Re-upload request sent.">Request Re-upload</button>
-                </div>
-              </div>
+              <!-- Card 1: CNIC Front -->
+              {% include 'user_management/seller/document_card_detail.html' with document=documents.cnic_front title='CNIC Front' application=seller.application document_type='cnic_front' %}
+
+              <!-- Card 2: CNIC Back -->
+              {% include 'user_management/seller/document_card_detail.html' with document=documents.cnic_back title='CNIC Back' application=seller.application document_type='cnic_back' %}
+
+              <!-- Card 3: Business Registration Certificate -->
+              {% include 'user_management/seller/document_card_detail.html' with document=documents.business_certificate title='Business Registration Certificate' application=seller.application document_type='business_certificate' %}
+
+              <!-- Card 4: NTN Certificate -->
+              {% include 'user_management/seller/document_card_detail.html' with document=documents.ntn title='NTN Certificate' application=seller.application document_type='ntn' %}
+
+              <!-- Card 5: Bank Statement -->
+              {% include 'user_management/seller/document_card_detail.html' with document=documents.bank_statement title='Bank Statement' application=seller.application document_type='bank_statement' %}
+
+              <!-- Card 6: Store Photo -->
+              {% include 'user_management/seller/document_card_detail.html' with document=documents.store_photo title='Store Photo' application=seller.application document_type='store_photo'%}
             </div>
           </section>
-
           <!-- ============ REVIEWS PANEL ============ -->
           <section class="sld-tab-panel" data-panel="reviews" aria-label="Reviews">
             <div class="sld-card">
@@ -1686,14 +1631,7 @@
             <div class="sld-actions-group">
               <h4 class="sld-actions-group-title">Communication</h4>
               <div class="sld-actions-row">
-                <button type="button" class="sld-action-btn"
-                 data-ec-open
-                 data-user-name="{{ seller.store_name}}"
-                 data-user-email="{{ seller.business_email|default:seller.user.email}}"
-                 data-user-avatar="{{ seller.store_logo}}"
-                 data-user-status="{{ seller.status}}"
-                 data-user-initial="{{ seller.shop_name|slice:":1"|upper }}"
-                 data-user-id="{{ seller.user.id }}">
+                <button type="button" class="sld-action-btn" data-ec-open data-user-name="{{ seller.store_name }}" data-user-email="{{ seller.business_email|default:seller.user.email }}" data-user-avatar="{{ seller.store_logo }}" data-user-status="{{ seller.status }}" data-user-initial="{{ seller.shop_name|slice:':1'|upper }}" data-user-id="{{ seller.user.id }}">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <rect x="2" y="4" width="20" height="16" rx="2"></rect>
@@ -1722,7 +1660,7 @@
             <div class="sld-actions-group">
               <h4 class="sld-actions-group-title">Verification</h4>
               <div class="sld-actions-row">
-                <button type="button" class="sld-action-btn" id="sldApproveBtnDown1" data-seller-id="{{seller.id}}">
+                <button type="button" class="sld-action-btn" id="sldApproveBtnDown1" data-seller-id="{{ seller.id }}">
                   <span class="sld-action-icon c-success">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M9 12l2 2 4-4"></path>
@@ -1829,7 +1767,7 @@
                     </svg>
                   </span><span><strong>Bulk Hide</strong><small>Hide multiple products at once</small></span>
                 </button>
-                <button type="button" class="sld-action-btn" onclick="window.location.href='{% url "export_products_csv" seller_id=seller.id %}'">
+                <button type="button" class="sld-action-btn" onclick="window.location.href='{% url 'export_products_csv' seller_id=seller.id %}'">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1844,7 +1782,7 @@
             <div class="sld-actions-group">
               <h4 class="sld-actions-group-title">Orders &amp; Revenue</h4>
               <div class="sld-actions-row">
-                <button type="button" class="sld-action-btn" id="sldExportOrderHistory" onclick="window.location.href='{% url "export_seller_orders" seller_id=seller.id %}'" data-toast="Preparing order export&hellip;">
+                <button type="button" class="sld-action-btn" id="sldExportOrderHistory" onclick="window.location.href='{% url 'export_seller_orders' seller_id=seller.id %}'" data-toast="Preparing order export&hellip;">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1861,7 +1799,7 @@
                     </svg>
                   </span><span><strong>View Order History</strong><small>Jump to the orders tab</small></span>
                 </button>
-                <button type="button" class="sld-action-btn" data-toast="Preparing revenue export&hellip;" onclick="window.location.href='{% url "export_revenue_report" seller_id=seller.id %}'">
+                <button type="button" class="sld-action-btn" data-toast="Preparing revenue export&hellip;" onclick="window.location.href='{% url 'export_revenue_report' seller_id=seller.id %}'">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M12 1v22"></path>
@@ -1883,7 +1821,7 @@
             <div class="sld-actions-group">
               <h4 class="sld-actions-group-title">Security</h4>
               <div class="sld-actions-row">
-                <button type="button" class="sld-action-btn" id="sldTerResetPasswordBtn" data-user-id="{{seller.user.id}}">
+                <button type="button" class="sld-action-btn" id="sldTerResetPasswordBtn" data-user-id="{{ seller.user.id }}">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <rect x="3" y="11" width="18" height="11" rx="2"></rect>
@@ -1891,7 +1829,7 @@
                     </svg>
                   </span><span><strong>Reset Password</strong><small>Send password reset link</small></span>
                 </button>
-                <button type="button" class="sld-action-btn" id="logoutAllDevicesBtn" data-user-id="{{seller.user.id}}">
+                <button type="button" class="sld-action-btn" id="logoutAllDevicesBtn" data-user-id="{{ seller.user.id }}">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -1922,7 +1860,7 @@
             <div class="sld-actions-group">
               <h4 class="sld-actions-group-title">Data</h4>
               <div class="sld-actions-row">
-                <button type="button" class="sld-action-btn" data-toast="Preparing profile export&hellip;" onclick="window.location.href='{% url "export_seller_profile" seller_id=seller.id %}'">
+                <button type="button" class="sld-action-btn" data-toast="Preparing profile export&hellip;" onclick="window.location.href='{% url 'export_seller_profile' seller_id=seller.id %}'">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
@@ -1930,7 +1868,7 @@
                     </svg>
                   </span><span><strong>Export Seller Profile</strong><small>Download full profile snapshot</small></span>
                 </button>
-                <button type="button" class="sld-action-btn" data-toast="Preparing product CSV&hellip;"  onclick="window.location.href='{% url "export_products_csv" seller_id=seller.id %}'">
+                <button type="button" class="sld-action-btn" data-toast="Preparing product CSV&hellip;" onclick="window.location.href='{% url 'export_products_csv' seller_id=seller.id %}'">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1939,7 +1877,7 @@
                     </svg>
                   </span><span><strong>Export Products CSV</strong><small>Full product catalog dump</small></span>
                 </button>
-                <button type="button" class="sld-action-btn" data-toast="Preparing order CSV&hellip;" onclick="window.location.href='{% url "export_seller_orders" seller_id=seller.id %}'">
+                <button type="button" class="sld-action-btn" data-toast="Preparing order CSV&hellip;" onclick="window.location.href='{% url 'export_seller_orders' seller_id=seller.id %}'">
                   <span class="sld-action-icon">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1971,7 +1909,7 @@
                 <div class="sld-danger-text">
                   <strong>Block Seller</strong><small>Permanently restrict this seller from the marketplace.</small>
                 </div>
-                <button type="button" class="sld-btn sld-btn-danger-outline sld-btn-sm" id="sldDangerBlockBtn1" data-seller-id="{{seller.id}}">Block Seller</button>
+                <button type="button" class="sld-btn sld-btn-danger-outline sld-btn-sm" id="sldDangerBlockBtn1" data-seller-id="{{ seller.id }}">Block Seller</button>
               </div>
               <div class="sld-danger-row">
                 <div class="sld-danger-text">
@@ -2142,7 +2080,94 @@
     </div>
   </div>
 
-  {% include "email_components/email_composer.html" %}
+  <!-- Reject Modal -->
+  <div class="sad-modal-overlay is-hidden" id="sadRejectModal" data-sad-modal>
+    <div class="sad-modal sad-modal-lg" role="dialog" aria-modal="true" aria-labelledby="sadRejectModalTitle">
+      <button type="button" class="sad-modal-close" data-sad-close-modal aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div class="sad-modal-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </div>
+      <h3 class="sad-modal-title" id="sadRejectModalTitle">Reject Application</h3>
+      <p class="sad-modal-text">Please provide a reason. This will be included in the notification sent to the applicant.</p>
+      <div class="sad-form-group">
+        <label for="sadRejectReason">Rejection Reason</label>
+        <select id="sadRejectReason">
+          <option>Incomplete or invalid documentation</option>
+          <option>Failed identity verification</option>
+          <option>Business type not permitted</option>
+          <option>Duplicate application</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="sad-form-group">
+        <label for="sadRejectNote">Additional Notes</label>
+        <textarea id="sadRejectNote" placeholder="Explain the decision to help the applicant understand…"></textarea>
+      </div>
+      <div class="sld-modal-actions">
+        <button type="button" class="sld-btn sad-btn-secondary" data-sad-close-modal>Cancel</button>
+        <button type="button" class="sld-btn sad-btn-primary" data-sad-confirm-action><span class="sad-btn-label">Confirm Rejection</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Missing Document Modal -->
+  <div class="sad-modal-overlay is-hidden" id="sadRequestDocumentModal" data-sad-modal data-document-type="">
+    <div class="sad-modal sad-modal-lg" role="dialog" aria-modal="true" aria-labelledby="sadRequestDocumentModalTitle">
+      <button type="button" class="sad-modal-close" data-sad-close-modal aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div class="sad-modal-icon c-accent">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <path d="M17 8l-5-5-5 5" />
+          <path d="M12 3v12" />
+        </svg>
+      </div>
+
+      <h3 class="sad-modal-title" id="sadRequestDocumentModalTitle">Request Missing Document</h3>
+
+      <p class="sad-modal-text">Ask the seller to upload the required document before the application can continue.</p>
+
+      <div class="sad-form-group">
+        <label for="sadRequestReason">Request Reason</label>
+
+        <select id="sadRequestReason">
+          <option value="Document is required for verification">Document is required for verification</option>
+
+          <option value="Document was not uploaded">Document was not uploaded</option>
+
+          <option value="Additional supporting document required">Additional supporting document required</option>
+
+          <option value="Compliance requirement">Compliance requirement</option>
+
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="sad-form-group">
+        <label for="sadRequestNote">Message to Seller</label>
+
+        <textarea id="sadRequestNote" placeholder="Provide instructions about what document should be uploaded..."></textarea>
+      </div>
+
+      <div class="sld-modal-actions">
+        <button type="button" class="sld-btn sad-btn-secondary" data-sad-close-modal>Cancel</button>
+
+        <button type="button" class="sld-btn sad-btn-primary" id="sadRequestDocumentConfirmBtn"><span class="sad-btn-label">Send Request</span></button>
+      </div>
+    </div>
+  </div>
+
+  {% include 'email_components/email_composer.html' %}
 
   <!-- ================= STORE EDIT MODAL ================= -->
   <div class="sld-modal-overlay is-hidden" id="sldEditStoreModalOverlay">
@@ -2301,7 +2326,7 @@
       <!-- Actions Footer -->
       <div class="sld-modal-actions" style="margin-top:20px;">
         <button type="button" class="sld-btn sld-btn-secondary" id="sldEditStoreCancelBtn">Cancel</button>
-        <button type="button" class="sld-btn sld-btn-primary" id="sldEditStoreSaveBtn" data-seller-id="{{seller.id}}">Save Changes</button>
+        <button type="button" class="sld-btn sld-btn-primary" id="sldEditStoreSaveBtn" data-seller-id="{{ seller.id }}">Save Changes</button>
       </div>
     </div>
   </div>

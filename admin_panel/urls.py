@@ -8,7 +8,11 @@ urlpatterns = [
     path("user/sellers/", views.user_sellers, name="user-sellers"),
     path("user/buyers/<int:userId>", views.user_buyer, name="user-buyer"),
     path("user/sellers/<int:sellerId>", views.user_seller, name="user-seller"),
-    path("user/sellers/<int:sellerId>/application", views.seller_application, name="seller-application"),
+    path(
+        "user/sellers/<int:sellerId>/application",
+        views.seller_application,
+        name="seller-application",
+    ),
     path("change-account-state/", views.change_state, name="change-account-state"),
     path(
         "user/buyers/<int:user_id>/reset-password/",
@@ -54,5 +58,45 @@ urlpatterns = [
         "sellers/<int:seller_id>/export-revenue/",
         views.export_revenue_report_view,
         name="export_revenue_report",
+    ),
+    path(
+        "user/seller/<int:application_id>/application/reject/",
+        views.reject_seller_application,
+        name="reject_seller_application",
+    ),
+    path(
+        "user/seller/<int:application_id>/application/request-changes/",
+        views.request_application_changes,
+        name="request_application_changes",
+    ),
+    path(
+        "user/seller/<int:application_id>/application/approve/",
+        views.approve_seller_application,
+        name="approve_seller_application",
+    ),
+    path(
+        "user/seller/<int:seller_id>/delete/",
+        views.delete_seller_application,
+        name="delete_seller_application",
+    ),
+    path(
+        "user/seller/document/<int:document_id>/flag/",
+        views.flag_seller_document,
+        name="flag_seller_document",
+    ),
+    path(
+        "user/seller/document/<int:document_id>/verify/",
+        views.verify_seller_document,
+        name="verify_seller_document",
+    ),
+    path(
+        "user/seller/document/request/",
+        views.request_missing_document,
+        name="request_missing_document",
+    ),
+    path(
+        "user/seller/application/save-notes/",
+        views.save_application_notes,
+        name="save_application_notes",
     ),
 ]

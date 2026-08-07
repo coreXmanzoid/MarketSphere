@@ -559,6 +559,8 @@ def get_seller_detail(user_id):
         DONUT_CIRCUMFERENCE * (100 - delivered_percentage) / 100,
         1,
     )
+    from accounts.services import get_seller_application_documents
+    documents = get_seller_application_documents(seller)
 
     return {
         "seller": seller,
@@ -602,6 +604,7 @@ def get_seller_detail(user_id):
         "donut_offset": donut_offset,
         "top_selling_products": top_selling_products,
         "top_categories": top_categories,
+        "documents": documents,
     }
 
 
@@ -715,24 +718,76 @@ def get_pending_seller(seller_id):
 
     score_offset = CIRCUMFERENCE * (1 - trust_score / 100)
 
+    from accounts.services import get_seller_application_documents
+    documents = get_seller_application_documents(seller)
+
+    from allauth.account.models import EmailAddress
+
+    # -----------------------------
+    # Identity Documents
+    # -----------------------------
+    cnic_front = documents.get("cnic_front")
+    cnic_back = documents.get("cnic_back")
+
+    identity_verified = (
+        cnic_front
+        and cnic_back
+        and cnic_front.file
+        and cnic_back.file
+        and cnic_front.verified
+        and cnic_back.verified
+    )
+
+    # -----------------------------
+    # Email Verification
+    # -----------------------------
+    email_verified = EmailAddress.objects.filter(
+        user=seller.user,
+        verified=True,
+    ).exists()
+
+    # -----------------------------
+    # Store Profile Completeness
+    # -----------------------------
+    store_profile_complete = all([
+        seller.store_logo,
+        seller.store_banner,
+        seller.store_description,
+    ])
+
+    # -----------------------------
+    # Business Address
+    # -----------------------------
+    business_address = bool(seller.business_address)
     return {
         "seller": seller,
         "application": application,
+
         "verification_score": verification_score,
         "trust_score": trust_score,
         "score_offset": score_offset,
         "risk_level": risk_level,
+
         "documents_submitted": documents_submitted,
         "verified_documents": verified_documents,
         "document_completeness": document_completeness,
+
         "flags_raised": flags_raised,
         "profile_completeness": profile_completeness,
         "compliance_score": compliance_score,
+
         "payment_verified": payment_verified,
         "duplicate_accounts": duplicate_accounts,
         "blacklist_clean": blacklist_clean,
-    }
 
+        "documents": documents,
+
+        # Checklist
+        "identity_verified": identity_verified,
+        "email_verified": email_verified,
+        "store_profile_complete": store_profile_complete,
+        "business_address": business_address,
+    }
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives

@@ -32,33 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const toastContainer = document.getElementById('sodToastContainer');
 
-    /* ================= 2. TOAST HELPER ================= */
-    function showToast(message, type) {
-        if (!toastContainer) return;
-
-        const toast = document.createElement('div');
-        toast.className = 'sod-toast sod-toast-' + (type || 'info');
-        toast.setAttribute('role', 'status');
-
-        const iconMarkup = type === 'error'
-            ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
-            : type === 'success'
-                ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>'
-                : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
-
-        toast.innerHTML = iconMarkup + '<span></span>';
-        toast.querySelector('span').textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add('is-leaving');
-            toast.addEventListener('animationend', function () {
-                toast.remove();
-            }, { once: true });
-        }, 4000);
-    }
-
     /* ================= 3. SCROLL REVEAL ================= */
     const revealTargets = document.querySelectorAll('.sod-reveal');
 

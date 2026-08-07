@@ -138,6 +138,7 @@ def update_seller_info(request):
 from . import services
 from .decorators import only_seller
 
+
 @login_required
 @only_seller
 def deactivate_seller_account(request):
@@ -155,6 +156,8 @@ def deactivate_seller_account(request):
             "message": "Seller account deactivated successfully.",
         }
     )
+
+
 @login_required
 @only_seller
 def reactivate_seller_account(request):
@@ -172,6 +175,8 @@ def reactivate_seller_account(request):
             "message": "Seller account activated successfully.",
         }
     )
+
+
 @login_required
 @only_seller
 def update_seller_address(request):
@@ -209,11 +214,18 @@ def update_seller_address(request):
 @only_seller
 def seller_account(request):
     seller = request.user.seller_profile
+
     business_address = services.get_bussiness_address(seller)
+
+    documents = services.get_seller_application_documents(seller)
+
+    application_progress = services.calculate_application_progress(seller)
 
     context = {
         "seller": seller,
         "business_address": business_address,
+        "documents": documents,
+        "application_progress": application_progress,
     }
 
     return render(request, "seller_account.html", context)
@@ -234,9 +246,8 @@ def save_user_address(request):
         }
     )
 
+
 import json
-
-
 
 
 @login_required
@@ -246,22 +257,19 @@ def update_user_address(request):
 
         services.update_user_address(request.user, data)
 
-        return JsonResponse({
-            "success": True,
-            "message": "Address updated successfully."
-        })
+        return JsonResponse(
+            {"success": True, "message": "Address updated successfully."}
+        )
 
     except ValueError as e:
-        return JsonResponse({
-            "success": False,
-            "message": str(e)
-        }, status=400)
+        return JsonResponse({"success": False, "message": str(e)}, status=400)
 
     except Exception:
-        return JsonResponse({
-            "success": False,
-            "message": "Something went wrong. Please try again."
-        }, status=500)
+        return JsonResponse(
+            {"success": False, "message": "Something went wrong. Please try again."},
+            status=500,
+        )
+
 
 import json
 
@@ -279,24 +287,20 @@ def delete_user_address_view(request):
 
         delete_user_address(request.user, data)
 
-        return JsonResponse({
-            "success": True,
-            "message": "Address deleted successfully."
-        })
+        return JsonResponse(
+            {"success": True, "message": "Address deleted successfully."}
+        )
 
     except ValueError as e:
-        return JsonResponse({
-            "success": False,
-            "message": str(e)
-        }, status=400)
+        return JsonResponse({"success": False, "message": str(e)}, status=400)
 
     except Exception:
-        return JsonResponse({
-            "success": False,
-            "message": "Something went wrong. Please try again."
-        }, status=500)
+        return JsonResponse(
+            {"success": False, "message": "Something went wrong. Please try again."},
+            status=500,
+        )
 
-    
+
 @login_required
 def update_shipping_preferences_view(request):
 
@@ -349,6 +353,7 @@ def update_notification_preferences_view(request):
         }
     )
 
+
 @login_required
 def logout_user(request):
     logout(request)
@@ -371,7 +376,9 @@ def resend_verification_email_view(request):
 
     return redirect(settings.LOGIN_REDIRECT_URL)
 
+
 from django.http import JsonResponse
+
 
 def change_store_banner(request):
     if request.method != "POST":
@@ -386,31 +393,37 @@ def change_store_banner(request):
     )
 
     if banner_url:
-        return JsonResponse({
-            "success": True,
-            "banner_url": banner_url,
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "banner_url": banner_url,
+            }
+        )
 
-    return JsonResponse({
-        "success": False,
-        "message": "Unable to update banner.",
-    })
+    return JsonResponse(
+        {
+            "success": False,
+            "message": "Unable to update banner.",
+        }
+    )
+
 
 from .models import Seller
+
 
 def change_seller_status(request):
     if request.method != "POST":
         return JsonResponse({"success": False}, status=405)
 
-    seller = Seller.objects.filter(
-        id=request.POST.get("seller_id")
-    ).first()
+    seller = Seller.objects.filter(id=request.POST.get("seller_id")).first()
 
     if not seller:
-        return JsonResponse({
-            "success": False,
-            "message": "Seller not found.",
-        })
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Seller not found.",
+            }
+        )
 
     services.update_seller_status(
         seller,
@@ -418,6 +431,7 @@ def change_seller_status(request):
     )
 
     return JsonResponse({"success": True})
+
 
 import json
 
@@ -438,7 +452,67 @@ def update_store_information(request, seller_id):
 
     services.update_store_information(seller, data)
 
-    return JsonResponse({
-        "success": True,
-        "message": "Store information updated successfully."
-    })
+    return JsonResponse(
+        {"success": True, "message": "Store information updated successfully."}
+    )
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+
+@login_required
+def update_seller_profile(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request method.",
+            },
+            status=405,
+        )
+
+    success, message = services.update_seller_profile_service(
+        request.user,
+        request.POST,
+    )
+
+    return JsonResponse(
+        {
+            "success": success,
+            "message": message,
+        }
+    )
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+
+@login_required
+def update_seller_document(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request method.",
+            },
+            status=405,
+        )
+
+    success, message, document = services.update_seller_document_service(
+        user=request.user,
+        data=request.POST,
+        files=request.FILES,
+    )
+
+    response = {
+        "success": success,
+        "message": message,
+    }
+
+    if success:
+        response["document_url"] = document.file.url
+        response["uploaded_at"] = document.uploaded_at.strftime("%b %d, %Y")
+
+    return JsonResponse(response)

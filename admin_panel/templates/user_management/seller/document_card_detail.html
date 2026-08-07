@@ -1,0 +1,121 @@
+<!-- templates/user_management/seller/components/document_card_detail.html -->
+<div class="sld-doc-card">
+  <div class="sld-doc-preview" data-doc-preview data-doc-title="{{ title }}" {% if document and document.file %}data-file-url="{{ document.file.url }}"{% endif %}>
+    {% if document and document.file %}
+      {% if document.file.url|lower|slice:'-4:' == '.pdf' %}
+        <i class="bi bi-file-earmark-pdf" style="font-size:32px;"></i>
+      {% else %}
+        <img src="{{ document.file.url }}" alt="{{ title }}" />
+      {% endif %}
+    {% else %}
+      <i class="bi bi-file-earmark-x" style="font-size:32px;"></i>
+    {% endif %}
+  </div>
+
+  <div class="sld-doc-head">
+    <span class="sld-doc-title">{{ title }}</span>
+
+    {% if not document %}
+      <span class="sld-badge c-secondary">Not Uploaded</span>
+    {% elif document.verified %}
+      <span class="sld-badge c-success">Verified</span>
+    {% elif document.verification_note %}
+      <span class="sld-badge c-danger">Re-upload Requested</span>
+    {% else %}
+      <span class="sld-badge c-warning">Pending</span>
+    {% endif %}
+  </div>
+
+  <span class="sld-doc-meta">
+    {% if document %}
+      Uploaded {{ document.uploaded_at|date:'M j, Y' }}
+    {% else %}
+      No document uploaded
+    {% endif %}
+  </span>
+
+    <div class="sld-doc-actions">
+    {% if not document or not document.file %}
+        <button type="button"
+                class="sld-btn sld-btn-secondary sld-btn-sm"
+                data-action="request-reupload"
+                data-application-id="{{ application.id }}"
+                data-document-type="{{ document_type }}">
+        Request This Document
+        </button>
+
+    {% elif document.verified %}
+
+        <button type="button"
+                class="sld-btn sld-btn-secondary sld-btn-sm"
+                data-action="view"
+                data-document-id="{{ document.id }}"
+                {% if document.file %}data-file-url="{{ document.file.url }}"{% endif %}
+                data-document-title="{{ title }}">
+        View
+        </button>
+
+        <a href="{{ document.file.url }}" download class="sld-btn sld-btn-secondary sld-btn-sm">Download</a>
+
+    {% elif document.verification_note %}
+
+        <button type="button"
+                class="sld-btn sld-btn-secondary sld-btn-sm"
+                data-action="view"
+                data-document-id="{{ document.id }}"
+                {% if document.file %}data-file-url="{{ document.file.url }}"{% endif %}
+                data-document-title="{{ title }}">
+        View
+        </button>
+
+        <button type="button"
+                class="sld-btn sld-btn-success sld-btn-sm"
+                data-action="approve"
+                data-document-id="{{ document.id }}"
+                data-document-title="{{ title }}"
+                data-document-type="{{ document.document_type }}">
+        Approve
+        </button>
+
+        <button type="button"
+                class="sld-btn sld-btn-outline sld-btn-sm"
+                data-action="request-reupload"
+                data-document-id="{{ document.id }}"
+                data-application-id="{{ document.application.id }}"
+                data-document-type="{{ document.document_type }}"
+                data-document-title="{{ title }}">
+        Request Re-upload
+        </button>
+
+    {% else %}
+
+        <button type="button"
+                class="sld-btn sld-btn-secondary sld-btn-sm"
+                data-action="view"
+                data-document-id="{{ document.id }}"
+                {% if document.file %}data-file-url="{{ document.file.url }}"{% endif %}
+                data-document-title="{{ title }}">
+        View
+        </button>
+
+        <button type="button"
+                class="sld-btn sld-btn-success sld-btn-sm"
+                data-action="approve"
+                data-document-id="{{ document.id }}"
+                data-document-title="{{ title }}"
+                data-document-type="{{ document.document_type }}">
+        Approve
+        </button>
+
+        <button type="button"
+                class="sld-btn sld-btn-danger-outline sld-btn-sm"
+                data-action="reject"
+                data-document-id="{{ document.id }}"
+                data-document-title="{{ title }}"
+                data-document-type="{{ document.document_type }}">
+        Flag 
+        </button>
+
+    {% endif %}
+    </div>
+</div>
