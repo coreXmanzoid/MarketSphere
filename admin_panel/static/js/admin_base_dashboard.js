@@ -71,18 +71,25 @@
     }
 
     /* =====================================================
-       2. EXPANDABLE SIDEBAR GROUPS
-       ===================================================== */
+   2. EXPANDABLE SIDEBAR GROUPS
+   ===================================================== */
+
     function openGroup(group) {
         group.classList.add('is-open');
+
         var trigger = group.querySelector('.ad-nav-group-trigger');
-        if (trigger) trigger.setAttribute('aria-expanded', 'true');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', 'true');
+        }
     }
 
     function closeGroup(group) {
         group.classList.remove('is-open');
+
         var trigger = group.querySelector('.ad-nav-group-trigger');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', 'false');
+        }
     }
 
     function toggleGroup(group) {
@@ -93,22 +100,87 @@
         }
     }
 
+    function initActivePage() {
+        var activePage = sidebar.getAttribute('data-active-page');
+
+        if (!activePage) return;
+
+        // Remove any existing active states
+        nav.querySelectorAll('.ad-nav-link.is-active').forEach(function (link) {
+            link.classList.remove('is-active');
+        });
+
+        nav.querySelectorAll('.ad-nav-sublink.is-active').forEach(function (link) {
+            link.classList.remove('is-active');
+        });
+
+        /*
+         * First check submenu pages.
+         *
+         * Example:
+         * active_page = "products"
+         *
+         * This will activate:
+         * [data-subpage="products"]
+         *
+         * And automatically open:
+         * [data-group="catalog"]
+         */
+        var activeSubLink = nav.querySelector(
+            '.ad-nav-sublink[data-subpage="' + activePage + '"]'
+        );
+
+        if (activeSubLink) {
+            activeSubLink.classList.add('is-active');
+
+            var parentGroup = activeSubLink.closest('.ad-nav-group');
+
+            if (parentGroup) {
+                openGroup(parentGroup);
+            }
+
+            return;
+        }
+
+        /*
+         * If it isn't a submenu page, check normal
+         * top-level navigation links.
+         *
+         * Example:
+         * active_page = "users"
+         */
+        var activeLink = nav.querySelector(
+            '.ad-nav-link[data-page="' + activePage + '"]:not(.ad-nav-group-trigger)'
+        );
+
+        if (activeLink) {
+            activeLink.classList.add('is-active');
+        }
+    }
+
     function initGroups() {
         var triggers = nav.querySelectorAll('.ad-nav-group-trigger');
+
         triggers.forEach(function (trigger) {
             trigger.addEventListener('click', function () {
                 // Collapsed desktop sidebar: expand it first so the
                 // submenu has somewhere to render, rather than toggling
                 // a group that's invisible anyway.
-                if (shell.classList.contains('is-collapsed') && !isMobileViewport()) {
+                if (
+                    shell.classList.contains('is-collapsed') &&
+                    !isMobileViewport()
+                ) {
                     setCollapsed(false);
                 }
+
                 var group = trigger.closest('.ad-nav-group');
-                if (group) toggleGroup(group);
+
+                if (group) {
+                    toggleGroup(group);
+                }
             });
         });
     }
-
     /* =====================================================
        3. DESKTOP COLLAPSE / EXPAND
        ===================================================== */

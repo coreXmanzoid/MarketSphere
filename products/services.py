@@ -448,14 +448,14 @@ def sort_products(products, sort_value):
     return products.order_by("-created_at")  # "newest" / default
 
 
-def hide_product_by_slug(product_slug, seller):
-    product = Product.objects.get(slug=product_slug, seller=seller)
+def hide_product_by_slug(product_slug):
+    product = Product.objects.get(slug=product_slug)
     product.status = Product.Status.HIDDEN
     product.save(update_fields=["status"])
 
 
-def unhide_product_by_slug(product_slug, seller):
-    product = Product.objects.get(slug=product_slug, seller=seller)
+def unhide_product_by_slug(product_slug):
+    product = Product.objects.get(slug=product_slug)
     product.status = Product.Status.PUBLISHED
     product.save(update_fields=["status"])
 
@@ -463,11 +463,10 @@ def unhide_product_by_slug(product_slug, seller):
 from django.db.models.deletion import ProtectedError
 
 
-def delete_product_by_slug(product_slug, seller):
+def delete_product_by_slug(product_slug):
     try:
         product = Product.objects.get(
             slug=product_slug,
-            seller=seller,
         )
 
         try:
@@ -492,6 +491,134 @@ def delete_product_by_slug(product_slug, seller):
             "archived": False,
         }
 
+
+from django.db import transaction
+
+
+
+@transaction.atomic
+def toggle_product_featured(product_slug, action):
+    try:
+        product = (
+            Product.objects
+            .select_for_update()
+            .get(
+                slug=product_slug
+            )
+        )
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "error": "not_found",
+            "message": "Product not found.",
+        }
+
+    if action == "feature":
+        if product.is_featured:
+            return {
+                "success": True,
+                "featured": True,
+                "changed": False,
+                "message": "Product is already featured.",
+            }
+
+        product.is_featured = True
+        product.save(update_fields=["is_featured"])
+
+        return {
+            "success": True,
+            "featured": True,
+            "changed": True,
+            "message": "Product featured successfully.",
+        }
+
+    if action == "unfeature":
+        if not product.is_featured:
+            return {
+                "success": True,
+                "featured": False,
+                "changed": False,
+                "message": "Product is already unfeatured.",
+            }
+
+        product.is_featured = False
+        product.save(update_fields=["is_featured"])
+
+        return {
+            "success": True,
+            "featured": False,
+            "changed": True,
+            "message": "Product unfeatured successfully.",
+        }
+
+    return {
+        "success": False,
+        "error": "invalid_action",
+        "message": "Invalid featured action.",
+    }
+
+
+@transaction.atomic
+def toggle_product_archive(product_slug, seller, action):
+    try:
+        product = (
+            Product.objects
+            .select_for_update()
+            .get(
+                slug=product_slug,
+                seller=seller,
+            )
+        )
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "error": "not_found",
+            "message": "Product not found.",
+        }
+
+    if action == "archive":
+        if product.status == Product.Status.ARCHIVED:
+            return {
+                "success": True,
+                "archived": True,
+                "changed": False,
+                "message": "Product is already archived.",
+            }
+
+        product.status = Product.Status.ARCHIVED
+        product.save(update_fields=["status"])
+
+        return {
+            "success": True,
+            "archived": True,
+            "changed": True,
+            "message": "Product archived successfully.",
+        }
+
+    if action == "unarchive":
+        if product.status != Product.Status.ARCHIVED:
+            return {
+                "success": True,
+                "archived": False,
+                "changed": False,
+                "message": "Product is already active.",
+            }
+
+        product.status = Product.Status.PUBLISHED
+        product.save(update_fields=["status"])
+
+        return {
+            "success": True,
+            "archived": False,
+            "changed": True,
+            "message": "Product restored successfully.",
+        }
+
+    return {
+        "success": False,
+        "error": "invalid_action",
+        "message": "Invalid archive action.",
+    }
 
 def paginate_products(products, page_number, per_page=12):
     paginator = Paginator(products, per_page)

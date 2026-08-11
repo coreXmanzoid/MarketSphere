@@ -1,0 +1,699 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Product Management
+{% endblock %}
+
+{% block active_page %}
+  products
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span>Catalog</span>
+    <span class="adh-breadcrumb-sep">&rsaquo;</span>
+    <span class="adh-breadcrumb-current">Product Management</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static '/css/admin_products.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <div class="pcl-page" id="pclPage">
+    <!-- ================= 1. PAGE HEADER ================= -->
+    <header class="pcl-header pcl-reveal">
+      <div class="pcl-header-text">
+        <h1 class="pcl-header-title">Product Management</h1>
+        <p class="pcl-header-subtitle">Manage, review, publish and moderate all marketplace products.</p>
+      </div>
+
+      <div class="pcl-header-actions">
+        <button type="button" class="pcl-btn pcl-btn-secondary" id="pclImportBtn" data-toast="info" data-toast-msg="Bulk import isn&#8217;t available yet.">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>Import Products
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-secondary" id="pclExportBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>Export Products
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-primary" id="pclAddProductBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>Add Product
+        </button>
+
+        <div class="pcl-dropdown" id="pclMoreDropdown">
+          <button type="button" class="pcl-btn pcl-btn-secondary pcl-icon-only" id="pclMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="1.2"></circle>
+              <circle cx="12" cy="12" r="1.2"></circle>
+              <circle cx="12" cy="19" r="1.2"></circle>
+            </svg>
+          </button>
+          <div class="pcl-dropdown-menu" id="pclMoreMenu" role="menu">
+            <button type="button" class="pcl-dropdown-item" role="menuitem" data-toast="info" data-toast-msg="Opening category manager&hellip;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16v4H4z"></path>
+                <path d="M4 12h10v4H4z"></path>
+              </svg>Manage Categories
+            </button>
+            <button type="button" class="pcl-dropdown-item" role="menuitem" data-toast="info" data-toast-msg="Opening brand manager&hellip;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path>
+                <circle cx="7.5" cy="7.5" r="1.5"></circle>
+              </svg>Manage Brands
+            </button>
+            <button type="button" class="pcl-dropdown-item" role="menuitem" data-toast="info" data-toast-msg="Opening the pending review queue&hellip;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 7v5l3 3"></path>
+              </svg>Review Queue
+            </button>
+            <div class="pcl-dropdown-divider" role="separator"></div>
+            <button type="button" class="pcl-dropdown-item" role="menuitem" id="pclRefreshBtn">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+                <polyline points="21 3 21 9 15 9"></polyline>
+              </svg>Refresh List
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= 2. PRODUCT SUMMARY METRICS ================= -->
+    <section class="pcl-metrics-grid" aria-label="Product summary metrics">
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+            <path d="M3 8v8l9 5 9-5V8"></path>
+            <path d="M12 13v8"></path>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Total Products</span>
+          <span class="pcl-metric-value" data-count-to="{{ admin.total_products }}">{{ admin.total_products }}</span>
+          {% if admin.products_increased %}
+          <span class="pcl-metric-trend up">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            {{ admin.products_change|floatformat:0 }}% this month
+          </span>
+          {% else %}
+          <span class="pcl-metric-trend down">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>{{ admin.products_change|floatformat:0 }}% this month
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path></svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Published</span>
+          <span class="pcl-metric-value" data-count-to="{{ published_products }}">{{ published_products }}</span>
+          <span class="pcl-metric-trend neutral">{{ published_percentage_catalog|floatformat:0 }}% of catalog</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-warning" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Pending Review</span>
+          <span class="pcl-metric-value" data-count-to="{{ admin.pending_products }}">{{ admin.pending_products }}</span>
+          <span class="pcl-metric-trend neutral">Needs moderation</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Low Stock Products</span>
+          <span class="pcl-metric-value" data-count-to="{{ admin.low_stock_products }}">{{ admin.low_stock_products }}</span>
+          <span class="pcl-metric-trend pcl-trend-down">Restock soon</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-muted" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Hidden</span>
+          <span class="pcl-metric-value" data-count-to="{{ hidden_products }}">{{ hidden_products }}</span>
+          <span class="pcl-metric-trend neutral">Kept off storefront</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Out of Stock</span>
+          <span class="pcl-metric-value" data-count-to="{{ out_of_stock_products }}">{{ out_of_stock_products }}</span>
+          <span class="pcl-metric-trend down">Restock recommended</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-warning" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Featured</span>
+          <span class="pcl-metric-value" data-count-to="{{ featured_products }}">{{ featured_products }}</span>
+          <span class="pcl-metric-trend neutral">On homepage rotation</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="21 8 21 21 3 21 3 8"></polyline>
+            <rect x="1" y="3" width="22" height="5"></rect>
+            <line x1="10" y1="12" x2="14" y2="12"></line>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Archived</span>
+          <span class="pcl-metric-value" data-count-to="{{ archived_products }}">{{ archived_products }}</span>
+          <span class="pcl-metric-trend neutral">Retained for records</span>
+        </div>
+      </div>
+
+      <div class="pcl-metric-card pcl-reveal">
+        <div class="pcl-metric-icon c-info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+            <path d="M14 2v6h6"></path>
+          </svg>
+        </div>
+        <div class="pcl-metric-body">
+          <span class="pcl-metric-label">Draft Products</span>
+          <span class="pcl-metric-value" data-count-to="{{ drafted_products }}">{{ drafted_products }}</span>
+          <span class="pcl-metric-trend neutral">Awaiting publish</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. SEARCH & FILTER TOOLBAR ================= -->
+    <section class="pcl-toolbar-card pcl-reveal" aria-label="Product filters">
+      <div class="pcl-toolbar">
+        <div class="pcl-search">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+          <input type="search" id="pclSearchInput" class="pcl-search-input" placeholder="Search by product name, SKU or seller..." aria-label="Search products" />
+        </div>
+
+        <div class="pcl-toolbar-filters">
+          <div class="pcl-select-wrap">
+            <select id="pclCategoryFilter" class="pcl-select" aria-label="Filter by category">
+              <option value="">All Categories</option>
+              <option value="electronics">Electronics</option>
+              <option value="fashion">Fashion</option>
+              <option value="home">Home &amp; Living</option>
+              <option value="beauty">Beauty</option>
+              <option value="sports">Sports</option>
+              <option value="books">Books</option>
+            </select>
+          </div>
+
+          <div class="pcl-select-wrap">
+            <select id="pclStatusFilter" class="pcl-select" aria-label="Filter by publication status">
+              <option value="">All Statuses</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="hidden">Hidden</option>
+              <option value="archived">Archived</option>
+              <option value="out-of-stock">Out of Stock</option>
+            </select>
+          </div>
+
+          <div class="pcl-select-wrap">
+            <select id="pclApprovalFilter" class="pcl-select" aria-label="Filter by approval status">
+              <option value="">All Approvals</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending Review</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <button type="button" class="pcl-btn pcl-btn-secondary pcl-btn-sm" id="pclMoreFiltersBtn" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>More Filters
+          </button>
+
+          <button type="button" class="pcl-btn pcl-btn-secondary pcl-btn-sm" id="pclResetFiltersBtn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Reset
+          </button>
+        </div>
+
+        <!-- Extra filter row (hidden by default) -->
+        <div class="pcl-filters-more" id="pclMoreFiltersRow">
+          <div class="pcl-select-wrap">
+            <select id="pclBrandFilter" class="pcl-select" aria-label="Filter by brand" style="width:100%;">
+              <option value="">All Brands</option>
+              <option value="soundwave">SoundWave</option>
+              <option value="timetech">TimeTech</option>
+              <option value="urbancarry">UrbanCarry</option>
+              <option value="novatech">NovaTech</option>
+            </select>
+          </div>
+          <div class="pcl-select-wrap">
+            <select id="pclSellerFilter" class="pcl-select" aria-label="Filter by seller" style="width:100%;">
+              <option value="">All Sellers</option>
+              <option value="urban-threads">Urban Threads Co.</option>
+              <option value="nova-electronics">Nova Electronics</option>
+              <option value="craftline">Craftline Studio</option>
+            </select>
+          </div>
+          <div class="pcl-select-wrap">
+            <select id="pclStockFilter" class="pcl-select" aria-label="Filter by stock status" style="width:100%;">
+              <option value="">All Stock Levels</option>
+              <option value="in-stock">In Stock</option>
+              <option value="low-stock">Low Stock</option>
+              <option value="out-of-stock">Out of Stock</option>
+            </select>
+          </div>
+          <div class="pcl-price-range">
+            <input type="number" class="pcl-price-input" id="pclPriceMin" placeholder="Min price" aria-label="Minimum price" />
+            <span class="pcl-price-sep">&ndash;</span>
+            <input type="number" class="pcl-price-input" id="pclPriceMax" placeholder="Max price" aria-label="Maximum price" />
+          </div>
+          <div class="pcl-price-range" style="grid-column: span 2;">
+            <input type="date" class="pcl-date-input" id="pclDateFrom" aria-label="Date added from" />
+            <span class="pcl-price-sep">&ndash;</span>
+            <input type="date" class="pcl-date-input" id="pclDateTo" aria-label="Date added to" />
+          </div>
+        </div>
+
+        <!-- ================= 7. QUICK FILTER CHIPS ================= -->
+        <div class="pcl-chip-row" id="pclQuickFilters">
+          <button type="button" class="pcl-chip is-active" data-chip="all">All <span class="pcl-chip-count">{{ admin.total_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="published">Published <span class="pcl-chip-count">{{ published_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="pending">Pending Review <span class="pcl-chip-count">{{ admin.pending_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="draft">Draft <span class="pcl-chip-count">{{ drafted_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="hidden">Hidden <span class="pcl-chip-count">{{ hidden_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="archived">Archived <span class="pcl-chip-count">{{ archived_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="out-of-stock">Out of Stock <span class="pcl-chip-count">{{ out_of_stock_products }}</span></button>
+          <button type="button" class="pcl-chip" data-chip="featured">Featured <span class="pcl-chip-count">{{ featured_products }}</span></button>
+          {% comment %} <button type="button" class="pcl-chip" data-chip="reported">Reported <span class="pcl-chip-count">-</span></button> {% endcomment %}
+          <button type="button" class="pcl-chip" data-chip="low-stock">Low Stock <span class="pcl-chip-count">{{ admin.low_stock_products }}</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. BULK ACTIONS BAR ================= -->
+    <div class="pcl-bulk-bar pcl-hidden" id="pclBulkBar">
+      <div class="pcl-bulk-info">
+        <span class="pcl-bulk-count" id="pclBulkCount">0</span><span>products selected</span>
+      </div>
+      <div class="pcl-bulk-actions">
+        <button type="button" class="pcl-btn pcl-btn-success pcl-btn-sm" data-bulk-action="approve">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>Approve
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-secondary pcl-btn-sm" data-bulk-action="publish">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Publish
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-secondary pcl-btn-sm" data-bulk-action="hide">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>Hide
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-secondary pcl-btn-sm" data-bulk-action="archive">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>Archive
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-secondary pcl-btn-sm" data-bulk-action="export">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-danger pcl-btn-sm" data-bulk-action="delete">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Delete
+        </button>
+        <button type="button" class="pcl-btn pcl-btn-ghost pcl-btn-sm" id="pclClearSelectionBtn">Clear Selection</button>
+      </div>
+    </div>
+
+    <!-- ================= LAYOUT: TABLE + SIDEBAR ================= -->
+    <div class="pcl-layout">
+      <div class="pcl-main-col">
+        <!-- ================= 5. PRODUCTS TABLE ================= -->
+        <section class="pcl-table-card pcl-reveal" aria-label="Products table">
+          <div class="pcl-table-wrap">
+            <table class="pcl-table" id="pclProductsTable">
+              <thead>
+                <tr>
+                  <th scope="col" class="pcl-col-checkbox">
+                    <label class="pcl-checkbox">
+                      <input type="checkbox" id="pclSelectAll" aria-label="Select all products" />
+                      <span class="pcl-checkbox-box"></span>
+                    </label>
+                  </th>
+                  <th scope="col" class="pcl-col-image"><span class="sr-only">Image</span></th>
+                  <th scope="col" data-sort="name">Product <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="sku">SKU <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="seller">Seller <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="category">Category <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="brand">Brand <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="price">Price <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="stock">Stock <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="orders">Orders <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="rating">Rating <span class="pcl-sort-icon">&#9650;</span></th>
+                  {% comment %} <th scope="col">Approval</th> {% endcomment %}
+                  <th scope="col">Status</th>
+                  <th scope="col" data-sort="created">Created <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" data-sort="updated">Updated <span class="pcl-sort-icon">&#9650;</span></th>
+                  <th scope="col" class="pcl-col-actions"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+
+              <tbody id="pclProductsTableBody">
+                <!-- ================= PRODUCT ROWS (frontend placeholder data) ================= -->
+                {% for product in products %}
+                <tr class="pcl-row" data-name="{{ product.name }}" data-sku="{{ product.sku }}" data-seller="{{ product.seller.user.first_name }} {{ product.seller.user.last_name}}" data-category="{{ product.category }}" data-brand="{{ product.brand }}" data-price="{{ product.discount_price|default:product.price }}" data-stock="{{ product.stock_quantity }}" data-orders="{{ product.total_orders }}" data-rating="4.6" data-status="{{ product_status }}" data-approval="approved" data-featured="{{ product.is_featured }}" data-created="{{ product.created_at|date }}" data-updated="{{ product.updated_at|date }}">
+                  <td data-label="">
+                    <label class="pcl-checkbox"><input type="checkbox" class="pcl-row-checkbox" aria-label="Select {{ product.name }}" /><span class="pcl-checkbox-box"></span></label>
+                  </td>
+                  <td data-label="" class="pcl-col-image">
+                    <span class="pcl-product-thumb"><img src="{{ product.primary_image.image.url }}" alt=""></span>
+                  </td>
+                  <td data-label="Product">
+                    <div class="pcl-product-name-cell">
+                      <a class="pcl-product-link" href="#" data-view-product="1">{{ product.name }}</a>
+                      {% if product.is_featured %}
+                      <span class="pcl-featured-tag"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg>Featured</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td data-label="SKU"><span class="pcl-sku">{{ product.sku }}</span></td>
+                  <td data-label="Seller">
+                    <div class="pcl-seller-cell"><span class="pcl-seller-avatar"><img src="{{ product.seller.store_logo.url }}" alt=""></span><span class="pcl-seller-name">{{ product.seller.store_name }}</span></div>
+                  </td>
+                  <td data-label="Category">{{ product.category.name }}</td>
+                  <td data-label="Brand">{{ product.brand.name|default:"N/A" }}</td>
+                  <td data-label="Price"><span class="pcl-price-cell">Rs. {{ product.discount_price|default:product.price|floatformat:0 }}</span> {% if product.discount_price %} <span class="pcl-price-original">{{ product.price|floatformat:0 }}</span> {% endif %}</td>
+                  {% if product.stock_quantity <= 0 %}
+                  <td data-label="Stock"><span class="pcl-stock-pill out-stock"><span class="pcl-stock-dot"></span>Out Of Stock</span></td>
+                  {% elif product.stock_quantity > 0 and product.stock_quantity < 20 %}
+                  <td data-label="Stock"><span class="pcl-stock-pill low-stock"><span class="pcl-stock-dot"></span>{{ product.stock_quantity }} left</span></td>
+                  {% else %}
+                  <td data-label="Stock"><span class="pcl-stock-pill in-stock"><span class="pcl-stock-dot"></span>{{ product.stock_quantity }}</span></td>
+                  {% endif %}
+                  <td data-label="Orders">{{ product.total_orders }}</td>
+                  <td data-label="Rating"><span class="pcl-rating-cell"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg>4.6</span></td>
+                  {% comment %} <td data-label="Approval"><span class="pcl-badge c-success">Approved</span></td> {% endcomment %}
+                  <td data-label="Status"><span class="pcl-badge c-{{ product.status }}">{{ product.status }}</span></td>
+                  <td data-label="Created"><span class="pcl-date-cell">{{ product.created_at|date }}</span></td>
+                  <td data-label="Updated"><span class="pcl-date-cell">{{ product.updated_at|date }}</span></td>
+                  <td data-label="" class="pcl-col-actions">
+                    <div class="pcl-dropdown pcl-row-dropdown">
+                      <button type="button" class="pcl-icon-btn pcl-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg>
+                      </button>
+                      <div class="pcl-dropdown-menu" role="menu">
+                        <button type="button" class="pcl-dropdown-item" role="menuitem" data-row-action="view" data-product-slug="{{ product.slug }}" data-detail-url="{% url "product" product_slug=product.slug %}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>View Product</button>
+                        {% if product.is_featured %} 
+                        <button
+                            type="button"
+                            class="pcl-dropdown-item"
+                            role="menuitem"
+                            data-row-action="unfeature"
+                            data-product-slug="{{ product.slug }}"
+                            data-name="{{ product.name }}"
+                            data-status="{{ product.status }}"
+                        > 
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"> <path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path> </svg>
+                        Unfeature </button>
+                        {% else %} 
+                        <button
+                            type="button"
+                            class="pcl-dropdown-item"
+                            role="menuitem"
+                            data-row-action="feature"
+                            data-product-slug="{{ product.slug }}"
+                            data-name="{{ product.name }}"
+                            data-status="{{ product.status }}"
+                        > 
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"> <path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path> </svg>
+                        Feature </button>
+                        {% endif %}
+
+                        {% if product.status == 'hidden' %}
+                        <button type="button" class="pcl-dropdown-item" role="menuitem" data-row-action="unhide" data-product-slug="{{ product.slug }}" data-name="{{ product.name }}" data-status="{{ product.status }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>Unhide</button>
+                        {% else %}
+                        <button type="button" class="pcl-dropdown-item" role="menuitem" data-row-action="hide" data-product-slug="{{ product.slug }}" data-name="{{ product.name }}" data-status="{{ product.status }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>Hide</button>
+                        {% endif %}
+                        <div class="pcl-dropdown-divider" role="separator"></div>
+                        {% if product.status == "archived" %} <button
+                            type="button"
+                            class="pcl-dropdown-item"
+                            role="menuitem"
+                            data-row-action="unarchive"
+                            data-product-slug="{{ product.slug }}"
+                            data-name="{{ product.name }}"
+                            data-status="{{ product.status }}"
+                        > <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"> <polyline points="21 8 21 21 3 21 3 8"></polyline> <rect x="1" y="3" width="22" height="5"></rect> </svg>
+                        Unarchive </button>
+                        {% else %} <button
+                            type="button"
+                            class="pcl-dropdown-item"
+                            role="menuitem"
+                            data-row-action="archive"
+                            data-product-slug="{{ product.slug }}"
+                            data-name="{{ product.name }}"
+                            data-status="{{ product.status }}"
+                        > <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"> <polyline points="21 8 21 21 3 21 3 8"></polyline> <rect x="1" y="3" width="22" height="5"></rect> </svg>
+                        Archive </button>
+                        {% endif %}
+                        <button type="button" class="pcl-dropdown-item is-danger" role="menuitem" data-row-action="delete" data-product-name="Wireless Over-Ear Headphones" data-product-slug="{{ product.slug }}" data-name="{{ product.name }}" data-status="{{ product.status }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Delete</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+                <!-- ================= END PRODUCT ROWS ================= -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ================= 10. EMPTY STATE ================= -->
+          <div class="pcl-empty-state" id="pclEmptyState">
+            <div class="pcl-empty-illustration" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
+                <path d="M3 8v8l9 5 9-5V8"></path>
+                <path d="M12 13v8"></path>
+                <line x1="3.5" y1="20.5" x2="20.5" y2="3.5"></line>
+              </svg>
+            </div>
+            <h3 class="pcl-empty-title">No Products Found</h3>
+            <p class="pcl-empty-subtitle">We couldn't find any products matching your current search or filters.</p>
+            <button type="button" class="pcl-btn pcl-btn-primary" id="pclEmptyResetBtn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Reset Filters
+            </button>
+          </div>
+
+          <!-- ================= 8. PAGINATION ================= -->
+          {% if paginator.num_pages > 1 %}<div class="pcl-pagination-bar">
+            <div class="pcl-pagination-left">
+              <span class="pcl-pagination-count">Showing <strong>{{ page_obj.start_index }}&ndash;{{ page_obj.end_index }}</strong> of <strong id="pclTotalCount">{{ paginator.count }}</strong> Products</span>
+              <div class="pcl-select-wrap">
+                <select id="pclRowsPerPage" class="pcl-select" aria-label="Rows per page" style="min-width:110px; padding:7px 26px 7px 11px; font-size:12.5px;">
+                  <option value="6">6 / page</option>
+                  <option value="20">20 / page</option>
+                  <option value="50">50 / page</option>
+                  <option value="100">100 / page</option>
+                </select>
+              </div>
+            </div>
+
+            <nav class="pcl-pagination" aria-label="Products pagination" id="pclPaginationNav">
+              <a class="pcl-page-btn" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" {% if not page_obj.has_previous %}aria-disabled="true"{% endif %} aria-label="Previous page">‹</a>
+              {% for num in paginator.page_range %}<a class="pcl-page-btn {% if num == page_obj.number %}is-active{% endif %}" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={{ num }}" {% if num == page_obj.number %}aria-current="page"{% endif %}>{{ num }}</a>{% endfor %}<a class="pcl-page-btn" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}" {% if not page_obj.has_next %}aria-disabled="true"{% endif %} aria-label="Next page">›</a><!--
+              <button type="button" class="pcl-page-btn" disabled aria-label="Previous page">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"></path></svg>
+              </button>
+              <button type="button" class="pcl-page-btn is-active" aria-current="page">1</button>
+              <button type="button" class="pcl-page-btn">2</button>
+              <button type="button" class="pcl-page-btn">3</button>
+              <button type="button" class="pcl-page-btn">4</button>
+              <span class="pcl-page-ellipsis">&hellip;</span>
+              <button type="button" class="pcl-page-btn">475</button>
+              <button type="button" class="pcl-page-btn" aria-label="Next page">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"></path></svg>
+              </button>
+              </nav>-->
+
+            <div class="pcl-jump-wrap">
+              <label for="pclJumpInput">Go to</label>
+              <input type="number" id="pclJumpInput" class="pcl-jump-input" min="1" value="1" aria-label="Jump to page" />
+            </div>
+          </div>{% endif %}
+        </section>
+
+        <!-- ================= 11. FOOTER PANEL ================= -->
+        <section class="pcl-footer-panel pcl-reveal" aria-label="Marketplace inventory insights">
+          <div class="pcl-footer-card">
+            <div class="pcl-footer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            </div>
+            <div class="pcl-footer-text">
+              <strong>Inventory Health</strong>
+              <p>{{ published_percentage_catalog|floatformat:0}}% of your catalog is published and active. Review the {{ admin.pending_products }} products pending approval to keep the queue under 24 hours.</p>
+            </div>
+          </div>
+          <div class="pcl-footer-card">
+            <div class="pcl-footer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg>
+            </div>
+            <div class="pcl-footer-text">
+              <strong>Documentation</strong>
+              <p>Need a refresher on approval workflows and status definitions? <a href="#">Read the catalog guide</a>.</p>
+            </div>
+          </div>
+          <div class="pcl-footer-card">
+            <div class="pcl-footer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+            <div class="pcl-footer-text">
+              <strong>Need Help?</strong>
+              <p>Reach the platform team any time. <a href="#">Contact Support</a>.</p>
+            </div>
+          </div>
+          <div class="pcl-footer-card">
+            <div class="pcl-footer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+            <div class="pcl-footer-text">
+              <strong>Platform Updates</strong>
+              <p>Stay up to date with the latest features, enhancements, and bug fixes. <a href="#">View changelog</a>.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= 9. RIGHT SIDEBAR ================= -->
+      <aside class="pcl-sidebar">
+        <div class="pcl-card pcl-sidebar-card pcl-reveal" style="background-color:var(--pcl-surface-raised);border:1px solid var(--pcl-border);border-radius:var(--pcl-radius-md);box-shadow:var(--pcl-shadow-sm);">
+          <h3 class="pcl-sidebar-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Recently Added
+          </h3>
+          <div class="pcl-mini-list">
+            {% for product in recently_added_products %}
+            <div class="pcl-mini-row">
+              <span class="pcl-mini-thumb"><img src="{{ product.primary_image.image.url }}" alt=""></span>
+              <div class="pcl-mini-info"><strong>{{ product.name }}</strong><small>{{ product.seller.store_name }}</small></div>
+              <span class="pcl-mini-value">{{ product.created_at|timesince }} ago</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="pcl-card pcl-sidebar-card pcl-reveal" style="background-color:var(--pcl-surface-raised);border:1px solid var(--pcl-border);border-radius:var(--pcl-radius-md);box-shadow:var(--pcl-shadow-sm);">
+          <h3 class="pcl-sidebar-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>Pending Review Queue
+          </h3>
+          <div class="pcl-mini-list">
+            {% for product in pending_approval_products %}
+            <div class="pcl-mini-row">
+              <span class="pcl-mini-thumb"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></span>
+              <div class="pcl-mini-info"><strong>{{ product.name }}</strong><small>Waiting {{ product.created_at|timesince }}</small></div>
+              <span class="pcl-badge c-warning" style="flex:0 0 auto;">Pending</span>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="pcl-link-btn" style="margin-top:12px;" data-chip-jump="pending">
+            View all {{ admin.pending_products }} pending<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg>
+          </button>
+        </div>
+
+        <div class="pcl-card pcl-sidebar-card pcl-reveal" style="background-color:var(--pcl-surface-raised);border:1px solid var(--pcl-border);border-radius:var(--pcl-radius-md);box-shadow:var(--pcl-shadow-sm);">
+          <h3 class="pcl-sidebar-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4z"></path><path d="M4 12h10v4H4z"></path><path d="M4 20h6v0H4z"></path></svg>Top Categories
+          </h3>
+          {% for category in admin.top_selling_categories %}
+            <div class="pcl-cat-bar-row"><span>{{ category.name }}</span><div class="pcl-cat-bar"><span class="pcl-cat-bar-fill" style="width:{{ category.progress}}%;"></span></div><span>{{ category.progress }}%</span></div>
+          {% endfor %}
+        </div>
+
+        {% comment %} <div class="pcl-card pcl-sidebar-card pcl-reveal" style="background-color:var(--pcl-surface-raised);border:1px solid var(--pcl-border);border-radius:var(--pcl-radius-md);box-shadow:var(--pcl-shadow-sm);">
+          <h3 class="pcl-sidebar-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line></svg>Low Stock Alerts
+          </h3>
+          <div class="pcl-alert-row">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line></svg>
+            <div class="pcl-alert-text"><strong>Smart Watch Series 4</strong><small>Only 6 units left</small></div>
+          </div>
+          <div class="pcl-alert-row">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line></svg>
+            <div class="pcl-alert-text"><strong>Portable Blender</strong><small>Only 3 units left</small></div>
+          </div>
+        </div> {% endcomment %}
+
+        <div class="pcl-card pcl-sidebar-card pcl-sidebar-tip pcl-reveal" style="border:1px solid var(--pcl-accent-ring);border-radius:var(--pcl-radius-md);">
+          <h3 class="pcl-sidebar-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"></path></svg>Moderation Tips
+          </h3>
+          <ul class="pcl-tips-list">
+            <li>Review pending products daily to keep approval turnaround under 24 hours.</li>
+            <li>Feature products with strong ratings and healthy stock for homepage rotation.</li>
+            <li>Archive rather than delete when a listing may need historical reference.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ================= DELETE CONFIRMATION MODAL ================= -->
+  <div class="pcl-modal-overlay is-hidden" id="pclDeleteModalOverlay">
+    <div class="pcl-modal" role="dialog" aria-modal="true" aria-labelledby="pclDeleteModalTitle">
+      <div class="pcl-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+      </div>
+      <h3 class="pcl-modal-title" id="pclDeleteModalTitle">Delete this product?</h3>
+      <p class="pcl-modal-text" id="pclDeleteModalText">This action cannot be undone. The product will be permanently removed from the marketplace.</p>
+      <div class="pcl-modal-actions">
+        <button type="button" class="pcl-btn pcl-btn-secondary" id="pclDeleteModalCancel">Cancel</button>
+        <button type="button" class="pcl-btn pcl-btn-danger" id="pclDeleteModalConfirm">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="pcl-toast-container" id="pclToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static '/js/admin_products.js' %}"></script>
+{% endblock %}

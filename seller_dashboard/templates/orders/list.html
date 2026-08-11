@@ -325,7 +325,7 @@
                 </td>
               </tr>
             {% endfor %}
-            {% if dashboard_seller_orders.count == 0 %}
+      {% if paginator.count == 0 %}
               <div class="so-empty-state" id="soEmptyState">
                 <div class="so-empty-illustration" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -347,10 +347,15 @@
       <!-- Hidden by default — shown once Django reports zero orders for the active filters -->
 
       <!-- ================= 7. PAGINATION ================= -->
-      <div class="so-pagination-bar">
-        <span class="so-pagination-count">Showing <strong>1&ndash;10</strong> of <strong>248</strong> Orders</span>
+      {% if paginator.num_pages > 1 %}<div class="so-pagination-bar">
+        <span class="so-pagination-count">Showing <strong>{{ page_obj.start_index }}&ndash;{{ page_obj.end_index }}</strong> of <strong>{{ paginator.count }}</strong> Orders</span>
 
         <nav class="so-pagination" aria-label="Orders pagination">
+          <a class="so-page-btn" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" {% if not page_obj.has_previous %}aria-disabled="true"{% endif %} aria-label="Previous page">‹</a>
+          {% for num in paginator.page_range %}
+          <a class="so-page-btn {% if num == page_obj.number %}is-active{% endif %}" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={{ num }}" {% if num == page_obj.number %}aria-current="page"{% endif %}>{{ num }}</a>
+          {% endfor %}
+          <a class="so-page-btn" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}" {% if not page_obj.has_next %}aria-disabled="true"{% endif %} aria-label="Next page">›</a><!--
           <button type="button" class="so-page-btn" disabled aria-label="Previous page">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M15 18l-6-6 6-6"></path>
@@ -367,8 +372,8 @@
               <path d="M9 18l6-6-6-6"></path>
             </svg>
           </button>
-        </nav>
-      </div>
+          --></nav>
+      </div>{% endif %}
     </section>
   </div>
 

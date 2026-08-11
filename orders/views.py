@@ -6,6 +6,7 @@ from . import services as order_service
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
 
 from .invoice import generate_invoice
 from .shipping_label import generate_shipping_label
@@ -19,8 +20,17 @@ import json
 
 def orders(request):
     orders = order_service.get_user_orders(request.user)
+    paginator = Paginator(orders, 10)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
 
-    context = {"orders": orders}
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    context = {
+        "orders": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "pagination_query": query_params,
+    }
     return render(request, "orders.html", context)
 
 

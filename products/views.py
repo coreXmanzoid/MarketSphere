@@ -54,12 +54,15 @@ def search(request):
     filtered_products = services.sort_products(filtered_products, sort_value)
 
     paginator, page_obj = services.paginate_products(filtered_products, page_number)
+    pagination_query = request.GET.copy()
+    pagination_query.pop("page", None)
 
     context = {
         "q": q,
         "products": page_obj,  # Page objects support |length and iteration
         "page_obj": page_obj,
         "paginator": paginator,
+        "pagination_query": pagination_query,
         "categories": categories,
         "brands": brands,
         "wishlist_ids": (

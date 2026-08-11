@@ -7,9 +7,13 @@ from products.services import (
     delete_product_by_slug,
     save_draft,
     edit_product,
-    get_edit_product_by_slug
-)
-from orders.services import get_user_order_for_seller, update_order_status
+    get_edit_product_by_slug,
+    toggle_product_featured,
+    toggle_product_archive,
+    )
+from orders.services import get_user_order_for_seller, get_seller_orders, update_order_status
+from django.core.paginator import Paginator
+from products.models import Product
 import json
 # Create your views here.
 
@@ -24,7 +28,20 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 def products(request):
-    return render(request, "products/list.html")
+    seller = request.user.seller_profile
+    products_qs = Product.objects.filter(seller=seller).select_related(
+        "category", "brand"
+    ).prefetch_related("images").order_by("-created_at")
+    paginator = Paginator(products_qs, 8)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    return render(request, "products/list.html", {
+        "dashboard_seller_products": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "pagination_query": query_params,
+    })
 
 
 from django.http import JsonResponse
@@ -106,7 +123,7 @@ def hide_product(request):
     try:
         data = json.loads(request.body)
         product_slug = data.get("productSlug")
-        hide_product_by_slug(product_slug, request.user.seller_profile)
+        hide_product_by_slug(product_slug)
         return JsonResponse(
             {
                 "status": "success",
@@ -124,7 +141,7 @@ def unhide_product(request):
     try:
         data = json.loads(request.body)
         product_slug = data.get("productSlug")
-        unhide_product_by_slug(product_slug, request.user.seller_profile)
+        unhide_product_by_slug(product_slug)
         return JsonResponse(
             {
                 "status": "success",
@@ -143,7 +160,6 @@ def delete_product(request):
     product_slug = data.get("productSlug")
     result = delete_product_by_slug(
         product_slug,
-        request.user.seller_profile,
     )
     print(result)
 
@@ -169,8 +185,169 @@ def delete_product(request):
     )
 
 
+
+
+def toggle_product_featured_view(request):
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Invalid request data.",
+            },
+            status=400,
+        )
+
+    product_slug = data.get("productSlug")
+    action = data.get("action")
+
+    if not product_slug:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Product slug is required.",
+            },
+            status=400,
+        )
+
+    if action not in {"feature", "unfeature"}:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Invalid featured action.",
+            },
+            status=400,
+        )
+
+    try:
+        seller = request.user.seller_profile
+    except AttributeError:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Seller profile not found.",
+            },
+            status=403,
+        )
+
+    result = toggle_product_featured(
+        product_slug=product_slug,
+        action=action,
+    )
+
+    if not result["success"]:
+        status_code = (
+            404
+            if result["error"] == "not_found"
+            else 400
+        )
+
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": result["message"],
+            },
+            status=status_code,
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "featured": result["featured"],
+            "changed": result["changed"],
+            "message": result["message"],
+        }
+    )
+
+
+
+def toggle_product_archive_view(request):
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Invalid request data.",
+            },
+            status=400,
+        )
+
+    product_slug = data.get("productSlug")
+    action = data.get("action")
+
+    if not product_slug:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Product slug is required.",
+            },
+            status=400,
+        )
+
+    if action not in {"archive", "unarchive"}:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Invalid archive action.",
+            },
+            status=400,
+        )
+
+    try:
+        seller = request.user.seller_profile
+    except AttributeError:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Seller profile not found.",
+            },
+            status=403,
+        )
+
+    result = toggle_product_archive(
+        product_slug=product_slug,
+        seller=seller,
+        action=action,
+    )
+
+    if not result["success"]:
+        status_code = (
+            404
+            if result["error"] == "not_found"
+            else 400
+        )
+
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": result["message"],
+            },
+            status=status_code,
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "archived": result["archived"],
+            "changed": result["changed"],
+            "message": result["message"],
+        }
+    )
+
 def orders(request):
-    return render(request, "orders/list.html")
+    seller_orders = get_seller_orders(request.user.seller_profile)
+    paginator = Paginator(seller_orders, 10)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    return render(request, "orders/list.html", {
+        "dashboard_seller_orders": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "pagination_query": query_params,
+    })
 
 def order_detail(request, order_no):
     order = get_user_order_for_seller(request.user.seller_profile, order_no)
@@ -191,6 +368,8 @@ def update_user_order_status(request, order_no, status):
     })
 
 
+from accounts.services import get_seller_application_documents
 def dashboard_settings(request):
     seller = request.user.seller_profile
-    return render(request, "settings.html", {"seller": seller})
+    documents = get_seller_application_documents(seller)
+    return render(request, "settings.html", {"seller": seller, "documents": documents})

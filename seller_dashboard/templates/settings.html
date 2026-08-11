@@ -75,6 +75,15 @@
             </a>
           </li>
           <li>
+            <a href="#documents" class="se-nav-link" data-se-nav="documents" role="tab" aria-selected="false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-person" viewBox="0 0 16 16">
+                <path d="M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2v9.255S12 12 8 12s-5 1.755-5 1.755V2a1 1 0 0 1 1-1h5.5z"/>
+              </svg>
+              <span>Documents</span>
+            </a>
+          </li>
+          <li>
             <a href="#security" class="se-nav-link" data-se-nav="security" role="tab" aria-selected="false">
               <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
@@ -391,6 +400,674 @@
           </div>
         </section>
 
+        <section class="se-card se-reveal" id="documents" data-se-section tabindex="-1">
+          <div class="se-card">
+            <div class="se-card-head">
+              <h2 class="se-card-title"><i class="bi bi-file-earmark-text"></i> Application Documents</h2>
+            </div>
+
+            <div class="se-documents-grid">
+              <!-- Document 1: CNIC Front -->
+            <div class="se-document-card"
+              data-document-type="cnic_front"
+              {% if documents.cnic_front and documents.cnic_front.file %}
+              data-file-url="{{ documents.cnic_front.file.url }}"
+              data-file-name="{{ documents.cnic_front.file.name }}"
+              {% endif %}>
+
+              <div class="se-document-header">
+                  <h3 class="se-document-title">CNIC Front</h3>
+
+                  {% if documents.cnic_front %}
+
+                      {% if documents.cnic_front.verified %}
+                          <span class="se-document-status verified">
+                              <i class="bi bi-check-circle-fill"></i>
+                              Verified
+                          </span>
+
+                      {% elif documents.cnic_front.verification_note %}
+                          <span class="se-document-status rejected">
+                              <i class="bi bi-exclamation-triangle-fill"></i>
+                              Changes Requested
+                          </span>
+
+                      {% else %}
+                          <span class="se-document-status pending">
+                              <i class="bi bi-hourglass-split"></i>
+                              Pending Review
+                          </span>
+                      {% endif %}
+
+                  {% else %}
+                      <span class="se-document-status missing">
+                          <i class="bi bi-exclamation-circle-fill"></i>
+                          Not Uploaded
+                      </span>
+                  {% endif %}
+              </div>
+
+              <div class="se-document-preview">
+
+                  {% if documents.cnic_front %}
+
+                      {% if documents.cnic_front.is_image %}
+                          <img class="se-document-image"
+                              src="{{ documents.cnic_front.file.url }}"
+                              alt="CNIC Front">
+                      {% else %}
+                          <div class="se-document-pdf">
+                              <i class="bi bi-file-earmark-pdf-fill se-doc-icon"></i>
+                              <span class="se-document-file-name">
+                                  {{ documents.cnic_front.file.name }}
+                              </span>
+                          </div>
+                      {% endif %}
+
+                  {% else %}
+
+                      <div class="se-document-empty">
+                          <i class="bi bi-cloud-arrow-up"></i>
+                          <span class="se-document-empty-text">
+                              No Document Uploaded
+                          </span>
+                          <span class="se-document-empty-helper">
+                              Upload a clear copy of this document.
+                          </span>
+                      </div>
+
+                  {% endif %}
+
+              </div>
+
+              {% if documents.cnic_front and documents.cnic_front.verification_note %}
+                <div class="se-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="se-document-feedback-message">
+                        {{ documents.cnic_front.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+              {% endif %}
+
+              <div class="se-document-meta">
+
+                  <span class="se-document-meta-label">
+                      {% if documents.cnic_front and documents.cnic_front.verification_note %}
+                          Last Upload:
+                      {% else %}
+                          Uploaded:
+                      {% endif %}
+                  </span>
+
+                  <span class="se-document-meta-value uploaded-date">
+                      {{ documents.cnic_front.uploaded_at|date:"M j, Y"|default:"—" }}
+                  </span>
+
+              </div>
+
+              <div class="se-document-actions">
+
+                  {% if documents.cnic_front %}
+
+                      <button type="button" class="btn se-edit-btn se-view-document">
+                          <i class="bi bi-eye"></i>
+                          View
+                      </button>
+
+                          <button type="button"
+                                  class="btn btn-hero-primary se-change-document">
+                              <i class="bi bi-arrow-repeat"></i>
+                              Update
+                          </button>
+                  {% else %}
+
+                      <button type="button"
+                              class="btn btn-hero-primary se-upload-document w-100">
+                          <i class="bi bi-upload"></i>
+                          Upload Document
+                      </button>
+
+                  {% endif %}
+
+              </div>
+
+            </div>
+
+           <!-- Document 2: CNIC Back -->
+            <div class="se-document-card"
+                data-document-type="cnic_back"
+                {% if documents.cnic_back and documents.cnic_back.file %}
+                data-file-url="{{ documents.cnic_back.file.url }}"
+                data-file-name="{{ documents.cnic_back.file.name }}"
+                {% endif %}>
+
+                <div class="se-document-header">
+                    <h3 class="se-document-title">CNIC Back</h3>
+
+                    {% if documents.cnic_back %}
+
+                        {% if documents.cnic_back.verified %}
+                            <span class="se-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.cnic_back.verification_note %}
+                            <span class="se-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="se-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="se-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="se-document-preview">
+                    {% if documents.cnic_back %}
+                        {% if documents.cnic_back.is_image %}
+                            <img
+                                class="se-document-image"
+                                src="{{ documents.cnic_back.file.url }}"
+                                alt="CNIC Back">
+                        {% else %}
+                            <div class="se-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill se-doc-icon"></i>
+                                <span class="se-document-file-name">
+                                    {{ documents.cnic_back.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="se-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="se-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="se-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.cnic_back and documents.cnic_back.verification_note %}
+                <div class="se-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="se-document-feedback-message">
+                        {{ documents.cnic_back.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="se-document-meta">
+                    <span class="se-document-meta-label">Uploaded:</span>
+                    <span class="se-document-meta-value uploaded-date">
+                        {{ documents.cnic_back.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="se-document-actions">
+                    {% if documents.cnic_back %}
+                        <button type="button" class="btn se-edit-btn se-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary se-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary se-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+              <!-- Document 3: Business Registration Certificate -->
+            <div class="se-document-card"
+                data-document-type="business_certificate"
+                {% if documents.business_certificate and documents.business_certificate.file %}
+                data-file-url="{{ documents.business_certificate.file.url }}"
+                data-file-name="{{ documents.business_certificate.file.name }}"
+                {% endif %}>
+
+                <div class="se-document-header">
+                    <h3 class="se-document-title">Business Certificate</h3>
+
+                    {% if documents.business_certificate %}
+
+                        {% if documents.business_certificate.verified %}
+                            <span class="se-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.business_certificate.verification_note %}
+                            <span class="se-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="se-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="se-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="se-document-preview">
+                    {% if documents.business_certificate %}
+                        {% if documents.business_certificate.is_image %}
+                            <img
+                                class="se-document-image"
+                                src="{{ documents.business_certificate.file.url }}"
+                                alt="Business Certificate">
+                        {% else %}
+                            <div class="se-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill se-doc-icon"></i>
+                                <span class="se-document-file-name">
+                                    {{ documents.business_certificate.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="se-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="se-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="se-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.business_certificate and documents.business_certificate.verification_note %}
+                <div class="se-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="se-document-feedback-message">
+                        {{ documents.business_certificate.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="se-document-meta">
+                    <span class="se-document-meta-label">Uploaded:</span>
+                    <span class="se-document-meta-value uploaded-date">
+                        {{ documents.business_certificate.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="se-document-actions">
+                    {% if documents.business_certificate %}
+                        <button type="button" class="btn se-edit-btn se-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary se-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary se-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+
+
+            <!-- Document 4: NTN Certificate -->
+            <div class="se-document-card"
+                data-document-type="ntn"
+                {% if documents.ntn and documents.ntn.file %}
+                data-file-url="{{ documents.ntn.file.url }}"
+                data-file-name="{{ documents.ntn.file.name }}"
+                {% endif %}>
+
+                <div class="se-document-header">
+                    <h3 class="se-document-title">NTN Certificate</h3>
+
+                    {% if documents.ntn %}
+
+                        {% if documents.ntn.verified %}
+                            <span class="se-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.ntn.verification_note %}
+                            <span class="se-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="se-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="se-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="se-document-preview">
+                    {% if documents.ntn %}
+                        {% if documents.ntn.is_image %}
+                            <img
+                                class="se-document-image"
+                                src="{{ documents.ntn.file.url }}"
+                                alt="NTN Certificate">
+                        {% else %}
+                            <div class="se-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill se-doc-icon"></i>
+                                <span class="se-document-file-name">
+                                    {{ documents.ntn.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="se-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="se-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="se-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.ntn and documents.ntn.verification_note %}
+                <div class="se-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="se-document-feedback-message">
+                        {{ documents.ntn.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="se-document-meta">
+                    <span class="se-document-meta-label">Uploaded:</span>
+                    <span class="se-document-meta-value uploaded-date">
+                        {{ documents.ntn.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="se-document-actions">
+                    {% if documents.ntn %}
+                        <button type="button" class="btn se-edit-btn se-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary se-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary se-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+
+
+            <!-- Document 5: Bank Statement -->
+            <div class="se-document-card"
+                data-document-type="bank_statement"
+                {% if documents.bank_statement and documents.bank_statement.file %}
+                data-file-url="{{ documents.bank_statement.file.url }}"
+                data-file-name="{{ documents.bank_statement.file.name }}"
+                {% endif %}>
+
+                <div class="se-document-header">
+                    <h3 class="se-document-title">Bank Statement</h3>
+
+                    {% if documents.bank_statement %}
+
+                        {% if documents.bank_statement.verified %}
+                            <span class="se-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.bank_statement.verification_note %}
+                            <span class="se-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="se-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="se-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="se-document-preview">
+                    {% if documents.bank_statement %}
+                        {% if documents.bank_statement.is_image %}
+                            <img
+                                class="se-document-image"
+                                src="{{ documents.bank_statement.file.url }}"
+                                alt="Bank Statement">
+                        {% else %}
+                            <div class="se-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill se-doc-icon"></i>
+                                <span class="se-document-file-name">
+                                    {{ documents.bank_statement.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="se-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="se-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="se-document-empty-helper">
+                                Upload a clear copy of this document.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.bank_statement and documents.bank_statement.verification_note %}
+                <div class="se-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="se-document-feedback-message">
+                        {{ documents.bank_statement.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="se-document-meta">
+                    <span class="se-document-meta-label">Uploaded:</span>
+                    <span class="se-document-meta-value uploaded-date">
+                        {{ documents.bank_statement.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="se-document-actions">
+                    {% if documents.bank_statement %}
+                        <button type="button" class="btn se-edit-btn se-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary se-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary se-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+
+              <!-- Document 6: Store Photo -->
+            <div class="se-document-card"
+                data-document-type="store_photo"
+                {% if documents.store_photo and documents.store_photo.file %}
+                data-file-url="{{ documents.store_photo.file.url }}"
+                data-file-name="{{ documents.store_photo.file.name }}"
+                {% endif %}>
+
+                <div class="se-document-header">
+                    <h3 class="se-document-title">Store Photo</h3>
+
+                    {% if documents.store_photo %}
+
+                        {% if documents.store_photo.verified %}
+                            <span class="se-document-status verified">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Verified
+                            </span>
+
+                        {% elif documents.store_photo.verification_note %}
+                            <span class="se-document-status rejected">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Changes Requested
+                            </span>
+
+                        {% else %}
+                            <span class="se-document-status pending">
+                                <i class="bi bi-hourglass-split"></i>
+                                Pending Review
+                            </span>
+                        {% endif %}
+
+                    {% else %}
+                        <span class="se-document-status missing">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="se-document-preview">
+                    {% if documents.store_photo %}
+                        {% if documents.store_photo.is_image %}
+                            <img
+                                class="se-document-image"
+                                src="{{ documents.store_photo.file.url }}"
+                                alt="Store Photo">
+                        {% else %}
+                            <div class="se-document-pdf">
+                                <i class="bi bi-file-earmark-pdf-fill se-doc-icon"></i>
+                                <span class="se-document-file-name">
+                                    {{ documents.store_photo.file.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="se-document-empty">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="se-document-empty-text">
+                                No Document Uploaded
+                            </span>
+                            <span class="se-document-empty-helper">
+                                Upload a clear photo of your physical store.
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if documents.store_photo and documents.store_photo.verification_note %}
+                <div class="se-document-feedback">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <p class="se-document-feedback-message">
+                        {{ documents.store_photo.verification_note|linebreaksbr }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="se-document-meta">
+                    <span class="se-document-meta-label">Uploaded:</span>
+                    <span class="se-document-meta-value uploaded-date">
+                        {{ documents.store_photo.uploaded_at|date:"M j, Y"|default:"—" }}
+                    </span>
+                </div>
+
+                <div class="se-document-actions">
+                    {% if documents.store_photo %}
+                        <button type="button" class="btn se-edit-btn se-view-document">
+                            <i class="bi bi-eye"></i>
+                            View
+                        </button>
+
+                        <button type="button" class="btn btn-hero-primary se-change-document">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Update
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-hero-primary se-upload-document w-100">
+                            <i class="bi bi-upload"></i>
+                            Upload Document
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            </div>
+          </div>
+
+        </section>
+
         <!-- ============ SECTION 5: SECURITY ============ -->
         <section class="se-card se-reveal" id="security" data-se-section tabindex="-1">
           <div class="se-card-head">
@@ -504,5 +1181,6 @@
 {% endblock %}
 
 {% block js %}
+  <script src="{% static '/js/seller_account.js' %}"></script>
   <script src="{% static '/js/settings.js' %}"></script>
 {% endblock %}

@@ -114,7 +114,7 @@ def admin_context(request):
     products_change = _calculate_change(current_month_products, previous_month_products)
 
     # BUG IDENTIFIED: Querying Seller model but using Product.Status.PENDING
-    pending_products = Seller.objects.filter(status=Product.Status.PENDING).count()
+    pending_products = Product.objects.filter(status=Product.Status.PENDING).count()
     low_stock_products = Product.objects.filter(stock_quantity__lte=20).count()
 
     top_selling_categories = (

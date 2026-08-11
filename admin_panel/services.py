@@ -789,6 +789,65 @@ def get_pending_seller(seller_id):
         "business_address": business_address,
     }
 
+
+def get_products_catalog():
+    published_products = Product.objects.filter(
+        status=Product.Status.PUBLISHED,
+    ).count()
+
+    total_prodcuts = Product.objects.all().count()
+
+    published_percentage_catalog = (
+        round((published_products / total_prodcuts) * 100, 1)
+        if total_prodcuts
+        else 0
+    )
+
+    hidden_products = Product.objects.filter(
+        status=Product.Status.HIDDEN,
+    ).count()
+
+    out_of_stock_products = Product.objects.filter(
+        Q(status=Product.Status.OUT_OF_STOCK) | Q(stock_quantity=0)
+    ).count()
+
+    featured_products = Product.objects.filter(is_featured=True).count()
+
+    archived_products = Product.objects.filter(status=Product.Status.ARCHIVED).count()
+
+    drafted_products = Product.objects.filter(status=Product.Status.DRAFT).count()
+ 
+    products = Product.objects.all().annotate(
+        total_orders =Coalesce(
+            Sum(
+                "order_items__quantity",
+                filter=Q(
+                    order_items__seller_order__status=SellerOrder.Status.DELIVERED
+                ),
+            ),
+            0,
+        )
+    )
+
+    recently_added_products = products.order_by("-created_at")[:10]
+
+    pending_approval_products = products.filter(status=Product.Status.PENDING)
+
+    return {
+        "published_products": published_products,
+        "total_products": total_prodcuts,
+        "published_percentage_catalog": published_percentage_catalog,
+        "hidden_products": hidden_products,
+        "out_of_stock_products": out_of_stock_products,
+        "featured_products": featured_products,
+        "archived_products": archived_products,
+        "drafted_products": drafted_products,
+        "products": products,
+        "recently_added_products": recently_added_products,
+        "pending_approval_products": pending_approval_products,
+    }
+
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string

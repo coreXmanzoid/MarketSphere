@@ -8,6 +8,7 @@ from accounts import services as account_services
 from accounts.models import User, Address
 from orders.models import Order
 from django.contrib import messages
+from django.core.paginator import Paginator
 
 # Create your views here.
 def dashboard(request):
@@ -29,9 +30,16 @@ def user_buyers(request):
             Decimal("0.00"),
         )
     )
-    return render(
-        request, "user_management/buyer/buyers.html", {"buyers": total_buyers}
-    )
+    paginator = Paginator(total_buyers.order_by("-date_joined"), 8)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    return render(request, "user_management/buyer/buyers.html", {
+        "buyers": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "pagination_query": query_params,
+    })
 
 
 def user_buyer(request, userId):
@@ -46,14 +54,38 @@ def user_buyer(request, userId):
 
 def user_sellers(request):
     total_sellers = account_services.get_all_sellers()
+    paginator = Paginator(total_sellers.order_by("-created_at"), 8)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
 
     return render(
-        request, "user_management/seller/seller.html", {"sellers": total_sellers}
+        request, "user_management/seller/seller.html", {
+            "sellers": page_obj,
+            "page_obj": page_obj,
+            "paginator": paginator,
+            "pagination_query": query_params,
+        }
     )
 
 def user_seller(request, sellerId):
     context = services.get_seller_detail(sellerId)
     return render(request, "user_management/seller/detail.html", context)
+
+def catalog_products(request):
+    context = services.get_products_catalog()
+    paginator = Paginator(context["products"].order_by("-created_at"), 6)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    context.update({
+        "products": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "pagination_query": query_params,
+    })
+    return render(request, "catalog/products_management/products.html", context=context)
+
 
 def seller_application(request, sellerId):
     context = services.get_pending_seller(sellerId)

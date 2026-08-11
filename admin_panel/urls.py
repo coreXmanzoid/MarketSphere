@@ -13,6 +13,7 @@ urlpatterns = [
         views.seller_application,
         name="seller-application",
     ),
+    path("catalog/products/", views.catalog_products, name="catalog-products"),
     path("change-account-state/", views.change_state, name="change-account-state"),
     path(
         "user/buyers/<int:user_id>/reset-password/",

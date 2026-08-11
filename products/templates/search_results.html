@@ -284,13 +284,14 @@ Search Results • MarketSphere
         </div>
 
         <!-- ================= PAGINATION ================= -->
+{% if paginator.num_pages > 1 %}
 <nav aria-label="Search results pagination" class="search-pagination-wrap">
     <ul class="pagination justify-content-center">
 
         <!-- Previous -->
         <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
             <a class="page-link"
-               href="#"
+               href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}"
                data-page="{% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}"
                {% if not page_obj.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}>
                 <i class="bi bi-chevron-left"></i> Previous
@@ -301,7 +302,7 @@ Search Results • MarketSphere
         {% for num in paginator.page_range %}
         <li class="page-item {% if num == page_obj.number %}active{% endif %}">
             <a class="page-link"
-               href="#"
+               href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={{ num }}"
                data-page="{{ num }}">
                 {{ num }}
             </a>
@@ -311,7 +312,7 @@ Search Results • MarketSphere
         <!-- Next -->
         <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
             <a class="page-link"
-               href="#"
+               href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}"
                data-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}"
                {% if not page_obj.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>
                 Next <i class="bi bi-chevron-right"></i>
@@ -320,6 +321,7 @@ Search Results • MarketSphere
 
     </ul>
 </nav>
+{% endif %}
       </div>
     </div>
   </div>

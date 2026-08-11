@@ -334,7 +334,7 @@
 
       <!-- ================= 8. EMPTY STATE ================= -->
       <!-- Hidden by default — shown once Django reports zero products for the active filters -->
-      {% if dashboard_seller_products.count == 0 %}
+      {% if paginator.count == 0 %}
         <div class="pm-empty-state" id="pmEmptyState">
           <div class="pm-empty-illustration" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -356,10 +356,15 @@
       {% endif %}
 
       <!-- ================= 7. PAGINATION ================= -->
-      <div class="pm-pagination-bar">
-        <span class="pm-pagination-count">Showing <strong>1–8</strong> of <strong>{{ dashboard_total_products }}</strong> products</span>
+      {% if paginator.num_pages > 1 %}<div class="pm-pagination-bar">
+        <span class="pm-pagination-count">Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of <strong>{{ paginator.count }}</strong> products</span>
 
         <nav class="pm-pagination" aria-label="Products pagination">
+          <a class="pm-page-btn" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" {% if not page_obj.has_previous %}aria-disabled="true"{% endif %} aria-label="Previous page">‹</a>
+          {% for num in paginator.page_range %}
+          <a class="pm-page-btn {% if num == page_obj.number %}is-active{% endif %}" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={{ num }}" {% if num == page_obj.number %}aria-current="page"{% endif %}>{{ num }}</a>
+          {% endfor %}
+          <a class="pm-page-btn" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}" {% if not page_obj.has_next %}aria-disabled="true"{% endif %} aria-label="Next page">›</a><!--
           <button type="button" class="pm-page-btn" disabled aria-label="Previous page">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M15 18l-6-6 6-6"></path>
@@ -376,8 +381,8 @@
               <path d="M9 18l6-6-6-6"></path>
             </svg>
           </button>
-        </nav>
-      </div>
+          --></nav>
+      </div>{% endif %}
     </section>
   </div>
 
