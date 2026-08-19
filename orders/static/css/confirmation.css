@@ -16,7 +16,10 @@
     --cf-warning: #b7802b;
     --cf-danger: #b54b3b;
 }
-
+.btn-hero-primary{
+    border-radius: 2px;
+    border-width: 1.5px !important;
+}
 /* ================= BREADCRUMB ================= */
 .cf-breadcrumb-wrap {
     padding: 18px 0 6px;

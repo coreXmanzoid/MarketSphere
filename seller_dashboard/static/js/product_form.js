@@ -921,6 +921,7 @@ let deletedImageIds = [];
 
                     if (response.ok && result.success) {
                         console.log(result);
+                        showToast("Product has been sent successfully for admin approval.", "success");
                         simulateSave(btn, "Product published");
                     } else {
                         console.error(result);

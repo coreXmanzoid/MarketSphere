@@ -35,13 +35,24 @@ def search(request):
     discount_only = request.GET.get("discount") == "1"
     sort_value = request.GET.get("sort", "newest")
     page_number = request.GET.get("page", 1)
-
+    
     # Base set: query only. Sidebar options are computed from THIS,
     # so the sidebar doesn't shrink as filters are applied.
     base_products = services.get_search_products(q)
+    featured = request.GET.get("featured") == "1"
+    new_arrivals = request.GET.get("new_arrivals") == "1"
+    if featured:
+        base_products = base_products.filter(is_featured=True)
+        q="Featured Products"
+    if new_arrivals:
+        base_products = base_products.order_by("-created_at")
+        q="New Arrivals"
+
+    if q == "":
+        q = category_slugs[0] or brand_slugs[0] or max_price or availability or sort_value
+
     categories = services.get_search_categories(base_products)
     brands = services.get_search_brands(base_products)
-
     # Full set: query + every active filter, for the actual grid.
     filtered_products = services.filter_products(
         base_products,
@@ -145,6 +156,43 @@ def product(request, product_slug):
     }
     return render(request, "product_details.html", context)
 
+from django.core.exceptions import PermissionDenied
+
+from products.models import Product
+from .product_pdf import export_product_report
+from django.shortcuts import get_object_or_404
+
+@login_required
+def export_product_pdf(request, slug):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    product = get_object_or_404(
+        Product.objects.select_related(
+            "category",
+            "brand",
+            "seller",
+        ).prefetch_related(
+            "images",
+            "order_items__seller_order__order",
+        ),
+        slug=slug,
+    )
+
+    return export_product_report(
+        product=product,
+        admin_user=request.user,
+    )
+
+
+
+def export_product_orders_view(request, slug):
+    product = get_object_or_404(
+        Product.objects.select_related("seller", "category", "brand"),
+        slug=slug,
+    )
+
+    return services.export_product_orders(product)
 
 @login_required
 def wishlist(request):

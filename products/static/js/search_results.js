@@ -76,6 +76,11 @@
         dom.noResultsSection = document.getElementById('noResultsSection');
         dom.resultsCountEl = document.querySelector('.results-count strong');
         dom.queryLabelEl = document.querySelector('.results-count .fs-6');
+        dom.breadcrumbQueryEl = document.querySelector('.pd-breadcrumb-wrap .breadcrumb-item.active');
+        dom.categoryFilters = document.getElementById('category-filters');
+        dom.mobileCategoryFilters = document.getElementById('mobile-category-filters');
+        dom.brandFilters = document.getElementById('brand-filters');
+        dom.mobileBrandFilters = document.getElementById('mobile-brand-filters');
         dom.sortSelect = document.getElementById('sortBy');
         dom.priceSliderDesktop = document.getElementById('priceRange');
         dom.priceSliderMobile = document.getElementById('priceRangeMobile');
@@ -84,6 +89,7 @@
         dom.clearFiltersDesktop = document.getElementById('clearFiltersDesktop');
         dom.clearFiltersMobile = document.getElementById('clearFiltersMobile');
         dom.paginationList = document.querySelector('.search-pagination-wrap .pagination');
+        dom.paginationWrap = document.querySelector('.search-pagination-wrap');
         dom.backToTopBtn = document.getElementById('backToTopBtn');
         dom.headerSearchInput = document.querySelector('.site-header input[name="q"]');
         dom.headerSearchForm = dom.headerSearchInput ? dom.headerSearchInput.closest('form') : null;
@@ -368,6 +374,10 @@
                 ? data.count
                 : (Array.isArray(data.products) ? data.products.length : null),
             paginationHTML: data.pagination_html || null,
+            categoryHTML: data.category_html || null,
+            mobileCategoryHTML: data.mobile_category_html || null,
+            brandHTML: data.brand_html || null,
+            mobileBrandHTML: data.mobile_brand_html || null,
             currentPage: data.page || state.page,
             totalPages: data.num_pages || null,
             hasResults: productsHTML.trim().length > 0
@@ -379,11 +389,21 @@
         const newGrid = doc.getElementById('searchResultsGrid');
         const newCountEl = doc.querySelector('.results-count strong');
         const newPaginationList = doc.querySelector('.search-pagination-wrap .pagination');
+        const newPaginationWrap = doc.querySelector('.search-pagination-wrap');
+        const newCategoryFilters = doc.getElementById('category-filters');
+        const newMobileCategoryFilters = doc.getElementById('mobile-category-filters');
+        const newBrandFilters = doc.getElementById('brand-filters');
+        const newMobileBrandFilters = doc.getElementById('mobile-brand-filters');
 
         return {
             productsHTML: newGrid ? newGrid.innerHTML : '',
             count: newCountEl ? (parseInt(newCountEl.textContent, 10) || 0) : null,
             paginationHTML: newPaginationList ? newPaginationList.innerHTML : null,
+            categoryHTML: newCategoryFilters ? newCategoryFilters.innerHTML : null,
+            mobileCategoryHTML: newMobileCategoryFilters ? newMobileCategoryFilters.innerHTML : null,
+            brandHTML: newBrandFilters ? newBrandFilters.innerHTML : null,
+            mobileBrandHTML: newMobileBrandFilters ? newMobileBrandFilters.innerHTML : null,
+            hasPagination: !!newPaginationWrap && !newPaginationWrap.classList.contains('d-none'),
             currentPage: state.page,
             totalPages: null,
             hasResults: !!(newGrid && newGrid.children.length > 0)
@@ -476,6 +496,9 @@
         if (dom.queryLabelEl) {
             dom.queryLabelEl.textContent = '"' + (state.q || '') + '"';
         }
+        if (dom.breadcrumbQueryEl) {
+            dom.breadcrumbQueryEl.textContent = state.q || 'Search results';
+        }
     }
 
     function updateProducts(payload) {
@@ -493,6 +516,20 @@
 
         if (!dom.grid) return;
         animateLeaveAll(oldItems, applySwap);
+    }
+
+    function updateDynamicFilters(payload) {
+        [
+            [dom.categoryFilters, payload.categoryHTML],
+            [dom.mobileCategoryFilters, payload.mobileCategoryHTML],
+            [dom.brandFilters, payload.brandHTML],
+            [dom.mobileBrandFilters, payload.mobileBrandHTML]
+        ].forEach(function (entry) {
+            if (entry[0] && entry[1] != null) entry[0].innerHTML = entry[1];
+        });
+
+        // Re-apply active selections to the newly-rendered checkbox elements.
+        applyStateToUI();
     }
 
     /* =====================================================================
@@ -554,6 +591,7 @@
             const payload = await parseResponse(response);
 
             updateProducts(payload);
+            updateDynamicFilters(payload);
             updateCounts(payload);
             updatePagination(payload);
 
@@ -612,11 +650,18 @@
 
         if (payload.paginationHTML != null) {
             dom.paginationList.innerHTML = payload.paginationHTML;
+            if (dom.paginationWrap) {
+                dom.paginationWrap.classList.toggle('d-none', payload.hasPagination === false);
+            }
             return;
         }
 
         if (payload.totalPages) {
             dom.paginationList.innerHTML = buildPaginationMarkup(payload.currentPage || state.page, payload.totalPages);
+            if (dom.paginationWrap) dom.paginationWrap.classList.remove('d-none');
+        } else {
+            dom.paginationList.innerHTML = '';
+            if (dom.paginationWrap) dom.paginationWrap.classList.add('d-none');
         }
     }
 
@@ -800,12 +845,16 @@
         dom.headerSearchForm.addEventListener('submit', function (e) {
             e.preventDefault();
             state.q = dom.headerSearchInput.value.trim();
+            state.categories = [];
+            state.brands = [];
             state.page = 1;
             loadProducts({ pushHistory: true, scroll: false });
         });
 
         dom.headerSearchInput.addEventListener('input', debounce(function () {
             state.q = dom.headerSearchInput.value.trim();
+            state.categories = [];
+            state.brands = [];
             state.page = 1;
             loadProducts({ pushHistory: true, scroll: false });
         }, CONFIG.DEBOUNCE_MS.search));

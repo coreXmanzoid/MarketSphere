@@ -67,4 +67,14 @@ urlpatterns = [
         views.search_categories,
         name="search_categories",
     ),
+    path(
+        "products/<slug:slug>/export-pdf/",
+        views.export_product_pdf,
+        name="product_export_pdf",
+    ),
+    path(
+        "products/<slug:slug>/export-orders/",
+        views.export_product_orders_view,
+        name="export_product_orders",
+    ),
 ]

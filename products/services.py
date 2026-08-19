@@ -175,7 +175,7 @@ def create_product(user, post_data, files):
         stock_quantity=post_data["stock_quantity"],
         min_stock_level=post_data["min_stock_level"],
         weight=nullable(post_data.get("weight")),
-        status=Product.Status.PUBLISHED,
+        status=Product.Status.PENDING,
         is_featured=post_data.get("is_featured") == "true",
     )
 
@@ -448,10 +448,12 @@ def sort_products(products, sort_value):
     return products.order_by("-created_at")  # "newest" / default
 
 
-def hide_product_by_slug(product_slug):
+def hide_product_by_slug(product_slug, reason=None):
     product = Product.objects.get(slug=product_slug)
     product.status = Product.Status.HIDDEN
-    product.save(update_fields=["status"])
+    if reason:
+        product.admin_notes = reason
+    product.save(update_fields=["status", "admin_notes"])
 
 
 def unhide_product_by_slug(product_slug):
@@ -459,6 +461,22 @@ def unhide_product_by_slug(product_slug):
     product.status = Product.Status.PUBLISHED
     product.save(update_fields=["status"])
 
+def reject_product(product_slug, admin_note=""):
+    product = get_product_by_slug(product_slug)
+
+    product.is_approved = False
+    product.status = Product.Status.REJECTED
+    product.admin_notes = admin_note
+
+    product.save(
+        update_fields=[
+            "is_approved",
+            "admin_notes",
+            "status"
+        ]
+    )
+
+    return product
 
 from django.db.models.deletion import ProtectedError
 
@@ -494,7 +512,56 @@ def delete_product_by_slug(product_slug):
 
 from django.db import transaction
 
+def approve_product(product_slug, publish_immediately=False):
+    product = get_product_by_slug(product_slug)
 
+    product.is_approved = True
+
+    update_fields = ["is_approved"]
+
+    if publish_immediately:
+        product.status = Product.Status.PUBLISHED
+        update_fields.append("status")
+
+    product.save(update_fields=update_fields)
+
+    return product
+
+def publish_product(product_slug, feature_homepage=False):
+    try:
+        product = Product.objects.get(slug=product_slug)
+
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    if product.status == Product.Status.PUBLISHED:
+        return {
+            "success": True,
+            "changed": False,
+            "message": "Product is already published.",
+        }
+
+    product.status = Product.Status.PUBLISHED
+
+    update_fields = ["status"]
+
+    # Add this later if/when your Product model has
+    # a featured/homepage field.
+    #
+    # if feature_homepage:
+    #     product.is_featured = True
+    #     update_fields.append("is_featured")
+
+    product.save(update_fields=update_fields)
+
+    return {
+        "success": True,
+        "changed": True,
+        "message": "Product published successfully.",
+    }
 
 @transaction.atomic
 def toggle_product_featured(product_slug, action):
@@ -980,3 +1047,490 @@ def export_products_csv(seller):
         ])
 
     return response
+
+import csv
+
+from django.http import HttpResponse
+from django.utils import timezone
+
+from orders.models import OrderItem
+
+
+def export_product_orders(product):
+    order_items = (
+        OrderItem.objects.filter(product=product)
+        .select_related(
+            "seller_order",
+            "seller_order__order",
+            "seller_order__seller",
+            "product",
+        )
+        .order_by("-created_at")
+    )
+
+    response = HttpResponse(content_type="text/csv")
+
+    filename = (
+        f"{product.slug}-orders-"
+        f"{timezone.now().strftime('%Y-%m-%d')}.csv"
+    )
+
+    response["Content-Disposition"] = (
+        f'attachment; filename="{filename}"'
+    )
+
+    writer = csv.writer(response)
+
+    writer.writerow(
+        [
+            "Order Number",
+            "Order Date",
+            "Order Status",
+            "Payment Status",
+            "Customer",
+            "Customer Phone",
+            "Shipping Address",
+            "Shipping City",
+            "Product",
+            "SKU",
+            "Quantity",
+            "Unit Price",
+            "Product Total",
+            "Seller",
+            "Seller Order Subtotal",
+            "Seller Order Shipping",
+            "Seller Order Discount",
+            "Seller Order Tax",
+            "Seller Order Total",
+            "Tracking Number",
+            "Courier",
+            "Shipped At",
+            "Delivered At",
+        ]
+    )
+
+    for item in order_items:
+        seller_order = item.seller_order
+        order = seller_order.order
+        seller = seller_order.seller
+
+        writer.writerow(
+            [
+                order.order_number,
+                order.created_at.strftime("%Y-%m-%d %H:%M"),
+                seller_order.get_status_display(),
+                order.get_payment_status_display(),
+                order.shipping_name,
+                order.shipping_phone or "",
+                order.shipping_address,
+                order.shipping_city,
+                product.name,
+                product.sku or "",
+                item.quantity,
+                item.price,
+                item.total,
+                seller.store_name,
+                seller_order.subtotal,
+                seller_order.shipping_cost,
+                seller_order.discount,
+                seller_order.tax,
+                seller_order.total,
+                seller_order.tracking_number,
+                seller_order.courier,
+                (
+                    seller_order.shipped_at.strftime("%Y-%m-%d %H:%M")
+                    if seller_order.shipped_at
+                    else ""
+                ),
+                (
+                    seller_order.delivered_at.strftime("%Y-%m-%d %H:%M")
+                    if seller_order.delivered_at
+                    else ""
+                ),
+            ]
+        )
+
+    return response
+
+from django.db import transaction
+
+
+def upload_product_image(product_slug, image_file, seller):
+    try:
+        product = Product.objects.get(
+            slug=product_slug,
+            seller=seller,
+        )
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    last_order = (
+        ProductImage.objects
+        .filter(product=product)
+        .order_by("-display_order")
+        .values_list("display_order", flat=True)
+        .first()
+    )
+
+    next_order = (last_order + 1) if last_order is not None else 0
+
+    product_image = ProductImage.objects.create(
+        product=product,
+        image=image_file,
+        display_order=next_order,
+    )
+
+    return {
+        "success": True,
+        "message": "Product image added successfully.",
+        "image_id": product_image.id,
+    }
+from django.db import transaction
+
+
+@transaction.atomic
+def delete_product_image(product_slug, image_id, seller):
+    try:
+        product_image = ProductImage.objects.select_related(
+            "product"
+        ).get(
+            id=image_id,
+            product__slug=product_slug,
+            product__seller=seller,
+        )
+
+    except ProductImage.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product image not found.",
+        }
+
+    product = product_image.product
+    was_primary = product_image.is_primary
+    replacement = None
+    if was_primary:
+        replacement = (
+            ProductImage.objects
+            .filter(product=product)
+            .exclude(id=product_image.id)
+            .order_by("display_order", "id")
+            .first()
+        )
+
+        if replacement:
+            replacement.is_primary = True
+            replacement.save(
+                update_fields=["is_primary"]
+            )
+
+    product_image.delete()
+
+    return {
+        "success": True,
+        "message": "Product image deleted successfully.",
+        "replacement_primary": was_primary and replacement is not None,
+    }
+
+@transaction.atomic
+def reorder_product_images(product_slug, image_ids, seller):
+    try:
+        product = Product.objects.get(
+            slug=product_slug,
+            seller=seller,
+        )
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    images = list(
+        ProductImage.objects.filter(
+            product=product,
+            id__in=image_ids,
+        )
+    )
+
+    image_map = {
+        str(image.id): image
+        for image in images
+    }
+
+    if len(images) != len(image_ids):
+        return {
+            "success": False,
+            "message": "Invalid product image list.",
+        }
+
+    for index, image_id in enumerate(image_ids):
+        image = image_map.get(str(image_id))
+
+        if image:
+            image.display_order = index
+            image.save(
+                update_fields=["display_order"]
+            )
+
+    return {
+        "success": True,
+        "message": "Media order updated successfully.",
+    }
+
+
+from django.db import transaction
+
+
+@transaction.atomic
+def set_primary_product_image(product_slug, image_id, seller):
+    try:
+        product_image = ProductImage.objects.select_related(
+            "product"
+        ).get(
+            id=image_id,
+            product__slug=product_slug,
+            product__seller=seller,
+        )
+
+    except ProductImage.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product image not found.",
+        }
+
+    ProductImage.objects.filter(
+        product=product_image.product,
+        is_primary=True,
+    ).exclude(
+        id=product_image.id
+    ).update(
+        is_primary=False
+    )
+
+    if not product_image.is_primary:
+        product_image.is_primary = True
+        product_image.save(
+            update_fields=["is_primary"]
+        )
+
+    return {
+        "success": True,
+        "message": "Primary image updated successfully.",
+    }
+
+import logging
+
+from django.db import transaction
+
+logger = logging.getLogger(__name__)
+
+
+@transaction.atomic
+def update_product_pricing(product_slug, seller, price, discount_price=None):
+    try:
+        product = Product.objects.get(
+            slug=product_slug,
+            seller=seller,
+        )
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    product.price = price
+    product.discount_price = discount_price
+
+    product.save(
+        update_fields=[
+            "price",
+            "discount_price",
+        ]
+    )
+
+    return {
+        "success": True,
+        "message": "Product pricing updated successfully.",
+        "price": product.price,
+        "discount_price": product.discount_price,
+    }
+
+@transaction.atomic
+def remove_product_discount(product_slug, seller):
+    try:
+        product = Product.objects.get(
+            slug=product_slug,
+            seller=seller,
+        )
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    if product.discount_price is None:
+        return {
+            "success": False,
+            "message": "This product does not have a discount.",
+        }
+
+    product.discount_price = None
+
+    product.save(
+        update_fields=[
+            "discount_price",
+        ]
+    )
+
+    return {
+        "success": True,
+        "message": "Discount removed successfully.",
+    }
+
+from django.db import transaction
+
+
+@transaction.atomic
+def adjust_product_stock(
+    product_slug,
+    seller,
+    adjustment_type,
+    quantity,
+    reason="",
+    note="",
+):
+    try:
+        product = (
+            Product.objects
+            .select_for_update()
+            .get(
+                slug=product_slug,
+                seller=seller,
+            )
+        )
+
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    current_stock = product.stock_quantity or 0
+
+    if adjustment_type == "increase":
+        new_stock = current_stock + quantity
+
+    elif adjustment_type == "decrease":
+        if quantity > current_stock:
+            return {
+                "success": False,
+                "message": "Stock cannot be reduced below zero.",
+            }
+
+        new_stock = current_stock - quantity
+
+    elif adjustment_type == "set":
+        new_stock = quantity
+
+    else:
+        return {
+            "success": False,
+            "message": "Invalid adjustment type.",
+        }
+
+    product.stock_quantity = new_stock
+
+    product.save(
+        update_fields=[
+            "stock_quantity",
+        ]
+    )
+
+    return {
+        "success": True,
+        "message": "Stock adjustment applied successfully.",
+        "previous_stock": current_stock,
+        "new_stock": new_stock,
+        "adjustment_type": adjustment_type,
+        "quantity": quantity,
+        "reason": reason,
+        "note": note,
+    }
+
+
+@transaction.atomic
+def mark_product_out_of_stock(product_slug, seller):
+    try:
+        product = (
+            Product.objects
+            .select_for_update()
+            .get(
+                slug=product_slug,
+                seller=seller,
+            )
+        )
+
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    product.stock_quantity = 0
+    product.status = Product.Status.OUT_OF_STOCK
+
+    product.save(
+        update_fields=[
+            "stock_quantity",
+            "status",
+        ]
+    )
+
+    return {
+        "success": True,
+        "message": "Product marked as out of stock.",
+        "stock_quantity": 0,
+    }
+
+
+@transaction.atomic
+def restore_product_stock(product_slug, seller):
+    try:
+        product = (
+            Product.objects
+            .select_for_update()
+            .get(
+                slug=product_slug,
+                seller=seller,
+            )
+        )
+
+    except Product.DoesNotExist:
+        return {
+            "success": False,
+            "message": "Product not found.",
+        }
+
+    if product.stock_quantity <= 0:
+        return {
+            "success": False,
+            "message": "Cannot restore product because its stock quantity is zero.",
+        }
+
+    product.status = Product.Status.PUBLISHED
+
+    product.save(
+        update_fields=[
+            "status",
+        ]
+    )
+
+    return {
+        "success": True,
+        "message": "Product stock restored successfully.",
+        "stock_quantity": product.stock_quantity,
+    }
+
+

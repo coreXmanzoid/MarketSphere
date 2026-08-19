@@ -1,0 +1,815 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Category Management
+{% endblock %}
+
+{% block active_page %}
+  categories
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span>Catalog</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">Categories</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/categories.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="cm-page" id="cmPage">
+
+  <!-- ================= 1. PAGE HEADER ================= -->
+  <header class="cm-header cm-reveal">
+    <div class="cm-header-text">
+      <span class="cm-header-eyebrow"><i class="cm-eyebrow-dot"></i> Catalog</span>
+      <h1 class="cm-header-title">Category Management</h1>
+      <p class="cm-header-subtitle">Organize, manage, and control the marketplace catalog structure.</p>
+    </div>
+
+    <div class="cm-header-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" id="cmImportBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>Import Categories
+      </button>
+      <button type="button" class="cm-btn cm-btn-secondary" id="cmExportBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>Export Categories
+      </button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmAddCategoryBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>Add Category
+      </button>
+
+      <div class="cm-dropdown" id="cmMoreDropdown">
+        <button type="button" class="cm-btn cm-btn-icon-only" id="cmMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1.2"></circle>
+            <circle cx="12" cy="12" r="1.2"></circle>
+            <circle cx="12" cy="19" r="1.2"></circle>
+          </svg>
+        </button>
+        <div class="cm-dropdown-menu" role="menu">
+          <button type="button" class="cm-dropdown-item" role="menuitem" data-cm-toast="info" data-cm-toast-msg="Category rules editor isn&#8217;t available yet.">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>Category Rules
+          </button>
+          <button type="button" class="cm-dropdown-item" role="menuitem" data-cm-toast="info" data-cm-toast-msg="Bulk reorder mode isn&#8217;t available yet.">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>Bulk Reorder
+          </button>
+          <div class="cm-dropdown-divider" role="separator"></div>
+          <button type="button" class="cm-dropdown-item" role="menuitem" id="cmCollapseAllHeaderBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"></path></svg>Collapse All Categories
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 2. CATEGORY SUMMARY METRICS ================= -->
+  <section class="cm-metrics-grid cm-reveal" aria-label="Category summary metrics">
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Total Categories</span>
+        <span class="cm-metric-value" data-cm-count-to="128">0</span>
+        <span class="cm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>6 added this month</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-success"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Active Categories</span>
+        <span class="cm-metric-value" data-cm-count-to="114">0</span>
+        <span class="cm-metric-trend neutral">89% of catalog</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-danger"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Inactive Categories</span>
+        <span class="cm-metric-value" data-cm-count-to="14">0</span>
+        <span class="cm-metric-trend neutral">Hidden from storefront</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-info"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4z"></path><path d="M4 12h10v4H4z"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Parent Categories</span>
+        <span class="cm-metric-value" data-cm-count-to="9">0</span>
+        <span class="cm-metric-trend neutral">Top-level nodes</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-info"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v18"></path><path d="M15 3v18"></path><path d="M3 9h18"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Subcategories</span>
+        <span class="cm-metric-value" data-cm-count-to="119">0</span>
+        <span class="cm-metric-trend neutral">Across all parents</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-warning"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Empty Categories</span>
+        <span class="cm-metric-value" data-cm-count-to="11">0</span>
+        <span class="cm-metric-trend down">No products assigned</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-accent"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Featured Categories</span>
+        <span class="cm-metric-value" data-cm-count-to="18">0</span>
+        <span class="cm-metric-trend neutral">Shown on homepage</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-success"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg></div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Products Assigned</span>
+        <span class="cm-metric-value" data-cm-count-to="8420">0</span>
+        <span class="cm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>Across all categories</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3. TOOLBAR ================= -->
+  <section class="cm-toolbar-card cm-reveal" aria-label="Category filters">
+    <div class="cm-toolbar">
+      <div class="cm-search">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="search" id="cmSearchInput" class="cm-search-input" placeholder="Search by name, slug, or parent category..." aria-label="Search categories" />
+      </div>
+
+      <div class="cm-toolbar-filters">
+        <div class="cm-select-wrap">
+          <select id="cmSortFilter" class="cm-select" aria-label="Sort categories">
+            <option value="order">Display Order</option>
+            <option value="name">Name (A–Z)</option>
+            <option value="products-desc">Most Products</option>
+            <option value="updated">Recently Updated</option>
+          </select>
+        </div>
+
+        <div class="cm-view-toggle" role="group" aria-label="View mode">
+          <button type="button" class="cm-view-btn is-active" data-cm-view="tree" aria-pressed="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path><path d="M14 14h6v6h-6z"></path><path d="M4 14h6v6H4z"></path></svg>Tree
+          </button>
+          <button type="button" class="cm-view-btn" data-cm-view="table" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>Table
+          </button>
+        </div>
+
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" id="cmExpandAllBtn">Expand All</button>
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" id="cmCollapseAllBtn">Collapse All</button>
+        <button type="button" class="cm-btn cm-btn-ghost cm-btn-sm" id="cmResetFiltersBtn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="cm-filter-chips" id="cmFilterChips">
+      <button type="button" class="cm-chip is-active" data-cm-filter="all">All</button>
+      <button type="button" class="cm-chip" data-cm-filter="active">Active</button>
+      <button type="button" class="cm-chip" data-cm-filter="inactive">Inactive</button>
+      <button type="button" class="cm-chip" data-cm-filter="parent">Parent Categories</button>
+      <button type="button" class="cm-chip" data-cm-filter="subcategory">Subcategories</button>
+      <button type="button" class="cm-chip" data-cm-filter="featured">Featured</button>
+      <button type="button" class="cm-chip" data-cm-filter="hidden">Hidden</button>
+      <button type="button" class="cm-chip" data-cm-filter="empty">Empty Categories</button>
+    </div>
+
+    <!-- Bulk action bar (table view) -->
+    <div class="cm-bulk-bar cm-hidden" id="cmBulkBar">
+      <div class="cm-bulk-info"><span class="cm-bulk-count" id="cmBulkCount">0</span><span>categories selected</span></div>
+      <div class="cm-bulk-actions">
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" data-cm-bulk="activate">Activate</button>
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" data-cm-bulk="deactivate">Deactivate</button>
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" data-cm-bulk="feature">Feature</button>
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" data-cm-bulk="hide">Hide</button>
+        <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" data-cm-bulk="export">Export</button>
+        <button type="button" class="cm-btn cm-btn-danger cm-btn-sm" data-cm-bulk="delete">Delete</button>
+        <button type="button" class="cm-btn cm-btn-ghost cm-btn-sm" id="cmClearSelectionBtn">Clear Selection</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. CATEGORY TREE ================= -->
+  <section class="cm-card cm-tree-card cm-reveal" id="cmTreeView" aria-label="Category hierarchy">
+    <div class="cm-card-head">
+      <div>
+        <h2 class="cm-card-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path><path d="M14 14h6v6h-6z"></path></svg>
+          Category Hierarchy
+        </h2>
+        <p class="cm-card-subtitle">Click a category to open its management workspace.</p>
+      </div>
+      <span class="cm-tree-count" id="cmTreeResultCount">128 categories</span>
+    </div>
+
+    <div class="cm-tree" id="cmTree" role="tree" aria-label="Category tree"></div>
+
+    <div class="cm-empty-state cm-hidden" id="cmTreeEmptyState">
+      <div class="cm-empty-icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></div>
+      <h3>No categories match your search</h3>
+      <p>Try a different search term or clear your active filters to see the full hierarchy.</p>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmEmptyResetBtn">Reset Filters</button>
+    </div>
+  </section>
+
+  <!-- ================= TABLE VIEW ================= -->
+  <section class="cm-card cm-table-card cm-hidden" id="cmTableView" aria-label="Category table">
+    <div class="cm-card-head">
+      <h2 class="cm-card-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Categories Table
+      </h2>
+    </div>
+    <div class="cm-table-wrap">
+      <table class="cm-table" id="cmCategoryTable">
+        <thead>
+          <tr>
+            <th style="width:34px;"><label class="cm-checkbox"><input type="checkbox" id="cmTableSelectAll" /><span class="cm-checkbox-box"></span></label></th>
+            <th>Category</th>
+            <th>Parent</th>
+            <th>Products</th>
+            <th>Subcategories</th>
+            <th>Status</th>
+            <th>Featured</th>
+            <th>Visibility</th>
+            <th>Order</th>
+            <th>Updated</th>
+            <th class="cm-col-actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="cmCategoryTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="cm-footer cm-reveal">
+    <p>Tip: categories with zero products can be safely deactivated instead of deleted — this preserves SEO history and lets you reassign products later.</p>
+  </footer>
+</div>
+
+<!-- ================================================================
+     CATEGORY MANAGEMENT DRAWER
+     ================================================================ -->
+<div class="cm-drawer-overlay cm-hidden" id="cmDrawerOverlay" aria-hidden="true">
+  <aside class="cm-drawer" id="cmDrawer" role="dialog" aria-modal="true" aria-labelledby="cmDrawerTitle">
+
+    <!-- Drawer Header -->
+    <div class="cm-drawer-header">
+      <div class="cm-drawer-header-top">
+        <button type="button" class="cm-drawer-close" id="cmDrawerClose" aria-label="Close drawer">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+        <div class="cm-drawer-header-actions">
+          <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" id="cmDrawerEditBtn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>Edit
+          </button>
+          <div class="cm-dropdown" id="cmDrawerMoreDropdown">
+            <button type="button" class="cm-btn cm-btn-icon-only cm-btn-sm" id="cmDrawerMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg>
+            </button>
+            <div class="cm-dropdown-menu" role="menu">
+              <button type="button" class="cm-dropdown-item" role="menuitem" id="cmDrawerAddSubBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Add Subcategory
+              </button>
+              <button type="button" class="cm-dropdown-item" role="menuitem" id="cmDrawerMoveBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3"></path><path d="M9 5l3-3 3 3"></path><path d="M15 19l3 3 3-3"></path><path d="M19 9l3 3-3 3"></path><path d="M2 12h20"></path><path d="M12 2v20"></path></svg>Move Category
+              </button>
+              <button type="button" class="cm-dropdown-item" role="menuitem" id="cmDrawerAssignBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>Assign Products
+              </button>
+              <button type="button" class="cm-dropdown-item" role="menuitem" id="cmDrawerFeatureBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg><span id="cmDrawerFeatureLabel">Feature Category</span>
+              </button>
+              <button type="button" class="cm-dropdown-item" role="menuitem" id="cmDrawerToggleStatusBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg><span id="cmDrawerToggleStatusLabel">Deactivate</span>
+              </button>
+              <button type="button" class="cm-dropdown-item" role="menuitem" data-cm-toast="info" data-cm-toast-msg="Preparing category export&hellip;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export Category
+              </button>
+              <div class="cm-dropdown-divider" role="separator"></div>
+              <button type="button" class="cm-dropdown-item is-danger" role="menuitem" id="cmDrawerDeleteBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Delete Category
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cm-drawer-identity">
+        <span class="cm-drawer-icon" id="cmDrawerIcon" aria-hidden="true"><i class="bi bi-grid"></i></span>
+        <div class="cm-drawer-identity-text">
+          <div class="cm-drawer-title-row">
+            <h2 class="cm-drawer-title" id="cmDrawerTitle">Category Name</h2>
+            <span class="cm-badge c-success" id="cmDrawerStatusBadge">Active</span>
+            <span class="cm-badge c-accent cm-hidden" id="cmDrawerFeaturedBadge">Featured</span>
+          </div>
+          <div class="cm-drawer-meta-row">
+            <span id="cmDrawerSlug">/category-slug</span>
+            <span class="cm-meta-sep">&middot;</span>
+            <span>Parent: <strong id="cmDrawerParent">—</strong></span>
+          </div>
+          <div class="cm-drawer-meta-row cm-drawer-meta-row-sub">
+            <span class="cm-meta-chip">Created <strong id="cmDrawerCreated">—</strong></span>
+            <span class="cm-meta-chip">Updated <strong id="cmDrawerUpdated">—</strong></span>
+            <span class="cm-meta-chip"><strong id="cmDrawerProductCount">0</strong> products</span>
+            <span class="cm-meta-chip"><strong id="cmDrawerSubCount">0</strong> subcategories</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer Tabs -->
+    <nav class="cm-drawer-tabs" id="cmDrawerTabs" role="tablist" aria-label="Category detail sections">
+      <button type="button" class="cm-drawer-tab is-active" data-cm-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="information" role="tab" aria-selected="false">Information</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="seo" role="tab" aria-selected="false">SEO</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="display" role="tab" aria-selected="false">Display Settings</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="subcategories" role="tab" aria-selected="false">Subcategories</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="products" role="tab" aria-selected="false">Products</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="analytics" role="tab" aria-selected="false">Analytics</button>
+      <button type="button" class="cm-drawer-tab" data-cm-tab="activity" role="tab" aria-selected="false">Activity</button>
+    </nav>
+
+    <div class="cm-drawer-body">
+
+      <!-- ============ OVERVIEW ============ -->
+      <section class="cm-drawer-panel is-active" data-cm-panel="overview">
+        <div class="cm-drawer-stats-grid">
+          <div class="cm-drawer-stat"><span>Total Products</span><strong id="ovTotalProducts">0</strong></div>
+          <div class="cm-drawer-stat"><span>Published</span><strong class="c-success" id="ovPublished">0</strong></div>
+          <div class="cm-drawer-stat"><span>Pending</span><strong class="c-warning" id="ovPending">0</strong></div>
+          <div class="cm-drawer-stat"><span>Out of Stock</span><strong class="c-danger" id="ovOutOfStock">0</strong></div>
+          <div class="cm-drawer-stat"><span>Subcategories</span><strong id="ovSubcategories">0</strong></div>
+          <div class="cm-drawer-stat"><span>Category Orders</span><strong id="ovOrders">0</strong></div>
+          <div class="cm-drawer-stat"><span>Category Revenue</span><strong id="ovRevenue">Rs. 0</strong></div>
+          <div class="cm-drawer-stat"><span>Conversion Rate</span><strong id="ovConversion">0%</strong></div>
+        </div>
+
+        <div class="cm-quick-actions">
+          <button type="button" class="cm-quick-action" data-cm-goto-tab="products">
+            <span class="cm-quick-action-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg></span>
+            <span><strong>View Products</strong><small>See everything in this category</small></span>
+          </button>
+          <button type="button" class="cm-quick-action" id="qaAddSub">
+            <span class="cm-quick-action-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>
+            <span><strong>Add Subcategory</strong><small>Create a child category</small></span>
+          </button>
+          <button type="button" class="cm-quick-action" id="qaAssign">
+            <span class="cm-quick-action-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg></span>
+            <span><strong>Assign Products</strong><small>Move products into this category</small></span>
+          </button>
+          <button type="button" class="cm-quick-action" id="qaMove">
+            <span class="cm-quick-action-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 9l-3 3 3 3"></path><path d="M19 9l3 3-3 3"></path><path d="M2 12h20"></path></svg></span>
+            <span><strong>Move Category</strong><small>Reposition in the hierarchy</small></span>
+          </button>
+        </div>
+
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Description</h3></div>
+          <p class="cm-desc-text" id="ovDescription">No description provided yet.</p>
+        </div>
+      </section>
+
+      <!-- ============ INFORMATION ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="information">
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head">
+            <h3 class="cm-card-subtitle-title">Category Information</h3>
+            <button type="button" class="cm-btn cm-btn-secondary cm-btn-sm" id="cmInfoEditToggle">Edit</button>
+          </div>
+
+          <div class="cm-info-grid" id="cmInfoDisplay">
+            <div class="cm-info-item"><span class="cm-info-label">Category Name</span><span class="cm-info-value" id="infoName">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Slug</span><span class="cm-info-value" id="infoSlug">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Parent Category</span><span class="cm-info-value" id="infoParent">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Category Type</span><span class="cm-info-value" id="infoType">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Status</span><span class="cm-info-value" id="infoStatus">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Display Order</span><span class="cm-info-value" id="infoOrder">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Icon</span><span class="cm-info-value" id="infoIcon">—</span></div>
+            <div class="cm-info-item"><span class="cm-info-label">Featured</span><span class="cm-info-value" id="infoFeatured">—</span></div>
+            <div class="cm-info-item cm-info-item-wide"><span class="cm-info-label">Description</span><span class="cm-info-value" id="infoDescription">—</span></div>
+          </div>
+
+          <form class="cm-form cm-hidden" id="cmInfoForm">
+            <div class="cm-form-grid">
+              <div class="cm-form-group"><label>Category Name</label><input type="text" id="fName" /></div>
+              <div class="cm-form-group"><label>Slug</label><input type="text" id="fSlug" /></div>
+              <div class="cm-form-group"><label>Parent Category</label>
+                <select id="fParent">
+                  <option value="">— No Parent (Top Level) —</option>
+                </select>
+              </div>
+              <div class="cm-form-group"><label>Category Type</label>
+                <select id="fType"><option>Standard</option><option>Digital</option><option>Service</option><option>Bundle</option></select>
+              </div>
+              <div class="cm-form-group"><label>Status</label>
+                <select id="fStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+              </div>
+              <div class="cm-form-group"><label>Display Order</label><input type="number" id="fOrder" min="0" /></div>
+              <div class="cm-form-group"><label>Icon Class</label><input type="text" id="fIcon" placeholder="bi bi-phone" /></div>
+              <div class="cm-form-group"><label>Category Image</label><input type="file" id="fImage" accept="image/*" /></div>
+              <div class="cm-form-group cm-form-group-full"><label>Description</label><textarea id="fDescription" rows="4"></textarea></div>
+            </div>
+            <div class="cm-form-actions">
+              <button type="button" class="cm-btn cm-btn-secondary" id="cmInfoCancelBtn">Cancel</button>
+              <button type="button" class="cm-btn cm-btn-primary" id="cmInfoSaveBtn">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ============ SEO ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="seo">
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head">
+            <div><h3 class="cm-card-subtitle-title">Search Engine Optimization</h3><p class="cm-card-desc">Controls how this category appears in search results. These fields are forward-ready and may not be connected to the database yet.</p></div>
+          </div>
+
+          <div class="cm-form-grid">
+            <div class="cm-form-group cm-form-group-full"><label>SEO Title</label><input type="text" id="seoTitle" value="Buy Mobile Phones Online in Pakistan | MarketSphere" /></div>
+            <div class="cm-form-group cm-form-group-full"><label>SEO Description</label><textarea id="seoDesc" rows="3">Shop the latest smartphones from top brands with fast delivery and secure checkout on MarketSphere.</textarea></div>
+            <div class="cm-form-group cm-form-group-full"><label>SEO Keywords</label><input type="text" id="seoKeywords" value="mobile phones, smartphones, android, iphone, buy phones online" /></div>
+            <div class="cm-form-group cm-form-group-full"><label>Canonical URL</label><input type="text" id="seoCanonical" value="https://marketsphere.com/category/mobile-phones" /></div>
+          </div>
+
+          <div class="cm-seo-preview">
+            <span class="cm-seo-preview-label">Search Preview</span>
+            <div class="cm-seo-preview-card">
+              <span class="cm-seo-preview-url" id="seoPreviewUrl">marketsphere.com › category › mobile-phones</span>
+              <span class="cm-seo-preview-title" id="seoPreviewTitle">Buy Mobile Phones Online in Pakistan | MarketSphere</span>
+              <span class="cm-seo-preview-desc" id="seoPreviewDesc">Shop the latest smartphones from top brands with fast delivery and secure checkout on MarketSphere.</span>
+            </div>
+          </div>
+
+          <div class="cm-form-actions">
+            <button type="button" class="cm-btn cm-btn-secondary" id="cmSeoResetBtn">Reset</button>
+            <button type="button" class="cm-btn cm-btn-primary" id="cmSeoSaveBtn">Save SEO Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DISPLAY SETTINGS ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="display">
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Display &amp; Visibility Settings</h3></div>
+
+          <div class="cm-toggle-list">
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Featured Category</strong><small>Highlight in featured category carousels</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgFeatured" checked /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Show on Homepage</strong><small>Display in the homepage category grid</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgHomepage" checked /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Show in Main Navigation</strong><small>Appear in the site header category menu</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgNav" checked /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Show in Footer</strong><small>Link this category from the site footer</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgFooter" /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Marketplace Visibility</strong><small>Category is visible to buyers storefront-wide</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgVisible" checked /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Allow Products</strong><small>Sellers may assign products directly to this node</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgAllowProducts" checked /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+            <div class="cm-toggle-row">
+              <div class="cm-toggle-text"><strong>Allow Subcategories</strong><small>Permit additional nested categories under this node</small></div>
+              <label class="cm-switch"><input type="checkbox" id="tgAllowSub" checked /><span class="cm-switch-track"><span class="cm-switch-thumb"></span></span></label>
+            </div>
+          </div>
+
+          <div class="cm-form-grid" style="margin-top:18px;">
+            <div class="cm-form-group"><label>Display Order</label><input type="number" id="dispOrder" value="1" min="0" /></div>
+            <div class="cm-form-group"><label>Category Icon</label><input type="text" id="dispIcon" placeholder="bi bi-phone" value="bi bi-phone" /></div>
+          </div>
+
+          <div class="cm-form-actions">
+            <button type="button" class="cm-btn cm-btn-secondary" id="cmDisplayResetBtn">Reset</button>
+            <button type="button" class="cm-btn cm-btn-primary" id="cmDisplaySaveBtn">Save Display Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SUBCATEGORIES ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="subcategories">
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head">
+            <h3 class="cm-card-subtitle-title">Subcategories</h3>
+            <button type="button" class="cm-btn cm-btn-primary cm-btn-sm" id="cmAddSubBtn2">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Add Subcategory
+            </button>
+          </div>
+          <div class="cm-sub-list" id="cmSubList"></div>
+          <div class="cm-empty-state cm-empty-state-sm cm-hidden" id="cmSubEmptyState">
+            <p>This category has no subcategories yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRODUCTS ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="products">
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head">
+            <h3 class="cm-card-subtitle-title">Products in this Category</h3>
+            <button type="button" class="cm-link-btn" id="cmViewAllProductsBtn">
+              View All Products<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg>
+            </button>
+          </div>
+          <div class="cm-table-wrap">
+            <table class="cm-table" id="cmProductsTable">
+              <thead>
+                <tr>
+                  <th>Product</th><th>SKU</th><th>Seller</th><th>Price</th><th>Stock</th><th>Status</th><th>Orders</th>
+                  <th class="cm-col-actions"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="cmProductsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ANALYTICS ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="analytics">
+        <div class="cm-analytics-grid">
+          <div class="cm-card cm-nested-card">
+            <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Revenue Trend</h3></div>
+            <div class="cm-line-chart-wrap" id="cmRevenueChart">
+              <svg viewBox="0 0 480 180" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="cm-line-gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#C08A4E" stop-opacity="0.32"></stop>
+                    <stop offset="100%" stop-color="#C08A4E" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                <path class="cm-line-chart-area" d="M0,140 L68,120 L136,132 L204,90 L272,102 L340,58 L408,72 L480,30 L480,180 L0,180 Z"></path>
+                <path class="cm-line-chart-path" d="M0,140 L68,120 L136,132 L204,90 L272,102 L340,58 L408,72 L480,30"></path>
+              </svg>
+            </div>
+            <div class="cm-chart-legend"><span><i></i> Weekly revenue</span></div>
+          </div>
+
+          <div class="cm-card cm-nested-card">
+            <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Order &amp; Product Growth</h3></div>
+            <div class="cm-bar-mini-chart" id="cmGrowthChart">
+              <span style="--cm-bar-h: 34%;"></span><span style="--cm-bar-h: 46%;"></span><span style="--cm-bar-h: 40%;"></span>
+              <span style="--cm-bar-h: 58%;"></span><span style="--cm-bar-h: 66%;"></span><span style="--cm-bar-h: 60%;"></span>
+              <span style="--cm-bar-h: 74%;"></span><span style="--cm-bar-h: 84%;"></span><span style="--cm-bar-h: 100%;"></span>
+            </div>
+            <div class="cm-mini-chart-caption"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+          </div>
+
+          <div class="cm-card cm-nested-card">
+            <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Key Performance</h3></div>
+            <div class="cm-kpi-row">
+              <div class="cm-kpi-card"><span>Views (30d)</span><strong>24,180</strong></div>
+              <div class="cm-kpi-card"><span>Conversion Rate</span><strong>3.8%</strong></div>
+              <div class="cm-kpi-card"><span>Wishlist Adds</span><strong>1,204</strong></div>
+              <div class="cm-kpi-card"><span>Sales Growth</span><strong class="c-success">+12.4%</strong></div>
+            </div>
+          </div>
+
+          <div class="cm-card cm-nested-card">
+            <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Top Products</h3></div>
+            <div class="cm-top-list" id="cmTopProductsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ACTIVITY ============ -->
+      <section class="cm-drawer-panel" data-cm-panel="activity">
+        <div class="cm-card cm-nested-card">
+          <div class="cm-card-head">
+            <h3 class="cm-card-subtitle-title">Activity Timeline</h3>
+            <div class="cm-filter-pills" id="cmActivityFilters">
+              <button type="button" class="cm-pill is-active" data-cm-activity-filter="all">All</button>
+              <button type="button" class="cm-pill" data-cm-activity-filter="category">Category</button>
+              <button type="button" class="cm-pill" data-cm-activity-filter="products">Products</button>
+              <button type="button" class="cm-pill" data-cm-activity-filter="visibility">Visibility</button>
+              <button type="button" class="cm-pill" data-cm-activity-filter="admin">Admin</button>
+            </div>
+          </div>
+          <ul class="cm-timeline" id="cmActivityTimeline"></ul>
+        </div>
+      </section>
+    </div>
+  </aside>
+</div>
+
+<!-- ================================================================
+     ADD / EDIT CATEGORY MODAL
+     ================================================================ -->
+<div class="cm-modal-overlay cm-hidden" id="cmCategoryModal" data-cm-modal>
+  <div class="cm-modal cm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="cmCategoryModalTitle">
+    <button type="button" class="cm-modal-close" data-cm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+
+    <h3 class="cm-modal-title" id="cmCategoryModalTitle">Add Category</h3>
+    <p class="cm-modal-text">Create a new node in the marketplace category hierarchy.</p>
+
+    <div class="cm-form-grid">
+      <div class="cm-form-group"><label>Category Name</label><input type="text" id="mName" placeholder="e.g. Smart Watches" /></div>
+      <div class="cm-form-group"><label>Slug</label><input type="text" id="mSlug" placeholder="e.g. smart-watches" /></div>
+      <div class="cm-form-group"><label>Parent Category</label>
+        <select id="mParent"><option value="">— No Parent (Top Level) —</option></select>
+      </div>
+      <div class="cm-form-group"><label>Category Type</label>
+        <select id="mType"><option>Standard</option><option>Digital</option><option>Service</option><option>Bundle</option></select>
+      </div>
+      <div class="cm-form-group"><label>Status</label>
+        <select id="mStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+      </div>
+      <div class="cm-form-group"><label>Display Order</label><input type="number" id="mOrder" value="1" min="0" /></div>
+      <div class="cm-form-group"><label>Category Icon</label><input type="text" id="mIcon" placeholder="bi bi-smartwatch" /></div>
+      <div class="cm-form-group"><label>Category Image</label><input type="file" id="mImage" accept="image/*" /></div>
+      <div class="cm-form-group cm-form-group-full"><label>Description</label><textarea id="mDescription" rows="3" placeholder="A short description of this category..."></textarea></div>
+    </div>
+
+    <div class="cm-toggle-list cm-toggle-list-compact">
+      <label class="cm-inline-toggle"><input type="checkbox" id="mFeatured" /> Featured Category</label>
+      <label class="cm-inline-toggle"><input type="checkbox" id="mHomepage" checked /> Show on Homepage</label>
+      <label class="cm-inline-toggle"><input type="checkbox" id="mNav" checked /> Show in Navigation</label>
+      <label class="cm-inline-toggle"><input type="checkbox" id="mAllowProducts" checked /> Allow Products</label>
+      <label class="cm-inline-toggle"><input type="checkbox" id="mAllowSub" checked /> Allow Subcategories</label>
+    </div>
+
+    <details class="cm-details">
+      <summary>SEO Information (optional)</summary>
+      <div class="cm-form-grid" style="margin-top:14px;">
+        <div class="cm-form-group cm-form-group-full"><label>SEO Title</label><input type="text" id="mSeoTitle" /></div>
+        <div class="cm-form-group cm-form-group-full"><label>SEO Description</label><textarea id="mSeoDesc" rows="2"></textarea></div>
+        <div class="cm-form-group cm-form-group-full"><label>SEO Keywords</label><input type="text" id="mSeoKeywords" /></div>
+      </div>
+    </details>
+
+    <div class="cm-modal-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmCategoryModalSubmit">Create Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MOVE CATEGORY MODAL ================= -->
+<div class="cm-modal-overlay cm-hidden" id="cmMoveModal" data-cm-modal>
+  <div class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmMoveModalTitle">
+    <button type="button" class="cm-modal-close" data-cm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="cm-modal-icon c-accent"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3"></path><path d="M19 9l3 3-3 3"></path><path d="M2 12h20"></path></svg></div>
+    <h3 class="cm-modal-title" id="cmMoveModalTitle">Move Category</h3>
+    <p class="cm-modal-text">Reposition this category within the hierarchy.</p>
+
+    <div class="cm-form-group"><label>Current Parent</label><input type="text" id="moveCurrentParent" disabled /></div>
+    <div class="cm-form-group"><label>New Parent</label>
+      <select id="moveNewParent"><option value="">— No Parent (Top Level) —</option></select>
+    </div>
+    <div class="cm-form-group"><label>New Position</label>
+      <select id="moveNewPosition"><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option><option value="last">Last</option></select>
+    </div>
+
+    <div class="cm-move-preview">
+      <span class="cm-move-preview-box" id="moveFromPreview">Electronics &rsaquo; Mobile Phones</span>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+      <span class="cm-move-preview-box is-target" id="moveToPreview">Fashion &rsaquo; Mobile Phones</span>
+    </div>
+
+    <div class="cm-modal-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmMoveConfirmBtn">Move Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ASSIGN PRODUCTS MODAL ================= -->
+<div class="cm-modal-overlay cm-hidden" id="cmAssignModal" data-cm-modal>
+  <div class="cm-modal cm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="cmAssignModalTitle">
+    <button type="button" class="cm-modal-close" data-cm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <h3 class="cm-modal-title" id="cmAssignModalTitle">Assign Products</h3>
+    <p class="cm-modal-text">Search and select products to move into <strong id="assignTargetName">this category</strong>.</p>
+
+    <div class="cm-search" style="margin-bottom:14px;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+      <input type="search" id="assignSearchInput" class="cm-search-input" placeholder="Search products by name or SKU..." />
+    </div>
+
+    <div class="cm-assign-toolbar">
+      <span id="assignSelectedCount">0 selected</span>
+      <div>
+        <button type="button" class="cm-link-btn" id="assignSelectAllBtn">Select All</button>
+        <span class="cm-meta-sep">&middot;</span>
+        <button type="button" class="cm-link-btn" id="assignClearBtn">Clear Selection</button>
+      </div>
+    </div>
+
+    <div class="cm-assign-list" id="cmAssignList"></div>
+
+    <div class="cm-modal-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmAssignConfirmBtn">Assign Products</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= DELETE CATEGORY MODAL ================= -->
+<div class="cm-modal-overlay cm-hidden" id="cmDeleteModal" data-cm-modal>
+  <div class="cm-modal cm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="cmDeleteModalTitle">
+    <button type="button" class="cm-modal-close" data-cm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="cm-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+    <h3 class="cm-modal-title" id="cmDeleteModalTitle">Delete "<span id="deleteTargetName">Category</span>"?</h3>
+    <p class="cm-modal-text">This category contains <strong id="deleteProductCount">0</strong> products and <strong id="deleteSubCount">0</strong> subcategories. Deleting it may affect storefront navigation, SEO rankings, and existing product listings.</p>
+
+    <div class="cm-delete-options">
+      <button type="button" class="cm-delete-option-btn" data-cm-toast="info" data-cm-toast-msg="Move Products flow isn&#8217;t available yet.">
+        <strong>Move Products Elsewhere</strong><small>Reassign affected products before deleting</small>
+      </button>
+      <button type="button" class="cm-delete-option-btn" data-cm-toast="info" data-cm-toast-msg="Move Subcategories flow isn&#8217;t available yet.">
+        <strong>Move Subcategories Elsewhere</strong><small>Reparent child categories before deleting</small>
+      </button>
+      <button type="button" class="cm-delete-option-btn" id="cmDeactivateInsteadBtn">
+        <strong>Deactivate Instead</strong><small>Hide from storefront without losing data</small>
+      </button>
+    </div>
+
+    <div class="cm-danger-zone">
+      <strong>Permanent Deletion</strong>
+      <p>Type <strong>DELETE</strong> below to confirm you understand this cannot be undone.</p>
+      <input type="text" id="deleteConfirmInput" placeholder="DELETE" autocomplete="off" />
+    </div>
+
+    <div class="cm-modal-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
+      <button type="button" class="cm-btn cm-btn-danger" id="cmDeleteConfirmBtn" disabled>Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= IMPORT / EXPORT MODALS ================= -->
+<div class="cm-modal-overlay cm-hidden" id="cmExportModal" data-cm-modal>
+  <div class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmExportModalTitle">
+    <button type="button" class="cm-modal-close" data-cm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <h3 class="cm-modal-title" id="cmExportModalTitle">Export Categories</h3>
+    <p class="cm-modal-text">Choose what to export and in which format.</p>
+    <div class="cm-form-group"><label>Export Scope</label>
+      <select id="exportScope"><option>Export All Categories</option><option>Export Selected</option><option>Export Visible (filtered)</option></select>
+    </div>
+    <div class="cm-form-group"><label>Format</label>
+      <select id="exportFormat"><option>CSV</option><option>JSON</option><option>PDF</option></select>
+    </div>
+    <div class="cm-modal-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmExportConfirmBtn">Start Export</button>
+    </div>
+  </div>
+</div>
+
+<div class="cm-modal-overlay cm-hidden" id="cmImportModal" data-cm-modal>
+  <div class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmImportModalTitle">
+    <button type="button" class="cm-modal-close" data-cm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <h3 class="cm-modal-title" id="cmImportModalTitle">Import Categories</h3>
+    <p class="cm-modal-text">Upload a CSV or JSON file matching the category schema.</p>
+    <div class="cm-upload-zone" id="cmUploadZone" tabindex="0" role="button">
+      <input type="file" id="cmImportFile" class="cm-visually-hidden" accept=".csv,.json" />
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      <p class="cm-upload-title">Drag &amp; drop a file, or <span class="cm-upload-link">browse</span></p>
+      <p class="cm-upload-hint">CSV or JSON &middot; up to 5&nbsp;MB</p>
+    </div>
+    <p class="cm-upload-filename cm-hidden" id="cmImportFileName"></p>
+    <div class="cm-modal-actions">
+      <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmImportConfirmBtn">Preview Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST CONTAINER ================= -->
+<div class="cm-toast-container" id="cmToastContainer" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/categories.js' %}"></script>
+{% endblock %}

@@ -14,6 +14,12 @@ urlpatterns = [
         name="seller-application",
     ),
     path("catalog/products/", views.catalog_products, name="catalog-products"),
+    path(
+        "catalog/products/<slug:product_slug>",
+        views.catalog_product,
+        name="catalog-product",
+    ),
+    path("catalog/categories", views.catalog_categories, name="catalog-categories"),
     path("change-account-state/", views.change_state, name="change-account-state"),
     path(
         "user/buyers/<int:user_id>/reset-password/",
@@ -99,5 +105,85 @@ urlpatterns = [
         "user/seller/application/save-notes/",
         views.save_application_notes,
         name="save_application_notes",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/approve/",
+        views.approve_product_view,
+        name="admin_approve_product",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/hide/",
+        views.hide_product_view,
+        name="admin_hide_product",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/unhide/",
+        views.unhide_product_view,
+        name="unhide-product",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/reject/",
+        views.reject_product_view,
+        name="reject-product",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/toggle-featured/",
+        views.admin_toggle_product_featured_view,
+        name="admin-toggle-product-featured",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/publish/",
+        views.publish_product_view,
+        name="publish-product",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/images/upload/",
+        views.upload_product_image_view,
+        name="upload-product-image",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/images/<int:image_id>/delete/",
+        views.delete_product_image_view,
+        name="delete-product-image",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/images/reorder/",
+        views.reorder_product_images_view,
+        name="reorder-product-images",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/images/<int:image_id>/set-primary/",
+        views.set_primary_product_image_view,
+        name="set-primary-product-image",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/price/",
+        views.update_product_pricing_view,
+        name="update-product-pricing",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/price/remove-discount/",
+        views.remove_product_discount_view,
+        name="remove-product-discount",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/stock/adjust/",
+        views.adjust_product_stock_view,
+        name="adjust-product-stock",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/stock/out-of-stock/",
+        views.mark_product_out_of_stock_view,
+        name="mark-product-out-of-stock",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/stock/restore/",
+        views.restore_product_stock_view,
+        name="restore-product-stock",
+    ),
+    path(
+        "catalog/product-management/<slug:product_slug>/update/",
+        views.edit_product_view,
+        name="edit-product",
     ),
 ]

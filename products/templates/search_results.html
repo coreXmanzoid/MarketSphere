@@ -54,6 +54,8 @@ Search Results • MarketSphere
               <input class="form-check-input" type="checkbox" id="cat-{{ category.slug }}" />
               <label class="form-check-label" for="cat-{{ category.slug }}">{{ category.name }}</label>
             </div>
+            {% empty %}
+            <span class="text-muted small">No related categories</span>
             {% endfor %}
           </div>
         </div>
@@ -69,6 +71,8 @@ Search Results • MarketSphere
               <input class="form-check-input" type="checkbox" id="brand-{{ brand.slug }}" />
               <label class="form-check-label" for="{{ brand.slug }}">{{ brand.name }}</label>
             </div>
+            {% empty %}
+            <span class="text-muted small">No related brands</span>
             {% endfor %}
           </div>
         </div>
@@ -155,7 +159,7 @@ Search Results • MarketSphere
         <div class="sorting-row d-flex flex-wrap align-items-center justify-content-between mb-4">
           <span class="results-count">
             <!-- Total result count will be rendered here by Django -->
-            <strong>{{ products|length }}</strong> Products Found for <strong class="fs-6">"{{ q }}"</strong>
+            <strong>{{ paginator.count }}</strong> Products Found for <strong class="fs-6">"{{ q }}"</strong>
           </span>
 
           <div class="sort-by-wrap d-flex align-items-center gap-2">
@@ -231,17 +235,17 @@ Search Results • MarketSphere
 
                   {% if product.discount_price %}
                   <span class="price-current">
-                    Rs. {{ product.discount_price }}
+                    Rs. {{ product.discount_price|floatformat:0 }}
                   </span>
 
                   <span class="price-original">
-                    Rs. {{ product.price }}
+                    Rs. {{ product.price|floatformat:0 }}
                   </span>
 
                   {% else %}
 
                   <span class="price-current">
-                    Rs. {{ product.price }}
+                    Rs. {{ product.price|floatformat:0 }}
                   </span>
 
                   {% endif %}
@@ -284,8 +288,7 @@ Search Results • MarketSphere
         </div>
 
         <!-- ================= PAGINATION ================= -->
-{% if paginator.num_pages > 1 %}
-<nav aria-label="Search results pagination" class="search-pagination-wrap">
+<nav aria-label="Search results pagination" class="search-pagination-wrap{% if paginator.num_pages <= 1 %} d-none{% endif %}">
     <ul class="pagination justify-content-center">
 
         <!-- Previous -->
@@ -321,7 +324,6 @@ Search Results • MarketSphere
 
     </ul>
 </nav>
-{% endif %}
       </div>
     </div>
   </div>
@@ -339,32 +341,16 @@ Search Results • MarketSphere
       <div class="card-header">
         <h6><i class="bi bi-grid"></i> Categories</h6>
       </div>
-      <div class="card-body">
+      <div class="card-body" id="mobile-category-filters">
         <!-- Category filter checkboxes will be rendered here -->
+        {% for category in categories|slice:5 %}
         <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-cat-electronics" />
-          <label class="form-check-label" for="m-cat-electronics">Electronics</label>
+          <input class="form-check-input" type="checkbox" id="m-cat-{{ category.slug }}" />
+          <label class="form-check-label" for="m-cat-{{ category.slug }}">{{ category.name }}</label>
         </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-cat-fashion" />
-          <label class="form-check-label" for="m-cat-fashion">Fashion</label>
-        </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-cat-home" />
-          <label class="form-check-label" for="m-cat-home">Home &amp; Living</label>
-        </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-cat-beauty" />
-          <label class="form-check-label" for="m-cat-beauty">Beauty</label>
-        </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-cat-sports" />
-          <label class="form-check-label" for="m-cat-sports">Sports</label>
-        </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-cat-books" />
-          <label class="form-check-label" for="m-cat-books">Books</label>
-        </div>
+        {% empty %}
+        <span class="text-muted small">No related categories</span>
+        {% endfor %}
       </div>
     </div>
 
@@ -372,24 +358,16 @@ Search Results • MarketSphere
       <div class="card-header">
         <h6><i class="bi bi-tags"></i> Brand</h6>
       </div>
-      <div class="card-body">
+      <div class="card-body" id="mobile-brand-filters">
         <!-- Brand filter checkboxes will be rendered here -->
+        {% for brand in brands|slice:5 %}
         <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-brand-soundwave" />
-          <label class="form-check-label" for="m-brand-soundwave">SoundWave</label>
+          <input class="form-check-input" type="checkbox" id="m-brand-{{ brand.slug }}" />
+          <label class="form-check-label" for="m-brand-{{ brand.slug }}">{{ brand.name }}</label>
         </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-brand-timetech" />
-          <label class="form-check-label" for="m-brand-timetech">TimeTech</label>
-        </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-brand-urbancarry" />
-          <label class="form-check-label" for="m-brand-urbancarry">UrbanCarry</label>
-        </div>
-        <div class="form-check filter-check">
-          <input class="form-check-input" type="checkbox" id="m-brand-novatech" />
-          <label class="form-check-label" for="m-brand-novatech">NovaTech</label>
-        </div>
+        {% empty %}
+        <span class="text-muted small">No related brands</span>
+        {% endfor %}
       </div>
     </div>
 

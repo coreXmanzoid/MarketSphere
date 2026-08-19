@@ -22,8 +22,7 @@ from django.contrib import messages
 
 def dashboard(request):
     seller = request.user.seller_profile
-    context = {}
-    messages.success(request, "sample error message")
+    context = { "seller": seller}
 
     return render(request, "dashboard.html", context)
 

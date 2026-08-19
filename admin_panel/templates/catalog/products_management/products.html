@@ -407,7 +407,7 @@
                   </td>
                   <td data-label="Product">
                     <div class="pcl-product-name-cell">
-                      <a class="pcl-product-link" href="#" data-view-product="1">{{ product.name }}</a>
+                      <a class="pcl-product-link" href="{% url 'catalog-product' product_slug=product.slug %}" data-view-product="1">{{ product.name }}</a>
                       {% if product.is_featured %}
                       <span class="pcl-featured-tag"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg>Featured</span>
                       {% endif %}

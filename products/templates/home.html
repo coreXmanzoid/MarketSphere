@@ -94,7 +94,7 @@
           <h2>Featured Products</h2>
           <p>Our top picks selected just for you</p>
         </div>
-        <a href="#" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
+        <a href="{% url "search" %}?featured=1" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
       </div>
 
       <div class="row g-4">
@@ -195,13 +195,13 @@
           <h2>New Arrivals</h2>
           <p>Freshly added products from our trusted sellers</p>
         </div>
-        <a href="#" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
+        <a href="{% url 'search' %}?new_arrivals=1" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
       </div>
 
       <div class="row g-4">
         <!-- New arrival products will be rendered here -->
 
-        {% for product in featured_products|slice:4 %}
+        {% for product in new_products|slice:4 %}
           <div class="col-lg-3 col-md-4 col-6">
             <div class="product-card">
                <div class="product-card-media">

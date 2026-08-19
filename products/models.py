@@ -31,6 +31,15 @@ class Category(models.Model):
 
     is_active = models.BooleanField(default=True)
 
+    @property
+    def root_category(self):
+        category = self
+
+        while category.parent is not None:
+            category = category.parent
+
+        return category
+
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Categories"
@@ -67,6 +76,8 @@ class Product(TimeStampedModel):
         OUT_OF_STOCK = "out_of_stock", "Out of Stock"
         ARCHIVED = "archived", "Archived",
         PENDING = "pending", "Pending",
+        REJECTED = "rejected", "Rejected",
+
 
     category = models.ForeignKey(
         Category, on_delete=models.PROTECT, related_name="products",  null=True, blank=True
@@ -112,7 +123,10 @@ class Product(TimeStampedModel):
         choices=Status.choices,
         default=Status.DRAFT,
     )
+    is_approved = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
+
+    admin_notes = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]
