@@ -1,0 +1,1076 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Order #{{ order.order_number }}
+{% endblock %}
+
+{% block active_page %}
+  sales
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span>Sales</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <a href="{% url 'sales-orders' %}" style="color:inherit;">Orders</a>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">Order #{{ order.order_number }}</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/email_composer.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/admin_order_detail.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <div class="od-page" id="odPage">
+
+    <!-- ================= 1. PAGE HEADER ================= -->
+    <header class="od-header od-reveal">
+      <div class="od-header-top">
+        <div class="od-header-title-row">
+          <h1 class="od-header-title">
+            Order <span class="od-order-number" id="odOrderNumberCopy" data-copy-value="{{ order.order_number }}">#{{ order.order_number }}</span>
+            <button type="button" class="od-copy-btn" data-copy-target="odOrderNumberCopy" aria-label="Copy order number">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </h1>
+
+          {% if order.overall_status == 'cancelled' %}
+            <span class="od-badge-pill od-badge-danger">Cancelled</span>
+          {% elif order.overall_status == 'delivered' %}
+            <span class="od-badge-pill od-badge-success">Delivered</span>
+          {% elif order.overall_status == 'on_hold' %}
+            <span class="od-badge-pill od-badge-warning">On Hold</span>
+          {% else %}
+            <span class="od-badge-pill od-badge-accent">{{ order.get_overall_status_display|default:"Processing" }}</span>
+          {% endif %}
+        </div>
+
+        <div class="od-header-meta">
+          <span class="od-meta-chip">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+            Placed {{ order.created_at|date:"M d, Y \a\t g:i A" }}
+          </span>
+          <span class="od-meta-sep">&middot;</span>
+          <span class="od-meta-chip">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+            Updated {{ order.updated_at|timesince }} ago
+          </span>
+          <span class="od-meta-sep">&middot;</span>
+          <span class="od-meta-chip">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle></svg>
+            {{ order.seller_orders.count }} seller{{ order.seller_orders.count|pluralize }} involved
+          </span>
+        </div>
+      </div>
+
+      <div class="od-header-actions">
+        <button type="button" class="od-btn od-btn-secondary" id="odPrintBtn">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Print
+        </button>
+        <button type="button" class="od-btn od-btn-secondary" id="odExportOpenBtn" data-od-open-modal="odExportModal">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export
+        </button>
+        <a href="{% url 'download_invoice' order_number=order.order_number %}" class="od-btn od-btn-secondary" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg>View Invoice
+        </a>
+        <button type="button" class="od-btn od-btn-secondary" data-od-open-modal="odContactBuyerModal">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>Contact Buyer
+        </button>
+
+        {% if order.overall_status == 'pending' %}
+          <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="confirmed">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Confirm Order
+          </button>
+        {% elif order.overall_status == 'confirmed' %}
+          <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="processing">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Mark Processing
+          </button>
+        {% elif order.overall_status == 'processing' %}
+          <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="shipped">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Mark Shipped
+          </button>
+        {% elif order.overall_status == 'shipped' %}
+          <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="delivered">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Mark Delivered
+          </button>
+        {% else %}
+          <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" disabled>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>{{ order.get_overall_status_display|default:"Order Complete" }}
+          </button>
+        {% endif %}
+
+        <div class="od-dropdown" id="odMoreDropdown">
+          <button type="button" class="od-btn od-btn-icon-only" id="odMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg>
+          </button>
+          <div class="od-dropdown-menu" role="menu">
+            <a href="#" class="od-dropdown-item" role="menuitem"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>Edit Order</a>
+            <button type="button" class="od-dropdown-item" role="menuitem" data-od-open-modal="odContactBuyerModal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>Contact Buyer</button>
+            <button type="button" class="od-dropdown-item" role="menuitem" data-od-open-modal="odContactSellerModal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg>Contact Seller</button>
+            <a href="{% url 'user-buyer' userId=order.user.id %}" class="od-dropdown-item" role="menuitem"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>View Buyer</a>
+            <a href="{% url 'download_invoice' order_number=order.order_number %}" class="od-dropdown-item" role="menuitem" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg>View Invoice</a>
+            <button type="button" class="od-dropdown-item" role="menuitem" data-od-open-modal="odExportModal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export Order</button>
+            <div class="od-dropdown-divider" role="separator"></div>
+            <button type="button" class="od-dropdown-item" role="menuitem" data-od-open-modal="odHoldModal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>Place On Hold</button>
+            <button type="button" class="od-dropdown-item is-danger" role="menuitem" data-od-open-modal="odCancelModal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>Cancel Order</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= 2. STATUS SUMMARY ================= -->
+    <section class="od-status-grid od-reveal" aria-label="Order status summary">
+      <div class="od-status-card">
+        <span class="od-status-label">Order Status</span>
+        <span class="od-status-value od-status-{{ order.overall_status|default:'processing' }}">{{ order.get_overall_status_display|default:"Processing" }}</span>
+      </div>
+      <div class="od-status-card">
+        <span class="od-status-label">Payment Status</span>
+        <span class="od-status-value od-status-{{ order.payment_status|default:'unpaid' }}">{{ order.get_payment_status_display|default:"Unpaid" }}</span>
+      </div>
+      <div class="od-status-card">
+        <span class="od-status-label">Fulfillment Status</span>
+        <span class="od-status-value od-status-{{ order.fulfillment_status|default:'pending' }}">{{ order.get_fulfillment_status_display|default:order.get_overall_status_display|default:"Pending" }}</span>
+      </div>
+      <div class="od-status-card">
+        <span class="od-status-label">Refund Status</span>
+        {% if order.refund_status %}
+          <span class="od-status-value od-status-{{ order.refund_status }}">{{ order.get_refund_status_display }}</span>
+        {% else %}
+          <span class="od-status-value od-status-none">None</span>
+        {% endif %}
+      </div>
+      <div class="od-status-card">
+        <span class="od-status-label">Shipping Status</span>
+        <span class="od-status-value od-status-{{ order.shipping_status|default:'not_shipped' }}">{{ order.get_shipping_status_display|default:"Not Shipped" }}</span>
+      </div>
+    </section>
+
+    <!-- ================= MAIN LAYOUT ================= -->
+    <div class="od-layout">
+      <div class="od-main-col">
+
+        <!-- ================= 3. ORDER TIMELINE ================= -->
+        <section class="od-card od-reveal" aria-label="Order timeline">
+          <div class="od-card-head">
+            <h2 class="od-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+              Order Timeline
+            </h2>
+          </div>
+
+          <ol class="od-timeline" id="odTimeline">
+            <li class="od-timeline-item {% if order.created_at %}is-complete{% endif %}">
+              <span class="od-timeline-dot">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"></path></svg>
+              </span>
+              <div class="od-timeline-body">
+                <div class="od-timeline-top">
+                  <strong>Order Placed</strong>
+                  <span class="od-timeline-time">{{ order.created_at|date:"M d, Y \a\t g:i A" }}</span>
+                </div>
+                <p>Order was placed by {{ order.user.first_name|default:order.user.username }}.</p>
+              </div>
+            </li>
+
+            <li class="od-timeline-item {% if order.payment_status == 'paid' %}is-complete{% endif %}">
+              <span class="od-timeline-dot">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 1v22"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </span>
+              <div class="od-timeline-body">
+                <div class="od-timeline-top">
+                  <strong>Payment Confirmed</strong>
+                  {% if order.payment_status == 'paid' %}
+                    <span class="od-timeline-time">{{ order.paid_at|date:"M d, Y \a\t g:i A"|default:"Confirmed" }}</span>
+                  {% else %}
+                    <span class="od-badge-pill od-badge-warning od-timeline-badge">Pending</span>
+                  {% endif %}
+                </div>
+                <p>Payment {% if order.payment_status == 'paid' %}was received in full{% else %}has not been confirmed yet{% endif %}.</p>
+              </div>
+            </li>
+
+            {% for seller_order in order.seller_orders.all %}
+              <li class="od-timeline-item {% if seller_order.status != 'pending' %}is-complete{% endif %}">
+                <span class="od-timeline-dot">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle></svg>
+                </span>
+                <div class="od-timeline-body">
+                  <div class="od-timeline-top">
+                    <strong>{{ seller_order.seller.store_name }} confirmed</strong>
+                    <span class="od-badge-pill od-badge-accent od-timeline-badge">{{ seller_order.get_status_display }}</span>
+                  </div>
+                  <p>Seller order #{{ seller_order.id }} is currently {{ seller_order.get_status_display|lower }}.</p>
+                </div>
+              </li>
+            {% endfor %}
+
+            <li class="od-timeline-item {% if order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %} {% if order.overall_status == 'processing' %}is-current{% endif %}">
+              <span class="od-timeline-dot">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>
+              </span>
+              <div class="od-timeline-body">
+                <div class="od-timeline-top">
+                  <strong>Processing</strong>
+                </div>
+                <p>Sellers are preparing items for shipment.</p>
+              </div>
+            </li>
+
+            <li class="od-timeline-item {% if order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %} {% if order.overall_status == 'shipped' %}is-current{% endif %}">
+              <span class="od-timeline-dot">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3h13v13H3z"></path><path d="M16 8h4l3 4v5h-7V8Z"></path><circle cx="7" cy="19" r="2"></circle><circle cx="18" cy="19" r="2"></circle></svg>
+              </span>
+              <div class="od-timeline-body">
+                <div class="od-timeline-top">
+                  <strong>Shipped</strong>
+                  {% if order.shipped_at %}<span class="od-timeline-time">{{ order.shipped_at|date:"M d, Y" }}</span>{% endif %}
+                </div>
+                <p>{% if tracking_number %}Tracking number {{ tracking_number }} assigned.{% else %}Package handed to courier for delivery.{% endif %}</p>
+              </div>
+            </li>
+
+            <li class="od-timeline-item {% if order.overall_status == 'delivered' %}is-complete{% endif %}">
+              <span class="od-timeline-dot">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"></path></svg>
+              </span>
+              <div class="od-timeline-body">
+                <div class="od-timeline-top">
+                  <strong>Delivered</strong>
+                  {% if order.delivered_at %}<span class="od-timeline-time">{{ order.delivered_at|date:"M d, Y" }}</span>{% endif %}
+                </div>
+                <p>Order was marked delivered to the buyer's address.</p>
+              </div>
+            </li>
+
+            {% if order.overall_status == 'cancelled' %}
+              <li class="od-timeline-item is-complete is-danger">
+                <span class="od-timeline-dot">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>
+                </span>
+                <div class="od-timeline-body">
+                  <div class="od-timeline-top">
+                    <strong>Cancelled</strong>
+                    <span class="od-timeline-time">{{ order.cancelled_at|date:"M d, Y" }}</span>
+                  </div>
+                  <p>{{ order.cancellation_reason|default:"Order was cancelled." }}</p>
+                </div>
+              </li>
+            {% endif %}
+
+            {% if order.refund_status %}
+              <li class="od-timeline-item is-complete is-warning">
+                <span class="od-timeline-dot">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </span>
+                <div class="od-timeline-body">
+                  <div class="od-timeline-top">
+                    <strong>Refund {{ order.get_refund_status_display }}</strong>
+                  </div>
+                  <p>Rs. {{ order.refunded_amount|default:"0" }} refunded to the buyer.</p>
+                </div>
+              </li>
+            {% endif %}
+          </ol>
+        </section>
+
+        <!-- ================= 5. SELLER ORDERS ================= -->
+        <section class="od-card od-reveal" aria-label="Seller orders">
+          <div class="od-card-head">
+            <h2 class="od-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path><path d="M9 21V13h6v8"></path></svg>
+              Seller Orders <span class="od-count-pill">{{ order.seller_orders.count }}</span>
+            </h2>
+          </div>
+
+          <div class="od-seller-orders-list">
+            {% for seller_order in order.seller_orders.all %}
+              <div class="od-seller-order-card">
+                <div class="od-seller-order-head">
+                  <div class="od-seller-order-identity">
+                    <span class="od-seller-avatar">
+                      {% if seller_order.seller.store_logo %}
+                        <img src="{{ seller_order.seller.store_logo.url }}" alt="{{ seller_order.seller.store_name }}" />
+                      {% else %}
+                        {{ seller_order.seller.store_name|slice:':1'|upper }}
+                      {% endif %}
+                    </span>
+                    <div>
+                      <strong class="od-seller-order-name">{{ seller_order.seller.store_name }}</strong>
+                      <span class="od-seller-order-id">Seller Order #{{ seller_order.id }}</span>
+                    </div>
+                  </div>
+
+                  <span class="od-badge-pill od-badge-{{ seller_order.status|default:'accent' }}">{{ seller_order.get_status_display }}</span>
+                </div>
+
+                <div class="od-seller-order-meta-row">
+                  <span><strong>{{ seller_order.items.count }}</strong> item{{ seller_order.items.count|pluralize }}</span>
+                  <span class="od-meta-sep">&middot;</span>
+                  <span>Fulfillment: <strong>{{ seller_order.get_status_display }}</strong></span>
+                  {% if seller_order.tracking_number %}
+                    <span class="od-meta-sep">&middot;</span>
+                    <span>Tracking: <strong>{{ seller_order.tracking_number }}</strong></span>
+                  {% endif %}
+                </div>
+
+                <div class="od-seller-order-totals">
+                  <div><span>Subtotal</span><strong>Rs. {{ seller_order.subtotal|floatformat:0 }}</strong></div>
+                  <div><span>Shipping</span><strong>Rs. {{ seller_order.shipping_cost|default:"0"|floatformat:0 }}</strong></div>
+                  <div><span>Discount</span><strong>- Rs. {{ seller_order.discount|default:"0"|floatformat:0 }}</strong></div>
+                  <div><span>Tax</span><strong>Rs. {{ seller_order.tax|default:"0"|floatformat:0 }}</strong></div>
+                  <div class="od-seller-order-total-final"><span>Total</span><strong>Rs. {{ seller_order.total|floatformat:0 }}</strong></div>
+                </div>
+
+                <div class="od-seller-order-actions">
+                  <a href="{% url 'user-seller' sellerId=seller_order.seller.id %}" class="od-btn od-btn-secondary od-btn-sm">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>View Seller
+                  </a>
+                  <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-toggle-seller-order="{{ forloop.counter0 }}">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>View Items
+                  </button>
+                  <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-od-open-modal="odContactSellerModal" data-seller-name="{{ seller_order.seller.store_name }}">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>Contact Seller
+                  </button>
+                </div>
+
+                <!-- ================= ORDER ITEMS FOR THIS SELLER ================= -->
+                <div class="od-seller-order-items" id="odSellerOrderItems{{ forloop.counter0 }}">
+                  <div class="od-table-wrap">
+                    <table class="od-table">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>SKU</th>
+                          <th>Qty</th>
+                          <th>Unit Price</th>
+                          <th>Discount</th>
+                          <th>Tax</th>
+                          <th>Subtotal</th>
+                          <th class="od-col-actions"><span class="sr-only">Actions</span></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in seller_order.items.all %}
+                          <tr>
+                            <td data-label="Product">
+                              <div class="od-item-cell">
+                                <span class="od-item-thumb">
+                                  {% if item.product.primary_image %}
+                                    <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" />
+                                  {% else %}
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+                                  {% endif %}
+                                </span>
+                                <div class="od-item-name-cell">
+                                  <strong>{{ item.product.name }}</strong>
+                                  <small class="od-badge-pill od-badge-{{ item.product.status|default:'accent' }} od-item-status-badge">{{ item.product.get_status_display|default:item.product.status }}</small>
+                                </div>
+                              </div>
+                            </td>
+                            <td data-label="SKU">{{ item.product.sku|default:"—" }}</td>
+                            <td data-label="Qty">{{ item.quantity }}</td>
+                            <td data-label="Unit Price">Rs. {{ item.unit_price|default:item.product.price|floatformat:0 }}</td>
+                            <td data-label="Discount">Rs. {{ item.discount|default:"0"|floatformat:0 }}</td>
+                            <td data-label="Tax">Rs. {{ item.tax|default:"0"|floatformat:0 }}</td>
+                            <td data-label="Subtotal"><strong>Rs. {{ item.total|floatformat:0 }}</strong></td>
+                            <td class="od-col-actions">
+                              <a href="{% url 'product' product_slug=item.product.slug %}" class="od-icon-btn" target="_blank" rel="noopener" aria-label="View product">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                              </a>
+                            </td>
+                          </tr>
+                        {% empty %}
+                          <tr><td colspan="8" class="od-table-empty">No items found for this seller order.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            {% empty %}
+              <div class="od-empty-state">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg>
+                <p>No seller orders are linked to this order yet.</p>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <!-- ================= 11. ORDER NOTES ================= -->
+        <section class="od-card od-reveal" aria-label="Order notes">
+          <div class="od-card-head">
+            <h2 class="od-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              Order Notes
+            </h2>
+          </div>
+
+          <div class="od-notes-grid">
+            <div class="od-note-block">
+              <span class="od-note-block-label">Buyer Note</span>
+              <p class="od-note-block-text">{{ order.buyer_note|default:"No note left by the buyer for this order." }}</p>
+            </div>
+            <div class="od-note-block">
+              <span class="od-note-block-label">Shipping Note</span>
+              <p class="od-note-block-text">{{ order.shipping_note|default:"No special shipping instructions provided." }}</p>
+            </div>
+            {% for seller_order in order.seller_orders.all %}
+              <div class="od-note-block">
+                <span class="od-note-block-label">{{ seller_order.seller.store_name }} — Seller Note</span>
+                <p class="od-note-block-text">{{ seller_order.seller_note|default:"No note from this seller." }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <!-- ================= 12. ADMIN NOTES ================= -->
+        <section class="od-card od-reveal" aria-label="Admin notes">
+          <div class="od-card-head">
+            <h2 class="od-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>
+              Internal Admin Notes
+            </h2>
+            <button type="button" class="od-btn od-btn-primary od-btn-sm" id="odAddNoteBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Add Note
+            </button>
+          </div>
+
+          <div class="od-note-composer is-hidden" id="odNoteComposer">
+            <textarea id="odNoteInput" rows="3" placeholder="Write a private note about this order..."></textarea>
+            <div class="od-note-composer-foot">
+              <div class="od-select-wrap">
+                <select id="odNotePriority" class="od-select">
+                  <option value="low">Low priority</option>
+                  <option value="normal" selected>Normal priority</option>
+                  <option value="high">High priority</option>
+                </select>
+              </div>
+              <div class="od-note-composer-actions">
+                <button type="button" class="od-btn od-btn-ghost od-btn-sm" id="odCancelNoteBtn">Cancel</button>
+                <button type="button" class="od-btn od-btn-primary od-btn-sm" id="odSaveNoteBtn">Save Note</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="od-notes-list" id="odNotesList">
+            {% for note in admin_notes %}
+              <div class="od-note-card">
+                <div class="od-note-head">
+                  <span class="od-note-avatar">{{ note.author.username|slice:':1'|upper }}</span>
+                  <div class="od-note-meta">
+                    <strong>{{ note.author.username }}</strong>
+                    <span>{{ note.created_at|date:"M d, Y \a\t g:i A" }}</span>
+                  </div>
+                  <span class="od-badge-pill od-badge-{{ note.priority|default:'accent' }}">{{ note.get_priority_display|default:"Normal" }}</span>
+                </div>
+                <p class="od-note-content">{{ note.text }}</p>
+                <div class="od-note-actions">
+                  <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-toast="Pinned note.">Pin</button>
+                  <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-toast="Editing notes isn't available yet.">Edit</button>
+                  <button type="button" class="od-btn od-btn-ghost od-btn-sm c-danger" data-toast="Deleting notes isn't available yet.">Delete</button>
+                </div>
+              </div>
+            {% empty %}
+              <p class="od-empty-inline">No internal notes on this order yet.</p>
+            {% endfor %}
+          </div>
+        </section>
+
+        <!-- ================= 13. ORDER ACTIVITY ================= -->
+        <section class="od-card od-reveal" aria-label="Order activity">
+          <div class="od-card-head">
+            <h2 class="od-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"></path><path d="M7 15l4-5 3 3 5-7"></path></svg>
+              Order Activity
+            </h2>
+          </div>
+
+          <ul class="od-activity-feed" id="odActivityFeed">
+            {% for event in order_activity %}
+              <li class="od-activity-item">
+                <span class="od-activity-icon od-activity-icon-{{ event.type|default:'accent' }}" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+                </span>
+                <span class="od-activity-body">
+                  <strong>{{ event.title }}</strong>
+                  <span>{{ event.description }}</span>
+                  <small>{{ event.actor|default:"System" }} &middot; {{ event.created_at|timesince }} ago</small>
+                </span>
+              </li>
+            {% empty %}
+              <li class="od-activity-item">
+                <span class="od-activity-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path></svg>
+                </span>
+                <span class="od-activity-body">
+                  <strong>Order Created</strong>
+                  <span>Order #{{ order.order_number }} was placed on the marketplace.</span>
+                  <small>{{ order.created_at|timesince }} ago</small>
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+
+        <!-- ================= 14. ADMIN ACTION CENTER ================= -->
+        <section class="od-card od-reveal" aria-label="Administrative actions">
+          <div class="od-card-head">
+            <h2 class="od-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg>
+              Administrative Actions
+            </h2>
+          </div>
+
+          <div class="od-actions-groups">
+            <div class="od-actions-group">
+              <h4 class="od-actions-group-title">Order</h4>
+              <div class="od-actions-row">
+                <button type="button" class="od-action-btn" id="odConfirmOrderAction">
+                  <span class="od-action-icon c-success"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg></span>
+                  <span><strong>Confirm Order</strong><small>Move order into confirmed state</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-od-open-modal="odHoldModal">
+                  <span class="od-action-icon c-warning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></span>
+                  <span><strong>Place On Hold</strong><small>Pause fulfilment temporarily</small></span>
+                </button>
+                <button type="button" class="od-action-btn c-danger" data-od-open-modal="odCancelModal">
+                  <span class="od-action-icon c-danger"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg></span>
+                  <span><strong>Cancel Order</strong><small>Cancel the entire order</small></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="od-actions-group">
+              <h4 class="od-actions-group-title">Fulfillment</h4>
+              <div class="od-actions-row">
+                <button type="button" class="od-action-btn" data-set-status="processing">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path></svg></span>
+                  <span><strong>Mark Processing</strong><small>Sellers begin preparing items</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-set-status="shipped">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h13v13H3z"></path></svg></span>
+                  <span><strong>Mark Shipped</strong><small>Order handed to courier</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-toast="Tracking update panel isn't available yet.">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path></svg></span>
+                  <span><strong>Update Tracking</strong><small>Edit courier &amp; tracking number</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-set-status="delivered">
+                  <span class="od-action-icon c-success"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <span><strong>Mark Delivered</strong><small>Confirm final delivery</small></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="od-actions-group">
+              <h4 class="od-actions-group-title">Customer &amp; Seller</h4>
+              <div class="od-actions-row">
+                <a href="{% url 'user-buyer' userId=order.user.id %}" class="od-action-btn">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                  <span><strong>View Buyer</strong><small>Open buyer profile</small></span>
+                </a>
+                <button type="button" class="od-action-btn" data-od-open-modal="odContactBuyerModal">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg></span>
+                  <span><strong>Contact Buyer</strong><small>Send a direct email</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-od-open-modal="odContactSellerModal">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5"></path></svg></span>
+                  <span><strong>Contact Seller</strong><small>Message an involved seller</small></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="od-actions-group">
+              <h4 class="od-actions-group-title">Financial</h4>
+              <div class="od-actions-row">
+                <button type="button" class="od-action-btn" data-od-open-modal="odRefundModal" data-refund-type="full">
+                  <span class="od-action-icon c-danger"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></span>
+                  <span><strong>Issue Refund</strong><small>Refund the full order</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-od-open-modal="odRefundModal" data-refund-type="partial">
+                  <span class="od-action-icon c-warning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg></span>
+                  <span><strong>Partial Refund</strong><small>Refund selected items</small></span>
+                </button>
+                <button type="button" class="od-action-btn" data-toast="Opening Payments module…">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span>
+                  <span><strong>View Payment</strong><small>Open in Payments module</small></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="od-actions-group">
+              <h4 class="od-actions-group-title">Data</h4>
+              <div class="od-actions-row">
+                <button type="button" class="od-action-btn" data-od-open-modal="odExportModal">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></span>
+                  <span><strong>Export Order</strong><small>CSV, PDF, or JSON</small></span>
+                </button>
+                <button type="button" class="od-action-btn" id="odPrintActionBtn">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="6 9 6 2 18 2 18 9"></polyline></svg></span>
+                  <span><strong>Print Order</strong><small>Print this order summary</small></span>
+                </button>
+                <a href="{% url 'download_invoice' order_number=order.order_number %}" class="od-action-btn" target="_blank" rel="noopener">
+                  <span class="od-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path></svg></span>
+                  <span><strong>View Invoice</strong><small>Open the generated invoice PDF</small></span>
+                </a>
+              </div>
+            </div>
+
+            <div class="od-actions-group od-danger-zone">
+              <h4 class="od-actions-group-title c-danger">Danger Zone</h4>
+              <div class="od-danger-row">
+                <div class="od-danger-text">
+                  <strong>Archive Order</strong>
+                  <small>Hide this order from active lists while retaining its data.</small>
+                </div>
+                <button type="button" class="od-btn od-btn-danger-outline od-btn-sm" data-toast="Order archived.">Archive Order</button>
+              </div>
+              <div class="od-danger-row">
+                <div class="od-danger-text">
+                  <strong>Cancel Order</strong>
+                  <small>Cancel the order and optionally notify the buyer and sellers.</small>
+                </div>
+                <button type="button" class="od-btn od-btn-danger od-btn-sm" data-od-open-modal="odCancelModal">Cancel Order</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= SIDEBAR ================= -->
+      <aside class="od-sidebar">
+
+        <!-- ================= 4. BUYER INFORMATION ================= -->
+        <div class="od-card od-sidebar-card od-reveal">
+          <h3 class="od-card-subtitle-title">Buyer Information</h3>
+          <div class="od-buyer-row">
+            <span class="od-buyer-avatar">
+              {% if order.user.profile_image_url %}
+                <img src="{{ order.user.profile_image_url }}" alt="{{ order.user.username }}" />
+              {% else %}
+                {{ order.user.username|slice:':1'|upper }}
+              {% endif %}
+            </span>
+            <div class="od-buyer-info">
+              <strong>{{ order.user.first_name }} {{ order.user.last_name }}</strong>
+              <span>@{{ order.user.username }}</span>
+            </div>
+          </div>
+
+          <div class="od-sidebar-kv-list">
+            <div class="od-sidebar-kv"><span>Email</span><strong><a href="mailto:{{ order.user.email }}">{{ order.user.email }}</a></strong></div>
+            <div class="od-sidebar-kv"><span>Phone</span><strong>{{ order.user.contact|default:"—" }}</strong></div>
+            <div class="od-sidebar-kv"><span>Account Status</span><strong>{{ order.user.account_status|title }}</strong></div>
+            <div class="od-sidebar-kv"><span>Buyer ID</span><strong>MS-BYR-{{ order.user.id }}</strong></div>
+            <div class="od-sidebar-kv"><span>Total Orders</span><strong>{{ order.user.orders.count }}</strong></div>
+            <div class="od-sidebar-kv"><span>Lifetime Spend</span><strong>Rs. {{ buyer_lifetime_spend|default:"0" }}</strong></div>
+          </div>
+
+          <div class="od-sidebar-actions">
+            <a href="{% url 'user-buyer' userId=order.user.id %}" class="od-btn od-btn-secondary od-btn-sm">View Buyer</a>
+            <button type="button" class="od-btn od-btn-secondary od-btn-sm" data-od-open-modal="odContactBuyerModal">Contact</button>
+          </div>
+        </div>
+
+        <!-- ================= 7. SHIPPING INFORMATION ================= -->
+        <div class="od-card od-sidebar-card od-reveal">
+          <h3 class="od-card-subtitle-title">Shipping Information</h3>
+          {% if order.shipping_address %}
+            <div class="od-sidebar-kv-list">
+              <div class="od-sidebar-kv"><span>Recipient</span><strong>{{ order.shipping_name }}</strong></div>
+              <div class="od-sidebar-kv"><span>Phone</span><strong>{{ order.shipping_phone }}</strong></div>
+              <div class="od-sidebar-kv od-sidebar-kv-block"><span>Address</span><strong>{{ order.shipping_address }}</strong></div>
+              <div class="od-sidebar-kv"><span>City</span><strong>{{ order.shipping_city }}</strong></div>
+              <div class="od-sidebar-kv"><span>Province</span><strong>{{ order.shipping_province|default:"—" }}</strong></div>
+              <div class="od-sidebar-kv"><span>Postal Code</span><strong>{{ order.shipping_postal_code|default:"—" }}</strong></div>
+              <div class="od-sidebar-kv"><span>Country</span><strong>Pakistan</strong></div>
+              <div class="od-sidebar-kv"><span>Courier</span><strong>{{ order.courier|default:"Not assigned" }}</strong></div>
+              <div class="od-sidebar-kv"><span>Tracking Number</span><strong id="odTrackingNumberCopy" data-copy-value="{{ order.tracking_number|default:'' }}">{{ order.tracking_number|default:"—" }}</strong></div>
+              <div class="od-sidebar-kv"><span>Estimated Delivery</span><strong>{{ order.estimated_delivery|date:"M d, Y"|default:"—" }}</strong></div>
+              <div class="od-sidebar-kv"><span>Actual Delivery</span><strong>{{ order.delivered_at|date:"M d, Y"|default:"—" }}</strong></div>
+            </div>
+            <div class="od-sidebar-actions">
+              {% if order.tracking_number %}
+                <button type="button" class="od-btn od-btn-secondary od-btn-sm" data-copy-target="odTrackingNumberCopy">Copy Tracking</button>
+              {% endif %}
+              <button type="button" class="od-btn od-btn-secondary od-btn-sm" data-toast="Tracking update panel isn't available yet.">Update Tracking</button>
+            </div>
+          {% else %}
+            <div class="od-empty-inline-wrap">
+              <p class="od-empty-inline">No shipping address is on file for this order.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ================= 8. BILLING INFORMATION ================= -->
+        <div class="od-card od-sidebar-card od-reveal">
+          <h3 class="od-card-subtitle-title">Billing Information</h3>
+          {% if order.billing_address %}
+            <div class="od-sidebar-kv-list">
+              <div class="od-sidebar-kv"><span>Billing Name</span><strong>{{ order.billing_name|default:order.shipping_name }}</strong></div>
+              <div class="od-sidebar-kv od-sidebar-kv-block"><span>Billing Address</span><strong>{{ order.billing_address }}</strong></div>
+              <div class="od-sidebar-kv"><span>Billing Phone</span><strong>{{ order.billing_phone|default:order.shipping_phone }}</strong></div>
+              <div class="od-sidebar-kv"><span>Billing Email</span><strong>{{ order.user.email }}</strong></div>
+              <div class="od-sidebar-kv"><span>Billing Status</span><strong>{{ order.get_payment_status_display|default:"Unpaid" }}</strong></div>
+            </div>
+          {% else %}
+            <p class="od-empty-inline">Billing address matches the shipping address on file.</p>
+          {% endif %}
+        </div>
+
+        <!-- ================= 9. PAYMENT SUMMARY ================= -->
+        <div class="od-card od-sidebar-card od-reveal">
+          <h3 class="od-card-subtitle-title">Payment Summary</h3>
+          <div class="od-sidebar-kv-list">
+            <div class="od-sidebar-kv"><span>Payment Status</span><strong>{{ order.get_payment_status_display|default:"Unpaid" }}</strong></div>
+            <div class="od-sidebar-kv"><span>Payment Method</span><strong>{{ order.payment_method|default:"Cash on Delivery" }}</strong></div>
+            <div class="od-sidebar-kv"><span>Transaction ID</span><strong id="odTxnIdCopy" data-copy-value="{{ order.transaction_id|default:'' }}">{{ order.transaction_id|default:"—" }}</strong></div>
+            <div class="od-sidebar-kv"><span>Payment Date</span><strong>{{ order.paid_at|date:"M d, Y"|default:"—" }}</strong></div>
+            <div class="od-sidebar-kv"><span>Paid Amount</span><strong>Rs. {{ order.paid_amount|default:order.total|floatformat:0 }}</strong></div>
+            <div class="od-sidebar-kv"><span>Refunded Amount</span><strong>Rs. {{ order.refunded_amount|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-sidebar-kv"><span>Remaining Amount</span><strong>Rs. {{ order.remaining_amount|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-sidebar-kv"><span>Payment Provider</span><strong>{{ order.payment_provider|default:"MarketSphere Pay" }}</strong></div>
+          </div>
+          <div class="od-sidebar-actions">
+            <button type="button" class="od-btn od-btn-secondary od-btn-sm" data-toast="Opening Payments module…">View Payment</button>
+          </div>
+        </div>
+
+        <!-- ================= 10. FINANCIAL BREAKDOWN ================= -->
+        <div class="od-card od-sidebar-card od-reveal">
+          <h3 class="od-card-subtitle-title">Financial Breakdown</h3>
+          <div class="od-financial-list">
+            <div class="od-financial-row"><span>Subtotal</span><strong>Rs. {{ order.subtotal|default:order.total|floatformat:0 }}</strong></div>
+            <div class="od-financial-row"><span>Discount</span><strong>- Rs. {{ order.discount|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-financial-row"><span>Shipping</span><strong>Rs. {{ order.shipping_cost|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-financial-row"><span>Tax</span><strong>Rs. {{ order.tax|default:"0"|floatformat:0 }}</strong></div>
+            <hr class="od-financial-divider" />
+            <div class="od-financial-row"><span>Marketplace Fees</span><strong>Rs. {{ order.marketplace_fee|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-financial-row"><span>Payment Processing Fee</span><strong>Rs. {{ order.processing_fee|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-financial-row"><span>Seller Earnings</span><strong>Rs. {{ order.seller_earnings|default:"0"|floatformat:0 }}</strong></div>
+            <div class="od-financial-row"><span>Refunds</span><strong>- Rs. {{ order.refunded_amount|default:"0"|floatformat:0 }}</strong></div>
+            <hr class="od-financial-divider" />
+            <div class="od-financial-row od-financial-total"><span>Order Total</span><strong>Rs. {{ order.total|floatformat:0 }}</strong></div>
+            <div class="od-financial-row od-financial-net"><span>Net Marketplace Revenue</span><strong>Rs. {{ order.net_marketplace_revenue|default:"0"|floatformat:0 }}</strong></div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="od-footer od-reveal">
+      <p>Actions performed on this page affect the live order and notify the buyer and sellers according to the notification settings chosen in each modal.</p>
+      <div class="od-footer-links">
+        <a href="{% url 'sales-orders' %}">Back to Orders</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="#">Documentation</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="#">Contact Support</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ================================================================
+       MODALS
+       ================================================================ -->
+
+  <!-- ============ REFUND MODAL ============ -->
+  <div class="od-modal-overlay is-hidden" id="odRefundModal" data-od-modal>
+    <div class="od-modal od-modal-lg" role="dialog" aria-modal="true" aria-labelledby="odRefundModalTitle">
+      <button type="button" class="od-modal-close" data-od-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+      <div class="od-modal-icon c-danger"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></div>
+      <h3 class="od-modal-title" id="odRefundModalTitle">Issue Refund</h3>
+      <p class="od-modal-text">Choose a refund type, review the affected items, and confirm the amount to return to the buyer.</p>
+
+      <div class="od-form-group">
+        <label>Refund Type</label>
+        <div class="od-radio-row">
+          <label class="od-radio"><input type="radio" name="odRefundType" value="full" id="odRefundTypeFull" checked /><span>Full Refund</span></label>
+          <label class="od-radio"><input type="radio" name="odRefundType" value="partial" id="odRefundTypePartial" /><span>Partial Refund</span></label>
+        </div>
+      </div>
+
+      <div class="od-form-group" id="odRefundItemsWrap">
+        <label>Refund Items</label>
+        <div class="od-refund-items-list">
+          {% for seller_order in order.seller_orders.all %}
+            {% for item in seller_order.items.all %}
+              <div class="od-refund-item-row">
+                <label class="od-checkbox">
+                  <input type="checkbox" class="od-refund-item-checkbox" data-amount="{{ item.total }}" checked />
+                  <span class="od-checkbox-box"></span>
+                </label>
+                <span class="od-refund-item-name">{{ item.product.name }} <small>x{{ item.quantity }}</small></span>
+                <span class="od-refund-item-amount">Rs. {{ item.total|floatformat:0 }}</span>
+              </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="od-form-grid">
+        <div class="od-form-group">
+          <label for="odRefundAmount">Refund Amount</label>
+          <input type="text" id="odRefundAmount" value="Rs. {{ order.total|floatformat:0 }}" readonly />
+        </div>
+        <div class="od-form-group">
+          <label for="odRefundReason">Reason</label>
+          <select id="odRefundReason">
+            <option>Buyer requested cancellation</option>
+            <option>Item out of stock</option>
+            <option>Damaged or defective item</option>
+            <option>Wrong item delivered</option>
+            <option>Order not delivered</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="od-form-group">
+        <label for="odRefundAdminNote">Admin Note</label>
+        <textarea id="odRefundAdminNote" placeholder="Internal note about this refund…"></textarea>
+      </div>
+
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Notify Buyer</strong><small>Send a refund confirmation email</small></div>
+        <label class="od-switch"><input type="checkbox" checked /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Notify Seller</strong><small>Alert seller(s) about the refund</small></div>
+        <label class="od-switch"><input type="checkbox" checked /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+
+      <div class="od-modal-actions">
+        <button type="button" class="od-btn od-btn-secondary" data-od-close-modal>Cancel</button>
+        <button type="button" class="od-btn od-btn-danger" data-od-confirm-action data-od-toast="Refund request submitted.">Process Refund</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CANCEL ORDER MODAL ============ -->
+  <div class="od-modal-overlay is-hidden" id="odCancelModal" data-od-modal>
+    <div class="od-modal od-modal-lg" role="dialog" aria-modal="true" aria-labelledby="odCancelModalTitle">
+      <button type="button" class="od-modal-close" data-od-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+      <div class="od-modal-icon c-danger"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg></div>
+      <h3 class="od-modal-title" id="odCancelModalTitle">Cancel Order #{{ order.order_number }}</h3>
+      <p class="od-modal-text">This will cancel the order for every seller involved. This action can't be silently undone.</p>
+
+      <div class="od-form-group">
+        <label for="odCancelReason">Cancellation Reason</label>
+        <select id="odCancelReason">
+          <option>Buyer requested cancellation</option>
+          <option>Payment failed or unverified</option>
+          <option>Item(s) out of stock</option>
+          <option>Suspected fraudulent order</option>
+          <option>Seller unable to fulfil</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="od-form-group">
+        <label for="odCancelMessage">Custom Message</label>
+        <textarea id="odCancelMessage" placeholder="Add context that will be shared with the buyer…"></textarea>
+      </div>
+
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Notify Buyer</strong><small>Send a cancellation email</small></div>
+        <label class="od-switch"><input type="checkbox" checked /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Notify Seller</strong><small>Alert seller(s) about the cancellation</small></div>
+        <label class="od-switch"><input type="checkbox" checked /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Refund Automatically</strong><small>Trigger a full refund once cancelled</small></div>
+        <label class="od-switch"><input type="checkbox" /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+
+      <div class="od-form-group">
+        <label for="odCancelAdminNote">Admin Note</label>
+        <textarea id="odCancelAdminNote" placeholder="Internal note about this cancellation…"></textarea>
+      </div>
+
+      <div class="od-modal-actions">
+        <button type="button" class="od-btn od-btn-secondary" data-od-close-modal>Keep Order</button>
+        <button type="button" class="od-btn od-btn-danger" data-od-confirm-action data-od-toast="Order cancelled.">Confirm Cancellation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOLD ORDER MODAL ============ -->
+  <div class="od-modal-overlay is-hidden" id="odHoldModal" data-od-modal>
+    <div class="od-modal od-modal-lg" role="dialog" aria-modal="true" aria-labelledby="odHoldModalTitle">
+      <button type="button" class="od-modal-close" data-od-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+      <div class="od-modal-icon c-warning"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></div>
+      <h3 class="od-modal-title" id="odHoldModalTitle">Place Order On Hold</h3>
+      <p class="od-modal-text">Pause fulfilment for this order while it's under review.</p>
+
+      <div class="od-form-grid">
+        <div class="od-form-group">
+          <label for="odHoldReason">Hold Reason</label>
+          <select id="odHoldReason">
+            <option>Suspected fraud review</option>
+            <option>Payment verification pending</option>
+            <option>Stock discrepancy</option>
+            <option>Address verification needed</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="od-form-group">
+          <label for="odHoldPriority">Priority</label>
+          <select id="odHoldPriority">
+            <option value="low">Low</option>
+            <option value="normal" selected>Normal</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="od-form-group">
+        <label for="odHoldReleaseDate">Release Date</label>
+        <input type="date" id="odHoldReleaseDate" />
+      </div>
+
+      <div class="od-form-group">
+        <label for="odHoldAdminNote">Admin Note</label>
+        <textarea id="odHoldAdminNote" placeholder="Why is this order being held?"></textarea>
+      </div>
+
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Notify Buyer</strong><small>Let the buyer know there's a delay</small></div>
+        <label class="od-switch"><input type="checkbox" /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Notify Seller</strong><small>Pause seller fulfilment actions</small></div>
+        <label class="od-switch"><input type="checkbox" checked /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+
+      <div class="od-modal-actions">
+        <button type="button" class="od-btn od-btn-secondary" data-od-close-modal>Cancel</button>
+        <button type="button" class="od-btn od-btn-primary" data-od-confirm-action data-od-toast="Order placed on hold.">Place On Hold</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTACT BUYER MODAL ============ -->
+  <div class="od-modal-overlay is-hidden" id="odContactBuyerModal" data-od-modal>
+    <div class="od-modal od-modal-lg" role="dialog" aria-modal="true" aria-labelledby="odContactBuyerModalTitle">
+      <button type="button" class="od-modal-close" data-od-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+      <div class="od-modal-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg></div>
+      <h3 class="od-modal-title" id="odContactBuyerModalTitle">Contact Buyer</h3>
+      <p class="od-modal-text">Compose a message about this order to {{ order.user.first_name|default:order.user.username }}.</p>
+
+      <div class="od-form-group">
+        <label>Recipient</label>
+        <div class="od-readonly-field">{{ order.user.first_name }} {{ order.user.last_name }} &lt;{{ order.user.email }}&gt;</div>
+      </div>
+      <div class="od-form-group">
+        <label for="odContactBuyerSubject">Subject</label>
+        <input type="text" id="odContactBuyerSubject" value="Update regarding order #{{ order.order_number }}" />
+      </div>
+      <div class="od-form-group">
+        <label for="odContactBuyerMessage">Message</label>
+        <textarea id="odContactBuyerMessage" placeholder="Write your message…"></textarea>
+      </div>
+      <div class="od-toggle-row">
+        <div class="od-toggle-text"><strong>Send Copy To Admin</strong><small>Receive a copy of this email</small></div>
+        <label class="od-switch"><input type="checkbox" /><span class="od-switch-track"><span class="od-switch-thumb"></span></span></label>
+      </div>
+
+      <div class="od-modal-actions">
+        <button type="button" class="od-btn od-btn-secondary" data-od-close-modal>Cancel</button>
+        <button type="button" class="od-btn od-btn-primary" data-od-confirm-action data-od-toast="Email sent to buyer.">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTACT SELLER MODAL ============ -->
+  <div class="od-modal-overlay is-hidden" id="odContactSellerModal" data-od-modal>
+    <div class="od-modal od-modal-lg" role="dialog" aria-modal="true" aria-labelledby="odContactSellerModalTitle">
+      <button type="button" class="od-modal-close" data-od-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+      <div class="od-modal-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg></div>
+      <h3 class="od-modal-title" id="odContactSellerModalTitle">Contact Seller</h3>
+      <p class="od-modal-text">This order involves more than one seller — choose who this message is for.</p>
+
+      <div class="od-form-group">
+        <label for="odContactSellerSelect">Seller</label>
+        <select id="odContactSellerSelect">
+          {% for seller_order in order.seller_orders.all %}
+            <option value="{{ seller_order.seller.id }}">{{ seller_order.seller.store_name }} &mdash; Seller Order #{{ seller_order.id }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="od-form-group">
+        <label for="odContactSellerSubject">Subject</label>
+        <input type="text" id="odContactSellerSubject" value="Regarding order #{{ order.order_number }}" />
+      </div>
+      <div class="od-form-group">
+        <label for="odContactSellerMessage">Message</label>
+        <textarea id="odContactSellerMessage" placeholder="Write your message…"></textarea>
+      </div>
+
+      <div class="od-modal-actions">
+        <button type="button" class="od-btn od-btn-secondary" data-od-close-modal>Cancel</button>
+        <button type="button" class="od-btn od-btn-primary" data-od-confirm-action data-od-toast="Email sent to seller.">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXPORT ORDER MODAL ============ -->
+  <div class="od-modal-overlay is-hidden" id="odExportModal" data-od-modal>
+    <div class="od-modal" role="dialog" aria-modal="true" aria-labelledby="odExportModalTitle">
+      <button type="button" class="od-modal-close" data-od-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+      <div class="od-modal-icon c-accent"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+      <h3 class="od-modal-title" id="odExportModalTitle">Export Order</h3>
+      <p class="od-modal-text">Choose a format to export order #{{ order.order_number }}.</p>
+
+      <div class="od-export-options">
+        <button type="button" class="od-export-option" data-od-toast="Preparing CSV export…">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 12h8M8 16h5"></path></svg>Export as CSV
+        </button>
+        <a href="{% url 'download_invoice' order_number=order.order_number %}" class="od-export-option" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg>Export as PDF / Invoice
+        </a>
+        <button type="button" class="od-export-option" data-od-toast="Preparing JSON export…">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>Export as JSON
+        </button>
+        <button type="button" class="od-export-option" id="odExportPrintOption">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path></svg>Print Order
+        </button>
+      </div>
+
+      <div class="od-modal-actions">
+        <button type="button" class="od-btn od-btn-secondary" data-od-close-modal>Close</button>
+      </div>
+    </div>
+  </div>
+
+  {% include "email_components/email_composer.html" %}
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="od-toast-container" id="odToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/admin_order_detail.js' %}"></script>
+{% endblock %}

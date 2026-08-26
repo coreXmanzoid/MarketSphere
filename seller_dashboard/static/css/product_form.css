@@ -345,14 +345,26 @@
     color: var(--pf-caption);
     transition: transform var(--pf-transition-fast);
 }
-
 .pf-card-body {
     padding: 4px 22px 26px;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
+/* Keep your existing .pf-card-head and .pf-card-head-text CSS exactly as is */
 
+/* Add this new class to group the button and SVG */
+.pf-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto; /* Pushes both the button and caret to the far right */
+}
+
+/* Update this class to remove the margin, as the wrapper handles it now */
+.pf-accordion-button {
+    /* Removed margin-left: auto; */
+}
 /* ================= 7. FORM FIELDS ================= */
 .pf-field-group {
     display: flex;

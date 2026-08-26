@@ -17,6 +17,11 @@ urlpatterns = [
         name="download_invoice",
     ),
     path(
+        "<str:order_number>/update-note/",
+        views.update_seller_note_view,
+        name="update-seller-note",
+    ),
+    path(
         "<str:order_number>/shipping-label/",
         views.download_shipping_label,
         name="download-shipping-label",

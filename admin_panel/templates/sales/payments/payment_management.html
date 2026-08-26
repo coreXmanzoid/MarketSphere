@@ -1,0 +1,841 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Payment Management
+{% endblock %}
+
+{% block active_page %}
+  payments
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span>Sales</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">Payments</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/payments.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <div class="pmt-page" id="pmtPage">
+
+    <!-- ================= 1. PAGE HEADER ================= -->
+    <header class="pmt-header pmt-reveal">
+      <div class="pmt-header-text">
+        <span class="pmt-header-eyebrow"><i class="pmt-eyebrow-dot"></i> Financial Operations</span>
+        <h1 class="pmt-header-title">Payment Management</h1>
+        <p class="pmt-header-subtitle">Monitor marketplace transactions, payment status, refunds, fees, and financial activity.</p>
+      </div>
+
+      <div class="pmt-header-actions">
+        <button type="button" class="pmt-btn pmt-btn-secondary" id="pmtAdvancedFiltersBtn" aria-expanded="false" aria-controls="pmtAdvancedFilterPanel">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+            <line x1="11" y1="18" x2="13" y2="18"></line>
+          </svg>Advanced Filters
+        </button>
+
+        <button type="button" class="pmt-btn pmt-btn-primary" id="pmtExportBtn" data-pmt-open-modal="pmtExportModal">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>Export Payments
+        </button>
+
+        <div class="pmt-dropdown" id="pmtMoreDropdown">
+          <button type="button" class="pmt-btn pmt-btn-icon-only" id="pmtMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More options">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="1.2"></circle>
+              <circle cx="12" cy="12" r="1.2"></circle>
+              <circle cx="12" cy="19" r="1.2"></circle>
+            </svg>
+          </button>
+
+          <div class="pmt-dropdown-menu" role="menu">
+            <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-toast="info" data-pmt-toast-msg="Reconciliation report isn&#8217;t available yet.">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 12l2 2 4-4"></path>
+                <circle cx="12" cy="12" r="9"></circle>
+              </svg>Reconciliation Report
+            </button>
+            <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-toast="info" data-pmt-toast-msg="Payout summary isn&#8217;t available yet.">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1v22"></path>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>Seller Payout Summary
+            </button>
+            <div class="pmt-dropdown-divider" role="separator"></div>
+            <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-toast="info" data-pmt-toast-msg="Refreshing payment data&#8230;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-3.5-7.1"></path>
+                <polyline points="21 3 21 9 15 9"></polyline>
+              </svg>Refresh Data
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= 2. PAYMENT SUMMARY METRICS ================= -->
+    <section class="pmt-metrics-grid pmt-reveal" aria-label="Payment summary metrics">
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Total Payments</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.total_payments|default:0 }}">{{ admin.total_payments|default:0 }}</span>
+          {% if admin.payments_increased %}
+            <span class="pmt-metric-trend up">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>{{ admin.payments_change|default:0 }}% vs last month
+            </span>
+          {% else %}
+            <span class="pmt-metric-trend down">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="6 9 12 15 18 9"></polyline></svg>{{ admin.payments_change|default:0 }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon c-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Successful</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.successful_payments|default:0 }}">{{ admin.successful_payments|default:0 }}</span>
+          <span class="pmt-metric-trend neutral">{{ admin.success_rate|default:0 }}% success rate</span>
+        </div>
+      </div>
+
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon c-warning" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 3"></path>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Pending</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.pending_payments|default:0 }}">{{ admin.pending_payments|default:0 }}</span>
+          <span class="pmt-metric-trend neutral">Awaiting confirmation</span>
+        </div>
+      </div>
+
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon c-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Failed</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.failed_payments|default:0 }}">{{ admin.failed_payments|default:0 }}</span>
+          <span class="pmt-metric-trend down">Needs review</span>
+        </div>
+      </div>
+
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon c-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Refunded</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.refunded_payments|default:0 }}">{{ admin.refunded_payments|default:0 }}</span>
+          <span class="pmt-metric-trend neutral">Rs. {{ admin.total_refunded|default:"0" }} total</span>
+        </div>
+      </div>
+
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon c-info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M12 8v4l3 2"></path>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Partially Refunded</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.partially_refunded_payments|default:0 }}">{{ admin.partially_refunded_payments|default:0 }}</span>
+          <span class="pmt-metric-trend neutral">Partial settlements</span>
+        </div>
+      </div>
+
+      <div class="pmt-metric-card pmt-metric-card-highlight">
+        <div class="pmt-metric-icon c-success" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1v22"></path>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Total Revenue</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.total_revenue|default:0 }}" data-prefix="Rs. ">Rs. {{ admin.total_revenue|default:"0" }}</span>
+          {% if admin.revenue_increased %}
+            <span class="pmt-metric-trend up">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>{{ admin.revenue_change|default:0 }}% vs last month
+            </span>
+          {% else %}
+            <span class="pmt-metric-trend down">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="6 9 12 15 18 9"></polyline></svg>{{ admin.revenue_change|default:0 }}% vs last month
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pmt-metric-card">
+        <div class="pmt-metric-icon c-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="10" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="pmt-metric-body">
+          <span class="pmt-metric-label">Total Refunded</span>
+          <span class="pmt-metric-value" data-count-to="{{ admin.total_refunded|default:0 }}" data-prefix="Rs. ">Rs. {{ admin.total_refunded|default:"0" }}</span>
+          <span class="pmt-metric-trend neutral">{{ admin.refund_rate|default:0 }}% of revenue</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECONDARY METRICS (future-ready, collapsible) ============ -->
+    <section class="pmt-submetrics-grid pmt-reveal" aria-label="Marketplace financial breakdown">
+      <div class="pmt-submetric-card">
+        <span class="pmt-submetric-label">Marketplace Fees</span>
+        <strong class="pmt-submetric-value">Rs. {{ admin.total_marketplace_fees|default:"—" }}</strong>
+      </div>
+      <div class="pmt-submetric-card">
+        <span class="pmt-submetric-label">Seller Payouts</span>
+        <strong class="pmt-submetric-value">Rs. {{ admin.total_seller_payouts|default:"—" }}</strong>
+      </div>
+      <div class="pmt-submetric-card">
+        <span class="pmt-submetric-label">Net Marketplace Revenue</span>
+        <strong class="pmt-submetric-value">Rs. {{ admin.net_marketplace_revenue|default:"—" }}</strong>
+      </div>
+      <div class="pmt-submetric-card">
+        <span class="pmt-submetric-label">Average Transaction Value</span>
+        <strong class="pmt-submetric-value">Rs. {{ admin.average_transaction_value|default:"—" }}</strong>
+      </div>
+    </section>
+
+    <!-- ================= 3. PAYMENT STATUS OVERVIEW ================= -->
+    <nav class="pmt-status-nav pmt-reveal" id="pmtStatusNav" aria-label="Filter by payment status">
+      <button type="button" class="pmt-status-pill is-active" data-pmt-status="all">
+        All <span class="pmt-status-count">{{ admin.total_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="successful">
+        <i class="pmt-status-dot c-success"></i>Successful <span class="pmt-status-count">{{ admin.successful_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="pending">
+        <i class="pmt-status-dot c-warning"></i>Pending <span class="pmt-status-count">{{ admin.pending_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="processing">
+        <i class="pmt-status-dot c-info"></i>Processing <span class="pmt-status-count">{{ admin.processing_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="authorized">
+        <i class="pmt-status-dot c-info"></i>Authorized <span class="pmt-status-count">{{ admin.authorized_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="captured">
+        <i class="pmt-status-dot c-success"></i>Captured <span class="pmt-status-count">{{ admin.captured_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="settled">
+        <i class="pmt-status-dot c-success"></i>Settled <span class="pmt-status-count">{{ admin.settled_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="failed">
+        <i class="pmt-status-dot c-danger"></i>Failed <span class="pmt-status-count">{{ admin.failed_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="refunded">
+        <i class="pmt-status-dot c-blue"></i>Refunded <span class="pmt-status-count">{{ admin.refunded_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="partially_refunded">
+        <i class="pmt-status-dot c-blue"></i>Partially Refunded <span class="pmt-status-count">{{ admin.partially_refunded_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="disputed">
+        <i class="pmt-status-dot c-danger"></i>Disputed <span class="pmt-status-count">{{ admin.disputed_payments|default:0 }}</span>
+      </button>
+      <button type="button" class="pmt-status-pill" data-pmt-status="cancelled">
+        <i class="pmt-status-dot c-muted"></i>Cancelled <span class="pmt-status-count">{{ admin.cancelled_payments|default:0 }}</span>
+      </button>
+    </nav>
+
+    <!-- ================= 4. SEARCH & FILTER TOOLBAR ================= -->
+    <section class="pmt-toolbar-card pmt-reveal" aria-label="Payment filters">
+      <form method="get" class="pmt-toolbar" id="pmtToolbarForm">
+        <div class="pmt-search">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input type="search" name="q" id="pmtSearchInput" class="pmt-search-input" placeholder="Search payments, orders, buyers, or transaction IDs..." aria-label="Search payments" value="{{ request.GET.q }}" />
+        </div>
+
+        <div class="pmt-toolbar-filters">
+          <div class="pmt-select-wrap">
+            <select name="method" id="pmtMethodFilter" class="pmt-select" aria-label="Filter by payment method">
+              <option value="">All Methods</option>
+              <option value="card">Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="wallet">Wallet</option>
+              <option value="cod">Cash on Delivery</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="pmt-select-wrap">
+            <select name="provider" id="pmtProviderFilter" class="pmt-select" aria-label="Filter by payment provider">
+              <option value="">All Providers</option>
+              {% for provider in payment_providers %}
+                <option value="{{ provider.slug }}">{{ provider.name }}</option>
+              {% empty %}
+                <option value="stripe">Stripe</option>
+                <option value="jazzcash">JazzCash</option>
+                <option value="easypaisa">Easypaisa</option>
+                <option value="cod">COD</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pmt-select-wrap">
+            <select name="sort" id="pmtSortFilter" class="pmt-select" aria-label="Sort payments">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="amount_high_low">Amount: High to Low</option>
+              <option value="amount_low_high">Amount: Low to High</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+
+          <button type="button" class="pmt-btn pmt-btn-secondary pmt-btn-sm" id="pmtResetFiltersBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>Reset
+          </button>
+
+          <button type="submit" class="pmt-btn pmt-btn-primary pmt-btn-sm">Apply Filters</button>
+        </div>
+      </form>
+
+      <!-- Quick filter chips -->
+      <div class="pmt-chip-row" id="pmtChipRow" aria-label="Quick filters">
+        <button type="button" class="pmt-chip is-active" data-pmt-chip="all">All</button>
+        <button type="button" class="pmt-chip" data-pmt-chip="successful">Successful</button>
+        <button type="button" class="pmt-chip" data-pmt-chip="pending">Pending</button>
+        <button type="button" class="pmt-chip" data-pmt-chip="failed">Failed</button>
+        <button type="button" class="pmt-chip" data-pmt-chip="refunded">Refunded</button>
+        <button type="button" class="pmt-chip" data-pmt-chip="disputed">Disputed</button>
+      </div>
+
+      <!-- ================= 17. ADVANCED FILTER PANEL ================= -->
+      <div class="pmt-advanced-panel" id="pmtAdvancedFilterPanel" hidden>
+        <div class="pmt-advanced-grid">
+          <div class="pmt-form-group">
+            <label for="pmtAdvTransactionId">Transaction ID</label>
+            <input type="text" id="pmtAdvTransactionId" name="transaction_id" placeholder="TXN-000000" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvOrderId">Order ID</label>
+            <input type="text" id="pmtAdvOrderId" name="order_id" placeholder="#MS-000000" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvBuyer">Buyer</label>
+            <input type="text" id="pmtAdvBuyer" name="buyer" placeholder="Name or email" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvSeller">Seller</label>
+            <input type="text" id="pmtAdvSeller" name="seller" placeholder="Store name" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvRefundStatus">Refund Status</label>
+            <select id="pmtAdvRefundStatus" name="refund_status">
+              <option value="">Any</option>
+              <option value="none">No Refund</option>
+              <option value="partial">Partial Refund</option>
+              <option value="full">Fully Refunded</option>
+            </select>
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvSettlementStatus">Settlement Status</label>
+            <select id="pmtAdvSettlementStatus" name="settlement_status">
+              <option value="">Any</option>
+              <option value="unsettled">Unsettled</option>
+              <option value="settled">Settled</option>
+            </select>
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvRiskStatus">Risk Status</label>
+            <select id="pmtAdvRiskStatus" name="risk_status">
+              <option value="">Any</option>
+              <option value="low">Low Risk</option>
+              <option value="medium">Medium Risk</option>
+              <option value="high">High Risk</option>
+            </select>
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvCurrency">Currency</label>
+            <select id="pmtAdvCurrency" name="currency">
+              <option value="">Any</option>
+              <option value="PKR" selected>PKR</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvMinAmount">Minimum Amount</label>
+            <input type="number" id="pmtAdvMinAmount" name="min_amount" placeholder="Rs. 0" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvMaxAmount">Maximum Amount</label>
+            <input type="number" id="pmtAdvMaxAmount" name="max_amount" placeholder="Rs. 150,000" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvStartDate">Start Date</label>
+            <input type="date" id="pmtAdvStartDate" name="start_date" />
+          </div>
+          <div class="pmt-form-group">
+            <label for="pmtAdvEndDate">End Date</label>
+            <input type="date" id="pmtAdvEndDate" name="end_date" />
+          </div>
+        </div>
+
+        <div class="pmt-advanced-actions">
+          <button type="button" class="pmt-btn pmt-btn-secondary pmt-btn-sm" id="pmtAdvancedResetBtn">Reset</button>
+          <button type="button" class="pmt-btn pmt-btn-primary pmt-btn-sm" id="pmtAdvancedApplyBtn">Apply</button>
+        </div>
+      </div>
+
+      <!-- ================= 16. BULK ACTION BAR ================= -->
+      <div class="pmt-bulk-bar pmt-hidden" id="pmtBulkBar">
+        <div class="pmt-bulk-info">
+          <span class="pmt-bulk-count" id="pmtBulkCount">0</span>
+          <span>payments selected</span>
+        </div>
+        <div class="pmt-bulk-actions">
+          <button type="button" class="pmt-btn pmt-btn-secondary pmt-btn-sm" data-pmt-bulk-action="export">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>Export
+          </button>
+          <button type="button" class="pmt-btn pmt-btn-secondary pmt-btn-sm" data-pmt-bulk-action="review">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 12l2 2 4-4"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>Mark Reviewed
+          </button>
+          <button type="button" class="pmt-btn pmt-btn-secondary pmt-btn-sm" data-pmt-bulk-action="archive">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="21 8 21 21 3 21 3 8"></polyline>
+              <rect x="1" y="3" width="22" height="5"></rect>
+              <line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>Archive
+          </button>
+          <button type="button" class="pmt-btn pmt-btn-ghost pmt-btn-sm" id="pmtClearSelectionBtn">Clear Selection</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5. PAYMENT TABLE ================= -->
+    <section class="pmt-table-card pmt-reveal" aria-label="Payments table">
+      <div class="pmt-table-wrap">
+        <table class="pmt-table" id="pmtTable">
+          <thead>
+            <tr>
+              <th scope="col" class="pmt-col-checkbox">
+                <label class="pmt-checkbox">
+                  <input type="checkbox" id="pmtSelectAll" aria-label="Select all payments" />
+                  <span class="pmt-checkbox-box"></span>
+                </label>
+              </th>
+              <th scope="col">Transaction</th>
+              <th scope="col">Order</th>
+              <th scope="col">Buyer</th>
+              <th scope="col">Seller</th>
+              <th scope="col">Method</th>
+              <th scope="col">Provider</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Fees</th>
+              <th scope="col">Net Amount</th>
+              <th scope="col">Status</th>
+              <th scope="col">Refund</th>
+              <th scope="col">Date</th>
+              <th scope="col" class="pmt-col-actions"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+
+          <tbody id="pmtTableBody">
+            {% for payment in payments %}
+              <tr class="pmt-row"
+                  data-payment-id="{{ payment.id }}"
+                  data-status="{{ payment.status|default:'pending' }}"
+                  data-transaction-id="{{ payment.transaction_id }}"
+                  data-order-id="{{ payment.order.order_number }}">
+
+                <td data-label="">
+                  <label class="pmt-checkbox">
+                    <input type="checkbox" class="pmt-row-checkbox" aria-label="Select payment {{ payment.transaction_id }}" />
+                    <span class="pmt-checkbox-box"></span>
+                  </label>
+                </td>
+
+                <td data-label="Transaction">
+                  <div class="pmt-txn-cell">
+                    <span class="pmt-txn-id">{{ payment.transaction_id|default:"TXN-000000" }}</span>
+                    <button type="button" class="pmt-copy-btn" data-pmt-copy="{{ payment.transaction_id }}" aria-label="Copy transaction ID">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    <span class="pmt-provider-ref">Ref: {{ payment.provider_reference|default:"—" }}</span>
+                  </div>
+                </td>
+
+                <td data-label="Order">
+                  <div class="pmt-order-cell">
+                    <a href="{% url 'order' order_number=payment.order.order_number %}" class="pmt-order-link">#MS-{{ payment.order.order_number|slice:"6" }}</a>
+                    <button type="button" class="pmt-copy-btn" data-pmt-copy="{{ payment.order.order_number }}" aria-label="Copy order ID">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                  </div>
+                </td>
+
+                <td data-label="Buyer">
+                  <a href="{% url 'user-buyer' userId=payment.order.user.id %}" class="pmt-user-cell">
+                    <span class="pmt-user-avatar">
+                      {% if payment.order.user.profile_image_url %}
+                        <img src="{{ payment.order.user.profile_image_url }}" alt="" />
+                      {% else %}
+                        {{ payment.order.user.first_name|slice:":1"|upper|default:"B" }}
+                      {% endif %}
+                    </span>
+                    <span class="pmt-user-info">
+                      <strong>{{ payment.order.user.first_name }} {{ payment.order.user.last_name }}</strong>
+                      <small>{{ payment.order.user.email }}</small>
+                    </span>
+                  </a>
+                </td>
+
+                <td data-label="Seller">
+                  {% if payment.seller %}
+                    <a href="{% url 'user-seller' sellerId=payment.seller.id %}" class="pmt-seller-cell">
+                      <strong>{{ payment.seller.store_name }}</strong>
+                      <small>ID: MS-SLR-{{ payment.seller.id|stringformat:"04d" }}</small>
+                    </a>
+                  {% else %}
+                    <span class="pmt-multi-seller">Multiple Sellers</span>
+                  {% endif %}
+                </td>
+
+                <td data-label="Method">
+                  <span class="pmt-method-cell">
+                    <i class="bi
+                      {% if payment.payment_method == 'card' %}bi-credit-card
+                      {% elif payment.payment_method == 'bank_transfer' %}bi-bank
+                      {% elif payment.payment_method == 'wallet' %}bi-wallet2
+                      {% elif payment.payment_method == 'cod' %}bi-cash-coin
+                      {% else %}bi-currency-exchange{% endif %}"></i>
+                    {{ payment.get_payment_method_display|default:"Cash on Delivery" }}
+                    {% if payment.card_last_four %}
+                      <span class="pmt-card-mask">•••• {{ payment.card_last_four }}</span>
+                    {% endif %}
+                  </span>
+                </td>
+
+                <td data-label="Provider">
+                  <span class="pmt-provider-cell">{{ payment.provider|default:"—" }}</span>
+                </td>
+
+                <td data-label="Amount">
+                  <span class="pmt-amount-cell">{{ payment.currency|default:"Rs." }} {{ payment.amount|floatformat:0|default:"0" }}</span>
+                </td>
+
+                <td data-label="Fees">
+                  <span class="pmt-fee-cell">Rs. {{ payment.processing_fee|floatformat:0|default:"0" }}</span>
+                </td>
+
+                <td data-label="Net Amount">
+                  <span class="pmt-net-cell">Rs. {{ payment.net_amount|floatformat:0|default:payment.amount|floatformat:0 }}</span>
+                </td>
+
+                <td data-label="Status">
+                  <span class="pmt-badge pmt-badge-{{ payment.status|default:'pending' }}">{{ payment.get_status_display|default:"Pending" }}</span>
+                </td>
+
+                <td data-label="Refund">
+                  {% if payment.refunded_amount %}
+                    <span class="pmt-badge pmt-badge-refund-{{ payment.refund_status|default:'partial' }}">
+                      {% if payment.refund_status == 'full' %}Fully Refunded{% else %}Rs. {{ payment.refunded_amount|floatformat:0 }} Refunded{% endif %}
+                    </span>
+                  {% else %}
+                    <span class="pmt-badge pmt-badge-refund-none">No Refund</span>
+                  {% endif %}
+                </td>
+
+                <td data-label="Date">
+                  <span class="pmt-date-cell">{{ payment.created_at|date:"M j, Y" }}<small>{{ payment.created_at|date:"H:i" }}</small></span>
+                </td>
+
+                <td data-label="" class="pmt-col-actions">
+                  <div class="pmt-dropdown pmt-row-dropdown">
+                    <button type="button" class="pmt-icon-btn pmt-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions for {{ payment.transaction_id }}">
+                      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="5" r="1.5"></circle>
+                        <circle cx="12" cy="12" r="1.5"></circle>
+                        <circle cx="12" cy="19" r="1.5"></circle>
+                      </svg>
+                    </button>
+                    <div class="pmt-dropdown-menu" role="menu" data-payment-id="{{ payment.id }}">
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-quickview
+                        data-transaction-id="{{ payment.transaction_id }}"
+                        data-order-id="{{ payment.order.order_number }}"
+                        data-buyer="{{ payment.order.user.first_name }} {{ payment.order.user.last_name }}"
+                        data-seller="{{ payment.seller.store_name|default:'Multiple Sellers' }}"
+                        data-amount="{{ payment.currency|default:'Rs.' }} {{ payment.amount|floatformat:0 }}"
+                        data-method="{{ payment.get_payment_method_display|default:'Cash on Delivery' }}"
+                        data-provider="{{ payment.provider|default:'—' }}"
+                        data-status="{{ payment.get_status_display|default:'Pending' }}"
+                        data-status-slug="{{ payment.status|default:'pending' }}"
+                        data-refund="{{ payment.refunded_amount|default:'0' }}"
+                        data-date="{{ payment.created_at|date:'M j, Y H:i' }}">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>View Payment
+                      </button>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" onclick="window.location.href='{% url "order" order_number=payment.order.order_number %}'">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path><path d="M14 2v5h5"></path></svg>View Order
+                      </button>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" onclick="window.location.href='{% url "user-buyer" userId=payment.order.user.id %}'">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>View Buyer
+                      </button>
+                      {% if payment.seller %}
+                        <button type="button" class="pmt-dropdown-item" role="menuitem" onclick="window.location.href='{% url "user-seller" sellerId=payment.seller.id %}'">
+                          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg>View Seller
+                        </button>
+                      {% endif %}
+                      <div class="pmt-dropdown-divider" role="separator"></div>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-copy="{{ payment.transaction_id }}">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy Transaction ID
+                      </button>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-copy="{{ payment.order.order_number }}">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy Order ID
+                      </button>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-toast="info" data-pmt-toast-msg="Opening refund history&#8230;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>View Refunds
+                      </button>
+                      <div class="pmt-dropdown-divider" role="separator"></div>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-toast="info" data-pmt-toast-msg="Preparing payment export&#8230;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export Payment
+                      </button>
+                      <button type="button" class="pmt-dropdown-item" role="menuitem" data-pmt-toast="info" data-pmt-toast-msg="Preparing print view&#8230;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path></svg>Print Payment
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr class="pmt-empty-row">
+                <td colspan="14">
+                  <div class="pmt-empty-state" id="pmtEmptyState">
+                    <div class="pmt-empty-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                      </svg>
+                    </div>
+                    <h3 class="pmt-empty-title">No Payments Found</h3>
+                    <p class="pmt-empty-subtitle">No payment transactions match your current filters. Try adjusting your search or clearing filters.</p>
+                    <button type="button" class="pmt-btn pmt-btn-primary" id="pmtEmptyResetBtn">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Reset Filters
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Search-result / status-specific empty states (hidden by default, toggled by JS) -->
+      <div class="pmt-empty-state pmt-hidden" id="pmtNoSearchResults">
+        <div class="pmt-empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        </div>
+        <h3 class="pmt-empty-title">No Matching Payments</h3>
+        <p class="pmt-empty-subtitle">We couldn't find any payments matching your search or filter criteria.</p>
+        <button type="button" class="pmt-btn pmt-btn-primary" id="pmtSearchEmptyResetBtn">Clear Search</button>
+      </div>
+
+      <!-- ================= 25. PAGINATION ================= -->
+      <div class="pmt-pagination-bar">
+        <div class="pmt-pagination-left">
+          <span class="pmt-pagination-count">
+            {% comment %} Showing <strong>{{ page_obj.start_index|default:1 }}&ndash;{{ page_obj.end_index|default:payments|length }}</strong> of <strong>{{ paginator.count|default:payments|length }}</strong> payments {% endcomment %}
+          </span>
+        </div>
+
+        <nav class="pmt-pagination" aria-label="Payments pagination">
+          <a href="?page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" class="pmt-page-btn {% if not page_obj.has_previous %}is-disabled{% endif %}" aria-label="Previous page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          </a>
+
+          {% for num in paginator.page_range %}
+            <a href="?page={{ num }}" class="pmt-page-btn {% if num == page_obj.number %}is-active{% endif %}" {% if num == page_obj.number %}aria-current="page"{% endif %}>{{ num }}</a>
+          {% empty %}
+            <span class="pmt-page-btn is-active" aria-current="page">1</span>
+          {% endfor %}
+
+          <a href="?page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages|default:1 }}{% endif %}" class="pmt-page-btn {% if not page_obj.has_next %}is-disabled{% endif %}" aria-label="Next page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+          </a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- ================= 20. PAYMENT ACTIVITY / SYSTEM STATUS ================= -->
+    <section class="pmt-activity-strip pmt-reveal" aria-label="Payment activity summary">
+      <div class="pmt-activity-card">
+        <span class="pmt-activity-label">Last Payment</span>
+        <strong>{{ admin.last_payment_amount|default:"—" }}</strong>
+        <small>{{ admin.last_payment_time|default:"No recent activity" }}</small>
+      </div>
+      <div class="pmt-activity-card">
+        <span class="pmt-activity-label">Last Successful Payment</span>
+        <strong class="c-success">{{ admin.last_successful_payment_amount|default:"—" }}</strong>
+        <small>{{ admin.last_successful_payment_time|default:"—" }}</small>
+      </div>
+      <div class="pmt-activity-card">
+        <span class="pmt-activity-label">Last Failed Payment</span>
+        <strong class="c-danger">{{ admin.last_failed_payment_amount|default:"—" }}</strong>
+        <small>{{ admin.last_failed_payment_time|default:"—" }}</small>
+      </div>
+      <div class="pmt-activity-card">
+        <span class="pmt-activity-label">Last Refund</span>
+        <strong class="c-blue">{{ admin.last_refund_amount|default:"—" }}</strong>
+        <small>{{ admin.last_refund_time|default:"—" }}</small>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= 19. QUICK VIEW DRAWER ================= -->
+  <div class="pmt-drawer-overlay pmt-hidden" id="pmtQuickViewOverlay">
+    <aside class="pmt-drawer" role="dialog" aria-modal="true" aria-labelledby="pmtQuickViewTitle">
+      <div class="pmt-drawer-head">
+        <div>
+          <span class="pmt-drawer-eyebrow">Quick View</span>
+          <h3 class="pmt-drawer-title" id="pmtQuickViewTitle">Payment Summary</h3>
+        </div>
+        <button type="button" class="pmt-modal-close" id="pmtQuickViewClose" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="pmt-drawer-body">
+        <div class="pmt-qv-status-row">
+          <span class="pmt-badge" id="pmtQvStatusBadge">Pending</span>
+          <span class="pmt-qv-amount" id="pmtQvAmount">Rs. 0</span>
+        </div>
+
+        <dl class="pmt-qv-list">
+          <div class="pmt-qv-row"><dt>Transaction ID</dt><dd id="pmtQvTransactionId">—</dd></div>
+          <div class="pmt-qv-row"><dt>Order</dt><dd id="pmtQvOrderId">—</dd></div>
+          <div class="pmt-qv-row"><dt>Buyer</dt><dd id="pmtQvBuyer">—</dd></div>
+          <div class="pmt-qv-row"><dt>Seller</dt><dd id="pmtQvSeller">—</dd></div>
+          <div class="pmt-qv-row"><dt>Payment Method</dt><dd id="pmtQvMethod">—</dd></div>
+          <div class="pmt-qv-row"><dt>Provider</dt><dd id="pmtQvProvider">—</dd></div>
+          <div class="pmt-qv-row"><dt>Refunded Amount</dt><dd id="pmtQvRefund">—</dd></div>
+          <div class="pmt-qv-row"><dt>Date</dt><dd id="pmtQvDate">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="pmt-drawer-foot">
+        <button type="button" class="pmt-btn pmt-btn-secondary" id="pmtQvViewOrderBtn">View Order</button>
+        <button type="button" class="pmt-btn pmt-btn-secondary" id="pmtQvViewBuyerBtn">View Buyer</button>
+        <button type="button" class="pmt-btn pmt-btn-primary" id="pmtQvViewFullBtn" data-pmt-toast="info" data-pmt-toast-msg="Full payment detail page is coming soon.">View Full Payment</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ================= 18. EXPORT MODAL ================= -->
+  <div class="pmt-modal-overlay pmt-hidden" id="pmtExportModal" data-pmt-modal>
+    <div class="pmt-modal pmt-modal-lg" role="dialog" aria-modal="true" aria-labelledby="pmtExportModalTitle">
+      <button type="button" class="pmt-modal-close" data-pmt-close-modal aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+      </button>
+      <div class="pmt-modal-icon c-accent">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </div>
+      <h3 class="pmt-modal-title" id="pmtExportModalTitle">Export Payments</h3>
+      <p class="pmt-modal-text">Choose what to export and in which format. Your export will include the fields selected below.</p>
+
+      <div class="pmt-form-group">
+        <label>Scope</label>
+        <div class="pmt-radio-row">
+          <label class="pmt-radio"><input type="radio" name="pmtExportScope" value="all" checked /><span>Export All</span></label>
+          <label class="pmt-radio"><input type="radio" name="pmtExportScope" value="selected" /><span>Export Selected</span></label>
+          <label class="pmt-radio"><input type="radio" name="pmtExportScope" value="filtered" /><span>Export Filtered</span></label>
+          <label class="pmt-radio"><input type="radio" name="pmtExportScope" value="current_view" /><span>Export Current View</span></label>
+        </div>
+      </div>
+
+      <div class="pmt-form-group">
+        <label for="pmtExportFormat">Format</label>
+        <select id="pmtExportFormat">
+          <option value="csv">CSV</option>
+          <option value="excel">Excel (.xlsx)</option>
+          <option value="pdf">PDF</option>
+          <option value="json">JSON</option>
+        </select>
+      </div>
+
+      <div class="pmt-form-grid-2">
+        <div class="pmt-form-group">
+          <label for="pmtExportStartDate">Date Range — Start</label>
+          <input type="date" id="pmtExportStartDate" />
+        </div>
+        <div class="pmt-form-group">
+          <label for="pmtExportEndDate">Date Range — End</label>
+          <input type="date" id="pmtExportEndDate" />
+        </div>
+      </div>
+
+      <div class="pmt-form-group">
+        <label>Include</label>
+        <div class="pmt-modal-checklist">
+          <label class="pmt-checkbox-row"><input type="checkbox" checked /><span>Fees Breakdown</span></label>
+          <label class="pmt-checkbox-row"><input type="checkbox" checked /><span>Refund Information</span></label>
+          <label class="pmt-checkbox-row"><input type="checkbox" checked /><span>Buyer Information</span></label>
+          <label class="pmt-checkbox-row"><input type="checkbox" checked /><span>Seller Information</span></label>
+        </div>
+      </div>
+
+      <div class="pmt-modal-actions">
+        <button type="button" class="pmt-btn pmt-btn-secondary" data-pmt-close-modal>Cancel</button>
+        <button type="button" class="pmt-btn pmt-btn-primary" id="pmtExportConfirmBtn">
+          <span class="pmt-btn-label">Start Export</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="pmt-toast-container" id="pmtToastContainer" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/payments.js' %}"></script>
+{% endblock %}

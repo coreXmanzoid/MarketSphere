@@ -732,6 +732,10 @@
     display: block;
     font-weight: 700;
     color: var(--pm-heading);
+    cursor: pointer;
+}
+.pm-product-name:hover {
+    text-decoration: underline;
 }
 
 .pm-product-sku {

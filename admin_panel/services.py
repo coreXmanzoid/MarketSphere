@@ -9,6 +9,12 @@ from accounts.models import Address, User, Seller, SellerApplicationDocument
 from orders.models import Order, SellerOrder, OrderItem
 from products import services
 from products.models import Product, Brand, Category
+from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+from django.db import IntegrityError, transaction
+import csv
+import io
+import json
 
 
 def get_buyer_details(user_id):
@@ -1100,16 +1106,17 @@ def get_product_performance(product):
 
     product_views = None
 
-    reserved_units = product.order_items.filter(
-    seller_order__status__in=[
-        SellerOrder.Status.PENDING,
-        SellerOrder.Status.CONFIRMED,
-        SellerOrder.Status.PROCESSING,
-        SellerOrder.Status.SHIPPED,
-        ]
-    ).aggregate(
-        total=Sum("quantity")
-    )["total"] or 0
+    reserved_units = (
+        product.order_items.filter(
+            seller_order__status__in=[
+                SellerOrder.Status.PENDING,
+                SellerOrder.Status.CONFIRMED,
+                SellerOrder.Status.PROCESSING,
+                SellerOrder.Status.SHIPPED,
+            ]
+        ).aggregate(total=Sum("quantity"))["total"]
+        or 0
+    )
 
     if current_stock <= 0:
         stock_health = "out_of_stock"
@@ -1124,32 +1131,27 @@ def get_product_performance(product):
     # RETURN RESULT
     # ---------------------------------------------------------
 
-
     return {
         "total_sales": total_sales,
         "sales_change": sales_change,
         "sales_increased": sales_increased,
-
         "total_orders": total_orders,
         "orders_change": orders_change,
         "orders_increased": orders_increased,
-
         "units_sold": units_sold,
         "units_change": units_change,
         "units_increased": units_increased,
-
         "revenue": revenue,
         "return_rate": return_rate,
-
         "current_stock": current_stock,
         "low_stock_threshold": low_stock_threshold,
-
         "wishlist_adds": wishlist_adds,
         "product_views": product_views,
         "reserved_units": reserved_units,
         "available_stock": available_stock,
         "stock_health": stock_health,
     }
+
 
 def get_product_orders(product):
     statuses = SellerOrder.Status
@@ -1168,59 +1170,80 @@ def get_product_orders(product):
     # TOTAL ORDERS
     # ---------------------------------------------------------
 
-    total_orders = product_order_items.values(
-        "seller_order__order_id"
-    ).distinct().count()
+    total_orders = (
+        product_order_items.values("seller_order__order_id").distinct().count()
+    )
 
     # ---------------------------------------------------------
     # STATUS COUNTS
     # ---------------------------------------------------------
 
-    pending_orders = product_order_items.filter(
-        seller_order__status=statuses.PENDING,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    pending_orders = (
+        product_order_items.filter(
+            seller_order__status=statuses.PENDING,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
-    confirmed_orders = product_order_items.filter(
-        seller_order__status=statuses.CONFIRMED,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    confirmed_orders = (
+        product_order_items.filter(
+            seller_order__status=statuses.CONFIRMED,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
-    processing_orders = product_order_items.filter(
-        seller_order__status=statuses.PROCESSING,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    processing_orders = (
+        product_order_items.filter(
+            seller_order__status=statuses.PROCESSING,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
-    shipped_orders = product_order_items.filter(
-        seller_order__status=statuses.SHIPPED,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    shipped_orders = (
+        product_order_items.filter(
+            seller_order__status=statuses.SHIPPED,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
-    delivered_orders = product_order_items.filter(
-        seller_order__status=statuses.DELIVERED,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    delivered_orders = (
+        product_order_items.filter(
+            seller_order__status=statuses.DELIVERED,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
-    cancelled_orders = product_order_items.filter(
-        seller_order__status=statuses.CANCELLED,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    cancelled_orders = (
+        product_order_items.filter(
+            seller_order__status=statuses.CANCELLED,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
     # ---------------------------------------------------------
     # REFUNDED ORDERS
     # ---------------------------------------------------------
 
-    refunded_orders = product_order_items.filter(
-        seller_order__order__payment_status=Order.PaymentStatus.REFUNDED,
-    ).values(
-        "seller_order__order_id"
-    ).distinct().count()
+    refunded_orders = (
+        product_order_items.filter(
+            seller_order__order__payment_status=Order.PaymentStatus.REFUNDED,
+        )
+        .values("seller_order__order_id")
+        .distinct()
+        .count()
+    )
 
     # ---------------------------------------------------------
     # RETURN ORDERS
@@ -1236,8 +1259,7 @@ def get_product_orders(product):
     # ---------------------------------------------------------
 
     orders = (
-        SellerOrder.objects
-        .filter(
+        SellerOrder.objects.filter(
             items__product=product,
         )
         .select_related(
@@ -1270,6 +1292,7 @@ def get_product_orders(product):
         "orders": orders,
     }
 
+
 from datetime import timedelta
 from decimal import Decimal
 
@@ -1283,9 +1306,7 @@ def get_product_revenue_trend(product):
     now = timezone.localtime(timezone.now())
 
     # Monday of the current week
-    current_week_start = (
-        now - timedelta(days=now.weekday())
-    ).replace(
+    current_week_start = (now - timedelta(days=now.weekday())).replace(
         hour=0,
         minute=0,
         second=0,
@@ -1296,10 +1317,7 @@ def get_product_revenue_trend(product):
     # LAST 8 WEEKS
     # ---------------------------------------------------------
 
-    week_starts = [
-        current_week_start - timedelta(weeks=i)
-        for i in range(7, -1, -1)
-    ]
+    week_starts = [current_week_start - timedelta(weeks=i) for i in range(7, -1, -1)]
 
     first_week_start = week_starts[0]
     next_week_start = current_week_start + timedelta(weeks=1)
@@ -1309,8 +1327,7 @@ def get_product_revenue_trend(product):
     # ---------------------------------------------------------
 
     weekly_sales = (
-        product.order_items
-        .filter(
+        product.order_items.filter(
             seller_order__status=SellerOrder.Status.DELIVERED,
             seller_order__delivered_at__gte=first_week_start,
             seller_order__delivered_at__lt=next_week_start,
@@ -1327,19 +1344,12 @@ def get_product_revenue_trend(product):
     # MAP SALES TO WEEK
     # ---------------------------------------------------------
 
-    revenue_by_week = {
-        week_start: Decimal("0.00")
-        for week_start in week_starts
-    }
+    revenue_by_week = {week_start: Decimal("0.00") for week_start in week_starts}
 
     for row in weekly_sales:
-        delivered_at = timezone.localtime(
-            row["seller_order__delivered_at"]
-        )
+        delivered_at = timezone.localtime(row["seller_order__delivered_at"])
 
-        week_start = (
-            delivered_at - timedelta(days=delivered_at.weekday())
-        ).replace(
+        week_start = (delivered_at - timedelta(days=delivered_at.weekday())).replace(
             hour=0,
             minute=0,
             second=0,
@@ -1347,9 +1357,7 @@ def get_product_revenue_trend(product):
         )
 
         if week_start in revenue_by_week:
-            revenue_by_week[week_start] += (
-                row["revenue"] or Decimal("0.00")
-            )
+            revenue_by_week[week_start] += row["revenue"] or Decimal("0.00")
 
     # ---------------------------------------------------------
     # BUILD CHART DATA
@@ -1360,29 +1368,25 @@ def get_product_revenue_trend(product):
     for week_start in week_starts:
         week_end = week_start + timedelta(days=6)
 
-        trend.append({
-            "date": week_start,
-            "label": week_start.strftime("%b %d").replace(" 0", " "),
-            "revenue": revenue_by_week[week_start],
-            "revenue_display": (
-                f"Rs. {revenue_by_week[week_start]:,.0f}"
-            ),
-        })
+        trend.append(
+            {
+                "date": week_start,
+                "label": week_start.strftime("%b %d").replace(" 0", " "),
+                "revenue": revenue_by_week[week_start],
+                "revenue_display": (f"Rs. {revenue_by_week[week_start]:,.0f}"),
+            }
+        )
     return trend
+
 
 def get_product_order_status_mix(product):
     statuses = SellerOrder.Status
 
-    status_counts = (
-        product.order_items
-        .values("seller_order__status")
-        .annotate(total=Count("seller_order__order", distinct=True))
+    status_counts = product.order_items.values("seller_order__status").annotate(
+        total=Count("seller_order__order", distinct=True)
     )
 
-    counts = {
-        row["seller_order__status"]: row["total"]
-        for row in status_counts
-    }
+    counts = {row["seller_order__status"]: row["total"] for row in status_counts}
 
     total_orders = sum(counts.values())
 
@@ -1401,30 +1405,23 @@ def get_product_order_status_mix(product):
 
     return {
         "total": total_orders,
-
         "delivered": delivered,
         "delivered_percentage": percentage(delivered),
-
         "pending": pending,
         "pending_percentage": percentage(pending),
-
         "confirmed": confirmed,
         "confirmed_percentage": percentage(confirmed),
-
         "processing": processing,
         "processing_percentage": percentage(processing),
-
         "shipped": shipped,
         "shipped_percentage": percentage(shipped),
-
         "cancelled": cancelled,
         "cancelled_percentage": percentage(cancelled),
     }
 
+
 def get_product_customer_locations(product):
-    product_orders = product.order_items.values(
-        "seller_order__order_id"
-    ).distinct()
+    product_orders = product.order_items.values("seller_order__order_id").distinct()
 
     total_orders = product_orders.count()
 
@@ -1432,8 +1429,7 @@ def get_product_customer_locations(product):
         return []
 
     city_counts = (
-        Order.objects
-        .filter(
+        Order.objects.filter(
             id__in=product_orders,
         )
         .exclude(
@@ -1453,10 +1449,7 @@ def get_product_customer_locations(product):
 
     top_cities = cities[:4]
 
-    top_count = sum(
-        city["orders"]
-        for city in top_cities
-    )
+    top_count = sum(city["orders"] for city in top_cities)
 
     locations = []
 
@@ -1466,25 +1459,30 @@ def get_product_customer_locations(product):
             1,
         )
 
-        locations.append({
-            "name": city["shipping_city"],
-            "orders": city["orders"],
-            "percentage": percentage,
-        })
+        locations.append(
+            {
+                "name": city["shipping_city"],
+                "orders": city["orders"],
+                "percentage": percentage,
+            }
+        )
 
     other_orders = total_orders - top_count
 
     if other_orders > 0:
-        locations.append({
-            "name": "Other",
-            "orders": other_orders,
-            "percentage": round(
-                (other_orders / total_orders) * 100,
-                1,
-            ),
-        })
+        locations.append(
+            {
+                "name": "Other",
+                "orders": other_orders,
+                "percentage": round(
+                    (other_orders / total_orders) * 100,
+                    1,
+                ),
+            }
+        )
 
     return locations
+
 
 def get_product_kpis(product):
     now = timezone.now()
@@ -1550,9 +1548,7 @@ def get_product_kpis(product):
         previous_wishlist_adds,
     )
 
-    wishlist_increased = (
-        current_wishlist_adds > previous_wishlist_adds
-    )
+    wishlist_increased = current_wishlist_adds > previous_wishlist_adds
 
     # ---------------------------------------------------------
     # PRODUCT ORDERS
@@ -1580,9 +1576,7 @@ def get_product_kpis(product):
     #
 
     if total_orders:
-        average_order_value = (
-            revenue / total_orders
-        )
+        average_order_value = revenue / total_orders
     else:
         average_order_value = Decimal("0.00")
 
@@ -1601,20 +1595,12 @@ def get_product_kpis(product):
         ),
     )
 
-    current_revenue = (
-        current_orders_data["revenue"]
-        or Decimal("0.00")
-    )
+    current_revenue = current_orders_data["revenue"] or Decimal("0.00")
 
-    current_orders = (
-        current_orders_data["orders"]
-        or 0
-    )
+    current_orders = current_orders_data["orders"] or 0
 
     current_aov = (
-        current_revenue / current_orders
-        if current_orders
-        else Decimal("0.00")
+        current_revenue / current_orders if current_orders else Decimal("0.00")
     )
 
     # ---------------------------------------------------------
@@ -1633,20 +1619,12 @@ def get_product_kpis(product):
         ),
     )
 
-    previous_revenue = (
-        previous_orders_data["revenue"]
-        or Decimal("0.00")
-    )
+    previous_revenue = previous_orders_data["revenue"] or Decimal("0.00")
 
-    previous_orders = (
-        previous_orders_data["orders"]
-        or 0
-    )
+    previous_orders = previous_orders_data["orders"] or 0
 
     previous_aov = (
-        previous_revenue / previous_orders
-        if previous_orders
-        else Decimal("0.00")
+        previous_revenue / previous_orders if previous_orders else Decimal("0.00")
     )
 
     aov_change = calculate_change(
@@ -1687,19 +1665,17 @@ def get_product_kpis(product):
         "wishlist_adds": total_wishlist_adds,
         "wishlist_change": wishlist_change,
         "wishlist_increased": wishlist_increased,
-
         "conversion_rate": conversion_rate,
         "conversion_change": conversion_change,
         "conversion_increased": conversion_increased,
-
         "average_order_value": average_order_value,
         "aov_change": aov_change,
         "aov_increased": aov_increased,
-
         "return_rate": return_rate,
         "return_change": return_change,
         "return_increased": return_increased,
     }
+
 
 def get_product_moderation(product):
     seller = product.seller
@@ -1733,9 +1709,7 @@ def get_product_moderation(product):
             product.status.title(),
         ),
         "class": (
-            "c-success"
-            if product.status == Product.Status.PUBLISHED
-            else "c-warning"
+            "c-success" if product.status == Product.Status.PUBLISHED else "c-warning"
         ),
     }
 
@@ -1743,10 +1717,7 @@ def get_product_moderation(product):
     # VISIBILITY
     # ---------------------------------------------------------
 
-    is_visible = (
-        product.status == Product.Status.PUBLISHED
-        and product.is_approved
-    )
+    is_visible = product.status == Product.Status.PUBLISHED and product.is_approved
 
     visibility = {
         "label": "Visible" if is_visible else "Hidden",
@@ -1766,10 +1737,7 @@ def get_product_moderation(product):
     # SELLER VERIFICATION
     # ---------------------------------------------------------
 
-    seller_verified = bool(
-        seller
-        and seller.status == seller.Status.VERIFIED
-    )
+    seller_verified = bool(seller and seller.status == seller.Status.VERIFIED)
 
     seller_verification = {
         "label": "Verified" if seller_verified else "Not Verified",
@@ -1780,10 +1748,7 @@ def get_product_moderation(product):
     # PRODUCT INFORMATION
     # ---------------------------------------------------------
 
-    product_information_complete = bool(
-        product.name
-        and product.description
-    )
+    product_information_complete = bool(product.name and product.description)
 
     # ---------------------------------------------------------
     # IMAGES
@@ -1814,10 +1779,7 @@ def get_product_moderation(product):
         and product.price > 0
         and (
             product.discount_price is None
-            or (
-                product.discount_price > 0
-                and product.discount_price < product.price
-            )
+            or (product.discount_price > 0 and product.discount_price < product.price)
         )
     )
 
@@ -1831,22 +1793,15 @@ def get_product_moderation(product):
     # REQUIRED INFORMATION
     # ---------------------------------------------------------
 
-    required_information_provided = bool(
-        product.sku
-        and product.barcode
-    )
+    required_information_provided = bool(product.sku and product.barcode)
 
     # ---------------------------------------------------------
     # DESCRIPTION REVIEW
     # ---------------------------------------------------------
 
-    description_length = len(
-        (product.description or "").strip()
-    )
+    description_length = len((product.description or "").strip())
 
-    description_requires_review = (
-        description_length < 100
-    )
+    description_requires_review = description_length < 100
 
     # ---------------------------------------------------------
     # POLICY / CONTENT QUALITY / MODERATION
@@ -1882,9 +1837,7 @@ def get_product_moderation(product):
     checklist = [
         {
             "title": "Product Information Complete",
-            "description": (
-                "Name and description provided"
-            ),
+            "description": ("Name and description provided"),
             "complete": product_information_complete,
             "warning": False,
         },
@@ -1900,9 +1853,7 @@ def get_product_moderation(product):
         {
             "title": "Category Assigned",
             "description": (
-                product.category.name
-                if product.category
-                else "No category assigned"
+                product.category.name if product.category else "No category assigned"
             ),
             "complete": category_assigned,
             "warning": False,
@@ -1910,9 +1861,7 @@ def get_product_moderation(product):
         {
             "title": "Brand Assigned",
             "description": (
-                product.brand.name
-                if product.brand
-                else "No brand assigned"
+                product.brand.name if product.brand else "No brand assigned"
             ),
             "complete": brand_assigned,
             "warning": False,
@@ -1929,9 +1878,7 @@ def get_product_moderation(product):
         },
         {
             "title": "Stock Available",
-            "description": (
-                f"{product.stock_quantity} units in stock"
-            ),
+            "description": (f"{product.stock_quantity} units in stock"),
             "complete": stock_available,
             "warning": not stock_available,
         },
@@ -1979,6 +1926,7 @@ def get_product_moderation(product):
         "checklist": checklist,
     }
 
+
 def get_product_risk_review(product):
     seller = product.seller
 
@@ -1992,9 +1940,7 @@ def get_product_risk_review(product):
     # barcode, and exact product name.
     #
 
-    duplicate_queryset = Product.objects.exclude(
-        pk=product.pk
-    )
+    duplicate_queryset = Product.objects.exclude(pk=product.pk)
 
     duplicate_sku = (
         product.sku
@@ -2015,26 +1961,32 @@ def get_product_risk_review(product):
     ).exists()
 
     if duplicate_sku or duplicate_barcode:
-        risks.append({
-            "title": "Duplicate Product",
-            "description": "Matching SKU or barcode found",
-            "level": "High",
-            "class": "is-high",
-        })
+        risks.append(
+            {
+                "title": "Duplicate Product",
+                "description": "Matching SKU or barcode found",
+                "level": "High",
+                "class": "is-high",
+            }
+        )
     elif duplicate_name:
-        risks.append({
-            "title": "Duplicate Product",
-            "description": "Another listing has the same product name",
-            "level": "Medium",
-            "class": "is-medium",
-        })
+        risks.append(
+            {
+                "title": "Duplicate Product",
+                "description": "Another listing has the same product name",
+                "level": "Medium",
+                "class": "is-medium",
+            }
+        )
     else:
-        risks.append({
-            "title": "Duplicate Product",
-            "description": "No matching SKU, barcode, or product name found",
-            "level": "Low",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Duplicate Product",
+                "description": "No matching SKU, barcode, or product name found",
+                "level": "Low",
+                "class": "",
+            }
+        )
 
     # ---------------------------------------------------------
     # COUNTERFEIT RISK
@@ -2044,19 +1996,23 @@ def get_product_risk_review(product):
     #
 
     if product.brand:
-        risks.append({
-            "title": "Counterfeit Risk",
-            "description": "Brand is assigned to the product",
-            "level": "Not Available",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Counterfeit Risk",
+                "description": "Brand is assigned to the product",
+                "level": "Not Available",
+                "class": "",
+            }
+        )
     else:
-        risks.append({
-            "title": "Counterfeit Risk",
-            "description": "No brand assigned for verification",
-            "level": "Not Available",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Counterfeit Risk",
+                "description": "No brand assigned for verification",
+                "level": "Not Available",
+                "class": "",
+            }
+        )
 
     # ---------------------------------------------------------
     # COPYRIGHT RISK
@@ -2066,12 +2022,14 @@ def get_product_risk_review(product):
     # verification.
     #
 
-    risks.append({
-        "title": "Copyright Risk",
-        "description": "Copyright ownership cannot be verified from current data",
-        "level": "Not Available",
-        "class": "",
-    })
+    risks.append(
+        {
+            "title": "Copyright Risk",
+            "description": "Copyright ownership cannot be verified from current data",
+            "level": "Not Available",
+            "class": "",
+        }
+    )
 
     # ---------------------------------------------------------
     # RESTRICTED CATEGORY
@@ -2082,22 +2040,26 @@ def get_product_risk_review(product):
     #
 
     if product.category:
-        risks.append({
-            "title": "Restricted Category",
-            "description": (
-                f"Category assigned: {product.category.name}; "
-                "restricted-category rules are not configured"
-            ),
-            "level": "Not Available",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Restricted Category",
+                "description": (
+                    f"Category assigned: {product.category.name}; "
+                    "restricted-category rules are not configured"
+                ),
+                "level": "Not Available",
+                "class": "",
+            }
+        )
     else:
-        risks.append({
-            "title": "Restricted Category",
-            "description": "No category assigned",
-            "level": "Medium",
-            "class": "is-medium",
-        })
+        risks.append(
+            {
+                "title": "Restricted Category",
+                "description": "No category assigned",
+                "level": "Medium",
+                "class": "is-medium",
+            }
+        )
 
     # ---------------------------------------------------------
     # SUSPICIOUS PRICING
@@ -2105,22 +2067,17 @@ def get_product_risk_review(product):
 
     if product.price and product.discount_price:
         discount_percentage = (
-            (product.price - product.discount_price)
-            / product.price
+            (product.price - product.discount_price) / product.price
         ) * 100
 
         if discount_percentage >= 50:
             pricing_level = "Medium"
             pricing_class = "is-medium"
-            pricing_description = (
-                f"{round(discount_percentage)}% discount detected"
-            )
+            pricing_description = f"{round(discount_percentage)}% discount detected"
         else:
             pricing_level = "Low"
             pricing_class = ""
-            pricing_description = (
-                f"{round(discount_percentage)}% discount"
-            )
+            pricing_description = f"{round(discount_percentage)}% discount"
 
     elif product.price:
         pricing_level = "Low"
@@ -2132,12 +2089,14 @@ def get_product_risk_review(product):
         pricing_class = "is-medium"
         pricing_description = "Product price is missing"
 
-    risks.append({
-        "title": "Suspicious Pricing",
-        "description": pricing_description,
-        "level": pricing_level,
-        "class": pricing_class,
-    })
+    risks.append(
+        {
+            "title": "Suspicious Pricing",
+            "description": pricing_description,
+            "level": pricing_level,
+            "class": pricing_class,
+        }
+    )
 
     # ---------------------------------------------------------
     # POLICY VIOLATION
@@ -2146,12 +2105,14 @@ def get_product_risk_review(product):
     # No product-policy violation model exists.
     #
 
-    risks.append({
-        "title": "Policy Violation",
-        "description": "No policy violation data is available",
-        "level": "Not Available",
-        "class": "",
-    })
+    risks.append(
+        {
+            "title": "Policy Violation",
+            "description": "No policy violation data is available",
+            "level": "Not Available",
+            "class": "",
+        }
+    )
 
     # ---------------------------------------------------------
     # INVALID PRODUCT INFORMATION
@@ -2175,64 +2136,68 @@ def get_product_risk_review(product):
         missing_fields.append("category")
 
     if missing_fields:
-        risks.append({
-            "title": "Invalid Product Information",
-            "description": (
-                "Missing: " + ", ".join(missing_fields)
-            ),
-            "level": "Medium",
-            "class": "is-medium",
-        })
+        risks.append(
+            {
+                "title": "Invalid Product Information",
+                "description": ("Missing: " + ", ".join(missing_fields)),
+                "level": "Medium",
+                "class": "is-medium",
+            }
+        )
     else:
-        risks.append({
-            "title": "Invalid Product Information",
-            "description": "All available required fields are populated",
-            "level": "Low",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Invalid Product Information",
+                "description": "All available required fields are populated",
+                "level": "Low",
+                "class": "",
+            }
+        )
 
     # ---------------------------------------------------------
     # SELLER RISK
     # ---------------------------------------------------------
 
     if not seller:
-        risks.append({
-            "title": "Seller Risk",
-            "description": "No seller assigned",
-            "level": "High",
-            "class": "is-high",
-        })
+        risks.append(
+            {
+                "title": "Seller Risk",
+                "description": "No seller assigned",
+                "level": "High",
+                "class": "is-high",
+            }
+        )
     elif seller.status == seller.Status.VERIFIED:
-        risks.append({
-            "title": "Seller Risk",
-            "description": "Seller is verified",
-            "level": "Low",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Seller Risk",
+                "description": "Seller is verified",
+                "level": "Low",
+                "class": "",
+            }
+        )
     elif seller.status in (
         seller.Status.SUSPENDED,
         seller.Status.BLOCKED,
         seller.Status.REJECTED,
     ):
-        risks.append({
-            "title": "Seller Risk",
-            "description": (
-                f"Seller status: "
-                f"{seller.get_status_display()}"
-            ),
-            "level": "High",
-            "class": "is-high",
-        })
+        risks.append(
+            {
+                "title": "Seller Risk",
+                "description": (f"Seller status: " f"{seller.get_status_display()}"),
+                "level": "High",
+                "class": "is-high",
+            }
+        )
     else:
-        risks.append({
-            "title": "Seller Risk",
-            "description": (
-                f"Seller status: "
-                f"{seller.get_status_display()}"
-            ),
-            "level": "Medium",
-            "class": "is-medium",
-        })
+        risks.append(
+            {
+                "title": "Seller Risk",
+                "description": (f"Seller status: " f"{seller.get_status_display()}"),
+                "level": "Medium",
+                "class": "is-medium",
+            }
+        )
 
     # ---------------------------------------------------------
     # IMAGE QUALITY
@@ -2245,69 +2210,65 @@ def get_product_risk_review(product):
     image_count = product.images.count()
 
     if image_count == 0:
-        risks.append({
-            "title": "Image Quality",
-            "description": "No product images uploaded",
-            "level": "Medium",
-            "class": "is-medium",
-        })
+        risks.append(
+            {
+                "title": "Image Quality",
+                "description": "No product images uploaded",
+                "level": "Medium",
+                "class": "is-medium",
+            }
+        )
     else:
-        risks.append({
-            "title": "Image Quality",
-            "description": (
-                f"{image_count} product image"
-                f"{'' if image_count == 1 else 's'} uploaded; "
-                "image resolution is not stored"
-            ),
-            "level": "Not Available",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Image Quality",
+                "description": (
+                    f"{image_count} product image"
+                    f"{'' if image_count == 1 else 's'} uploaded; "
+                    "image resolution is not stored"
+                ),
+                "level": "Not Available",
+                "class": "",
+            }
+        )
 
     # ---------------------------------------------------------
     # TRADEMARK RISK
     # ---------------------------------------------------------
 
     if product.brand:
-        risks.append({
-            "title": "Trademark Risk",
-            "description": (
-                f"Brand assigned: {product.brand.name}; "
-                "trademark ownership cannot be verified"
-            ),
-            "level": "Not Available",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Trademark Risk",
+                "description": (
+                    f"Brand assigned: {product.brand.name}; "
+                    "trademark ownership cannot be verified"
+                ),
+                "level": "Not Available",
+                "class": "",
+            }
+        )
     else:
-        risks.append({
-            "title": "Trademark Risk",
-            "description": "No brand assigned",
-            "level": "Not Available",
-            "class": "",
-        })
+        risks.append(
+            {
+                "title": "Trademark Risk",
+                "description": "No brand assigned",
+                "level": "Not Available",
+                "class": "",
+            }
+        )
 
     # ---------------------------------------------------------
     # SUMMARY
     # ---------------------------------------------------------
 
-    high_count = sum(
-        1 for risk in risks
-        if risk["level"] == "High"
-    )
+    high_count = sum(1 for risk in risks if risk["level"] == "High")
 
-    medium_count = sum(
-        1 for risk in risks
-        if risk["level"] == "Medium"
-    )
+    medium_count = sum(1 for risk in risks if risk["level"] == "Medium")
 
-    low_count = sum(
-        1 for risk in risks
-        if risk["level"] == "Low"
-    )
+    low_count = sum(1 for risk in risks if risk["level"] == "Low")
 
-    unavailable_count = sum(
-        1 for risk in risks
-        if risk["level"] == "Not Available"
-    )
+    unavailable_count = sum(1 for risk in risks if risk["level"] == "Not Available")
 
     return {
         "risks": risks,
@@ -2316,6 +2277,7 @@ def get_product_risk_review(product):
         "low_count": low_count,
         "unavailable_count": unavailable_count,
     }
+
 
 from django.db.models import Sum, Count
 from decimal import Decimal
@@ -2344,9 +2306,7 @@ def get_product_seller_summary(product):
     # VERIFICATION STATUS
     # ---------------------------------------------------------
 
-    is_verified = (
-        seller.status == seller.Status.VERIFIED
-    )
+    is_verified = seller.status == seller.Status.VERIFIED
 
     verification_status = {
         "label": "Verified" if is_verified else "Not Verified",
@@ -2417,10 +2377,7 @@ def get_product_seller_summary(product):
         revenue=Sum("total"),
     )
 
-    seller_revenue = (
-        revenue_data["revenue"]
-        or Decimal("0.00")
-    )
+    seller_revenue = revenue_data["revenue"] or Decimal("0.00")
 
     return {
         "verification_status": verification_status,
@@ -2431,10 +2388,10 @@ def get_product_seller_summary(product):
         "seller_revenue": seller_revenue,
     }
 
+
 def get_product_detail(product_slug):
     product = (
-        Product.objects
-        .filter(slug=product_slug)
+        Product.objects.filter(slug=product_slug)
         .select_related(
             "category",
             "brand",
@@ -2457,11 +2414,8 @@ def get_product_detail(product_slug):
     moderation = get_product_moderation(product)
     risk_review = get_product_risk_review(product)
     seller_summary = get_product_seller_summary(product)
-    brands = Brand.objects.filter(
-        is_active=True
-    ).order_by("name")
+    brands = Brand.objects.filter(is_active=True).order_by("name")
     status_mix = get_product_order_status_mix(product)
-
 
     return {
         "product": product,
@@ -2475,8 +2429,8 @@ def get_product_detail(product_slug):
         "moderation": moderation,
         "risk_review": risk_review,
         "seller_summary": seller_summary,
-        
     }
+
 
 import csv
 
@@ -2624,5 +2578,919 @@ def export_seller_orders(seller):
                 ),
             ]
         )
+
+    return response
+
+
+from django.db.models import Count, DecimalField
+from django.utils import timezone
+
+from products.models import Category, Product
+from orders.models import OrderItem, Order
+from django.db.models import Q, Sum
+from django.db.models.functions import Coalesce
+
+from django.db.models import Count
+from django.utils import timezone
+
+
+def get_categories_data():
+    now = timezone.now()
+
+    categories = (
+        Category.objects
+        .annotate(
+            product_count=Count(
+                "products",
+                distinct=True,
+            ),
+            subcategory_count=Count(
+                "children",
+                distinct=True,
+            ),
+        )
+        .select_related("parent")
+        .prefetch_related("products")
+        .order_by("name")
+    )
+
+    total_categories = categories.count()
+
+    active_categories = categories.filter(
+        is_active=True
+    ).count()
+
+    inactive_categories = categories.filter(
+        is_active=False
+    ).count()
+
+    percentage_active = (
+        (active_categories / total_categories) * 100
+        if total_categories
+        else 0
+    )
+
+    categories_added_this_month = categories.filter(
+        created_at__year=now.year,
+        created_at__month=now.month,
+    ).count()
+
+    total_parent_categories = categories.filter(
+        parent__isnull=True
+    ).count()
+
+    total_subcategories = categories.filter(
+        parent__isnull=False
+    ).count()
+
+    empty_categories = categories.filter(
+        product_count=0
+    ).count()
+
+    products_assigned = Product.objects.filter(
+        category__isnull=False
+    ).count()
+
+    average_products_per_category = (
+        products_assigned / total_categories
+        if total_categories
+        else 0
+    )
+
+    category_nodes = {}
+
+    for category in categories:
+
+        category_products = []
+        for product in category.products.all():
+            sold_units = product.order_items.filter(
+                seller_order__order__payment_status=Order.PaymentStatus.PAID
+            ).aggregate(total=Coalesce(Sum("quantity"), 0))["total"] or 0
+            category_products.append({
+                "id": product.id,
+                "name": product.name,
+                "slug": product.slug,
+                "sku": product.sku or "",
+                "seller": getattr(product.seller, "store_name", "") if product.seller else "",
+                "price": str(product.discount_price or product.price or ""),
+                "stock_quantity": product.stock_quantity,
+                "status": product.status,
+                "orders": sold_units,
+            })
+
+        paid_order_items = OrderItem.objects.filter(
+            product__category=category,
+            seller_order__order__payment_status=Order.PaymentStatus.PAID,
+        )
+        order_summary = paid_order_items.aggregate(
+            order_count=Count("seller_order__order", distinct=True),
+            revenue=Coalesce(
+                Sum("total"),
+                0,
+                output_field=DecimalField(max_digits=18, decimal_places=2),
+            ),
+        )
+        top_products = sorted(
+            [product for product in category_products if product["orders"]],
+            key=lambda product: product["orders"],
+            reverse=True,
+        )[:4]
+        product_queryset = category.products.all()
+
+        revenue_trend = []
+        growth_trend = []
+        for month_offset in range(8, -1, -1):
+            month_index = now.year * 12 + now.month - 1 - month_offset
+            month_start = now.replace(
+                year=month_index // 12,
+                month=month_index % 12 + 1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+            next_month = (month_start + timedelta(days=32)).replace(day=1)
+            month_summary = paid_order_items.filter(
+                seller_order__order__created_at__gte=month_start,
+                seller_order__order__created_at__lt=next_month,
+            ).aggregate(
+                order_count=Count("seller_order__order", distinct=True),
+                revenue=Coalesce(
+                    Sum("total"),
+                    0,
+                    output_field=DecimalField(max_digits=18, decimal_places=2),
+                ),
+            )
+            label = month_start.strftime("%b")
+            revenue_trend.append({
+                "label": label,
+                "value": str(month_summary["revenue"] or 0),
+            })
+            growth_trend.append({
+                "label": label,
+                "value": month_summary["order_count"] or 0,
+            })
+
+        category_nodes[category.id] = {
+            "id": category.id,
+
+            "name": category.name,
+
+            "slug": category.slug,
+
+            "description": category.description or "",
+
+            "icon": category.icon or "bi bi-grid",
+
+            "image": (
+                category.image.url
+                if category.image
+                else ""
+            ),
+
+            "is_active": category.is_active,
+
+            "status": (
+                "active"
+                if category.is_active
+                else "inactive"
+            ),
+
+            "parent_id": category.parent_id,
+
+            "_parentName": (
+                category.parent.name
+                if category.parent
+                else None
+            ),
+
+            "parent": (
+                {
+                    "id": category.parent.id,
+                    "name": category.parent.name,
+                    "slug": category.parent.slug,
+                }
+                if category.parent
+                else None
+            ),
+
+            "product_count": category.product_count,
+
+            "products": category_products,
+
+            "subcategory_count": category.subcategory_count,
+
+            "children": [],
+
+            "analytics": {
+                "published": product_queryset.filter(status=Product.Status.PUBLISHED).count(),
+                "pending": product_queryset.filter(status=Product.Status.PENDING).count(),
+                "out_of_stock": product_queryset.filter(status=Product.Status.OUT_OF_STOCK).count(),
+                "orders": order_summary["order_count"] or 0,
+                "revenue": str(order_summary["revenue"] or 0),
+                "conversion_rate": None,
+                "top_products": top_products,
+                "revenue_trend": revenue_trend,
+                "growth_trend": growth_trend,
+            },
+
+            "created_at": (
+                category.created_at.isoformat()
+                if getattr(category, "created_at", None)
+                else None
+            ),
+
+            "updated_at": (
+                category.updated_at.isoformat()
+                if getattr(category, "updated_at", None)
+                else None
+            ),
+
+            "created": (
+                category.created_at.strftime("%b %d, %Y")
+                if getattr(category, "created_at", None)
+                else None
+            ),
+
+            "updated": (
+                category.updated_at.strftime("%b %d, %Y")
+                if getattr(category, "updated_at", None)
+                else None
+            ),
+        }
+
+    category_tree = []
+
+    for category in categories:
+        node = category_nodes[category.id]
+
+        if category.parent_id is None:
+            category_tree.append(node)
+
+        else:
+            parent_node = category_nodes.get(
+                category.parent_id
+            )
+
+            if parent_node:
+                parent_node["children"].append(node)
+
+    return {
+        "categories": list(category_nodes.values()),
+
+        "category_tree": category_tree,
+
+        "total_categories": total_categories,
+
+        "active_categories": active_categories,
+
+        "inactive_categories": inactive_categories,
+
+        "percentage_active": round(
+            percentage_active,
+            1,
+        ),
+
+        "categories_added_this_month":
+            categories_added_this_month,
+
+        "total_parent_categories":
+            total_parent_categories,
+
+        "total_subcategories":
+            total_subcategories,
+
+        "empty_categories":
+            empty_categories,
+
+        "products_assigned":
+            products_assigned,
+
+        "average_products_per_category":
+            round(
+                average_products_per_category,
+                1,
+            ),
+    }
+
+def get_categories_api_data():
+    """Return JSON-safe category data for the category management frontend."""
+    context = get_categories_data()
+    return {
+        "categories": context["category_tree"],
+        "category_tree": context["category_tree"],
+        "total_categories": context["total_categories"],
+        "active_categories": context["active_categories"],
+        "inactive_categories": context["inactive_categories"],
+        "percentage_active": context["percentage_active"],
+        "categories_added_this_month": context["categories_added_this_month"],
+        "total_parent_categories": context["total_parent_categories"],
+        "total_subcategories": context["total_subcategories"],
+        "empty_categories": context["empty_categories"],
+        "products_assigned": context["products_assigned"],
+        "average_products_per_category": context["average_products_per_category"],
+    }
+
+from django.db.models import Count
+from django.utils import timezone
+
+from products.models import Brand, Product
+
+
+def get_brands_data():
+    now = timezone.now()
+
+    brands = (
+        Brand.objects.annotate(
+            products_count=Count("products", distinct=True),
+            categories_count=Count("products__category", distinct=True),
+            orders_count=Count(
+                "products__order_items__seller_order__order",
+                distinct=True,
+            ),
+        )
+        .order_by("name")
+    )
+
+    total_brands = brands.count()
+
+    brands_added_this_month = brands.filter(
+        created_at__year=now.year,
+        created_at__month=now.month,
+    ).count()
+
+    active_brands = brands.filter(is_active=True).count()
+
+    percentage_active = (
+        (active_brands / total_brands) * 100
+        if total_brands
+        else 0
+    )
+
+    inactive_brands = brands.filter(is_active=False).count()
+
+    inactive_brands_added_this_month = brands.filter(
+        is_active=False,
+        created_at__year=now.year,
+        created_at__month=now.month,
+    ).count()
+
+    featured_brands = brands.filter(is_featured=True).count()
+
+    empty_brands = brands.filter(products_count=0).count()
+
+    products_assigned = Product.objects.filter(
+        brand__isnull=False
+    )
+
+    products_assigned_this_month = products_assigned.filter(
+        created_at__year=now.year,
+        created_at__month=now.month,
+    ).count()
+    products_assigned = products_assigned.count()
+
+    return {
+        "brands": brands,
+        "total_brands": total_brands,
+        "brands_added_this_month": brands_added_this_month,
+        "active_brands": active_brands,
+        "percentage_active": percentage_active,
+        "inactive_brands": inactive_brands,
+        "inactive_brands_added_this_month": inactive_brands_added_this_month,
+        "featured_brands": featured_brands,
+        "empty_brands": empty_brands,
+        "products_assigned": products_assigned,
+        "products_assigned_this_month": products_assigned_this_month,
+    }
+
+
+BRAND_WRITE_FIELDS = (
+    "name", "slug", "description", "country_of_origin", "founded_year",
+    "website", "official_email", "official_phone", "facebook", "instagram",
+    "linkedin", "is_active", "is_featured", "display_order",
+)
+
+
+def brand_payload(brand):
+    return {
+        "id": brand.id, "name": brand.name, "slug": brand.slug,
+        "description": brand.description, "country_of_origin": brand.country_of_origin,
+        "founded_year": brand.founded_year, "website": brand.website,
+        "official_email": brand.official_email, "official_phone": brand.official_phone,
+        "facebook": brand.facebook, "instagram": brand.instagram, "linkedin": brand.linkedin,
+        "is_active": brand.is_active, "is_featured": brand.is_featured,
+        "display_order": brand.display_order,
+        "logo_url": brand.logo.url if brand.logo else "",
+        "cover_image_url": brand.cover_image.url if brand.cover_image else "",
+        "products_count": brand.products.count(),
+        "categories_count": brand.products.values("category_id").distinct().count(),
+        "created_at": brand.created_at.isoformat(), "updated_at": brand.updated_at.isoformat(),
+    }
+
+
+def get_brands_api_data():
+    return {"brands": [brand_payload(b) for b in Brand.objects.all()]}
+
+
+def brand_detail_payload(brand):
+    from django.db.models import Count, Sum, Q
+    from django.utils import timezone
+    from datetime import timedelta
+
+    products = brand.products.select_related("category", "seller").annotate(
+        order_count=Count("order_items", distinct=True),
+        units_sold=Sum("order_items__quantity"),
+        revenue_total=Sum("order_items__total"),
+    ).order_by("-created_at")
+    product_rows = []
+    for product in products[:20]:
+        product_rows.append({
+            "id": product.id, "name": product.name, "sku": product.sku or "—",
+            "seller": product.seller.store_name if product.seller else "—",
+            "category": product.category.name if product.category else "Uncategorized",
+            "price": float(product.discount_price or product.price or 0),
+            "stock": product.stock_quantity, "orders": product.order_count, "units_sold": product.units_sold or 0,
+            "revenue": float(product.revenue_total or 0), "status": product.status,
+            "slug": product.slug if product.slug else "undefined",
+            "image_url": product.primary_image.image.url if product.primary_image else "",
+        })
+    category_rows = list(brand.products.values("category__id", "category__name").annotate(
+        product_count=Count("id", distinct=True), units_sold=Sum("order_items__quantity"), revenue=Sum("order_items__total")
+    ).order_by("-product_count", "category__name"))
+    categories = [{"id": row["category__id"], "name": row["category__name"] or "Uncategorized", "products": row["product_count"], "units_sold": row["units_sold"] or 0, "revenue": float(row["revenue"] or 0)} for row in category_rows]
+    revenue = brand.products.aggregate(total=Sum("order_items__total"))["total"] or 0
+    orders = brand.products.aggregate(total=Count("order_items__seller_order__order", distinct=True))["total"] or 0
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    previous_month_end = month_start
+    previous_month_start = (month_start - timedelta(days=1)).replace(day=1)
+    product_qs = brand.products
+    order_items = brand.products.filter(order_items__isnull=False).values("order_items")
+    def month_metrics(start, end):
+        scoped = brand.products.filter(order_items__created_at__gte=start, order_items__created_at__lt=end)
+        return {
+            "products": brand.products.filter(created_at__gte=start, created_at__lt=end).count(),
+            "orders": scoped.aggregate(value=Count("order_items__seller_order__order", distinct=True))["value"] or 0,
+            "units": scoped.aggregate(value=Sum("order_items__quantity"))["value"] or 0,
+            "revenue": float(scoped.aggregate(value=Sum("order_items__total"))["value"] or 0),
+        }
+    current_month = month_metrics(month_start, now)
+    previous_month = month_metrics(previous_month_start, previous_month_end)
+    def change(current, previous):
+        if not previous:
+            return 100 if current else 0
+        return round(((current - previous) / previous) * 100, 1)
+    weekly = []
+    for index in range(7, -1, -1):
+        start = now - timedelta(days=(index + 1) * 7)
+        end = now - timedelta(days=index * 7)
+        aggregate = brand.products.filter(order_items__created_at__gte=start, order_items__created_at__lt=end).aggregate(total=Sum("order_items__total"))["total"] or 0
+        weekly.append({"label": start.strftime("%b %-d") if not __import__("sys").platform.startswith("win") else start.strftime("%b %#d"), "revenue": float(aggregate)})
+    monthly = []
+    cursor = (month_start - timedelta(days=330)).replace(day=1)
+    for _ in range(12):
+        next_month = (cursor.replace(day=28) + timedelta(days=4)).replace(day=1)
+        scoped = brand.products.filter(order_items__created_at__gte=cursor, order_items__created_at__lt=next_month)
+        monthly.append({
+            "label": cursor.strftime("%b"),
+            "orders": scoped.aggregate(value=Count("order_items__seller_order__order", distinct=True))["value"] or 0,
+            "units": scoped.aggregate(value=Sum("order_items__quantity"))["value"] or 0,
+        })
+    payload = brand_payload(brand)
+    payload.update({
+        "products": product_rows, "categories": categories, "revenue": float(revenue), "orders": orders,
+        "weekly_revenue": weekly, "latest_product": product_rows[0] if product_rows else None,
+        "top_category": categories[0] if categories else None,
+        "analytics": {"top_products": sorted(product_rows, key=lambda item: item["units_sold"], reverse=True)[:3], "top_categories": sorted(categories, key=lambda item: item["units_sold"], reverse=True)[:3], "monthly": monthly},
+        "overview": {
+            "products_this_month": current_month["products"], "products_change": change(current_month["products"], previous_month["products"]),
+            "orders_this_month": current_month["orders"], "orders_change": change(current_month["orders"], previous_month["orders"]),
+            "revenue_this_month": current_month["revenue"], "revenue_change": change(current_month["revenue"], previous_month["revenue"]),
+            "units_sold": current_month["units"], "categories": len(categories),
+            "rating": None, "reviews": None, "return_rate": None, "views": None, "conversion_rate": None,
+        },
+        "activity": [{"type": "brand", "title": "Brand created", "description": f"{brand.name} was added to the marketplace catalog.", "time": brand.created_at.isoformat()}, {"type": "brand", "title": "Brand updated", "description": "Brand information was updated.", "time": brand.updated_at.isoformat()}],
+    })
+    return payload
+
+
+def save_brand(data, files=None, brand=None):
+    files = files or {}
+    with transaction.atomic():
+        brand = brand or Brand()
+        for field in BRAND_WRITE_FIELDS:
+            if field not in data:
+                continue
+            value = data.get(field)
+            if field in ("is_active", "is_featured"):
+                value = str(value).lower() in ("1", "true", "yes", "on")
+            elif field in ("founded_year", "display_order"):
+                value = int(value) if str(value or "").strip() else None if field == "founded_year" else 0
+            elif field == "slug":
+                value = str(value or "").strip() or slugify(data.get("name", brand.name))
+            else:
+                value = str(value or "").strip()
+            setattr(brand, field, value)
+        if not brand.name:
+            raise ValidationError("Brand name is required.")
+        if not brand.slug:
+            brand.slug = slugify(brand.name)
+        if files.get("logo"):
+            brand.logo = files["logo"]
+        if files.get("cover_image"):
+            brand.cover_image = files["cover_image"]
+        if str(data.get("remove_logo", "")).lower() == "true" and brand.logo:
+            brand.logo.delete(save=False)
+            brand.logo = None
+        if str(data.get("remove_cover_image", "")).lower() == "true" and brand.cover_image:
+            brand.cover_image.delete(save=False)
+            brand.cover_image = None
+        brand.is_active = True
+        brand.full_clean()
+        brand.save()
+    return brand
+
+
+def delete_brand(brand, remove_products=False):
+    if remove_products:
+        brand.products.update(brand=None)
+    elif brand.products.exists():
+        raise ValidationError("Brands with products cannot be deleted. Remove the brand from products first.")
+    brand.delete()
+
+
+def import_brands(upload):
+    raw = upload.read()
+    if upload.name.lower().endswith(".json"):
+        records = json.loads(raw.decode("utf-8"))
+    else:
+        records = list(csv.DictReader(io.StringIO(raw.decode("utf-8-sig"))))
+    if isinstance(records, dict):
+        records = records.get("brands", [])
+    created = 0
+    with transaction.atomic():
+        for record in records:
+            if not record.get("name"):
+                raise ValidationError("Every imported brand must have a name.")
+            save_brand(record)
+            created += 1
+    return created
+
+
+import csv
+import io
+import json
+
+from django.http import HttpResponse
+from django.db.models import Count
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
+
+
+def export_categories(
+    export_format="CSV",
+    category_ids=None,
+):
+    export_format = str(export_format or "CSV").upper()
+
+    categories = (
+        Category.objects
+        .select_related("parent")
+        .annotate(
+            product_count=Count(
+                "products",
+                distinct=True,
+            ),
+            subcategory_count=Count(
+                "children",
+                distinct=True,
+            ),
+        )
+        .order_by("name")
+    )
+
+    if category_ids:
+        categories = categories.filter(
+            id__in=category_ids
+        )
+
+    if export_format == "CSV":
+        return _export_categories_csv(categories)
+
+    if export_format == "JSON":
+        return _export_categories_json(categories)
+
+    if export_format == "PDF":
+        return _export_categories_pdf(categories)
+
+    raise ValueError("Unsupported export format.")
+
+def _export_categories_csv(categories):
+    output = io.StringIO()
+
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "ID",
+        "Name",
+        "Slug",
+        "Parent",
+        "Type",
+        "Status",
+        "Products",
+        "Subcategories",
+        "Description",
+        "Icon",
+        "Image",
+    ])
+
+    for category in categories:
+        writer.writerow([
+            category.id,
+            category.name,
+            category.slug,
+            category.parent.name if category.parent else "",
+            "Subcategory" if category.parent_id else "Category",
+            "Active" if category.is_active else "Inactive",
+            category.product_count,
+            category.subcategory_count,
+            category.description or "",
+            category.icon or "",
+            category.image.url if category.image else "",
+        ])
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="text/csv; charset=utf-8",
+    )
+
+    response["Content-Disposition"] = (
+        'attachment; filename="categories.csv"'
+    )
+
+    return response
+
+def _export_categories_json(categories):
+    data = []
+
+    for category in categories:
+        data.append({
+            "id": category.id,
+            "name": category.name,
+            "slug": category.slug,
+
+            "parent_id": category.parent_id,
+
+            "parent": (
+                {
+                    "id": category.parent.id,
+                    "name": category.parent.name,
+                    "slug": category.parent.slug,
+                }
+                if category.parent
+                else None
+            ),
+
+            "type": (
+                "Subcategory"
+                if category.parent_id
+                else "Category"
+            ),
+
+            "status": (
+                "active"
+                if category.is_active
+                else "inactive"
+            ),
+
+            "is_active": category.is_active,
+
+            "product_count": category.product_count,
+
+            "subcategory_count":
+                category.subcategory_count,
+
+            "description":
+                category.description or "",
+
+            "icon":
+                category.icon or "",
+
+            "image": (
+                category.image.url
+                if category.image
+                else ""
+            ),
+
+            "created_at": (
+                category.created_at.isoformat()
+                if getattr(category, "created_at", None)
+                else None
+            ),
+
+            "updated_at": (
+                category.updated_at.isoformat()
+                if getattr(category, "updated_at", None)
+                else None
+            ),
+        })
+
+    response = HttpResponse(
+        json.dumps(
+            data,
+            indent=2,
+            ensure_ascii=False,
+        ),
+        content_type="application/json; charset=utf-8",
+    )
+
+    response["Content-Disposition"] = (
+        'attachment; filename="categories.json"'
+    )
+
+    return response
+
+import io
+from django.utils import timezone
+from django.http import HttpResponse
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+)
+
+# =============================================================
+# BRAND & STYLE CONSTANTS
+# =============================================================
+ACCENT_COLOR = colors.HexColor("#9D6638")
+HEADING_COLOR = colors.HexColor("#4E220F")
+MUTED_COLOR = colors.HexColor("#6B6B6B")
+BORDER_COLOR = colors.HexColor("#D9D2C4")
+LIGHT_BG = colors.HexColor("#F7F1DE")
+
+PAGE_MARGIN = 20 * mm
+
+
+def _get_styles():
+    """Defines the typography system for the report."""
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name="ReportBrand", fontName="Helvetica-Bold", fontSize=20, textColor=HEADING_COLOR, spaceAfter=4))
+    styles.add(ParagraphStyle(name="ReportTitle", fontName="Helvetica", fontSize=12, spaceBefore=4, textColor=MUTED_COLOR))
+    styles.add(ParagraphStyle(name="MetaRight", fontName="Helvetica", fontSize=9, textColor=MUTED_COLOR, alignment=TA_RIGHT, leading=12))
+    styles.add(ParagraphStyle(name="TableHeader", fontName="Helvetica-Bold", fontSize=9, textColor=colors.white, alignment=TA_CENTER))
+    styles.add(ParagraphStyle(name="TableCell", fontName="Helvetica", fontSize=9, textColor=colors.black, leading=12, alignment=TA_CENTER))
+    styles.add(ParagraphStyle(name="TableCellLeft", parent=styles["TableCell"], alignment=TA_LEFT))
+    styles.add(ParagraphStyle(name="TableCellRight", parent=styles["TableCell"], alignment=TA_RIGHT))
+    return styles
+
+
+def _draw_footer(canvas, doc):
+    """Canvas hook for drawing the universal footer on every page."""
+    canvas.saveState()
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(MUTED_COLOR)
+    
+    timestamp = timezone.localtime().strftime("%Y-%m-%d %H:%M:%S")
+    landscape_width = landscape(A4)[0]
+    
+    canvas.drawString(PAGE_MARGIN, 10 * mm, f"MarketSphere Admin Dashboard | {timestamp}")
+    canvas.drawCentredString(landscape_width / 2.0, 10 * mm, "Confidential Document")
+    canvas.drawRightString(landscape_width - PAGE_MARGIN, 10 * mm, f"Page {doc.page}")
+    canvas.restoreState()
+
+
+def _build_data_table(headers, row_data, col_widths, styles, align_left_cols=None, align_right_cols=None):
+    """Builds standard list tables with alternating row colors."""
+    align_left_cols = align_left_cols or []
+    align_right_cols = align_right_cols or []
+    table_data = []
+
+    # Headers
+    header_row = [Paragraph(h, styles["TableHeader"]) for h in headers]
+    table_data.append(header_row)
+
+    # Rows
+    if not row_data:
+        table_data.append([Paragraph("<i>No data available</i>", styles["TableCellLeft"])] + [""] * (len(headers) - 1))
+    else:
+        for row in row_data:
+            formatted_row = []
+            for idx, cell_value in enumerate(row):
+                style = styles["TableCellLeft"] if idx in align_left_cols else (styles["TableCellRight"] if idx in align_right_cols else styles["TableCell"])
+                formatted_row.append(Paragraph(str(cell_value), style))
+            table_data.append(formatted_row)
+
+    t = Table(table_data, colWidths=col_widths, repeatRows=1)
+    t_style = [
+        ('BACKGROUND', (0, 0), (-1, 0), HEADING_COLOR),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BOX', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, BORDER_COLOR),
+    ]
+    
+    if row_data:
+        t_style.append(('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_BG]))
+        
+    t.setStyle(TableStyle(t_style))
+    return t
+
+
+def _export_categories_pdf(categories):
+    buffer = io.BytesIO()
+    styles = _get_styles()
+
+    # Setup Document for Landscape A4
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        leftMargin=PAGE_MARGIN,
+        rightMargin=PAGE_MARGIN,
+        topMargin=PAGE_MARGIN,
+        bottomMargin=PAGE_MARGIN,
+        title="MarketSphere - Category Export"
+    )
+
+    elements = []
+
+    # --- HEADER ---
+    brand_block = [
+        Paragraph("MARKETSPHERE", styles["ReportBrand"]),
+        Paragraph("Category Export Report", styles["ReportTitle"]),
+    ]
+    meta_block = [
+        Paragraph(f"<b>Generated Date:</b> {timezone.now().strftime('%b %d, %Y')}", styles["MetaRight"]),
+        Paragraph(f"<b>Time:</b> {timezone.now().strftime('%H:%M:%S')}", styles["MetaRight"]),
+        Paragraph(f"<b>Total Categories:</b> {len(categories)}", styles["MetaRight"]),
+    ]
+    
+    # Landscape A4 printable width is approx 257mm
+    header_table = Table([[brand_block, meta_block]], colWidths=[130*mm, 127*mm])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'), 
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT')
+    ]))
+    
+    elements.extend([
+        header_table, 
+        Spacer(1, 10), 
+        HRFlowable(width="100%", thickness=1.5, color=ACCENT_COLOR, spaceAfter=15)
+    ])
+
+    # --- TABLE DATA PREPARATION ---
+    headers = [
+        "ID", "Category", "Slug", "Parent", 
+        "Type", "Status", "Products", "Subcategories"
+    ]
+
+    row_data = []
+    for category in categories:
+        row_data.append([
+            str(category.id),
+            category.name,
+            category.slug,
+            category.parent.name if category.parent else "Top Level",
+            "Subcategory" if category.parent_id else "Category",
+            "Active" if category.is_active else "Inactive",
+            str(category.product_count),
+            str(category.subcategory_count),
+        ])
+
+    # --- BUILD TABLE ---
+    # Total width sums exactly to 257mm (Landscape A4 Width minus 40mm margins)
+    col_widths = [15*mm, 45*mm, 45*mm, 45*mm, 25*mm, 22*mm, 25*mm, 35*mm]
+
+    table = _build_data_table(
+        headers=headers,
+        row_data=row_data,
+        col_widths=col_widths,
+        styles=styles,
+        align_left_cols=[1, 2, 3], # Align text strings to the left
+        align_right_cols=[6, 7]    # Align numeric counts to the right
+    )
+
+    elements.append(table)
+
+    # --- BUILD & RESPOND ---
+    document.build(elements, onFirstPage=_draw_footer, onLaterPages=_draw_footer)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="categories.pdf"'
 
     return response

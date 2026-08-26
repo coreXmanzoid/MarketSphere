@@ -20,11 +20,31 @@ urlpatterns = [
         name="catalog-product",
     ),
     path("catalog/categories", views.catalog_categories, name="catalog-categories"),
+    path("catalog/categories/api/", views.category_api, name="admin-category-api"),
+    path(
+        "catalog/categories/api/<int:category_id>/",
+        views.category_api_detail,
+        name="admin-category-api-detail",
+    ),
+    path("catalog/brands", views.catalog_brands, name="catalog-brands"),
+    path("catalog/brands/api/", views.brand_api, name="admin-brand-api"),
+    path("catalog/brands/api/<int:brand_id>/", views.brand_api_detail, name="admin-brand-api-detail"),
+    path("catalog/brands/import/", views.brand_import_api, name="admin-brand-import"),
+    path("catalog/brands/export/", views.brand_export_api, name="admin-brands-export"),
+    path("sales/orders", views.sales_orders, name="sales-orders"),
+    path("sales/order/<str:order_number>", views.sales_order, name="sales-order"),
+    path("sales/payments", views.payment_management, name="payment-management"),
     path("change-account-state/", views.change_state, name="change-account-state"),
+
     path(
         "user/buyers/<int:user_id>/reset-password/",
         views.admin_reset_password,
         name="admin_reset_password",
+    ),
+    path(
+        "catalog/categories/export/",
+        views.export_categories_api,
+        name="admin-category-export",
     ),
     path(
         "logout-all-devices/",

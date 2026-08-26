@@ -514,7 +514,7 @@ closeShippingModal.addEventListener("click", hideShippingModal);
 
 cancelShipping.addEventListener("click", hideShippingModal);
 
-shippingModal.addEventListener("click", function(e) {
+shippingModal.addEventListener("click", function (e) {
 
     if (e.target === shippingModal) {
         hideShippingModal();
@@ -522,9 +522,9 @@ shippingModal.addEventListener("click", function(e) {
 
 });
 
-document.addEventListener("keydown", function(e){
+document.addEventListener("keydown", function (e) {
 
-    if(e.key === "Escape"){
+    if (e.key === "Escape") {
         hideShippingModal();
     }
 
@@ -570,35 +570,31 @@ document.getElementById("shippingForm").addEventListener("submit", async functio
 
     const data = await response.json();
 
-if (data.success) {
-    document.getElementById("trackingNumber").textContent =
-        data.tracking_number || "Not yet assigned";
+    if (data.success) {
+        document.getElementById("trackingNumber").textContent =
+            data.tracking_number || "Not yet assigned";
 
-    document.getElementById("courierName").textContent =
-        data.courier || "Not yet assigned";
+        document.getElementById("courierName").textContent =
+            data.courier || "Not yet assigned";
 
-    document.getElementById("estimatedDelivery").textContent =
-        data.estimated_delivery || "Not Found Yet.";
+        document.getElementById("estimatedDelivery").textContent =
+            data.estimated_delivery || "Not Found Yet.";
 
-    document.getElementById("shippingNotesDisplay").textContent =
-        data.shipping_notes || "No shipping notes yet.";
+        document.getElementById("shippingNotesDisplay").textContent =
+            data.shipping_notes || "No shipping notes yet.";
 
-    document.getElementById("sodCopyTrackingBtn").dataset.trackingNumber =
-        data.tracking_number || "";
+        document.getElementById("sodCopyTrackingBtn").dataset.trackingNumber =
+            data.tracking_number || "";
 
         hideShippingModal();
-}
+    }
 });
 
-
 document.querySelectorAll(".editable-note").forEach((note) => {
-
     note.addEventListener("dblclick", function () {
-
         if (note.dataset.editing === "true") return;
 
         note.dataset.editing = "true";
-
         const originalText = note.textContent.trim();
 
         const textarea = document.createElement("input");
@@ -608,74 +604,82 @@ document.querySelectorAll(".editable-note").forEach((note) => {
 
         note.innerHTML = "";
         note.appendChild(textarea);
-
         textarea.focus();
 
         function finishEditing() {
-
             const newValue = textarea.value.trim();
 
-            note.dataset.editing = "false";
+            // 1. If the text hasn't changed, simply restore and exit
+            if (newValue === originalText || (newValue === "" && originalText === "No seller Notes.")) {
+                note.dataset.editing = "false";
+                note.textContent = originalText;
+                return;
+            }
 
-            note.textContent = newValue || "No seller Notes.";
+            // 2. Show a temporary loading state
+            note.textContent = "Saving...";
+            textarea.disabled = true;
 
-            if (newValue === originalText) return;
+            // 3. Fetch the CSRF token from the DOM for Django POST request
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            const csrfToken = csrfInput ? csrfInput.value : '';
 
-            /*
-                Later:
+            const orderNumber = note.dataset.orderNumber;
+            const fetchUrl = `/order/${orderNumber}/update-note/`;
 
-                fetch(note.dataset.url,{
-                    method:"POST",
-                    body:...
+            fetch(fetchUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({ note: newValue })
+            })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(({ status, body }) => {
+                    if (status === 200 && body.success !== false) {
+                        // On success: Keep updated text
+                        note.textContent = newValue || "No seller Notes.";
+                        note.dataset.editing = "false";
+                        console.log("Updated Note:", newValue);
+                    } else {
+                        // On failure: Throw error to be caught below
+                        throw new Error(body.message || "Failed to save the note.");
+                    }
                 })
+                .catch(error => {
+                    // On error (network issue or 400/500 status): Restore original text
+                    console.error("Error updating note:", error);
+                    alert(error.message || "A network error occurred.");
 
-                On success keep updated text.
-                On failure restore original text.
-            */
-
-            console.log("Updated Note:", newValue);
-
+                    note.textContent = originalText;
+                    note.dataset.editing = "false";
+                });
         }
 
         setTimeout(() => {
-
             document.addEventListener("click", outsideClick);
-
         }, 0);
 
         function outsideClick(e) {
-
             if (!note.contains(e.target)) {
-
                 document.removeEventListener("click", outsideClick);
-
                 finishEditing();
-
             }
-
         }
 
         textarea.addEventListener("keydown", function (e) {
-
             if (e.key === "Escape") {
-
                 document.removeEventListener("click", outsideClick);
-
                 note.dataset.editing = "false";
                 note.textContent = originalText;
-
             }
 
             if (e.key === "Enter" && e.ctrlKey) {
-
                 document.removeEventListener("click", outsideClick);
-
                 finishEditing();
-
             }
-
         });
-
     });
-
 });

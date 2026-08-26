@@ -65,9 +65,9 @@
     --sod-shadow-md: 0 8px 22px rgba(78, 34, 15, 0.09);
     --sod-shadow-lg: 0 18px 44px rgba(78, 34, 15, 0.16);
 
-    --sod-radius-sm: 4px;
-    --sod-radius-md: 10px;
-    --sod-radius-lg: 20px;
+    --sod-radius-sm: 2px;
+    --sod-radius-md: 4px;
+    --sod-radius-lg: 8px;
     --sod-radius-pill: 999px;
 
     --sod-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -189,13 +189,12 @@
 .sod-btn-ghost {
     background-color: transparent;
     color: var(--sod-body);
-    border: 1.5px solid var(--sod-border);
+    border: 1.5px solid var(--sod-border) !important;
 }
 
 .sod-btn-ghost:hover {
     background-color: var(--sod-muted-bg);
     color: var(--sod-heading);
-    border-color: var(--sod-accent);
 }
 
 .sod-btn-success {
@@ -723,6 +722,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
+}
+
+.sod-product-name:hover {
+    text-decoration: underline;
 }
 
 .sod-product-variant {
@@ -1408,6 +1412,10 @@
 
 .sod-modal-actions .sod-btn {
     flex: 1;
+}
+.sod-modal input, .sod-modal textarea {
+    border-width: 1.5px !important;
+    border-radius: 2px !important;
 }
 
 /* ================= 18. RESPONSIVE ================= */

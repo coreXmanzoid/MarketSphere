@@ -1236,3 +1236,67 @@ document.addEventListener("click", function (e) {
     }
 
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const removeDiscountBtn = document.getElementById('remove-discount');
+
+    if (removeDiscountBtn) {
+        removeDiscountBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default button behavior
+
+            // 1. Get the slug from the button's data attribute
+            const productSlug = this.getAttribute('data-slug');
+            if (!productSlug) {
+                console.error("Product slug is missing.");
+                return;
+            }
+
+            // 2. Construct the URL matching your urls.py
+            const url = `/admin-db/catalog/product-management/${productSlug}/price/remove-discount/`;
+
+            // 3. Get the CSRF token from the DOM (required by Django for POST requests)
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            const csrfToken = csrfInput ? csrfInput.value : '';
+
+            // Optional: Show loading state on button
+            const originalText = this.innerText;
+            this.innerText = 'Removing...';
+            this.disabled = true;
+
+            // 4. Make the fetch request
+            fetch(url, {
+                method: 'POST', // Assuming your view allows POST. Use 'GET' if specifically configured that way, but POST is safer for state-changing actions.
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest' // Tells Django this is an AJAX request
+                }
+            })
+            .then(response => {
+                // Parse the JSON response
+                return response.json().then(data => ({ status: response.status, body: data }));
+            })
+            .then(({ status, body }) => {
+                if (status === 200 && body.success !== false) {
+                    // Success handling
+                    showToast('Discount removed successfully!', "success");
+                    
+                    // You can update the UI here or simply reload the page to reflect changes
+                    document.getElementById("pfDiscountPrice").value = " "; 
+                } else {
+                    // Handled error from your JsonResponse (e.g., status 404)
+                    showToast(body.message || 'Failed to remove discount.', "error");
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showToast('A network error occurred while removing the discount.', "error");
+            })
+            .finally(() => {
+                // Restore button state
+                this.innerText = originalText;
+                this.disabled = false;
+            });
+        });
+    }
+});

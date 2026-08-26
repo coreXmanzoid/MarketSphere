@@ -31,6 +31,9 @@ class Category(models.Model):
 
     is_active = models.BooleanField(default=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     @property
     def root_category(self):
         category = self
@@ -50,24 +53,59 @@ class Category(models.Model):
 
 class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
-
     slug = models.SlugField(unique=True)
 
-    logo = models.ImageField(upload_to="brands/logos/", blank=True, null=True)
+    logo = models.ImageField(
+        upload_to="brands/logos/",
+        blank=True,
+        null=True,
+    )
+
+    cover_image = models.ImageField(
+        upload_to="brands/covers/",
+        blank=True,
+        null=True,
+    )
 
     description = models.TextField(blank=True)
 
+    country_of_origin = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    founded_year = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
     website = models.URLField(blank=True)
 
+    official_email = models.EmailField(blank=True)
+
+    official_phone = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+
+    facebook = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+
     is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+
+    display_order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["display_order", "name"]
 
     def __str__(self):
         return self.name
-
-
+    
 class Product(TimeStampedModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"

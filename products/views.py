@@ -49,8 +49,13 @@ def search(request):
         q="New Arrivals"
 
     if q == "":
-        q = category_slugs[0] or brand_slugs[0] or max_price or availability or sort_value
-
+        q = (
+            (category_slugs[0] if category_slugs else None) or 
+            (brand_slugs[0] if brand_slugs else None) or 
+            max_price or 
+            (availability[0] if availability else None) or 
+            sort_value
+        )
     categories = services.get_search_categories(base_products)
     brands = services.get_search_brands(base_products)
     # Full set: query + every active filter, for the actual grid.

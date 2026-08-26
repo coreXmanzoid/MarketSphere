@@ -709,6 +709,7 @@
 
                 <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
                   type="button"
+                  data-product-slug="{{ product.slug }}"
                   aria-label="{% if product.id in wishlist_ids %}
                     Remove from wishlist
                   {% else %}
@@ -801,6 +802,7 @@
 
                 <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
                   type="button"
+                  data-product-slug="{{ product.slug }}"
                   aria-label="{% if product.id in wishlist_ids %}
                     Remove from wishlist
                   {% else %}

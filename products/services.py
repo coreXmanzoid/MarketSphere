@@ -1358,11 +1358,10 @@ def update_product_pricing(product_slug, seller, price, discount_price=None):
     }
 
 @transaction.atomic
-def remove_product_discount(product_slug, seller):
+def remove_product_discount(product_slug):
     try:
         product = Product.objects.get(
             slug=product_slug,
-            seller=seller,
         )
     except Product.DoesNotExist:
         return {

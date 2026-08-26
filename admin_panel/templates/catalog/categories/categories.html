@@ -14,7 +14,7 @@
     <span>Admin</span>
     <span class="adh-breadcrumb-sep">/</span>
     <span>Catalog</span>
-    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-sep">&rsaquo;</span>
     <span class="adh-breadcrumb-current">Categories</span>
   </nav>
 {% endblock %}
@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="cm-page" id="cmPage">
+<div class="cm-page" id="cmPage" data-category-api-url="{% url 'admin-category-api' %}" data-category-export-url="{% url 'admin-category-export' %}">
 
   <!-- ================= 1. PAGE HEADER ================= -->
   <header class="cm-header cm-reveal">
@@ -86,23 +86,23 @@
       <div class="cm-metric-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Total Categories</span>
-        <span class="cm-metric-value" data-cm-count-to="128">0</span>
-        <span class="cm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>6 added this month</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ total_categories }}">{{ total_categories }}</span>
+        <span class="cm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>{{ categories_added_this_month }} added this month</span>
       </div>
     </div>
     <div class="cm-metric-card">
       <div class="cm-metric-icon c-success"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Active Categories</span>
-        <span class="cm-metric-value" data-cm-count-to="114">0</span>
-        <span class="cm-metric-trend neutral">89% of catalog</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ active_categories }}">{{ active_categories }}</span>
+        <span class="cm-metric-trend neutral">{{percentage_active|floatformat:0}}% of catalog</span>
       </div>
     </div>
     <div class="cm-metric-card">
       <div class="cm-metric-icon c-danger"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Inactive Categories</span>
-        <span class="cm-metric-value" data-cm-count-to="14">0</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ inactive_categories }}">{{ inactive_categories }}</span>
         <span class="cm-metric-trend neutral">Hidden from storefront</span>
       </div>
     </div>
@@ -110,7 +110,7 @@
       <div class="cm-metric-icon c-info"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4z"></path><path d="M4 12h10v4H4z"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Parent Categories</span>
-        <span class="cm-metric-value" data-cm-count-to="9">0</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ total_parent_categories }}">{{ total_parent_categories }}</span>
         <span class="cm-metric-trend neutral">Top-level nodes</span>
       </div>
     </div>
@@ -118,7 +118,7 @@
       <div class="cm-metric-icon c-info"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v18"></path><path d="M15 3v18"></path><path d="M3 9h18"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Subcategories</span>
-        <span class="cm-metric-value" data-cm-count-to="119">0</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ total_subcategories }}">{{ total_subcategories }}</span>
         <span class="cm-metric-trend neutral">Across all parents</span>
       </div>
     </div>
@@ -126,7 +126,7 @@
       <div class="cm-metric-icon c-warning"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Empty Categories</span>
-        <span class="cm-metric-value" data-cm-count-to="11">0</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ empty_categories }}">{{ empty_categories }}</span>
         <span class="cm-metric-trend down">No products assigned</span>
       </div>
     </div>
@@ -134,7 +134,7 @@
       <div class="cm-metric-icon c-accent"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Featured Categories</span>
-        <span class="cm-metric-value" data-cm-count-to="18">0</span>
+        <span class="cm-metric-value" data-cm-count-to="8">8</span>
         <span class="cm-metric-trend neutral">Shown on homepage</span>
       </div>
     </div>
@@ -142,7 +142,19 @@
       <div class="cm-metric-icon c-success"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg></div>
       <div class="cm-metric-body">
         <span class="cm-metric-label">Products Assigned</span>
-        <span class="cm-metric-value" data-cm-count-to="8420">0</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ products_assigned }}">{{ products_assigned }}</span>
+        <span class="cm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>Across all categories</span>
+      </div>
+    </div>
+    <div class="cm-metric-card">
+      <div class="cm-metric-icon c-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-up" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
+        </svg>
+      </div>
+      <div class="cm-metric-body">
+        <span class="cm-metric-label">Avg Products per Category</span>
+        <span class="cm-metric-value" data-cm-count-to="{{ average_products_per_category }}">{{ average_products_per_category }}</span>
         <span class="cm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>Across all categories</span>
       </div>
     </div>
@@ -250,8 +262,6 @@
             <th>Products</th>
             <th>Subcategories</th>
             <th>Status</th>
-            <th>Featured</th>
-            <th>Visibility</th>
             <th>Order</th>
             <th>Updated</th>
             <th class="cm-col-actions"><span class="sr-only">Actions</span></th>
@@ -356,13 +366,13 @@
       <!-- ============ OVERVIEW ============ -->
       <section class="cm-drawer-panel is-active" data-cm-panel="overview">
         <div class="cm-drawer-stats-grid">
-          <div class="cm-drawer-stat"><span>Total Products</span><strong id="ovTotalProducts">0</strong></div>
+          <div class="cm-drawer-stat"><span>Total Products</span><strong id="ovTotalProducts">—</strong></div>
           <div class="cm-drawer-stat"><span>Published</span><strong class="c-success" id="ovPublished">0</strong></div>
           <div class="cm-drawer-stat"><span>Pending</span><strong class="c-warning" id="ovPending">0</strong></div>
           <div class="cm-drawer-stat"><span>Out of Stock</span><strong class="c-danger" id="ovOutOfStock">0</strong></div>
           <div class="cm-drawer-stat"><span>Subcategories</span><strong id="ovSubcategories">0</strong></div>
           <div class="cm-drawer-stat"><span>Category Orders</span><strong id="ovOrders">0</strong></div>
-          <div class="cm-drawer-stat"><span>Category Revenue</span><strong id="ovRevenue">Rs. 0</strong></div>
+          <div class="cm-drawer-stat"><span>Category Revenue</span><strong id="ovRevenue">—</strong></div>
           <div class="cm-drawer-stat"><span>Conversion Rate</span><strong id="ovConversion">0%</strong></div>
         </div>
 
@@ -589,10 +599,10 @@
           <div class="cm-card cm-nested-card">
             <div class="cm-card-head"><h3 class="cm-card-subtitle-title">Key Performance</h3></div>
             <div class="cm-kpi-row">
-              <div class="cm-kpi-card"><span>Views (30d)</span><strong>24,180</strong></div>
-              <div class="cm-kpi-card"><span>Conversion Rate</span><strong>3.8%</strong></div>
-              <div class="cm-kpi-card"><span>Wishlist Adds</span><strong>1,204</strong></div>
-              <div class="cm-kpi-card"><span>Sales Growth</span><strong class="c-success">+12.4%</strong></div>
+              <div class="cm-kpi-card"><span>Views (30d)</span><strong>—</strong></div>
+              <div class="cm-kpi-card"><span>Conversion Rate</span><strong>—</strong></div>
+              <div class="cm-kpi-card"><span>Wishlist Adds</span><strong>—</strong></div>
+              <div class="cm-kpi-card"><span>Sales Growth</span><strong>—</strong></div>
             </div>
           </div>
 
@@ -800,7 +810,7 @@
     <p class="cm-upload-filename cm-hidden" id="cmImportFileName"></p>
     <div class="cm-modal-actions">
       <button type="button" class="cm-btn cm-btn-secondary" data-cm-close-modal>Cancel</button>
-      <button type="button" class="cm-btn cm-btn-primary" id="cmImportConfirmBtn">Preview Import</button>
+      <button type="button" class="cm-btn cm-btn-primary" id="cmImportConfirmBtn">Import Categories</button>
     </div>
   </div>
 </div>
@@ -811,5 +821,6 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ category_tree|json_script:"category-tree-data" }}
 <script src="{% static 'js/categories.js' %}"></script>
 {% endblock %}

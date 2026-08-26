@@ -371,7 +371,7 @@
                     </td>
                     <td data-label="Product">
                       <!-- item.product.name -->
-                      <span class="sod-product-name">{{ item.product.name }}</span>
+                      <span class="sod-product-name" onclick="window.open('/product/{{ item.product.slug }}/', '_blank')">{{ item.product.name }}</span>
                       <span class="sod-product-variant">Matte Black</span>
                     </td>
                     <td data-label="SKU">
@@ -428,13 +428,14 @@
                   <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
                 </svg>Seller Notes
               </span>
-              <!-- seller_order.seller_notes -->
-<p
-    class="sod-note-block-text editable-note"
-    data-url=""
->
-    {{ item.seller.notes|default:"No seller Notes." }}
-</p>            </div>
+              <p
+                  class="sod-note-block-text editable-note"
+                  data-order-number="{{ order.order.order_number }}"
+              >
+                  <!-- Note: changed item.seller.notes to item.seller_notes based on your model -->
+                  {{ order.seller_notes|default:"No seller Notes." }}
+              </p>
+            </div>
 
             <div class="sod-note-block">
               <span class="sod-note-block-label">

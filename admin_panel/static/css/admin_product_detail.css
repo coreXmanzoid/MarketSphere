@@ -482,8 +482,8 @@
 .apd-sidebar { display: flex; flex-direction: column; gap: 18px; position: sticky; top: calc(var(--ad-topbar-height, 68px) + 20px); }
 
 /* ================= 14. TABLES ================= */
-.apd-subtle-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
-.apd-subtle-stat { background-color: var(--apd-surface-raised); border: 1px solid var(--apd-border); border-radius: var(--apd-radius-md); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--apd-shadow-sm); }
+.apd-subtle-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 18px; }
+.apd-subtle-stat { background-color: var(--apd-surface-raised); border: 1px solid var(--apd-border); border-radius: var(--apd-radius-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--apd-shadow-sm); }
 .apd-subtle-stat span { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--apd-caption); }
 .apd-subtle-stat strong { font-size: 16px; color: var(--apd-heading); }
 

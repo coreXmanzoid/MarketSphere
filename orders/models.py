@@ -125,6 +125,7 @@ class SellerOrder(models.Model):
     estimated_delivery = models.DateField(null=True, blank=True)
 
     shipping_notes = models.TextField(blank=True)
+    seller_notes = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

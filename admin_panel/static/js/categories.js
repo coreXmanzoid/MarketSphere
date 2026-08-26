@@ -1,12 +1,10 @@
 /* =========================================================================
    MARKETSPHERE ADMIN — CATEGORY MANAGEMENT (list.js)
-   Frontend-only interactivity for admin_panel/templates/catalog/categories/list.html.
-   Vanilla JS, IIFE-scoped, no external libraries, no network calls.
-   All category data below is realistic demo/placeholder data used to
-   drive the UI until the backend model + views are wired up.
+   Frontend interactivity for admin_panel/templates/catalog/categories/categories.html.
+   Vanilla JS, IIFE-scoped, no external libraries.
 
    Sections:
-     1. Demo Data
+     1. Demo Data (Products & Activity) & Backend Category Integration
      2. State
      3. DOM Cache
      4. Toast Helper
@@ -36,24 +34,10 @@
 
     var root = document.getElementById("cmPage");
     if (!root) return;
+    var CATEGORY_API_URL = root.getAttribute("data-category-api-url") || "";
+    var CATEGORY_EXPORT_URL = root.getAttribute("data-category-export-url") || "";
 
-    /* ================= 1. DEMO DATA ================= */
-    var PRODUCT_POOL = [
-        { name: "Wireless Over-Ear Headphones", sku: "SW-HP-2201", seller: "SoundWave", price: 6399, stock: 42, status: "published", orders: 214 },
-        { name: "Smart Watch Series 4", sku: "TT-SW-0044", seller: "TimeTech", price: 12999, stock: 8, status: "published", orders: 96 },
-        { name: "4K Action Camera", sku: "NV-AC-0091", seller: "NovaTech", price: 18500, stock: 0, status: "out_of_stock", orders: 51 },
-        { name: "Leather Crossbody Bag", sku: "UC-BG-1123", seller: "UrbanCarry", price: 4200, stock: 27, status: "published", orders: 133 },
-        { name: "Bluetooth Portable Speaker", sku: "SW-SP-0087", seller: "SoundWave", price: 3899, stock: 61, status: "pending", orders: 12 },
-        { name: "Ergonomic Office Chair", sku: "HM-CH-0210", seller: "HomeMakers", price: 15999, stock: 14, status: "published", orders: 44 },
-    ];
-
-    var TOP_PRODUCTS = [
-        { name: "Wireless Over-Ear Headphones", sold: 214 },
-        { name: "Smart Watch Series 4", sold: 96 },
-        { name: "Bluetooth Portable Speaker", sold: 63 },
-        { name: "4K Action Camera", sold: 51 },
-    ];
-
+    /* ================= 1. CATEGORY DATA & ISOLATED DEMO ACTIVITY ================= */
     var ACTIVITY_EVENTS = [
         { type: "category", icon: "created", title: "Category created", desc: "Category was added to the catalog structure.", actor: "Hammad Ashraf", time: "3 months ago", status: "success" },
         { type: "visibility", icon: "featured", title: "Marked as Featured", desc: "Category now appears in the featured carousel.", actor: "Sana Raza", time: "2 months ago", status: "success" },
@@ -64,122 +48,173 @@
         { type: "products", icon: "removed", title: "3 products removed", desc: "Out-of-policy listings were removed from this category.", actor: "Hammad Ashraf", time: "2 days ago", status: "danger" },
     ];
 
-    function makeCategory(opts) {
-        return Object.assign({
-            id: idCounter++,
-            slug: (opts.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-            icon: "bi bi-grid",
-            description: "",
-            type: "Standard",
-            status: "active",
-            featured: false,
-            homepage: true,
-            nav: true,
-            footer: false,
-            visible: true,
-            allowProducts: true,
-            allowSubcategories: true,
-            order: 1,
-            created: "Jan 12, 2026",
-            updated: "2 weeks ago",
-            children: [],
-        }, opts);
+    function escapeHtml(value) {
+        return String(value === null || value === undefined ? "" : value)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
-    var idCounter = 1;
+    function idKey(id) {
+        return id === null || id === undefined || id === "" ? "" : String(id);
+    }
 
-    var CATEGORY_TREE = [
-        makeCategory({
-            name: "Electronics", icon: "bi bi-cpu", products: 2140, featured: true, order: 1,
-            description: "Consumer electronics including phones, laptops, and accessories.",
-            children: [
-                makeCategory({
-                    name: "Mobile Phones", icon: "bi bi-phone", products: 640, featured: true, order: 1,
-                    description: "Smartphones and feature phones from all major brands.",
-                    children: [
-                        makeCategory({ name: "Android Phones", icon: "bi bi-phone", products: 410, order: 1 }),
-                        makeCategory({ name: "iPhones", icon: "bi bi-phone", products: 230, order: 2 }),
-                    ],
-                }),
-                makeCategory({
-                    name: "Laptops", icon: "bi bi-laptop", products: 380, order: 2,
-                    children: [
-                        makeCategory({ name: "Gaming Laptops", icon: "bi bi-laptop", products: 140, order: 1 }),
-                        makeCategory({ name: "Business Laptops", icon: "bi bi-laptop", products: 180, order: 2 }),
-                    ],
-                }),
-                makeCategory({ name: "Accessories", icon: "bi bi-usb-plug", products: 520, order: 3, status: "active" }),
-                makeCategory({ name: "Smart Home", icon: "bi bi-house-gear", products: 0, order: 4, status: "inactive" }),
-            ],
-        }),
-        makeCategory({
-            name: "Fashion", icon: "bi bi-bag-heart", products: 1890, featured: true, order: 2,
-            description: "Apparel and accessories for men, women, and kids.",
-            children: [
-                makeCategory({ name: "Men", icon: "bi bi-person", products: 640, order: 1 }),
-                makeCategory({ name: "Women", icon: "bi bi-person-dress", products: 890, order: 2 }),
-                makeCategory({ name: "Kids", icon: "bi bi-emoji-smile", products: 360, order: 3 }),
-            ],
-        }),
-        makeCategory({
-            name: "Home & Living", icon: "bi bi-house-door", products: 1120, order: 3,
-            description: "Furniture, kitchenware, and home decoration.",
-            children: [
-                makeCategory({ name: "Furniture", icon: "bi bi-house-door", products: 410, order: 1 }),
-                makeCategory({ name: "Kitchen", icon: "bi bi-cup-hot", products: 380, order: 2 }),
-                makeCategory({ name: "Decoration", icon: "bi bi-flower1", products: 330, order: 3, status: "active" }),
-            ],
-        }),
-        makeCategory({
-            name: "Beauty & Personal Care", icon: "bi bi-droplet", products: 740, order: 4,
-            children: [
-                makeCategory({ name: "Skincare", icon: "bi bi-droplet-half", products: 320, order: 1 }),
-                makeCategory({ name: "Makeup", icon: "bi bi-palette", products: 260, order: 2 }),
-                makeCategory({ name: "Fragrances", icon: "bi bi-flower2", products: 160, order: 3, status: "inactive" }),
-            ],
-        }),
-        makeCategory({
-            name: "Sports & Outdoors", icon: "bi bi-bicycle", products: 480, order: 5,
-            children: [
-                makeCategory({ name: "Fitness Equipment", icon: "bi bi-activity", products: 210, order: 1 }),
-                makeCategory({ name: "Camping & Hiking", icon: "bi bi-tree", products: 140, order: 2 }),
-                makeCategory({ name: "Cycling", icon: "bi bi-bicycle", products: 130, order: 3 }),
-            ],
-        }),
-        makeCategory({
-            name: "Books & Stationery", icon: "bi bi-book", products: 0, order: 6, status: "active",
-            children: [],
-        }),
-        makeCategory({
-            name: "Groceries", icon: "bi bi-basket", products: 610, order: 7, status: "inactive",
-            children: [
-                makeCategory({ name: "Beverages", icon: "bi bi-cup-straw", products: 210, order: 1 }),
-                makeCategory({ name: "Snacks", icon: "bi bi-basket2", products: 400, order: 2 }),
-            ],
-        }),
-        makeCategory({
-            name: "Toys & Games", icon: "bi bi-controller", products: 260, order: 8,
-            children: [
-                makeCategory({ name: "Board Games", icon: "bi bi-dice-5", products: 90, order: 1 }),
-                makeCategory({ name: "Action Figures", icon: "bi bi-robot", products: 170, order: 2 }),
-            ],
-        }),
-        makeCategory({
-            name: "Automotive", icon: "bi bi-car-front", products: 0, order: 9, status: "inactive",
-            children: [],
-        }),
-    ];
+    function sameId(a, b) { return idKey(a) !== "" && idKey(a) === idKey(b); }
 
-    /* Flatten helper used across search/filter/table/selects */
+    function productCount(cat) {
+        if (Array.isArray(cat.products)) return cat.products.length;
+        if (typeof cat.product_count === "number") return cat.product_count;
+        return Number(cat.products) || 0;
+    }
+
+    function childCount(cat) {
+        if (Array.isArray(cat.children)) return cat.children.length;
+        return Number(cat.subcategory_count) || 0;
+    }
+
+    function categoryStatus(cat) {
+        if (typeof cat.is_active === "boolean") return cat.is_active ? "active" : "inactive";
+        return String(cat.status || "active").toLowerCase() === "inactive" ? "inactive" : "active";
+    }
+
+    function formatCategoryTimestamp(value) {
+        if (!value) return "—";
+
+        var date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return "—";
+        }
+
+        return date.toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
+        });
+    }
+
+    function categoryCreated(cat) {
+        return formatCategoryTimestamp(
+            cat.created_at || cat.created
+        );
+    }
+
+    function categoryUpdated(cat) {
+        return formatCategoryTimestamp(
+            cat.updated_at || cat.updated
+        );
+    }
+    // Load actual category data provided by Django. Invalid or missing data means empty UI.
+    var CATEGORY_TREE = [];
+    var categoryDataElement = document.getElementById("category-tree-data");
+
+    function setCategoryData(payload) {
+        var data = payload && payload.category_tree ? payload.category_tree : payload;
+        if (Array.isArray(data)) CATEGORY_TREE = data;
+        else if (data && Array.isArray(data.children)) CATEGORY_TREE = data.children;
+        else if (data && Array.isArray(data.categories)) CATEGORY_TREE = data.categories;
+        else CATEGORY_TREE = [];
+    }
+
+    if (categoryDataElement) {
+        try { setCategoryData(JSON.parse(categoryDataElement.textContent.trim() || "null")); }
+        catch (error) { CATEGORY_TREE = []; console.error("Failed to parse category data:", error); }
+    }
+
+    function csrfToken() {
+        var match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        if (match) return decodeURIComponent(match[1]);
+        var input = document.querySelector("input[name=csrfmiddlewaretoken]");
+        return input ? input.value : "";
+    }
+
+    function apiRequest(url, options) {
+        options = options || {};
+        options.headers = Object.assign({ "Accept": "application/json" }, options.headers || {});
+        if (options.body && !(options.body instanceof FormData) && !options.headers["Content-Type"]) {
+            options.headers["Content-Type"] = "application/json";
+        }
+        if (options.method && options.method !== "GET") options.headers["X-CSRFToken"] = csrfToken();
+        return fetch(url, options).then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (payload) {
+                if (!response.ok || payload.ok === false) throw new Error(payload.error || "Category request failed.");
+                return payload;
+            });
+        });
+    }
+
+    function reloadCategories() {
+        if (!CATEGORY_API_URL) return Promise.resolve();
+        return apiRequest(CATEGORY_API_URL).then(function (payload) {
+            setCategoryData(payload);
+            renderTree();
+            renderTable();
+            if (state.activeCategoryId !== null) {
+                var active = findCategory(state.activeCategoryId);
+                if (active) populateDrawer(active); else closeDrawer();
+            }
+        }).catch(function (error) {
+            showToast(error.message || "Unable to load categories.", "danger");
+            throw error;
+        });
+    }
+
+    function categoryApiUrl(id) { return CATEGORY_API_URL + idKey(id) + "/"; }
+
+    function saveCategory(id, data) {
+        var isCreate = id === null || id === undefined;
+
+        var url = isCreate
+            ? CATEGORY_API_URL
+            : categoryApiUrl(id);
+
+        var formData = new FormData();
+
+        Object.keys(data).forEach(function (key) {
+            var value = data[key];
+
+            if (value === undefined || value === null) {
+                return;
+            }
+
+            if (key === "image") {
+                if (typeof File !== "undefined" && value instanceof File) {
+                    formData.append("image", value);
+                }
+                return;
+            }
+
+            formData.append(key, String(value));
+        });
+
+        return apiRequest(url, {
+            method: "POST",
+            body: formData
+        }).then(function (payload) {
+            return reloadCategories().then(function () {
+                return payload;
+            });
+        });
+    }
+    /* Flatten helper used across search/filter/table/selects.
+       Returns copies of nodes to prevent mutating the original tree structure. */
     function flatten(nodes, depth, parent, out) {
         depth = depth || 0;
         out = out || [];
+        if (!Array.isArray(nodes)) return out;
         nodes.forEach(function (node) {
-            node._depth = depth;
-            node._parentName = parent ? parent.name : null;
-            out.push(node);
-            if (node.children && node.children.length) {
-                flatten(node.children, depth + 1, node, out);
+            if (!node || typeof node !== "object") return;
+            var copy = Object.assign({}, node);
+            copy._depth = depth;
+            copy._parentName = parent ? parent.name : null;
+            if (!Object.prototype.hasOwnProperty.call(copy, "parent_id")) copy.parent_id = parent ? parent.id : null;
+            copy.status = categoryStatus(copy);
+            out.push(copy);
+
+            if (Array.isArray(node.children) && node.children.length) {
+                flatten(node.children, depth + 1, copy, out);
             }
         });
         return out;
@@ -190,7 +225,7 @@
     }
 
     function findCategory(id) {
-        return allCategoriesFlat().find(function (c) { return c.id === Number(id); });
+        return allCategoriesFlat().find(function (c) { return sameId(c.id, id); });
     }
 
     /* ================= 2. STATE ================= */
@@ -198,7 +233,7 @@
         view: "tree",
         filter: "all",
         search: "",
-        sort: "order",
+        sort: "name",
         expanded: new Set(),
         selectedTableIds: new Set(),
         activeCategoryId: null,
@@ -245,28 +280,6 @@
 
         toastContainer: document.getElementById("cmToastContainer"),
     };
-
-    /* ================= 4. TOAST HELPER ================= */
-    var TOAST_ICONS = {
-        success: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"></path></svg>',
-        danger: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg>',
-        info: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
-    };
-
-    function showToast(message, type) {
-        type = type || "info";
-        if (!dom.toastContainer) return;
-
-        var toast = document.createElement("div");
-        toast.className = "cm-toast cm-toast-" + type;
-        toast.innerHTML = (TOAST_ICONS[type] || TOAST_ICONS.info) + "<span>" + message + "</span>";
-        dom.toastContainer.appendChild(toast);
-
-        window.setTimeout(function () {
-            toast.classList.add("is-leaving");
-            window.setTimeout(function () { toast.remove(); }, 220);
-        }, 3600);
-    }
 
     /* ================= 5. SCROLL REVEAL / COUNTERS ================= */
     function initReveal() {
@@ -372,14 +385,29 @@
 
     function categoryMatchesFilter(cat) {
         var f = state.filter;
+
         if (f === "all") return true;
-        if (f === "active") return cat.status === "active";
-        if (f === "inactive") return cat.status === "inactive";
-        if (f === "parent") return cat._depth === 0;
-        if (f === "subcategory") return cat._depth > 0;
-        if (f === "featured") return !!cat.featured;
-        if (f === "hidden") return !cat.visible || !cat.nav;
-        if (f === "empty") return (cat.products || 0) === 0;
+
+        if (f === "active") {
+            return categoryStatus(cat) === "active";
+        }
+
+        if (f === "inactive") {
+            return categoryStatus(cat) === "inactive";
+        }
+
+        if (f === "parent") {
+            return cat.parent_id === null || cat.parent_id === undefined;
+        }
+
+        if (f === "subcategory") {
+            return cat.parent_id !== null && cat.parent_id !== undefined;
+        }
+
+        if (f === "empty") {
+            return productCount(cat) === 0;
+        }
+
         return true;
     }
 
@@ -387,16 +415,21 @@
         if (!state.search) return true;
         var q = state.search.toLowerCase();
         return (
-            cat.name.toLowerCase().indexOf(q) !== -1 ||
-            cat.slug.toLowerCase().indexOf(q) !== -1 ||
-            (cat._parentName || "").toLowerCase().indexOf(q) !== -1
+            String(cat.name || "").toLowerCase().indexOf(q) !== -1 ||
+            String(cat.slug || "").toLowerCase().indexOf(q) !== -1 ||
+            String(cat._parentName || "").toLowerCase().indexOf(q) !== -1
         );
     }
 
     // A node is visible in the tree if it (or any descendant) matches.
-    function nodeVisible(node) {
-        var selfMatch = categoryMatchesFilter(node) && categoryMatchesSearch(node);
-        var childVisible = (node.children || []).some(nodeVisible);
+    function nodeVisible(node, parent) {
+        var viewNode = Object.assign({}, node, {
+            parent_id: Object.prototype.hasOwnProperty.call(node, "parent_id") ? node.parent_id : (parent ? parent.id : null),
+            _parentName: parent ? parent.name : null,
+            status: categoryStatus(node)
+        });
+        var selfMatch = categoryMatchesFilter(viewNode) && categoryMatchesSearch(viewNode);
+        var childVisible = (node.children || []).some(function (child) { return nodeVisible(child, node); });
         return selfMatch || childVisible;
     }
 
@@ -408,8 +441,15 @@
         return count;
     }
 
-    function renderTreeNode(node) {
-        if (!nodeVisible(node)) return null;
+    function renderTreeNode(node, depth, parent) {
+        if (!nodeVisible(node, parent)) return null;
+
+        node = Object.assign({}, node, {
+            _depth: depth || 0,
+            _parentName: parent ? parent.name : null,
+            parent_id: Object.prototype.hasOwnProperty.call(node, "parent_id") ? node.parent_id : (parent ? parent.id : null),
+            status: categoryStatus(node)
+        });
 
         var wrap = document.createElement("div");
         wrap.className = "cm-tree-node";
@@ -417,7 +457,7 @@
         wrap.style.setProperty("--cm-depth", node._depth);
 
         var hasChildren = node.children && node.children.length > 0;
-        var isOpen = state.expanded.has(node.id) || !!state.search;
+        var isOpen = state.expanded.has(idKey(node.id)) || !!state.search;
 
         var row = document.createElement("div");
         row.className = "cm-tree-row";
@@ -429,42 +469,42 @@
         if (state.activeCategoryId === node.id) row.classList.add("is-selected");
 
         var toggleHtml = hasChildren
-            ? '<button type="button" class="cm-tree-toggle' + (isOpen ? " is-open" : "") + '" data-cm-toggle aria-label="' + (isOpen ? "Collapse" : "Expand") + ' ' + node.name + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M9 18l6-6-6-6"></path></svg></button>'
+            ? '<button type="button" class="cm-tree-toggle' + (isOpen ? " is-open" : "") + '" data-cm-toggle aria-label="' + escapeHtml((isOpen ? "Collapse" : "Expand") + " " + (node.name || "category")) + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M9 18l6-6-6-6"></path></svg></button>'
             : '<span class="cm-tree-toggle-spacer"></span>';
 
         var badgesHtml = "";
-        if (node.status === "inactive") badgesHtml += '<span class="cm-badge c-muted">Inactive</span>';
-        if (node.featured) badgesHtml += '<span class="cm-badge c-accent">Featured</span>';
-        if (!node.visible || !node.nav) badgesHtml += '<span class="cm-badge c-warning">Hidden</span>';
+
+        if (categoryStatus(node) === "inactive") {
+            badgesHtml += '<span class="cm-badge c-muted">Inactive</span>';
+        }
 
         row.innerHTML =
             toggleHtml +
-            '<span class="cm-tree-icon"><i class="' + node.icon + '"></i></span>' +
+            '<span class="cm-tree-icon"><i class="' + escapeHtml(node.icon || "bi bi-grid") + '"></i></span>' +
             '<span class="cm-tree-label">' +
-                '<span class="cm-tree-name">' + node.name + '</span>' +
-                '<span class="cm-tree-slug">/' + node.slug + '</span>' +
+            '<span class="cm-tree-name">' + escapeHtml(node.name || "Unnamed Category") + '</span>' +
+            '<span class="cm-tree-slug">/' + escapeHtml(node.slug || "") + '</span>' +
             '</span>' +
             '<span class="cm-tree-meta">' +
-                '<span class="cm-tree-meta-item"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>' + (node.products || 0) + ' products</span>' +
-                (hasChildren ? '<span class="cm-tree-meta-item"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path></svg>' + node.children.length + ' sub</span>' : "") +
-                '<span class="cm-tree-meta-item">Order ' + node.order + '</span>' +
+            '<span class="cm-tree-meta-item"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>' + productCount(node) + ' products</span>' +
+            (hasChildren ? '<span class="cm-tree-meta-item"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path></svg>' + childCount(node) + ' sub</span>' : "") +
             '</span>' +
             '<span class="cm-tree-badges">' + badgesHtml + '</span>' +
             '<span class="cm-tree-actions">' +
-                '<div class="cm-dropdown">' +
-                    '<button type="button" class="cm-tree-icon-btn" data-cm-row-menu-trigger aria-haspopup="true" aria-expanded="false" aria-label="More actions for ' + node.name + '"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>' +
-                    '<div class="cm-dropdown-menu" role="menu">' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="view">View / Open</button>' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="edit">Edit</button>' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="add-sub">Add Subcategory</button>' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="move">Move</button>' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="assign">Assign Products</button>' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="feature">' + (node.featured ? "Unfeature" : "Feature") + '</button>' +
-                        '<button type="button" class="cm-dropdown-item" data-cm-row-action="toggle-status">' + (node.status === "active" ? "Deactivate" : "Activate") + '</button>' +
-                        '<div class="cm-dropdown-divider"></div>' +
-                        '<button type="button" class="cm-dropdown-item is-danger" data-cm-row-action="delete">Delete</button>' +
-                    '</div>' +
-                '</div>' +
+            '<div class="cm-dropdown">' +
+            '<button type="button" class="cm-tree-icon-btn" data-cm-row-menu-trigger aria-haspopup="true" aria-expanded="false" aria-label="More actions for ' + escapeHtml(node.name || "category") + '"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>' +
+            '<div class="cm-dropdown-menu" role="menu">' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="view">View / Open</button>' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="edit">Edit</button>' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="add-sub">Add Subcategory</button>' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="move">Move</button>' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="assign">Assign Products</button>' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="feature">Feature (backend required)</button>' +
+            '<button type="button" class="cm-dropdown-item" data-cm-row-action="toggle-status">' + (categoryStatus(node) === "active" ? "Deactivate" : "Activate") + '</button>' +
+            '<div class="cm-dropdown-divider"></div>' +
+            '<button type="button" class="cm-dropdown-item is-danger" data-cm-row-action="delete">Delete</button>' +
+            '</div>' +
+            '</div>' +
             '</span>';
 
         wrap.appendChild(row);
@@ -473,7 +513,7 @@
             var childrenWrap = document.createElement("div");
             childrenWrap.className = "cm-tree-children" + (isOpen ? " is-open" : "");
             node.children.forEach(function (child) {
-                var childEl = renderTreeNode(child);
+                var childEl = renderTreeNode(child, node._depth + 1, node);
                 if (childEl) childrenWrap.appendChild(childEl);
             });
             wrap.appendChild(childrenWrap);
@@ -521,7 +561,8 @@
             if (toggleBtn) {
                 e.stopPropagation();
                 var node = row.closest(".cm-tree-node");
-                var id = Number(row.dataset.categoryId);
+                var id = row.dataset.categoryId;
+                id = idKey(id);
                 if (state.expanded.has(id)) state.expanded.delete(id);
                 else state.expanded.add(id);
                 renderTree();
@@ -530,7 +571,7 @@
 
             if (rowAction) {
                 e.stopPropagation();
-                handleRowAction(rowAction.dataset.cmRowAction, Number(row.dataset.categoryId));
+                handleRowAction(rowAction.dataset.cmRowAction, row.dataset.categoryId);
                 return;
             }
 
@@ -539,7 +580,7 @@
             }
 
             if (row) {
-                openDrawer(Number(row.dataset.categoryId));
+                openDrawer(row.dataset.categoryId);
             }
         });
 
@@ -548,14 +589,14 @@
             var row = e.target.closest(".cm-tree-row");
             if (row && e.target === row) {
                 e.preventDefault();
-                openDrawer(Number(row.dataset.categoryId));
+                openDrawer(row.dataset.categoryId);
             }
         });
     }
 
     function expandAll() {
         allCategoriesFlat().forEach(function (c) {
-            if (c.children && c.children.length) state.expanded.add(c.id);
+            if (c.children && c.children.length) state.expanded.add(idKey(c.id));
         });
         renderTree();
     }
@@ -586,18 +627,12 @@
                 openAssignModal(cat);
                 break;
             case "feature":
-                cat.featured = !cat.featured;
-                showToast(cat.featured ? '"' + cat.name + '" is now featured.' : '"' + cat.name + '" removed from featured.', "success");
-                renderTree();
-                renderTable();
-                if (state.activeCategoryId === id) populateDrawer(cat);
+                showToast("Feature state requires backend integration.", "info");
                 break;
             case "toggle-status":
-                cat.status = cat.status === "active" ? "inactive" : "active";
-                showToast('"' + cat.name + '" is now ' + STATUS_LABELS[cat.status] + ".", "success");
-                renderTree();
-                renderTable();
-                if (state.activeCategoryId === id) populateDrawer(cat);
+                saveCategory(cat.id, { is_active: categoryStatus(cat) !== "active" })
+                    .then(function () { showToast('"' + cat.name + '" status updated.', "success"); })
+                    .catch(function (error) { showToast(error.message, "danger"); });
                 break;
             case "delete":
                 openDeleteModal(cat);
@@ -608,6 +643,7 @@
     /* ================= 10. TABLE VIEW ================= */
     function renderTable() {
         if (!dom.tableBody) return;
+
         dom.tableBody.innerHTML = "";
 
         var rows = allCategoriesFlat().filter(function (c) {
@@ -615,30 +651,91 @@
         });
 
         rows.sort(function (a, b) {
-            if (state.sort === "name") return a.name.localeCompare(b.name);
-            if (state.sort === "products-desc") return (b.products || 0) - (a.products || 0);
-            if (state.sort === "updated") return 0;
-            return (a.order || 0) - (b.order || 0);
+            if (state.sort === "name") {
+                return (a.name || "").localeCompare(b.name || "");
+            }
+
+            if (state.sort === "products-desc") {
+                return productCount(b) - productCount(a);
+            }
+
+            if (state.sort === "created") {
+                return new Date(categoryCreated(b)).getTime() - new Date(categoryCreated(a)).getTime();
+            }
+
+            return (a.name || "").localeCompare(b.name || "");
         });
 
         rows.forEach(function (cat) {
             var tr = document.createElement("tr");
+
             tr.dataset.categoryId = cat.id;
 
             var sub = countSubcategories(cat);
 
             tr.innerHTML =
-                '<td data-label=""><label class="cm-checkbox"><input type="checkbox" class="cm-row-checkbox" data-cm-table-check ' + (state.selectedTableIds.has(cat.id) ? "checked" : "") + ' /><span class="cm-checkbox-box"></span></label></td>' +
-                '<td data-label="Category"><div class="cm-table-cat-cell" data-cm-table-open><span class="cm-table-cat-icon"><i class="' + cat.icon + '"></i></span><span><span class="cm-table-cat-name">' + cat.name + '</span><span class="cm-table-cat-slug">/' + cat.slug + '</span></span></div></td>' +
-                '<td data-label="Parent">' + (cat._parentName || "—") + '</td>' +
-                '<td data-label="Products">' + (cat.products || 0) + '</td>' +
-                '<td data-label="Subcategories">' + sub + '</td>' +
-                '<td data-label="Status"><span class="cm-badge ' + (cat.status === "active" ? "c-success" : "c-muted") + '">' + STATUS_LABELS[cat.status] + '</span></td>' +
-                '<td data-label="Featured">' + (cat.featured ? '<span class="cm-badge c-accent">Featured</span>' : "—") + '</td>' +
-                '<td data-label="Visibility">' + (cat.visible ? '<span class="cm-badge c-success">Visible</span>' : '<span class="cm-badge c-warning">Hidden</span>') + '</td>' +
-                '<td data-label="Order">' + cat.order + '</td>' +
-                '<td data-label="Updated">' + cat.updated + '</td>' +
-                '<td data-label="" class="cm-col-actions"><button type="button" class="cm-tree-icon-btn" data-cm-table-open aria-label="Open ' + cat.name + '"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button></td>';
+                '<td data-label="">' +
+                '<label class="cm-checkbox">' +
+                '<input type="checkbox" class="cm-row-checkbox" data-cm-table-check ' +
+                (state.selectedTableIds.has(idKey(cat.id)) ? "checked" : "") +
+                ' />' +
+                '<span class="cm-checkbox-box"></span>' +
+                '</label>' +
+                '</td>' +
+
+                '<td data-label="Category">' +
+                '<div class="cm-table-cat-cell" data-cm-table-open>' +
+                '<span class="cm-table-cat-icon">' +
+                '<i class="' + escapeHtml(cat.icon || "bi bi-grid") + '"></i>' +
+                '</span>' +
+                '<span>' +
+                '<span class="cm-table-cat-name">' +
+                escapeHtml(cat.name || "Unnamed Category") +
+                '</span>' +
+                '<span class="cm-table-cat-slug">/' +
+                escapeHtml(cat.slug || "") +
+                '</span>' +
+                '</span>' +
+                '</div>' +
+                '</td>' +
+
+                '<td data-label="Parent">' +
+                (cat._parentName || "—") +
+                '</td>' +
+
+                '<td data-label="Products">' +
+                productCount(cat) +
+                '</td>' +
+
+                '<td data-label="Subcategories">' +
+                sub +
+                '</td>' +
+
+                '<td data-label="Status">' +
+                '<span class="cm-badge ' +
+                (categoryStatus(cat) === "active" ? "c-success" : "c-muted") +
+                '">' +
+                (STATUS_LABELS[categoryStatus(cat)] || "Unknown") +
+                '</span>' +
+                '</td>' +
+
+                '<td data-label="Order">' +
+                (cat.analytics.orders === undefined ? "—" : cat.analytics.orders) +
+                '</td>' +
+
+                '<td data-label="Created">' +
+                escapeHtml(categoryCreated(cat)) +
+                '</td>' +
+
+                '<td data-label="" class="cm-col-actions">' +
+                '<button type="button" class="cm-tree-icon-btn" ' +
+                'data-cm-table-open ' +
+                'aria-label="Open ' + escapeHtml(cat.name || "category") + '">' +
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">' +
+                '<path d="M9 18l6-6-6-6"></path>' +
+                '</svg>' +
+                '</button>' +
+                '</td>';
 
             dom.tableBody.appendChild(tr);
         });
@@ -651,14 +748,14 @@
             var openTrigger = e.target.closest("[data-cm-table-open]");
             if (openTrigger) {
                 var tr = e.target.closest("tr");
-                openDrawer(Number(tr.dataset.categoryId));
+                openDrawer(tr.dataset.categoryId);
             }
         });
 
         dom.tableBody.addEventListener("change", function (e) {
             if (!e.target.matches("[data-cm-table-check]")) return;
             var tr = e.target.closest("tr");
-            var id = Number(tr.dataset.categoryId);
+            var id = idKey(tr.dataset.categoryId);
             if (e.target.checked) state.selectedTableIds.add(id);
             else state.selectedTableIds.delete(id);
             updateBulkBar();
@@ -668,7 +765,7 @@
             dom.tableSelectAll.addEventListener("change", function () {
                 var checked = dom.tableSelectAll.checked;
                 Array.prototype.slice.call(dom.tableBody.querySelectorAll("tr")).forEach(function (tr) {
-                    var id = Number(tr.dataset.categoryId);
+                    var id = idKey(tr.dataset.categoryId);
                     if (checked) state.selectedTableIds.add(id);
                     else state.selectedTableIds.delete(id);
                 });
@@ -699,15 +796,11 @@
                 } else if (action === "activate" || action === "deactivate") {
                     ids.forEach(function (id) {
                         var cat = findCategory(id);
-                        if (cat) cat.status = action === "activate" ? "active" : "inactive";
+                        if (cat) { cat.is_active = action === "activate"; cat.status = categoryStatus(cat); }
                     });
                     showToast(count + " categor" + (count === 1 ? "y" : "ies") + " " + (action === "activate" ? "activated" : "deactivated") + ".", "success");
-                } else if (action === "feature") {
-                    ids.forEach(function (id) { var cat = findCategory(id); if (cat) cat.featured = true; });
-                    showToast(count + " categor" + (count === 1 ? "y" : "ies") + " featured.", "success");
-                } else if (action === "hide") {
-                    ids.forEach(function (id) { var cat = findCategory(id); if (cat) cat.visible = false; });
-                    showToast(count + " categor" + (count === 1 ? "y" : "ies") + " hidden.", "success");
+                } else if (action === "feature" || action === "hide") {
+                    showToast("This action requires backend integration.", "info");
                 } else if (action === "export") {
                     showToast("Preparing export for " + count + " categor" + (count === 1 ? "y" : "ies") + "\u2026", "info");
                 }
@@ -869,36 +962,36 @@
 
     /* ================= 14. DRAWER PANELS ================= */
     function populateDrawer(cat) {
-        var sub = countSubcategories(cat);
+        var sub = childCount(cat);
+        var analytics = cat.analytics || {};
 
         // Header
-        document.getElementById("cmDrawerIcon").innerHTML = '<i class="' + cat.icon + '"></i>';
+        document.getElementById("cmDrawerIcon").innerHTML = '<i class="' + escapeHtml(cat.icon || "bi bi-grid") + '"></i>';
         document.getElementById("cmDrawerTitle").textContent = cat.name;
-        document.getElementById("cmDrawerSlug").textContent = "/" + cat.slug;
-        document.getElementById("cmDrawerParent").textContent = cat._parentName || "— Top Level —";
-        document.getElementById("cmDrawerCreated").textContent = cat.created;
-        document.getElementById("cmDrawerUpdated").textContent = cat.updated;
-        document.getElementById("cmDrawerProductCount").textContent = cat.products || 0;
+        document.getElementById("cmDrawerSlug").textContent = "/" + (cat.slug || "");
+        document.getElementById("cmDrawerParent").textContent = cat._parentName || (cat.parent && cat.parent.name) || "— Top Level —";
+        document.getElementById("cmDrawerCreated").textContent = categoryCreated(cat);
+        document.getElementById("cmDrawerUpdated").textContent = categoryUpdated(cat);
+        document.getElementById("cmDrawerProductCount").textContent = productCount(cat);
         document.getElementById("cmDrawerSubCount").textContent = sub;
 
         var statusBadge = document.getElementById("cmDrawerStatusBadge");
-        statusBadge.textContent = STATUS_LABELS[cat.status];
-        statusBadge.className = "cm-badge " + (cat.status === "active" ? "c-success" : "c-muted");
+        statusBadge.textContent = STATUS_LABELS[categoryStatus(cat)] || "Unknown";
+        statusBadge.className = "cm-badge " + (categoryStatus(cat) === "active" ? "c-success" : "c-muted");
 
-        document.getElementById("cmDrawerFeaturedBadge").classList.toggle("cm-hidden", !cat.featured);
-        document.getElementById("cmDrawerFeatureLabel").textContent = cat.featured ? "Unfeature Category" : "Feature Category";
-        document.getElementById("cmDrawerToggleStatusLabel").textContent = cat.status === "active" ? "Deactivate" : "Activate";
+        document.getElementById("cmDrawerFeaturedBadge").classList.add("cm-hidden");
+        document.getElementById("cmDrawerFeatureLabel").textContent = "Feature (backend required)";
+        document.getElementById("cmDrawerToggleStatusLabel").textContent = categoryStatus(cat) === "active" ? "Deactivate" : "Activate";
 
         // Overview
-        var revenue = (cat.products || 0) * 1450;
-        document.getElementById("ovTotalProducts").textContent = cat.products || 0;
-        document.getElementById("ovPublished").textContent = Math.round((cat.products || 0) * 0.82);
-        document.getElementById("ovPending").textContent = Math.round((cat.products || 0) * 0.08);
-        document.getElementById("ovOutOfStock").textContent = Math.round((cat.products || 0) * 0.1);
+        document.getElementById("ovTotalProducts").textContent = productCount(cat);
+        document.getElementById("ovPublished").textContent = analytics.published === undefined ? "—" : analytics.published;
+        document.getElementById("ovPending").textContent = analytics.pending === undefined ? "—" : analytics.pending;
+        document.getElementById("ovOutOfStock").textContent = analytics.out_of_stock === undefined ? "—" : analytics.out_of_stock;
         document.getElementById("ovSubcategories").textContent = sub;
-        document.getElementById("ovOrders").textContent = Math.round((cat.products || 0) * 0.6);
-        document.getElementById("ovRevenue").textContent = "Rs. " + revenue.toLocaleString("en-US");
-        document.getElementById("ovConversion").textContent = (cat.products ? 3.4 : 0) + "%";
+        document.getElementById("ovOrders").textContent = analytics.orders === undefined ? "—" : analytics.orders;
+        document.getElementById("ovRevenue").textContent = analytics.revenue === undefined ? "—" : "Rs. " + analytics.revenue;
+        document.getElementById("ovConversion").textContent = analytics.conversion_rate === undefined || analytics.conversion_rate === null ? "—" : analytics.conversion_rate + "%";
         document.getElementById("ovDescription").textContent = cat.description || "No description provided yet.";
 
         // Information
@@ -908,15 +1001,11 @@
         populateSeoPanel(cat);
 
         // Display Settings
-        document.getElementById("tgFeatured").checked = !!cat.featured;
-        document.getElementById("tgHomepage").checked = !!cat.homepage;
-        document.getElementById("tgNav").checked = !!cat.nav;
-        document.getElementById("tgFooter").checked = !!cat.footer;
-        document.getElementById("tgVisible").checked = !!cat.visible;
-        document.getElementById("tgAllowProducts").checked = !!cat.allowProducts;
-        document.getElementById("tgAllowSub").checked = !!cat.allowSubcategories;
-        document.getElementById("dispOrder").value = cat.order;
-        document.getElementById("dispIcon").value = cat.icon;
+        ["tgFeatured", "tgHomepage", "tgNav", "tgFooter", "tgVisible", "tgAllowProducts", "tgAllowSub", "dispOrder"].forEach(function (id) {
+            var field = document.getElementById(id);
+            if (field) { field.checked = false; field.value = ""; field.disabled = true; }
+        });
+        document.getElementById("dispIcon").value = cat.icon || "";
 
         // Subcategories
         renderSubcategoriesPanel(cat);
@@ -925,10 +1014,11 @@
         renderProductsPanel(cat);
 
         // Analytics
-        renderTopProducts();
+        renderTopProducts(cat);
+        renderAnalytics(cat);
 
         // Activity
-        renderActivityTimeline();
+        renderActivityTimeline(cat);
 
         // exit edit mode if it was open
         state.infoEditing = false;
@@ -939,30 +1029,39 @@
     function populateInfoPanel(cat) {
         document.getElementById("infoName").textContent = cat.name;
         document.getElementById("infoSlug").textContent = "/" + cat.slug;
-        document.getElementById("infoParent").textContent = cat._parentName || "— Top Level —";
-        document.getElementById("infoType").textContent = cat.type;
-        document.getElementById("infoStatus").textContent = STATUS_LABELS[cat.status];
-        document.getElementById("infoOrder").textContent = cat.order;
-        document.getElementById("infoIcon").textContent = cat.icon;
-        document.getElementById("infoFeatured").textContent = cat.featured ? "Yes" : "No";
+        document.getElementById("infoParent").textContent = cat._parentName || (cat.parent && cat.parent.name) || "— Top Level —";
+        document.getElementById("infoType").textContent = cat.type || "—";
+        document.getElementById("infoStatus").textContent = STATUS_LABELS[categoryStatus(cat)] || "Unknown";
+        document.getElementById("infoOrder").textContent = "—";
+        document.getElementById("infoIcon").textContent = cat.icon || "—";
+        document.getElementById("infoFeatured").textContent = cat.featured === undefined ? "—" : (cat.featured ? "Yes" : "No");
         document.getElementById("infoDescription").textContent = cat.description || "No description provided yet.";
 
         // populate form for edit mode
         document.getElementById("fName").value = cat.name;
         document.getElementById("fSlug").value = cat.slug;
-        document.getElementById("fType").value = cat.type;
-        document.getElementById("fStatus").value = cat.status;
-        document.getElementById("fOrder").value = cat.order;
-        document.getElementById("fIcon").value = cat.icon;
+        document.getElementById("fType").value = "";
+        document.getElementById("fStatus").value = categoryStatus(cat);
+        document.getElementById("fOrder").value = "";
+        document.getElementById("fIcon").value = cat.icon || "";
         document.getElementById("fDescription").value = cat.description || "";
+        document.getElementById("fImage").value = "";
         populateParentSelect(document.getElementById("fParent"), cat.id, cat._parentName);
     }
 
     function populateParentSelect(selectEl, excludeId, selectedName) {
         if (!selectEl) return;
         selectEl.innerHTML = '<option value="">— No Parent (Top Level) —</option>';
+        var excluded = new Set();
+        if (excludeId !== null && excludeId !== undefined) {
+            excluded.add(idKey(excludeId));
+            var current = findCategory(excludeId);
+            (function collect(children) {
+                (children || []).forEach(function (child) { excluded.add(idKey(child.id)); collect(child.children); });
+            })(current && current.children);
+        }
         allCategoriesFlat().forEach(function (c) {
-            if (excludeId && c.id === excludeId) return;
+            if (excluded.has(idKey(c.id))) return;
             var opt = document.createElement("option");
             opt.value = c.id;
             opt.textContent = (c._depth > 0 ? "— " : "") + c.name;
@@ -972,13 +1071,14 @@
     }
 
     function populateSeoPanel(cat) {
-        var title = "Buy " + cat.name + " Online in Pakistan | MarketSphere";
-        var desc = "Shop the best " + cat.name.toLowerCase() + " from trusted sellers with fast delivery and secure checkout on MarketSphere.";
+        var title = cat.seo_title || "";
+        var desc = cat.seo_description || "";
+        var keywords = cat.seo_keywords || "";
         document.getElementById("seoTitle").value = title;
         document.getElementById("seoDesc").value = desc;
-        document.getElementById("seoKeywords").value = cat.name.toLowerCase() + ", buy " + cat.name.toLowerCase() + " online, marketsphere";
-        document.getElementById("seoCanonical").value = "https://marketsphere.com/category/" + cat.slug;
-        document.getElementById("seoPreviewUrl").textContent = "marketsphere.com \u203a category \u203a " + cat.slug;
+        document.getElementById("seoKeywords").value = keywords;
+        document.getElementById("seoCanonical").value = cat.seo_canonical || "";
+        document.getElementById("seoPreviewUrl").textContent = cat.seo_canonical || "—";
         document.getElementById("seoPreviewTitle").textContent = title;
         document.getElementById("seoPreviewDesc").textContent = desc;
     }
@@ -998,74 +1098,121 @@
             var row = document.createElement("div");
             row.className = "cm-sub-row";
             row.innerHTML =
-                '<span class="cm-sub-icon"><i class="' + child.icon + '"></i></span>' +
-                '<span class="cm-sub-info"><strong>' + child.name + '</strong><span>' + (child.products || 0) + ' products &middot; ' + STATUS_LABELS[child.status] + '</span></span>' +
+                '<span class="cm-sub-icon"><i class="' + escapeHtml(child.icon || "bi bi-grid") + '"></i></span>' +
+                '<span class="cm-sub-info"><strong>' + escapeHtml(child.name || "Unnamed Category") + '</strong><span>' + productCount(child) + ' products &middot; ' + (STATUS_LABELS[categoryStatus(child)] || "Unknown") + '</span></span>' +
                 '<span class="cm-sub-actions">' +
-                    '<button type="button" class="cm-tree-icon-btn" data-cm-sub-open="' + child.id + '" aria-label="Open ' + child.name + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button>' +
+                '<button type="button" class="cm-tree-icon-btn" data-cm-sub-open="' + escapeHtml(child.id) + '" aria-label="Open ' + escapeHtml(child.name || "category") + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button>' +
                 '</span>';
             list.appendChild(row);
         });
 
         list.querySelectorAll("[data-cm-sub-open]").forEach(function (btn) {
-            btn.addEventListener("click", function () { openDrawer(Number(btn.dataset.cmSubOpen)); });
+            btn.addEventListener("click", function () { openDrawer(btn.dataset.cmSubOpen); });
         });
     }
 
     function renderProductsPanel(cat) {
         var body = document.getElementById("cmProductsTableBody");
         body.innerHTML = "";
-
-        var count = Math.min(6, cat.products ? Math.max(2, Math.min(6, Math.round(cat.products / 100))) : 0);
-        if (!cat.products) {
+        var products = Array.isArray(cat.products) ? cat.products : [];
+        if (!products.length) {
             var tr = document.createElement("tr");
-            tr.innerHTML = '<td colspan="8" style="text-align:center;color:var(--cm-caption);padding:24px;">No products in this category yet.</td>';
+            tr.innerHTML = '<td colspan="8" style="text-align:center;color:var(--cm-caption);padding:24px;">Product details are unavailable in category data.</td>';
             body.appendChild(tr);
             return;
         }
-
-        PRODUCT_POOL.slice(0, count || 4).forEach(function (p) {
+        products.slice(0, 6).forEach(function (p) {
             var tr = document.createElement("tr");
-            var statusBadge = p.status === "published" ? "c-success" : (p.status === "out_of_stock" ? "c-danger" : "c-warning");
+            var statusBadge = p.status === "published" ? "c-success" : (p.status === "out_of_stock" ? "c-danger" : "c-muted");
             tr.innerHTML =
-                '<td data-label="Product"><div class="cm-product-cell"><span class="cm-product-thumb"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path></svg></span><span class="cm-product-name-cell"><strong>' + p.name + '</strong></span></div></td>' +
-                '<td data-label="SKU">' + p.sku + '</td>' +
-                '<td data-label="Seller">' + p.seller + '</td>' +
-                '<td data-label="Price">Rs. ' + p.price.toLocaleString("en-US") + '</td>' +
-                '<td data-label="Stock">' + p.stock + '</td>' +
-                '<td data-label="Status"><span class="cm-badge ' + statusBadge + '">' + p.status.replace("_", " ") + '</span></td>' +
-                '<td data-label="Orders">' + p.orders + '</td>' +
-                '<td data-label="" class="cm-col-actions">' +
-                    '<div class="cm-dropdown">' +
-                        '<button type="button" class="cm-tree-icon-btn" data-cm-row-menu-trigger aria-label="More actions"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>' +
-                        '<div class="cm-dropdown-menu" role="menu">' +
-                            '<button type="button" class="cm-dropdown-item" data-cm-toast="info" data-cm-toast-msg="Opening product&hellip;">View Product</button>' +
-                            '<button type="button" class="cm-dropdown-item" data-cm-toast="info" data-cm-toast-msg="Product removed from category.">Remove From Category</button>' +
-                            '<button type="button" class="cm-dropdown-item" data-cm-toast="info" data-cm-toast-msg="Move Category flow isn&#8217;t available yet.">Move Category</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</td>';
+                '<td data-label="Product" onclick="window.open(\'/product/' + p.slug + '/\', \'_blank\')">' + '<strong>' + escapeHtml(p.name || "Unnamed Product") + '</strong>' + '</td>' +
+                '<td data-label="SKU">' + escapeHtml(p.sku || "—") + '</td>' +
+                '<td data-label="Seller">' + escapeHtml(p.seller || "—") + '</td>' +
+                '<td data-label="Price">' + escapeHtml(p.price || "—") + '</td>' +
+                '<td data-label="Stock">' + escapeHtml(p.stock_quantity === undefined ? "—" : p.stock_quantity) + '</td>' +
+                '<td data-label="Status"><span class="cm-badge ' + statusBadge + '">' + escapeHtml(p.status || "—") + '</span></td>' +
+                '<td data-label="Orders">' + escapeHtml(p.orders === undefined ? "—" : p.orders) + '</td>' +
+                '<td data-label="" class="cm-col-actions">—</td>';
             body.appendChild(tr);
         });
     }
 
-    function renderTopProducts() {
+    function renderTopProducts(cat) {
         var list = document.getElementById("cmTopProductsList");
         if (!list) return;
         list.innerHTML = "";
-        var max = TOP_PRODUCTS[0].sold;
-        TOP_PRODUCTS.forEach(function (p, i) {
+        var products = cat && cat.analytics && Array.isArray(cat.analytics.top_products) ? cat.analytics.top_products : [];
+        if (!products.length) {
+            list.textContent = "No paid orders recorded for this category.";
+            return;
+        }
+        var max = Number(products[0].orders) || 1;
+        products.forEach(function (product, index) {
             var row = document.createElement("div");
             row.className = "cm-top-row";
-            var pct = Math.round((p.sold / max) * 100);
-            row.innerHTML =
-                '<span class="cm-top-rank">' + (i + 1) + '</span>' +
-                '<span class="cm-top-info"><strong>' + p.name + '</strong><span class="cm-top-bar"><span class="cm-top-bar-fill" style="width:' + pct + '%;"></span></span></span>' +
-                '<span class="cm-top-value">' + p.sold + ' sold</span>';
+            var pct = Math.round((Number(product.orders) / max) * 100);
+            row.innerHTML = '<span class="cm-top-rank">' + (index + 1) + '</span>' +
+                '<span class="cm-top-info"><strong>' + escapeHtml(product.name || "Unnamed Product") + '</strong><span class="cm-top-bar"><span class="cm-top-bar-fill" style="width:' + pct + '%;"></span></span></span>' +
+                '<span class="cm-top-value">' + escapeHtml(product.orders) + ' sold</span>';
             list.appendChild(row);
         });
     }
 
-    function renderActivityTimeline(filter) {
+    function renderAnalytics(cat) {
+        var analytics = cat && cat.analytics ? cat.analytics : {};
+        var revenueChart = document.getElementById("cmRevenueChart");
+        var growthChart = document.getElementById("cmGrowthChart");
+        if (revenueChart) {
+            var revenuePoints = Array.isArray(analytics.revenue_trend) ? analytics.revenue_trend : [];
+            var revenueSvg = revenueChart.querySelector("svg");
+            var revenuePath = revenueChart.querySelector(".cm-line-chart-path");
+            var revenueArea = revenueChart.querySelector(".cm-line-chart-area");
+            if (revenueSvg && revenuePath && revenueArea && revenuePoints.length) {
+                var width = 480;
+                var height = 180;
+                var values = revenuePoints.map(function (item) { return Number(item.value) || 0; });
+                var maxValue = Math.max.apply(Math, values);
+                var minValue = Math.min.apply(Math, values);
+                var range = maxValue - minValue || 1;
+                var points = values.map(function (value, index) {
+                    var x = revenuePoints.length === 1 ? width / 2 : (index * width) / (revenuePoints.length - 1);
+                    var y = height - 18 - ((value - minValue) / range) * (height - 36);
+                    return Math.round(x) + "," + Math.round(y);
+                });
+                revenuePath.setAttribute("d", "M" + points.join(" L"));
+                revenueArea.setAttribute("d", "M" + points.join(" L") + " L" + width + "," + height + " L0," + height + " Z");
+                revenueSvg.setAttribute("aria-label", "Monthly revenue trend");
+            }
+        }
+        if (growthChart) {
+            var growthPoints = Array.isArray(analytics.growth_trend) ? analytics.growth_trend : [];
+            var growthValues = growthPoints.map(function (item) { return Number(item.value) || 0; });
+            var growthMax = growthValues.length ? Math.max.apply(Math, growthValues) : 0;
+            growthChart.innerHTML = growthPoints.map(function (item) {
+                var value = Number(item.value) || 0;
+                var barHeight = growthMax ? Math.max(4, Math.round((value / growthMax) * 100)) : 4;
+                var bar = document.createElement("span");
+                bar.style.setProperty("--cm-bar-h", barHeight + "%");
+                bar.setAttribute("title", item.label + ": " + value + " paid orders");
+                return bar.outerHTML;
+            }).join("");
+            var caption = growthChart.nextElementSibling;
+            if (caption) {
+                caption.innerHTML = growthPoints.map(function (item) {
+                    return "<span>" + escapeHtml(item.label) + "</span>";
+                }).join("");
+            }
+        }
+        var kpis = document.querySelectorAll('[data-cm-panel="analytics"] .cm-kpi-card strong');
+        if (kpis.length >= 4) {
+            kpis[0].textContent = analytics.views === undefined ? "—" : analytics.views;
+            kpis[1].textContent = analytics.conversion_rate === undefined || analytics.conversion_rate === null ? "—" : analytics.conversion_rate + "%";
+            kpis[2].textContent = analytics.wishlist_adds === undefined ? "—" : analytics.wishlist_adds;
+            kpis[3].textContent = analytics.sales_growth === undefined || analytics.sales_growth === null ? "—" : analytics.sales_growth + "%";
+        }
+    }
+
+    function renderActivityTimeline(cat, filter) {
         filter = filter || "all";
         var ul = document.getElementById("cmActivityTimeline");
         if (!ul) return;
@@ -1073,16 +1220,19 @@
 
         var dotClassMap = { success: "c-success", warning: "c-warning", danger: "c-danger", info: "c-info" };
 
-        ACTIVITY_EVENTS.forEach(function (ev) {
+        var events = [];
+        if (cat && cat.created_at) events.push({ type: "category", title: "Category created", desc: "Category was created in the catalog.", actor: "", time: categoryCreated(cat), status: "success" });
+        if (cat && cat.updated_at && cat.updated_at !== cat.created_at) events.push({ type: "category", title: "Category updated", desc: "Category details were updated.", actor: "", time: categoryUpdated(cat), status: "info" });
+        events.forEach(function (ev) {
             if (filter !== "all" && ev.type !== filter) return;
             var li = document.createElement("li");
             li.className = "cm-timeline-item";
             li.innerHTML =
                 '<span class="cm-timeline-dot ' + (dotClassMap[ev.status] || "") + '"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"></circle></svg></span>' +
                 '<div class="cm-timeline-body">' +
-                    '<div class="cm-timeline-top"><strong>' + ev.title + '</strong></div>' +
-                    '<p>' + ev.desc + '</p>' +
-                    '<span class="cm-timeline-time">' + ev.actor + ' &middot; ' + ev.time + '</span>' +
+                '<div class="cm-timeline-top"><strong>' + ev.title + '</strong></div>' +
+                '<p>' + ev.desc + '</p>' +
+                '<span class="cm-timeline-time">' + (ev.actor ? escapeHtml(ev.actor) + ' &middot; ' : '') + escapeHtml(ev.time) + '</span>' +
                 '</div>';
             ul.appendChild(li);
         });
@@ -1095,7 +1245,7 @@
             var pill = e.target.closest(".cm-pill");
             if (!pill) return;
             bar.querySelectorAll(".cm-pill").forEach(function (p) { p.classList.toggle("is-active", p === pill); });
-            renderActivityTimeline(pill.dataset.cmActivityFilter);
+            renderActivityTimeline(findCategory(state.activeCategoryId), pill.dataset.cmActivityFilter);
         });
     }
 
@@ -1125,21 +1275,44 @@
         if (saveBtn) {
             saveBtn.addEventListener("click", function () {
                 var cat = findCategory(state.activeCategoryId);
-                if (!cat) return;
-                cat.name = document.getElementById("fName").value.trim() || cat.name;
-                cat.slug = document.getElementById("fSlug").value.trim() || cat.slug;
-                cat.type = document.getElementById("fType").value;
-                cat.status = document.getElementById("fStatus").value;
-                cat.order = Number(document.getElementById("fOrder").value) || cat.order;
-                cat.icon = document.getElementById("fIcon").value.trim() || cat.icon;
-                cat.description = document.getElementById("fDescription").value.trim();
-                cat.updated = "Just now";
 
-                exitEdit();
-                populateDrawer(cat);
-                renderTree();
-                renderTable();
-                showToast("Changes saved.", "success");
+                if (!cat) return;
+
+                var imageInput = document.getElementById("fImage");
+
+                var categoryData = {
+                    name: document.getElementById("fName").value.trim(),
+                    slug: document.getElementById("fSlug").value.trim(),
+                    parent_id: document.getElementById("fParent").value || "",
+                    is_active: document.getElementById("fStatus").value === "active",
+                    icon: document.getElementById("fIcon").value.trim(),
+                    description: document.getElementById("fDescription").value.trim(),
+                    image: imageInput && imageInput.files.length
+                        ? imageInput.files[0]
+                        : null
+                };
+
+                if (!categoryData.name) {
+                    showToast("Category name is required.", "danger");
+                    return;
+                }
+
+                if (!categoryData.slug) {
+                    showToast("Category slug is required.", "danger");
+                    return;
+                }
+
+                saveCategory(cat.id, categoryData)
+                    .then(function () {
+                        exitEdit();
+                        showToast("Category updated.", "success");
+                    })
+                    .catch(function (error) {
+                        showToast(
+                            error.message || "Failed to update category.",
+                            "danger"
+                        );
+                    });
             });
         }
     }
@@ -1155,7 +1328,7 @@
                 document.getElementById("seoPreviewDesc").textContent = document.getElementById("seoDesc").value;
             });
         });
-        if (saveBtn) saveBtn.addEventListener("click", function () { showToast("SEO settings saved.", "success"); });
+        if (saveBtn) saveBtn.addEventListener("click", function () { showToast("SEO settings saved locally.", "success"); });
         if (resetBtn) resetBtn.addEventListener("click", function () {
             var cat = findCategory(state.activeCategoryId);
             if (cat) populateSeoPanel(cat);
@@ -1170,19 +1343,7 @@
             saveBtn.addEventListener("click", function () {
                 var cat = findCategory(state.activeCategoryId);
                 if (!cat) return;
-                cat.featured = document.getElementById("tgFeatured").checked;
-                cat.homepage = document.getElementById("tgHomepage").checked;
-                cat.nav = document.getElementById("tgNav").checked;
-                cat.footer = document.getElementById("tgFooter").checked;
-                cat.visible = document.getElementById("tgVisible").checked;
-                cat.allowProducts = document.getElementById("tgAllowProducts").checked;
-                cat.allowSubcategories = document.getElementById("tgAllowSub").checked;
-                cat.order = Number(document.getElementById("dispOrder").value) || cat.order;
-                cat.icon = document.getElementById("dispIcon").value.trim() || cat.icon;
-                populateDrawer(cat);
-                renderTree();
-                renderTable();
-                showToast("Display settings saved.", "success");
+                showToast("Display settings require backend fields and integration.", "info");
             });
         }
         if (resetBtn) {
@@ -1252,33 +1413,27 @@
         populateParentSelect(document.getElementById("mParent"), cat ? cat.id : null, cat ? cat._parentName : null);
 
         if (mode === "edit" && cat) {
-            document.getElementById("mName").value = cat.name;
-            document.getElementById("mSlug").value = cat.slug;
-            document.getElementById("mParent").value = "";
-            document.getElementById("mType").value = cat.type;
-            document.getElementById("mStatus").value = cat.status;
-            document.getElementById("mOrder").value = cat.order;
-            document.getElementById("mIcon").value = cat.icon;
+            document.getElementById("mName").value = cat.name || "";
+            document.getElementById("mSlug").value = cat.slug || "";
+            document.getElementById("mParent").value = cat.parent_id === null || cat.parent_id === undefined ? "" : String(cat.parent_id);
+            document.getElementById("mType").value = "";
+            document.getElementById("mStatus").value = categoryStatus(cat);
+            document.getElementById("mOrder").value = "";
+            document.getElementById("mIcon").value = cat.icon || "";
             document.getElementById("mDescription").value = cat.description || "";
-            document.getElementById("mFeatured").checked = !!cat.featured;
-            document.getElementById("mHomepage").checked = !!cat.homepage;
-            document.getElementById("mNav").checked = !!cat.nav;
-            document.getElementById("mAllowProducts").checked = !!cat.allowProducts;
-            document.getElementById("mAllowSub").checked = !!cat.allowSubcategories;
+            document.getElementById("mImage").value = "";
+            ["mFeatured", "mHomepage", "mNav", "mAllowProducts", "mAllowSub"].forEach(function (id) { document.getElementById(id).checked = false; document.getElementById(id).disabled = true; });
         } else {
             document.getElementById("mName").value = "";
             document.getElementById("mSlug").value = "";
             document.getElementById("mParent").value = parentCat ? parentCat.id : "";
-            document.getElementById("mType").value = "Standard";
+            document.getElementById("mType").value = "";
             document.getElementById("mStatus").value = "active";
-            document.getElementById("mOrder").value = "1";
+            document.getElementById("mOrder").value = "";
             document.getElementById("mIcon").value = "";
             document.getElementById("mDescription").value = "";
-            document.getElementById("mFeatured").checked = false;
-            document.getElementById("mHomepage").checked = true;
-            document.getElementById("mNav").checked = true;
-            document.getElementById("mAllowProducts").checked = true;
-            document.getElementById("mAllowSub").checked = true;
+            document.getElementById("mImage").value = "";
+            ["mFeatured", "mHomepage", "mNav", "mAllowProducts", "mAllowSub"].forEach(function (id) { document.getElementById(id).checked = false; document.getElementById(id).disabled = true; });
         }
 
         openModal(dom.categoryModal);
@@ -1289,72 +1444,65 @@
             dom.addCategoryBtn.addEventListener("click", function () { openCategoryModal("add"); });
         }
 
-        var nameInput = document.getElementById("mName");
-        var slugInput = document.getElementById("mSlug");
-        if (nameInput && slugInput) {
-            nameInput.addEventListener("input", function () {
-                if (categoryModalMode !== "edit" && !slugInput.dataset.manuallyEdited) {
-                    slugInput.value = nameInput.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-                }
-            });
-            slugInput.addEventListener("input", function () { slugInput.dataset.manuallyEdited = "1"; });
-        }
-
         if (dom.categoryModalSubmit) {
             dom.categoryModalSubmit.addEventListener("click", function () {
                 var name = document.getElementById("mName").value.trim();
                 if (!name) { showToast("Category name is required.", "danger"); return; }
+                if (!document.getElementById("mSlug").value.trim()) { showToast("Category slug is required.", "danger"); return; }
 
                 if (categoryModalMode === "edit" && categoryModalEditingCat) {
+
                     var cat = categoryModalEditingCat;
-                    cat.name = name;
-                    cat.slug = document.getElementById("mSlug").value.trim() || cat.slug;
-                    cat.type = document.getElementById("mType").value;
-                    cat.status = document.getElementById("mStatus").value;
-                    cat.order = Number(document.getElementById("mOrder").value) || cat.order;
-                    cat.icon = document.getElementById("mIcon").value.trim() || cat.icon;
-                    cat.description = document.getElementById("mDescription").value.trim();
-                    cat.featured = document.getElementById("mFeatured").checked;
-                    cat.homepage = document.getElementById("mHomepage").checked;
-                    cat.nav = document.getElementById("mNav").checked;
-                    cat.allowProducts = document.getElementById("mAllowProducts").checked;
-                    cat.allowSubcategories = document.getElementById("mAllowSub").checked;
-                    cat.updated = "Just now";
-                    showToast('"' + cat.name + '" updated.', "success");
-                    if (state.activeCategoryId === cat.id) populateDrawer(cat);
-                } else {
-                    var newCat = makeCategory({
+
+                    var imageInput = document.getElementById("mImage");
+                    var imageFile = imageInput && imageInput.files.length
+                        ? imageInput.files[0]
+                        : null;
+
+                    var categoryData = {
                         name: name,
-                        slug: document.getElementById("mSlug").value.trim() || undefined,
-                        type: document.getElementById("mType").value,
-                        status: document.getElementById("mStatus").value,
-                        order: Number(document.getElementById("mOrder").value) || 1,
-                        icon: document.getElementById("mIcon").value.trim() || "bi bi-grid",
+                        slug: document.getElementById("mSlug").value.trim(),
+                        parent_id: document.getElementById("mParent").value || "",
+                        is_active: document.getElementById("mStatus").value === "active",
+                        icon: document.getElementById("mIcon").value.trim(),
                         description: document.getElementById("mDescription").value.trim(),
-                        featured: document.getElementById("mFeatured").checked,
-                        homepage: document.getElementById("mHomepage").checked,
-                        nav: document.getElementById("mNav").checked,
-                        allowProducts: document.getElementById("mAllowProducts").checked,
-                        allowSubcategories: document.getElementById("mAllowSub").checked,
-                        products: 0,
-                        children: [],
-                    });
+                        image: imageFile
+                    };
 
-                    var parentSelectValue = document.getElementById("mParent").value;
-                    var parentCat = parentSelectValue ? findCategory(parentSelectValue) : categoryModalTargetParent;
+                    saveCategory(cat.id, categoryData)
+                        .then(function () {
+                            closeModal(dom.categoryModal);
+                            showToast("Category updated.", "success");
+                        })
+                        .catch(function (error) {
+                            showToast(error.message || "Failed to update category.", "danger");
+                        });
 
-                    if (parentCat) {
-                        parentCat.children.push(newCat);
-                        if (parentCat.children.length && parentCat.children.length) state.expanded.add(parentCat.id);
-                    } else {
-                        CATEGORY_TREE.push(newCat);
-                    }
-                    showToast('"' + newCat.name + '" created.', "success");
+                } else {
+
+                    var imageInput = document.getElementById("mImage");
+                    var imageFile = imageInput && imageInput.files.length
+                        ? imageInput.files[0]
+                        : null;
+
+                    var categoryData = {
+                        name: name,
+                        slug: document.getElementById("mSlug").value.trim(),
+                        parent_id: document.getElementById("mParent").value || "",
+                        is_active: document.getElementById("mStatus").value === "active",
+                        icon: document.getElementById("mIcon").value.trim(),
+                        description: document.getElementById("mDescription").value.trim(),
+                        image: imageFile
+                    };
+                    saveCategory(null, categoryData)
+                        .then(function () {
+                            closeModal(dom.categoryModal);
+                            showToast("Category created.", "success");
+                        })
+                        .catch(function (error) {
+                            showToast(error.message || "Failed to create category.", "danger");
+                        });
                 }
-
-                closeModal(dom.categoryModal);
-                renderTree();
-                renderTable();
             });
         }
     }
@@ -1385,12 +1533,9 @@
         if (confirmBtn) {
             confirmBtn.addEventListener("click", function () {
                 if (!moveModalCat) return;
-                showToast('"' + moveModalCat.name + '" moved successfully.', "success");
-                moveModalCat.updated = "Just now";
-                closeModal(dom.moveModal);
-                if (state.activeCategoryId === moveModalCat.id) populateDrawer(moveModalCat);
-                renderTree();
-                renderTable();
+                saveCategory(moveModalCat.id, { parent_id: newParentSelect.value || null })
+                    .then(function () { closeModal(dom.moveModal); showToast("Category moved.", "success"); })
+                    .catch(function (error) { showToast(error.message, "danger"); });
             });
         }
     }
@@ -1411,27 +1556,7 @@
     function renderAssignList(filterText) {
         var list = document.getElementById("cmAssignList");
         list.innerHTML = "";
-        var q = (filterText || "").toLowerCase();
-
-        PRODUCT_POOL.filter(function (p) {
-            return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.sku.toLowerCase().indexOf(q) !== -1;
-        }).forEach(function (p, i) {
-            var row = document.createElement("div");
-            row.className = "cm-assign-row";
-            row.innerHTML =
-                '<label class="cm-checkbox"><input type="checkbox" data-cm-assign-check="' + p.sku + '" ' + (assignSelected.has(p.sku) ? "checked" : "") + ' /><span class="cm-checkbox-box"></span></label>' +
-                '<span class="cm-assign-row-info"><strong>' + p.name + '</strong><span>' + p.sku + ' &middot; ' + p.seller + '</span></span>' +
-                '<span class="cm-assign-row-price">Rs. ' + p.price.toLocaleString("en-US") + '</span>';
-            list.appendChild(row);
-        });
-
-        list.querySelectorAll("[data-cm-assign-check]").forEach(function (cb) {
-            cb.addEventListener("change", function () {
-                var sku = cb.dataset.cmAssignCheck;
-                if (cb.checked) assignSelected.add(sku); else assignSelected.delete(sku);
-                updateAssignCount();
-            });
-        });
+        list.textContent = "Product assignment requires product data and backend integration.";
     }
 
     function updateAssignCount() {
@@ -1447,7 +1572,6 @@
         var selectAllBtn = document.getElementById("assignSelectAllBtn");
         if (selectAllBtn) {
             selectAllBtn.addEventListener("click", function () {
-                PRODUCT_POOL.forEach(function (p) { assignSelected.add(p.sku); });
                 renderAssignList(searchInput ? searchInput.value.trim() : "");
                 updateAssignCount();
             });
@@ -1464,14 +1588,7 @@
         if (confirmBtn) {
             confirmBtn.addEventListener("click", function () {
                 if (!assignSelected.size) { showToast("Select at least one product to assign.", "danger"); return; }
-                if (assignTargetCat) {
-                    assignTargetCat.products = (assignTargetCat.products || 0) + assignSelected.size;
-                }
-                showToast(assignSelected.size + " product(s) assigned to " + (assignTargetCat ? assignTargetCat.name : "category") + ".", "success");
-                closeModal(dom.assignModal);
-                if (assignTargetCat && state.activeCategoryId === assignTargetCat.id) populateDrawer(assignTargetCat);
-                renderTree();
-                renderTable();
+                showToast("Product assignment requires backend integration.", "info");
             });
         }
     }
@@ -1483,7 +1600,7 @@
         if (!cat) return;
         deleteTargetCat = cat;
         document.getElementById("deleteTargetName").textContent = cat.name;
-        document.getElementById("deleteProductCount").textContent = cat.products || 0;
+        document.getElementById("deleteProductCount").textContent = productCount(cat);
         document.getElementById("deleteSubCount").textContent = countSubcategories(cat);
         var input = document.getElementById("deleteConfirmInput");
         var confirmBtn = document.getElementById("cmDeleteConfirmBtn");
@@ -1512,41 +1629,188 @@
             });
             confirmBtn.addEventListener("click", function () {
                 if (confirmBtn.disabled || !deleteTargetCat) return;
-                var name = deleteTargetCat.name;
-                removeCategoryFromTree(deleteTargetCat);
-                closeModal(dom.deleteModal);
-                if (state.activeCategoryId === deleteTargetCat.id) closeDrawer();
-                showToast('"' + name + '" deleted permanently.', "danger");
-                deleteTargetCat = null;
-                renderTree();
-                renderTable();
+                apiRequest(categoryApiUrl(deleteTargetCat.id), { method: "DELETE" })
+                    .then(function () {
+                        closeModal(dom.deleteModal);
+                        if (state.activeCategoryId === deleteTargetCat.id) closeDrawer();
+                        deleteTargetCat = null;
+                        return reloadCategories();
+                    }).then(function () { showToast("Category deleted.", "success"); })
+                    .catch(function (error) { showToast(error.message, "danger"); });
             });
         }
 
         if (deactivateBtn) {
             deactivateBtn.addEventListener("click", function () {
                 if (!deleteTargetCat) return;
-                deleteTargetCat.status = "inactive";
-                showToast('"' + deleteTargetCat.name + '" deactivated instead of deleted.', "success");
-                closeModal(dom.deleteModal);
-                if (state.activeCategoryId === deleteTargetCat.id) populateDrawer(deleteTargetCat);
-                renderTree();
-                renderTable();
+                saveCategory(deleteTargetCat.id, { is_active: false })
+                    .then(function () { closeModal(dom.deleteModal); showToast("Category deactivated.", "success"); })
+                    .catch(function (error) { showToast(error.message, "danger"); });
             });
         }
     }
 
     /* ================= 19. IMPORT / EXPORT MODALS ================= */
+
+    function downloadCategoryExport() {
+        var scope = document.getElementById("exportScope");
+        var format = document.getElementById("exportFormat");
+        var scopeValue = scope ? scope.value : "Export All Categories";
+        var formatValue = format ? String(format.value || "CSV").toUpperCase() : "CSV";
+        var ids = [];
+
+        if (scopeValue === "Export Selected") {
+            ids = Array.from(state.selectedTableIds);
+            if (!ids.length) { showToast("Select at least one category to export.", "danger"); return; }
+        } else if (scopeValue === "Export Visible (filtered)") {
+            ids = allCategoriesFlat().filter(function (cat) {
+                return categoryMatchesFilter(cat) && categoryMatchesSearch(cat);
+            }).map(function (cat) { return cat.id; });
+            if (!ids.length) { showToast("There are no visible categories to export.", "danger"); return; }
+        }
+
+        if (!CATEGORY_EXPORT_URL) { showToast("Category export is not configured.", "danger"); return; }
+        var params = new URLSearchParams();
+        params.set("format", formatValue);
+        ids.forEach(function (id) { params.append("category_id", idKey(id)); });
+
+        fetch(CATEGORY_EXPORT_URL + "?" + params.toString(), {
+            credentials: "same-origin",
+            headers: { "Accept": "text/csv, application/json, application/pdf" }
+        }).then(function (response) {
+            if (!response.ok) return response.json().catch(function () { return {}; }).then(function (payload) {
+                throw new Error(payload.error || "Unable to export categories.");
+            });
+            var disposition = response.headers.get("Content-Disposition") || "";
+            var match = disposition.match(/filename="?([^";]+)"?/i);
+            return response.blob().then(function (blob) {
+                return { blob: blob, filename: match ? match[1] : "categories." + formatValue.toLowerCase() };
+            });
+        }).then(function (result) {
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(result.blob);
+            link.download = result.filename;
+            document.body.appendChild(link);
+            link.click();
+            window.setTimeout(function () { URL.revokeObjectURL(link.href); link.remove(); }, 1000);
+            closeModal(dom.exportModal);
+            showToast("Categories exported successfully.", "success");
+        }).catch(function (error) { showToast(error.message || "Unable to export categories.", "danger"); });
+    }
+
+    function parseCsv(text) {
+        var rows = [], row = [], value = "", quoted = false;
+        for (var i = 0; i < text.length; i += 1) {
+            var char = text[i], next = text[i + 1];
+            if (char === '"' && quoted && next === '"') { value += '"'; i += 1; continue; }
+            if (char === '"') { quoted = !quoted; continue; }
+            if (char === "," && !quoted) { row.push(value); value = ""; continue; }
+            if ((char === "\n" || char === "\r") && !quoted) {
+                if (char === "\r" && next === "\n") i += 1;
+                row.push(value); value = "";
+                if (row.some(function (cell) { return cell.trim() !== ""; })) rows.push(row);
+                row = [];
+                continue;
+            }
+            value += char;
+        }
+        if (value !== "" || row.length) { row.push(value); if (row.some(function (cell) { return cell.trim() !== ""; })) rows.push(row); }
+        if (rows.length < 2) return [];
+        var headers = rows.shift().map(function (header) { return header.trim().toLowerCase().replace(/[\s-]+/g, "_"); });
+        return rows.map(function (cells) {
+            var item = {};
+            headers.forEach(function (header, index) { item[header] = (cells[index] || "").trim(); });
+            return item;
+        });
+    }
+
+    function flattenImportData(data, parent) {
+        var result = [];
+        if (!Array.isArray(data)) return result;
+        data.forEach(function (item) {
+            if (!item || typeof item !== "object") return;
+            var copy = Object.assign({}, item);
+            if ((copy.parent_id === undefined || copy.parent_id === null || copy.parent_id === "") && parent) copy.parent_id = parent.id;
+            result.push(copy);
+            if (Array.isArray(item.children)) result = result.concat(flattenImportData(item.children, item));
+        });
+        return result;
+    }
+
+    function importRowsFromText(text, filename) {
+        var extension = filename.toLowerCase().split(".").pop();
+        if (extension === "json") {
+            var parsed = JSON.parse(text);
+            var data = parsed && (parsed.category_tree || parsed.categories) ? (parsed.category_tree || parsed.categories) : parsed;
+            return flattenImportData(data);
+        }
+        if (extension === "csv") return parseCsv(text);
+        throw new Error("Only CSV and JSON category files are supported.");
+    }
+
+    function importCategoryRow(row) {
+        var name = String(row.name || row.category || "").trim();
+        var slug = String(row.slug || "").trim();
+        if (!name || !slug) return Promise.reject(new Error("Each imported category needs a name and slug."));
+        var existing = row.id ? findCategory(row.id) : null;
+        if (!existing) existing = allCategoriesFlat().find(function (cat) { return cat.slug === slug; });
+        var parentValue = row.parent_id === undefined ? row.parent : row.parent_id;
+        if (parentValue && typeof parentValue === "object") parentValue = parentValue.id || parentValue.slug || parentValue.name;
+        var parentId = "";
+        if (parentValue !== undefined && parentValue !== null && String(parentValue).trim() !== "") {
+            var parent = findCategory(parentValue) || allCategoriesFlat().find(function (cat) {
+                return cat.slug === String(parentValue) || cat.name.toLowerCase() === String(parentValue).toLowerCase();
+            });
+            if (!parent) return Promise.reject(new Error("Parent category not found for " + name + "."));
+            if (existing && sameId(parent.id, existing.id)) return Promise.reject(new Error("A category cannot be its own parent: " + name + "."));
+            parentId = parent.id;
+        }
+        var activeValue = row.is_active;
+        if (activeValue === undefined || activeValue === "") activeValue = String(row.status || "active").toLowerCase() !== "inactive";
+        else activeValue = !["false", "0", "inactive", "no"].includes(String(activeValue).toLowerCase());
+        return saveCategory(existing ? existing.id : null, {
+            name: name, slug: slug, parent_id: parentId, description: row.description || "", icon: row.icon || "", is_active: activeValue
+        });
+    }
+
+    function importCategories(file) {
+        if (!file) return Promise.reject(new Error("Choose a CSV or JSON file first."));
+        if (file.size > 5 * 1024 * 1024) return Promise.reject(new Error("The import file must be 5 MB or smaller."));
+        return file.text().then(function (text) {
+            var rows = importRowsFromText(text.replace(/^\uFEFF/, ""), file.name);
+            if (!rows.length) throw new Error("The import file does not contain any categories.");
+            var pending = rows.slice(), imported = 0;
+            function nextPass() {
+                if (!pending.length) return Promise.resolve(imported);
+                var deferred = [], progressed = false;
+                return pending.reduce(function (chain, row) {
+                    return chain.then(function () { return importCategoryRow(row).then(function () { imported += 1; progressed = true; }).catch(function (error) {
+                        if (error.message.indexOf("Parent category not found") === 0) deferred.push(row); else throw error;
+                    }); });
+                }, Promise.resolve()).then(function () {
+                    if (!deferred.length) return imported;
+                    if (!progressed) throw new Error("Some imported categories reference missing parents.");
+                    pending = deferred;
+                    return nextPass();
+                });
+            }
+            return nextPass();
+        });
+    }
+
     function initImportExport() {
         var exportBtn = document.getElementById("cmExportBtn");
         var exportConfirm = document.getElementById("cmExportConfirmBtn");
-        if (exportBtn) exportBtn.addEventListener("click", function () { openModal(dom.exportModal); });
+
+        if (exportBtn) {
+            exportBtn.addEventListener("click", function () {
+                openModal(dom.exportModal);
+            });
+        }
+
         if (exportConfirm) {
             exportConfirm.addEventListener("click", function () {
-                var scope = document.getElementById("exportScope").value;
-                var format = document.getElementById("exportFormat").value;
-                closeModal(dom.exportModal);
-                showToast(scope + " (" + format + ") export started.", "success");
+                downloadCategoryExport();
             });
         }
 
@@ -1556,42 +1820,85 @@
         var fileInput = document.getElementById("cmImportFile");
         var fileNameEl = document.getElementById("cmImportFileName");
 
-        if (importBtn) importBtn.addEventListener("click", function () { openModal(dom.importModal); });
+        if (importBtn) {
+            importBtn.addEventListener("click", function () {
+                openModal(dom.importModal);
+            });
+        }
 
         if (uploadZone && fileInput) {
-            uploadZone.addEventListener("click", function () { fileInput.click(); });
-            uploadZone.addEventListener("keydown", function (e) {
-                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+            uploadZone.addEventListener("click", function () {
+                fileInput.click();
             });
+
+            uploadZone.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInput.click();
+                }
+            });
+
             fileInput.addEventListener("change", function () {
                 if (fileInput.files && fileInput.files[0]) {
-                    fileNameEl.textContent = "Selected: " + fileInput.files[0].name;
+                    fileNameEl.textContent =
+                        "Selected: " + fileInput.files[0].name;
+
                     fileNameEl.classList.remove("cm-hidden");
                 }
             });
+
             ["dragenter", "dragover"].forEach(function (evt) {
-                uploadZone.addEventListener(evt, function (e) { e.preventDefault(); uploadZone.classList.add("is-dragover"); });
+                uploadZone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    uploadZone.classList.add("is-dragover");
+                });
             });
+
             ["dragleave", "drop"].forEach(function (evt) {
-                uploadZone.addEventListener(evt, function (e) { e.preventDefault(); uploadZone.classList.remove("is-dragover"); });
+                uploadZone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    uploadZone.classList.remove("is-dragover");
+                });
             });
+
             uploadZone.addEventListener("drop", function (e) {
                 var files = e.dataTransfer.files;
+
                 if (files && files[0]) {
-                    fileNameEl.textContent = "Selected: " + files[0].name;
+                    fileNameEl.textContent =
+                        "Selected: " + files[0].name;
+
                     fileNameEl.classList.remove("cm-hidden");
+
+                    try {
+                        var dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(files[0]);
+                        fileInput.files = dataTransfer.files;
+                    } catch (error) {
+                        // Browser does not allow assigning files.
+                    }
                 }
             });
         }
 
         if (importConfirm) {
             importConfirm.addEventListener("click", function () {
-                closeModal(dom.importModal);
-                showToast("Import preview isn\u2019t available yet \u2014 check back soon.", "info");
+                var file = fileInput && fileInput.files ? fileInput.files[0] : null;
+                importConfirm.disabled = true;
+                importCategories(file).then(function (count) {
+                    closeModal(dom.importModal);
+                    if (fileInput) fileInput.value = "";
+                    if (fileNameEl) fileNameEl.classList.add("cm-hidden");
+                    showToast(count + " categor" + (count === 1 ? "y" : "ies") + " imported successfully.", "success");
+                }).catch(function (error) {
+                    showToast(error.message || "Unable to import categories.", "danger");
+                }).then(function () {
+                    importConfirm.disabled = false;
+                });
+                return;
             });
         }
     }
-
     /* ================= GENERIC TOAST TRIGGERS ================= */
     function initGenericToastTriggers() {
         document.addEventListener("click", function (e) {
@@ -1672,6 +1979,7 @@
 
         renderTree();
         renderTable();
+        reloadCategories().catch(function () { });
     }
 
     if (document.readyState === "loading") {

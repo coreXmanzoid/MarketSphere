@@ -1,0 +1,1653 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}
+  Brand Management
+{% endblock %}
+
+{% block active_page %}
+  brands
+{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span>Catalog</span>
+    <span class="adh-breadcrumb-sep">&rsaquo;</span>
+    <span class="adh-breadcrumb-current">Brands</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static '/css/brands.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="bm-page" id="bmPage" data-brand-api-url="{% url 'admin-brand-api' %}" data-brand-import-url="{% url 'admin-brand-import' %}" data-brand-export-url="{% url 'admin-brands-export' %}">
+
+  <!-- ================= 1. PAGE HEADER ================= -->
+  <header class="bm-header bm-reveal">
+    <div class="bm-header-text">
+      <span class="bm-header-eyebrow"><i class="bm-eyebrow-dot" aria-hidden="true"></i> Catalog &middot; Brands</span>
+      <h1 class="bm-header-title">Brand Management</h1>
+      <p class="bm-header-subtitle">Manage marketplace brands, products, visibility, verification, and performance.</p>
+    </div>
+
+    <div class="bm-header-actions">
+      <button type="button" class="bm-btn bm-btn-ghost" id="bmAddBrandBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>Add Brand
+      </button>
+
+      <button type="button" class="bm-btn bm-btn-secondary" id="bmImportBtn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>Import Brands
+      </button>
+
+      <button type="button" class="bm-btn bm-btn-primary" id="bmExportBtn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>Export Brands
+      </button>
+
+      <div class="bm-dropdown" id="bmMoreDropdown">
+        <button type="button" class="bm-btn bm-btn-outline bm-btn-icon-only" id="bmMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1.2"></circle>
+            <circle cx="12" cy="12" r="1.2"></circle>
+            <circle cx="12" cy="19" r="1.2"></circle>
+          </svg>
+        </button>
+        <div class="bm-dropdown-menu" role="menu">
+          <button type="button" class="bm-dropdown-item" role="menuitem" data-bm-toast="info" data-bm-toast-msg="Bulk verification queue isn&#8217;t available yet.">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle>
+            </svg>Verification Queue
+          </button>
+          <button type="button" class="bm-dropdown-item" role="menuitem" data-bm-toast="info" data-bm-toast-msg="Brand order settings coming soon.">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M3 12h18M3 18h18"></path>
+            </svg>Reorder Directory
+          </button>
+          <div class="bm-dropdown-divider" role="separator"></div>
+          <button type="button" class="bm-dropdown-item is-danger" role="menuitem" id="bmBulkDeleteMenuBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>Bulk Delete Inactive
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 2. BRAND SUMMARY METRICS ================= -->
+  <section class="bm-metrics-grid" aria-label="Brand summary metrics">
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Total Brands</span>
+        <span class="bm-metric-value" data-count-to="{{ total_brands }}">{{ total_brands }}</span>
+        <span class="bm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>{{ brands_added_this_month }} added last month</span>
+      </div>
+    </div>
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-success" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Active Brands</span>
+        <span class="bm-metric-value" data-count-to="{{ active_brands }}">{{ active_brands }}</span>
+        <span class="bm-metric-trend neutral">{{ percentage_active }}% of directory</span>
+      </div>
+    </div>
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-danger" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Inactive Brands</span>
+        <span class="bm-metric-value" data-count-to="{{ inactive_brands }}">{{ inactive_brands }}</span>
+        <span class="bm-metric-trend down">{{ inactive_brands_added_this_month }} added this month</span>
+      </div>
+    </div>
+
+    {% comment %} <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-info" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Verified Brands</span>
+        <span class="bm-metric-value" data-count-to="94">94</span>
+        <span class="bm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>73.4% verified</span>
+      </div>
+    </div>
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-warning" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Unverified Brands</span>
+        <span class="bm-metric-value" data-count-to="19">19</span>
+        <span class="bm-metric-trend neutral">Needs review</span>
+      </div>
+    </div>
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-warning" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Pending Verification</span>
+        <span class="bm-metric-value" data-count-to="15">15</span>
+        <span class="bm-metric-trend neutral">Awaiting documents</span>
+      </div>
+    </div> {% endcomment %}
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-accent" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Featured Brands</span>
+        <span class="bm-metric-value" data-count-to="{{ featured_brands }}">{{ featured_brands }}</span>
+        <span class="bm-metric-trend neutral">On homepage rotation</span>
+      </div>
+    </div>
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-danger" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Brands Without Products</span>
+        <span class="bm-metric-value" data-count-to="{{ empty_brands }}">{{ empty_brands }}</span>
+        <span class="bm-metric-trend down">Review for cleanup</span>
+      </div>
+    </div>
+
+    <div class="bm-metric-card bm-reveal">
+      <div class="bm-metric-icon c-info" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg>
+      </div>
+      <div class="bm-metric-body">
+        <span class="bm-metric-label">Products Across Brands</span>
+        <span class="bm-metric-value" data-count-to="{{ products_assigned }}">{{ products_assigned }}</span>
+        <span class="bm-metric-trend up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="18 15 12 9 6 15"></polyline></svg>{{ products_assigned_this_month }} this month</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3. SEARCH AND FILTER TOOLBAR ================= -->
+  <section class="bm-toolbar-card bm-reveal" aria-label="Brand filters">
+    <div class="bm-toolbar">
+      <div class="bm-search">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input type="search" id="bmSearchInput" class="bm-search-input" placeholder="Search by brand name, slug, website, or country..." aria-label="Search brands" />
+      </div>
+
+      <div class="bm-toolbar-filters">
+        <div class="bm-select-wrap">
+          <select id="bmStatusFilter" class="bm-select" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="bm-select-wrap">
+          <select id="bmVerificationFilter" class="bm-select" aria-label="Filter by verification">
+            <option value="">All Verification</option>
+            <option value="verified">Verified</option>
+            <option value="unverified">Unverified</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="bm-select-wrap">
+          <select id="bmFeaturedFilter" class="bm-select" aria-label="Filter by featured status">
+            <option value="">Featured &amp; Standard</option>
+            <option value="featured">Featured Only</option>
+            <option value="standard">Not Featured</option>
+          </select>
+        </div>
+
+        <div class="bm-select-wrap">
+          <select id="bmCountryFilter" class="bm-select" aria-label="Filter by country">
+            <option value="">All Countries</option>
+            <option value="pakistan">Pakistan</option>
+            <option value="china">China</option>
+            <option value="usa">United States</option>
+            <option value="uae">UAE</option>
+            <option value="turkey">Turkey</option>
+          </select>
+        </div>
+
+        <div class="bm-select-wrap">
+          <select id="bmSortFilter" class="bm-select" aria-label="Sort brands">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="name-az">Name A&ndash;Z</option>
+            <option value="name-za">Name Z&ndash;A</option>
+            <option value="most-products">Most Products</option>
+            <option value="highest-revenue">Highest Revenue</option>
+            <option value="highest-rating">Highest Rating</option>
+          </select>
+        </div>
+
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" id="bmResetFiltersBtn">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path>
+          </svg>Reset
+        </button>
+
+        <button type="button" class="bm-btn bm-btn-outline bm-btn-sm bm-btn-icon-only" id="bmRefreshBtn" aria-label="Refresh brand list">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-3.5-7.1"></path><polyline points="21 3 21 9 15 9"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= QUICK FILTER CHIPS ================= -->
+    <div class="bm-chips-row" id="bmChipsRow" role="group" aria-label="Quick filters">
+      <button type="button" class="bm-chip is-active" data-bm-chip="all">All</button>
+      <button type="button" class="bm-chip" data-bm-chip="active">Active</button>
+      <button type="button" class="bm-chip" data-bm-chip="inactive">Inactive</button>
+      <button type="button" class="bm-chip" data-bm-chip="verified">Verified</button>
+      <button type="button" class="bm-chip" data-bm-chip="unverified">Unverified</button>
+      <button type="button" class="bm-chip" data-bm-chip="pending">Pending Verification</button>
+      <button type="button" class="bm-chip" data-bm-chip="featured">Featured</button>
+      <button type="button" class="bm-chip" data-bm-chip="no-products">Without Products</button>
+    </div>
+
+    <!-- ================= BULK ACTION BAR ================= -->
+    <div class="bm-bulk-bar bm-hidden" id="bmBulkBar">
+      <div class="bm-bulk-info">
+        <span class="bm-bulk-count" id="bmBulkCount">0</span>
+        <span>brands selected</span>
+      </div>
+      <div class="bm-bulk-actions">
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bulk-action="activate">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Activate
+        </button>
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bulk-action="deactivate">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg>Deactivate
+        </button>
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bulk-action="verify">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>Verify
+        </button>
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bulk-action="feature">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg>Feature
+        </button>
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bulk-action="hide">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>Hide
+        </button>
+        <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bulk-action="export">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export
+        </button>
+        <button type="button" class="bm-btn bm-btn-danger bm-btn-sm" data-bulk-action="delete">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Delete
+        </button>
+        <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm" id="bmClearSelectionBtn">Clear Selection</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. BRAND DIRECTORY / TABLE ================= -->
+  <section class="bm-table-card bm-reveal" aria-label="Brand directory">
+    <div class="bm-table-wrap">
+      <table class="bm-table" id="bmBrandTable">
+        <thead>
+          <tr>
+            <th scope="col" class="bm-col-checkbox">
+              <label class="bm-checkbox">
+                <input type="checkbox" id="bmSelectAll" aria-label="Select all brands" />
+                <span class="bm-checkbox-box"></span>
+              </label>
+            </th>
+            <th scope="col" class="bm-col-logo"><span class="sr-only">Logo</span></th>
+            <th scope="col" data-sort="name">Brand Name</th>
+            <th scope="col">Slug</th>
+            <th scope="col" data-sort="products">Products</th>
+            <th scope="col">Categories</th>
+            <th scope="col" data-sort="orders">Orders</th>
+            <th scope="col" data-sort="revenue">Revenue</th>
+            <th scope="col" data-sort="rating">Rating</th>
+            <th scope="col">Verification</th>
+            <th scope="col">Status</th>
+            <th scope="col">Featured</th>
+            <th scope="col" data-sort="created">Created</th>
+            <th scope="col">Updated</th>
+            <th scope="col" class="bm-col-actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+
+        <tbody id="bmBrandTableBody">
+          {% for brand in brands %}
+          <tr class="bm-row"
+              data-id="{{ brand.id }}"
+              data-name="{{ brand.name|lower }}"
+              data-slug="{{ brand.slug|lower }}"
+              data-country="{{ brand.country_of_origin|lower }}"
+              data-status="{% if brand.is_active %}active{% else %}inactive{% endif %}"
+              data-verification="unverified"
+              data-featured="{% if brand.is_featured %}1{% else %}0{% endif %}"
+              data-products="{{ brand.products_count|default:0 }}"
+              data-orders="{{ brand.orders_count|default:0 }}"
+              data-revenue="0"
+              data-rating="0"
+              data-created="{{ brand.created_at|date:'Y-m-d' }}"
+              data-updated="{{ brand.updated_at|date:'Y-m-d' }}">
+            <td data-label="" class="bm-col-checkbox">
+              <label class="bm-checkbox" onclick="event.stopPropagation();">
+                <input type="checkbox" class="bm-row-checkbox" data-id="{{ brand.id }}" aria-label="Select {{ brand.name }}" />
+                <span class="bm-checkbox-box"></span>
+              </label>
+            </td>
+            <td data-label="" class="bm-col-logo"><span class="bm-logo-thumb"{% if brand.logo %} style="background-image:url('{{ brand.logo.url }}'); background-size:cover; color:transparent;"{% endif %}>{{ brand.name|slice:':2'|upper }}</span></td>
+            <td data-label="Brand"><div class="bm-brand-cell"><span class="bm-brand-name">{{ brand.name }}</span></div></td>
+            <td data-label="Slug"><span class="bm-brand-slug">/{{ brand.slug }}</span></td>
+            <td data-label="Products"><span class="bm-count-value">{{ brand.products_count|default:0 }}</span></td>
+            <td data-label="Categories"><span class="bm-count-value">{{ brand.categories_count|default:0 }}</span></td>
+            <td data-label="Orders"><span class="bm-count-value">{{ brand.orders_count|default:0 }}</span></td>
+            <td data-label="Revenue"><span class="bm-count-value">Rs. 0</span></td>
+            <td data-label="Rating"><span class="c-muted">&mdash;</span></td>
+            <td data-label="Verification"><span class="bm-badge c-muted">Unverified</span></td>
+            <td data-label="Status">
+              {% if brand.is_active %}<span class="bm-badge c-success">Active</span>{% else %}<span class="bm-badge c-danger">Inactive</span>{% endif %}
+            </td>
+            <td data-label="Featured"><button type="button" class="bm-featured-star js-bm-toggle-featured" data-id="{{ brand.id }}" aria-label="Toggle featured" onclick="event.stopPropagation();"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></button></td>
+            <td data-label="Created">{{ brand.created_at|date:"M j, Y" }}</td>
+            <td data-label="Updated">{{ brand.updated_at|date:"M j, Y" }}</td>
+            <td data-label="" class="bm-col-actions">
+              <div class="bm-dropdown">
+                <button type="button" class="bm-icon-btn js-bm-row-dropdown-trigger" data-id="{{ brand.id }}" aria-haspopup="true" aria-expanded="false" aria-label="More actions for {{ brand.name }}" onclick="event.stopPropagation();"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>
+                <div class="bm-row-dropdown-menu" data-brand-id="{{ brand.id }}">
+                  <button type="button" class="bm-dropdown-item" data-row-action="view">View</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="edit">Edit</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="verify">Verify</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="reject">Reject Verification</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="request-docs">Request Documents</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="feature">Feature</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="toggle-status">Activate / Deactivate</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="view-products">View Products</button>
+                  <button type="button" class="bm-dropdown-item" data-row-action="export">Export</button>
+                  <div class="bm-dropdown-divider"></div>
+                  <button type="button" class="bm-dropdown-item is-danger" data-row-action="delete">Delete</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <!-- The existing empty state is shown by JavaScript when there are no rows. -->
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================= EMPTY STATE ================= -->
+    <div class="bm-empty-state bm-hidden" id="bmEmptyState">
+      <div class="bm-empty-illustration" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path>
+          <line x1="16.5" y1="12.5" x2="21.5" y2="17.5"></line><line x1="21.5" y1="12.5" x2="16.5" y2="17.5"></line>
+        </svg>
+      </div>
+      <h3 class="bm-empty-title">No Brands Found</h3>
+      <p class="bm-empty-subtitle">We couldn&rsquo;t find any brands matching your current search or filters.</p>
+      <button type="button" class="bm-btn bm-btn-primary" id="bmEmptyResetBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Reset Filters
+      </button>
+    </div>
+
+    <!-- ================= PAGINATION ================= -->
+    <div class="bm-pagination-bar">
+      <div class="bm-pagination-left">
+        <span class="bm-pagination-count">Showing <strong id="bmPaginationShowing">1&ndash;20</strong> of <strong id="bmPaginationTotal">128</strong> Brands</span>
+      </div>
+      <nav class="bm-pagination" aria-label="Brand directory pagination">
+        <button type="button" class="bm-page-btn" disabled aria-label="Previous page">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+        </button>
+        <button type="button" class="bm-page-btn is-active" aria-current="page">1</button>
+        <button type="button" class="bm-page-btn">2</button>
+        <button type="button" class="bm-page-btn">3</button>
+        <span style="color: var(--bm-caption); padding: 0 4px;">&hellip;</span>
+        <button type="button" class="bm-page-btn">7</button>
+        <button type="button" class="bm-page-btn" aria-label="Next page">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </nav>
+    </div>
+  </section>
+</div>
+
+<!-- ==========================================================================
+     BRAND MANAGEMENT DRAWER
+     ========================================================================== -->
+<div class="bm-drawer-overlay" id="bmDrawerOverlay" aria-hidden="true">
+  <aside class="bm-drawer" id="bmDrawer" role="dialog" aria-modal="true" aria-labelledby="bmDrawerTitle">
+
+    <!-- ============ DRAWER HEADER ============ -->
+    <div class="bm-drawer-header">
+      <div class="bm-drawer-brand-row">
+        <div class="bm-drawer-logo" id="bmDrawerLogo">NV</div>
+        <div class="bm-drawer-title-block">
+          <h2 class="bm-drawer-title" id="bmDrawerTitle">
+            <span id="bmDrawerBrandName">NovaTech</span>
+          </h2>
+          <span class="bm-drawer-slug" id="bmDrawerSlug">/brands/novatech</span>
+          <div class="bm-drawer-badges" id="bmDrawerBadges">
+            <span class="bm-badge c-success">Active</span>
+            <span class="bm-badge c-success">Verified</span>
+            <span class="bm-badge c-accent">Featured</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="bm-drawer-close" id="bmDrawerCloseBtn" aria-label="Close brand drawer">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- ============ QUICK STATS ============ -->
+    <div class="bm-drawer-quickstats">
+      <div class="bm-drawer-quickstat"><strong id="bmQsProducts">312</strong><span>Products</span></div>
+      <div class="bm-drawer-quickstat"><strong id="bmQsOrders">4,981</strong><span>Orders</span></div>
+      <div class="bm-drawer-quickstat"><strong id="bmQsRevenue">Rs. 8.4M</strong><span>Revenue</span></div>
+      <div class="bm-drawer-quickstat"><strong id="bmQsRating">4.7</strong><span>Rating</span></div>
+      <div class="bm-drawer-quickstat"><strong id="bmQsCategories">6</strong><span>Categories</span></div>
+    </div>
+
+    <!-- ============ DRAWER TABS ============ -->
+    <nav class="bm-drawer-tabs" id="bmDrawerTabs" role="tablist" aria-label="Brand management sections">
+      <button type="button" class="bm-drawer-tab is-active" data-bm-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="information" role="tab" aria-selected="false">Information</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="verification" role="tab" aria-selected="false">Verification</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="documents" role="tab" aria-selected="false">Documents</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="products" role="tab" aria-selected="false">Products</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="categories" role="tab" aria-selected="false">Categories</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="analytics" role="tab" aria-selected="false">Analytics</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="visibility" role="tab" aria-selected="false">Visibility</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="seo" role="tab" aria-selected="false">SEO</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="performance" role="tab" aria-selected="false">Performance</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="activity" role="tab" aria-selected="false">Activity</button>
+      <button type="button" class="bm-drawer-tab" data-bm-tab="notes" role="tab" aria-selected="false">Admin Notes</button>
+    </nav>
+
+    <!-- ============ DRAWER BODY ============ -->
+    <div class="bm-drawer-body">
+
+      <!-- ========== OVERVIEW PANEL ========== -->
+      <section class="bm-drawer-panel is-active" data-bm-panel="overview" aria-label="Overview">
+        <div class="bm-overview-grid">
+          <div class="bm-overview-stat"><span>Products</span><strong>312</strong><small>+18 this month</small></div>
+          <div class="bm-overview-stat"><span>Orders</span><strong>4,981</strong><small>+6.4% MoM</small></div>
+          <div class="bm-overview-stat"><span>Revenue</span><strong>Rs. 8.4M</strong><small>+9.1% MoM</small></div>
+          <div class="bm-overview-stat"><span>Units Sold</span><strong>11,204</strong><small>Lifetime</small></div>
+          <div class="bm-overview-stat"><span>Categories</span><strong>6</strong><small>Active listings</small></div>
+          <div class="bm-overview-stat"><span>Average Rating</span><strong>4.7 &#9733;</strong><small>Based on 2,140 reviews</small></div>
+          <div class="bm-overview-stat"><span>Reviews</span><strong>2,140</strong><small>+64 this month</small></div>
+          <div class="bm-overview-stat"><span>Return Rate</span><strong>1.8%</strong><small>Below average</small></div>
+          <div class="bm-overview-stat"><span>Views (30d)</span><strong>68,420</strong><small>+11.2%</small></div>
+          <div class="bm-overview-stat"><span>Conversion Rate</span><strong>3.9%</strong><small>+0.3% MoM</small></div>
+        </div>
+
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"></path><path d="M7 15l4-5 3 3 5-7"></path></svg>
+              Revenue Snapshot
+            </h3>
+          </div>
+          <div class="bm-bar-mini-chart" id="bmOverviewBarChart">
+            <span style="--bm-bar-h: 42%;"></span><span style="--bm-bar-h: 55%;"></span><span style="--bm-bar-h: 48%;"></span>
+            <span style="--bm-bar-h: 68%;"></span><span style="--bm-bar-h: 74%;"></span><span style="--bm-bar-h: 62%;"></span>
+            <span style="--bm-bar-h: 80%;"></span><span style="--bm-bar-h: 100%;"></span>
+          </div>
+          <div class="bm-mini-chart-caption">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== INFORMATION PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="information" aria-label="Brand Information">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              Brand Information
+            </h3>
+            <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" id="bmEditInfoBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg>Edit Brand
+            </button>
+          </div>
+
+          <!-- Display Mode -->
+          <div id="bmInfoDisplay">
+            <div class="bm-info-grid">
+              <div class="bm-info-item"><span class="bm-info-label">Brand Name</span><span class="bm-info-value">NovaTech</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Slug</span><span class="bm-info-value">novatech</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Brand Type</span><span class="bm-info-value">Manufacturer</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Website</span><span class="bm-info-value"><a href="#" target="_blank" rel="noopener">www.novatech.com</a></span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Country of Origin</span><span class="bm-info-value">Pakistan</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Founded Year</span><span class="bm-info-value">2014</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Official Email</span><span class="bm-info-value">contact@novatech.com</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Official Phone</span><span class="bm-info-value">+92 300 1234567</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Contact Person</span><span class="bm-info-value">Hamza Iqbal</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Business Registration No.</span><span class="bm-info-value">REG-88210-PK</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Trademark Number</span><span class="bm-info-value">TM-4471-2019</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Display Order</span><span class="bm-info-value">4</span></div>
+
+              <div class="bm-info-item bm-info-item-wide">
+                <span class="bm-info-label">Description</span>
+                <span class="bm-info-value">NovaTech designs and manufactures consumer electronics and smart-home accessories, known for durable build quality and fast local warranty support.</span>
+              </div>
+
+              <div class="bm-info-item bm-info-item-wide">
+                <span class="bm-info-label">Social Links</span>
+                <div class="bm-social-row">
+                  <span class="bm-social-chip"><i class="bi bi-facebook"></i> NovaTechOfficial</span>
+                  <span class="bm-social-chip"><i class="bi bi-instagram"></i> @novatech.pk</span>
+                  <span class="bm-social-chip"><i class="bi bi-linkedin"></i> NovaTech Pvt Ltd</span>
+                  <span class="bm-social-chip"><i class="bi bi-twitter-x"></i> @novatech_pk</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode (hidden by default) -->
+          <form id="bmInfoEditForm" class="bm-hidden">
+            <div class="bm-form-grid">
+              <div class="bm-form-group">
+                <label for="bmEditBrandName">Brand Name</label>
+                <input type="text" id="bmEditBrandName" value="NovaTech" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditSlug">Slug</label>
+                <input type="text" id="bmEditSlug" value="novatech" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditBrandType">Brand Type</label>
+                <select id="bmEditBrandType">
+                  <option selected>Manufacturer</option>
+                  <option>Distributor</option>
+                  <option>Reseller</option>
+                  <option>Private Label</option>
+                </select>
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditWebsite">Website</label>
+                <input type="url" id="bmEditWebsite" value="https://www.novatech.com" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditCountry">Country of Origin</label>
+                <input type="text" id="bmEditCountry" value="Pakistan" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditFounded">Founded Year</label>
+                <input type="number" id="bmEditFounded" value="2014" min="1800" max="2026" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditEmail">Official Email</label>
+                <input type="email" id="bmEditEmail" value="contact@novatech.com" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditPhone">Official Phone</label>
+                <input type="text" id="bmEditPhone" value="+92 300 1234567" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditContactPerson">Contact Person</label>
+                <input type="text" id="bmEditContactPerson" value="Hamza Iqbal" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditRegNumber">Business Registration Number</label>
+                <input type="text" id="bmEditRegNumber" value="REG-88210-PK" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditTrademark">Trademark Number</label>
+                <input type="text" id="bmEditTrademark" value="TM-4471-2019" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditDisplayOrder">Display Order</label>
+                <input type="number" id="bmEditDisplayOrder" value="4" min="0" />
+              </div>
+
+              <div class="bm-form-group bm-form-group-full">
+                <label for="bmEditDescription">Description</label>
+                <textarea id="bmEditDescription">NovaTech designs and manufactures consumer electronics and smart-home accessories, known for durable build quality and fast local warranty support.</textarea>
+              </div>
+
+              <div class="bm-form-group">
+                <label>Brand Logo</label>
+                <div class="bm-upload-box">
+                  <div class="bm-upload-preview">NV</div>
+                  <div>
+                    <input type="file" id="bmEditLogoFile" hidden accept="image/*" />
+                    <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" id="bmChangeLogoBtn">Change Logo</button>
+                    <p class="bm-form-hint">PNG or SVG &middot; Square, min 256&times;256px</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bm-form-group">
+                <label>Cover Image</label>
+                <div class="bm-upload-box">
+                  <div class="bm-upload-preview"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></div>
+                  <div>
+                    <input type="file" id="bmEditCoverFile" hidden accept="image/*" />
+                    <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" id="bmChangeCoverBtn">Change Cover</button>
+                    <p class="bm-form-hint">JPG or PNG &middot; 1600&times;400px recommended</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bm-form-group bm-form-group-full">
+                <label for="bmEditFacebook">Facebook</label>
+                <input type="text" id="bmEditFacebook" value="NovaTechOfficial" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditInstagram">Instagram</label>
+                <input type="text" id="bmEditInstagram" value="@novatech.pk" />
+              </div>
+              <div class="bm-form-group">
+                <label for="bmEditLinkedin">LinkedIn</label>
+                <input type="text" id="bmEditLinkedin" value="NovaTech Pvt Ltd" />
+              </div>
+            </div>
+
+            <div class="bm-edit-toggle-row">
+              <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm" id="bmCancelEditInfoBtn">Cancel</button>
+              <button type="submit" class="bm-btn bm-btn-primary bm-btn-sm" id="bmSaveInfoBtn">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========== VERIFICATION PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="verification" aria-label="Verification">
+        <div class="bm-verification-grid">
+          <div class="bm-card">
+            <div class="bm-card-head">
+              <h3 class="bm-card-title">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                Verification Checklist
+              </h3>
+              <span class="bm-badge c-success">Verified</span>
+            </div>
+
+            <div class="bm-checklist">
+              <div class="bm-checklist-item is-complete">
+                <div class="bm-checklist-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg></div>
+                <div class="bm-checklist-text"><strong>Official Website</strong><small>Verified and reachable</small></div>
+                <span class="bm-badge c-success">Passed</span>
+              </div>
+              <div class="bm-checklist-item is-complete">
+                <div class="bm-checklist-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg></div>
+                <div class="bm-checklist-text"><strong>Brand Ownership</strong><small>Confirmed via registration documents</small></div>
+                <span class="bm-badge c-success">Passed</span>
+              </div>
+              <div class="bm-checklist-item is-complete">
+                <div class="bm-checklist-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg></div>
+                <div class="bm-checklist-text"><strong>Business Registration</strong><small>REG-88210-PK on file</small></div>
+                <span class="bm-badge c-success">Passed</span>
+              </div>
+              <div class="bm-checklist-item is-complete">
+                <div class="bm-checklist-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg></div>
+                <div class="bm-checklist-text"><strong>Trademark / Ownership Evidence</strong><small>TM-4471-2019 verified</small></div>
+                <span class="bm-badge c-success">Passed</span>
+              </div>
+              <div class="bm-checklist-item is-complete">
+                <div class="bm-checklist-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg></div>
+                <div class="bm-checklist-text"><strong>Contact Information</strong><small>Phone and email verified</small></div>
+                <span class="bm-badge c-success">Passed</span>
+              </div>
+              <div class="bm-checklist-item is-pending">
+                <div class="bm-checklist-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg></div>
+                <div class="bm-checklist-text"><strong>Brand Identity</strong><small>Logo &amp; cover under final review</small></div>
+                <span class="bm-badge c-warning">Pending</span>
+              </div>
+            </div>
+
+            <div class="bm-verify-actions">
+              <button type="button" class="bm-btn bm-btn-primary bm-btn-sm" data-bm-open-modal="bmVerifyModal">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>Verify Brand
+              </button>
+              <button type="button" class="bm-btn bm-btn-outline bm-btn-sm" data-bm-open-modal="bmRejectVerificationModal">Reject Verification</button>
+              <button type="button" class="bm-btn bm-btn-outline bm-btn-sm" data-bm-open-modal="bmRequestDocsModal">Request Documents</button>
+              <button type="button" class="bm-btn bm-btn-danger-outline bm-btn-sm" data-bm-open-modal="bmRevokeVerificationModal">Revoke Verification</button>
+            </div>
+          </div>
+
+          <div class="bm-card">
+            <div class="bm-card-head">
+              <h3 class="bm-card-title">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg>
+                Verification Details
+              </h3>
+            </div>
+            <div class="bm-info-grid" style="grid-template-columns: 1fr;">
+              <div class="bm-info-item"><span class="bm-info-label">Verification Date</span><span class="bm-info-value">Mar 18, 2025</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Verified By</span><span class="bm-info-value">Sana Raza (Admin)</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Documents Submitted</span><span class="bm-info-value">5 of 6</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Documents Approved</span><span class="bm-info-value">5</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Documents Pending</span><span class="bm-info-value">1 (Brand Identity Kit)</span></div>
+              <div class="bm-info-item"><span class="bm-info-label">Verification Notes</span><span class="bm-info-value">Strong onboarding; all core documents verified without issue on first submission.</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== DOCUMENTS PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="documents" aria-label="Verification Documents">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg>
+              Verification Documents
+            </h3>
+            <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Preparing document bundle&hellip;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>Download All
+            </button>
+          </div>
+
+          <div class="bm-docs-grid" id="bmDocsGrid">
+            <div class="bm-doc-card">
+              <div class="bm-doc-preview" data-bm-doc-preview data-doc-title="Business Registration"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="bm-doc-head"><span class="bm-doc-title">Business Registration</span><span class="bm-badge c-success">Verified</span></div>
+              <span class="bm-doc-meta">Uploaded Mar 2, 2025 &middot; Verified by Sana Raza</span>
+              <div class="bm-doc-actions">
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-doc-preview data-doc-title="Business Registration">View</button>
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Downloading document&hellip;">Download</button>
+              </div>
+            </div>
+
+            <div class="bm-doc-card">
+              <div class="bm-doc-preview" data-bm-doc-preview data-doc-title="Trademark Certificate"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="bm-doc-head"><span class="bm-doc-title">Trademark Certificate</span><span class="bm-badge c-success">Verified</span></div>
+              <span class="bm-doc-meta">Uploaded Mar 2, 2025 &middot; Verified by Sana Raza</span>
+              <div class="bm-doc-actions">
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-doc-preview data-doc-title="Trademark Certificate">View</button>
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Downloading document&hellip;">Download</button>
+              </div>
+            </div>
+
+            <div class="bm-doc-card">
+              <div class="bm-doc-preview" data-bm-doc-preview data-doc-title="Brand Ownership Proof"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="bm-doc-head"><span class="bm-doc-title">Brand Ownership Proof</span><span class="bm-badge c-success">Verified</span></div>
+              <span class="bm-doc-meta">Uploaded Mar 3, 2025 &middot; Verified by Sana Raza</span>
+              <div class="bm-doc-actions">
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-doc-preview data-doc-title="Brand Ownership Proof">View</button>
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Downloading document&hellip;">Download</button>
+              </div>
+            </div>
+
+            <div class="bm-doc-card">
+              <div class="bm-doc-preview" data-bm-doc-preview data-doc-title="Tax Certificate"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="bm-doc-head"><span class="bm-doc-title">Tax Certificate</span><span class="bm-badge c-success">Verified</span></div>
+              <span class="bm-doc-meta">Uploaded Mar 3, 2025 &middot; Verified by Sana Raza</span>
+              <div class="bm-doc-actions">
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-doc-preview data-doc-title="Tax Certificate">View</button>
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Downloading document&hellip;">Download</button>
+              </div>
+            </div>
+
+            <div class="bm-doc-card">
+              <div class="bm-doc-preview" data-bm-doc-preview data-doc-title="Official Website Proof"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="bm-doc-head"><span class="bm-doc-title">Official Website Proof</span><span class="bm-badge c-success">Verified</span></div>
+              <span class="bm-doc-meta">Uploaded Mar 4, 2025 &middot; Verified by Sana Raza</span>
+              <div class="bm-doc-actions">
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-doc-preview data-doc-title="Official Website Proof">View</button>
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Downloading document&hellip;">Download</button>
+              </div>
+            </div>
+
+            <div class="bm-doc-card">
+              <div class="bm-doc-preview"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="bm-doc-head"><span class="bm-doc-title">Brand Identity Kit</span><span class="bm-badge c-warning">Pending Review</span></div>
+              <span class="bm-doc-meta">Not yet uploaded</span>
+              <div class="bm-doc-actions">
+                <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-bm-open-modal="bmRequestDocsModal">Request Document</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PRODUCTS PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="products" aria-label="Brand Products">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>
+              Products in this Brand
+            </h3>
+            <button type="button" class="bm-link-btn" id="bmViewAllProductsBtn">
+              View All Products<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg>
+            </button>
+          </div>
+
+          <div class="bm-mini-table-wrap">
+            <table class="bm-mini-table">
+              <thead>
+                <tr>
+                  <th>Product</th><th>SKU</th><th>Seller</th><th>Category</th><th>Price</th><th>Stock</th><th>Orders</th><th>Revenue</th><th>Status</th><th><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="bm-mini-product-cell"><span class="bm-mini-product-thumb"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></span><span class="bm-mini-product-name">Wireless Over-Ear Headphones</span></div></td>
+                  <td>NV-HP-2201</td><td>Urban Threads Co.</td><td>Electronics</td><td>Rs. 6,399</td><td>84</td><td>612</td><td>Rs. 3.9M</td>
+                  <td><span class="bm-badge c-success">Published</span></td>
+                  <td class="bm-col-actions">
+                    <div class="bm-dropdown">
+                      <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening product&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><div class="bm-mini-product-cell"><span class="bm-mini-product-thumb"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></span><span class="bm-mini-product-name">Smart Watch Series 4</span></div></td>
+                  <td>NV-SW-4401</td><td>NovaTech Direct</td><td>Wearables</td><td>Rs. 12,999</td><td>41</td><td>388</td><td>Rs. 5.0M</td>
+                  <td><span class="bm-badge c-success">Published</span></td>
+                  <td class="bm-col-actions">
+                    <div class="bm-dropdown">
+                      <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening product&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><div class="bm-mini-product-cell"><span class="bm-mini-product-thumb"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></span><span class="bm-mini-product-name">4K Action Camera</span></div></td>
+                  <td>NV-CM-7702</td><td>NovaTech Direct</td><td>Cameras</td><td>Rs. 18,500</td><td>19</td><td>140</td><td>Rs. 2.6M</td>
+                  <td><span class="bm-badge c-warning">Low Stock</span></td>
+                  <td class="bm-col-actions">
+                    <div class="bm-dropdown">
+                      <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening product&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== CATEGORIES PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="categories" aria-label="Brand Categories">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4z"></path><path d="M4 12h10v4H4z"></path></svg>
+              Categories
+            </h3>
+          </div>
+          <div class="bm-category-list" id="bmCategoryList">
+            <div class="bm-category-row">
+              <div class="bm-category-info">
+                <strong>Electronics</strong>
+                <div class="bm-category-bar"><span class="bm-category-bar-fill" style="--bm-pct: 100%;"></span></div>
+              </div>
+              <span class="bm-category-value">142 products</span>
+              <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening category&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+            <div class="bm-category-row">
+              <div class="bm-category-info">
+                <strong>Wearables</strong>
+                <div class="bm-category-bar"><span class="bm-category-bar-fill" style="--bm-pct: 44%;"></span></div>
+              </div>
+              <span class="bm-category-value">63 products</span>
+              <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening category&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+            <div class="bm-category-row">
+              <div class="bm-category-info">
+                <strong>Cameras</strong>
+                <div class="bm-category-bar"><span class="bm-category-bar-fill" style="--bm-pct: 20%;"></span></div>
+              </div>
+              <span class="bm-category-value">29 products</span>
+              <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening category&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+            <div class="bm-category-row">
+              <div class="bm-category-info">
+                <strong>Home Audio</strong>
+                <div class="bm-category-bar"><span class="bm-category-bar-fill" style="--bm-pct: 10%;"></span></div>
+              </div>
+              <span class="bm-category-value">14 products</span>
+              <button type="button" class="bm-icon-btn" data-bm-toast="info" data-bm-toast-msg="Opening category&hellip;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== ANALYTICS PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="analytics" aria-label="Brand Analytics">
+        <div class="bm-analytics-grid">
+          <div class="bm-card">
+            <div class="bm-card-head">
+              <div>
+                <h3 class="bm-card-title">Brand Revenue</h3>
+                <p class="bm-card-desc">Last 8 weeks of gross revenue</p>
+              </div>
+            </div>
+            <div class="bm-line-chart-wrap" id="bmRevenueLineChart">
+              <svg viewBox="0 0 560 190" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="bm-line-gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#C08A4E" stop-opacity="0.32"></stop>
+                    <stop offset="100%" stop-color="#C08A4E" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                <path class="bm-line-chart-area" d="M0,140 L80,124 L160,132 L240,92 L320,104 L400,58 L480,74 L560,30 L560,190 L0,190 Z"></path>
+                <path class="bm-line-chart-path" d="M0,140 L80,124 L160,132 L240,92 L320,104 L400,58 L480,74 L560,30"></path>
+                <circle class="bm-line-chart-dot" data-value="Rs. 640K" cx="0" cy="140" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 720K" cx="80" cy="124" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 690K" cx="160" cy="132" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 960K" cx="240" cy="92" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 880K" cx="320" cy="104" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 1.12M" cx="400" cy="58" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 1.02M" cx="480" cy="74" r="4"></circle>
+                <circle class="bm-line-chart-dot" data-value="Rs. 1.30M" cx="560" cy="30" r="4"></circle>
+              </svg>
+              <div class="bm-chart-tooltip" id="bmChartTooltip"></div>
+            </div>
+            <div class="bm-chart-legend"><span><i></i> Weekly gross revenue</span></div>
+          </div>
+
+          <div class="bm-card">
+            <div class="bm-card-head"><h3 class="bm-card-title">Top Products</h3></div>
+            <div class="bm-top-list">
+              <div class="bm-top-list-row"><span class="bm-top-rank">1</span><div class="bm-top-list-info"><strong>Smart Watch Series 4</strong><div class="bm-top-list-bar"><span class="bm-top-list-bar-fill" style="width:100%;"></span></div></div><span class="bm-top-list-value">388 sold</span></div>
+              <div class="bm-top-list-row"><span class="bm-top-rank">2</span><div class="bm-top-list-info"><strong>Wireless Over-Ear Headphones</strong><div class="bm-top-list-bar"><span class="bm-top-list-bar-fill" style="width:79%;"></span></div></div><span class="bm-top-list-value">306 sold</span></div>
+              <div class="bm-top-list-row"><span class="bm-top-rank">3</span><div class="bm-top-list-info"><strong>4K Action Camera</strong><div class="bm-top-list-bar"><span class="bm-top-list-bar-fill" style="width:36%;"></span></div></div><span class="bm-top-list-value">140 sold</span></div>
+            </div>
+          </div>
+
+          <div class="bm-card">
+            <div class="bm-card-head"><h3 class="bm-card-title">Top Categories</h3></div>
+            <div class="bm-top-list">
+              <div class="bm-top-list-row"><span class="bm-top-rank">1</span><div class="bm-top-list-info"><strong>Electronics</strong><div class="bm-top-list-bar"><span class="bm-top-list-bar-fill" style="width:100%;"></span></div></div><span class="bm-top-list-value">45%</span></div>
+              <div class="bm-top-list-row"><span class="bm-top-rank">2</span><div class="bm-top-list-info"><strong>Wearables</strong><div class="bm-top-list-bar"><span class="bm-top-list-bar-fill" style="width:64%;"></span></div></div><span class="bm-top-list-value">29%</span></div>
+              <div class="bm-top-list-row"><span class="bm-top-rank">3</span><div class="bm-top-list-info"><strong>Cameras</strong><div class="bm-top-list-bar"><span class="bm-top-list-bar-fill" style="width:30%;"></span></div></div><span class="bm-top-list-value">14%</span></div>
+            </div>
+          </div>
+
+          <div class="bm-card bm-analytics-grid-full">
+            <div class="bm-card-head"><h3 class="bm-card-title">Orders &amp; Units Sold Over Time</h3></div>
+            <div class="bm-kpi-row">
+              <div class="bm-kpi-card"><span>Orders (30d)</span><strong>642</strong><span class="bm-kpi-trend c-success">+6.4%</span></div>
+              <div class="bm-kpi-card"><span>Units Sold (30d)</span><strong>1,180</strong><span class="bm-kpi-trend c-success">+8.1%</span></div>
+              <div class="bm-kpi-card"><span>Avg. Order Value</span><strong>Rs. 8,940</strong><span class="bm-kpi-trend c-success">+2.2%</span></div>
+              <div class="bm-kpi-card"><span>Sales Growth (MoM)</span><strong>9.1%</strong><span class="bm-kpi-trend c-success">Trending up</span></div>
+            </div>
+            <div class="bm-bar-mini-chart" id="bmProductGrowthChart" style="margin-top: 18px;">
+              <span style="--bm-bar-h: 34%;"></span><span style="--bm-bar-h: 40%;"></span><span style="--bm-bar-h: 38%;"></span><span style="--bm-bar-h: 52%;"></span>
+              <span style="--bm-bar-h: 58%;"></span><span style="--bm-bar-h: 50%;"></span><span style="--bm-bar-h: 66%;"></span><span style="--bm-bar-h: 72%;"></span>
+              <span style="--bm-bar-h: 64%;"></span><span style="--bm-bar-h: 80%;"></span><span style="--bm-bar-h: 90%;"></span><span style="--bm-bar-h: 100%;"></span>
+            </div>
+            <div class="bm-mini-chart-caption">
+              <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== VISIBILITY PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="visibility" aria-label="Brand Visibility">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              Visibility &amp; Marketplace Settings
+            </h3>
+          </div>
+
+          <div class="bm-toggle-list">
+            <div class="bm-toggle-row">
+              <div class="bm-toggle-text"><strong>Brand Active</strong><small>Brand is live and sellable on the marketplace</small></div>
+              <label class="bm-switch"><input type="checkbox" checked data-bm-toggle="active" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label>
+            </div>
+            <div class="bm-toggle-row">
+              <div class="bm-toggle-text"><strong>Featured Brand</strong><small>Highlighted across the marketplace and homepage rotation</small></div>
+              <label class="bm-switch"><input type="checkbox" checked data-bm-toggle="featured" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label>
+            </div>
+            <div class="bm-toggle-row">
+              <div class="bm-toggle-text"><strong>Visible in Search</strong><small>Brand appears in storefront search results</small></div>
+              <label class="bm-switch"><input type="checkbox" checked data-bm-toggle="search" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label>
+            </div>
+            <div class="bm-toggle-row">
+              <div class="bm-toggle-text"><strong>Visible in Brand Directory</strong><small>Listed on the public "All Brands" page</small></div>
+              <label class="bm-switch"><input type="checkbox" checked data-bm-toggle="directory" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label>
+            </div>
+            <div class="bm-toggle-row">
+              <div class="bm-toggle-text"><strong>Visible on Homepage</strong><small>Eligible for homepage brand carousel</small></div>
+              <label class="bm-switch"><input type="checkbox" checked data-bm-toggle="homepage" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label>
+            </div>
+            <div class="bm-toggle-row">
+              <div class="bm-toggle-text"><strong>Visible in Navigation</strong><small>Shown in the primary storefront navigation menu</small></div>
+              <label class="bm-switch"><input type="checkbox" data-bm-toggle="navigation" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label>
+            </div>
+          </div>
+
+          <div class="bm-toggle-row" style="border-top: 1px solid var(--bm-border); margin-top: 8px; padding-top: 16px;">
+            <div class="bm-toggle-text"><strong>Display Order</strong><small>Lower numbers appear first in the directory</small></div>
+            <div class="bm-order-input-row">
+              <input type="number" class="bm-order-input" value="4" min="0" id="bmDisplayOrderInput" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== SEO PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="seo" aria-label="Brand SEO">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+              Search Engine Optimization
+            </h3>
+          </div>
+
+          <div class="bm-form-group bm-form-group-full" style="margin-bottom: 16px;">
+            <label for="bmSeoTitle">SEO Title</label>
+            <input type="text" id="bmSeoTitle" value="NovaTech — Smart Electronics &amp; Wearables | MarketSphere" maxlength="60" />
+            <span class="bm-seo-char-counter" id="bmSeoTitleCounter">52 / 60</span>
+          </div>
+
+          <div class="bm-form-group bm-form-group-full" style="margin-bottom: 16px;">
+            <label for="bmSeoDescription">SEO Description</label>
+            <textarea id="bmSeoDescription" maxlength="160">Shop NovaTech's official range of smart electronics, wearables, and cameras on MarketSphere. Verified brand, fast local warranty support.</textarea>
+            <span class="bm-seo-char-counter" id="bmSeoDescCounter">142 / 160</span>
+          </div>
+
+          <div class="bm-form-group bm-form-group-full" style="margin-bottom: 16px;">
+            <label for="bmSeoCanonical">Canonical URL</label>
+            <input type="text" id="bmSeoCanonical" value="https://marketsphere.com/brands/novatech" />
+          </div>
+
+          <div class="bm-form-group bm-form-group-full" style="margin-bottom: 18px;">
+            <label>SEO Keywords</label>
+            <div class="bm-keyword-tags">
+              <span class="bm-keyword-tag">novatech</span>
+              <span class="bm-keyword-tag">smart electronics</span>
+              <span class="bm-keyword-tag">wearables pakistan</span>
+              <span class="bm-keyword-tag">smart watch</span>
+              <span class="bm-keyword-tag">action camera</span>
+            </div>
+          </div>
+
+          <div class="bm-card-head" style="margin-top: 4px;"><h4 class="bm-card-title" style="font-size: 13px;">Google Search Preview</h4></div>
+          <div class="bm-seo-preview">
+            <div class="bm-seo-preview-url">marketsphere.com &rsaquo; brands &rsaquo; novatech</div>
+            <div class="bm-seo-preview-title" id="bmSeoPreviewTitle">NovaTech — Smart Electronics &amp; Wearables | MarketSphere</div>
+            <div class="bm-seo-preview-desc" id="bmSeoPreviewDesc">Shop NovaTech's official range of smart electronics, wearables, and cameras on MarketSphere. Verified brand, fast local warranty support.</div>
+          </div>
+
+          <div class="bm-edit-toggle-row" style="margin-top: 18px;">
+            <button type="button" class="bm-btn bm-btn-primary bm-btn-sm" id="bmSaveSeoBtn">Save SEO Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PERFORMANCE PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="performance" aria-label="Brand Performance">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg>
+              Performance Summary
+            </h3>
+          </div>
+          <div class="bm-perf-grid">
+            <div class="bm-perf-card"><div class="bm-perf-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></div><div class="bm-perf-text"><strong>#4</strong><span>Marketplace Rank</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg></div><div class="bm-perf-text"><strong>312</strong><span>Product Count</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"></path><path d="M7 15l4-5 3 3 5-7"></path></svg></div><div class="bm-perf-text"><strong>#2</strong><span>Sales Rank (Electronics)</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon c-success"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></div><div class="bm-perf-text"><strong>4.7 &#9733;</strong><span>Customer Rating</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon c-success"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path></svg></div><div class="bm-perf-text"><strong>96.2%</strong><span>Customer Satisfaction</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon c-success"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></div><div class="bm-perf-text"><strong>1.8%</strong><span>Return Rate</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon c-success"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="18 15 12 9 6 15"></polyline></svg></div><div class="bm-perf-text"><strong>+9.1%</strong><span>Growth (MoM)</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4z"></path><path d="M4 12h10v4H4z"></path></svg></div><div class="bm-perf-text"><strong>Electronics</strong><span>Top Category</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></div><div class="bm-perf-text"><strong>Smart Watch Series 4</strong><span>Top Product</span></div></div>
+            <div class="bm-perf-card"><div class="bm-perf-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg></div><div class="bm-perf-text"><strong>NovaTech Direct</strong><span>Top Seller</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== ACTIVITY PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="activity" aria-label="Brand Activity">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+              Activity Timeline
+            </h3>
+            <div class="bm-filter-pills" id="bmActivityFilters">
+              <button type="button" class="bm-pill is-active" data-bm-filter="all">All</button>
+              <button type="button" class="bm-pill" data-bm-filter="brand">Brand</button>
+              <button type="button" class="bm-pill" data-bm-filter="verification">Verification</button>
+              <button type="button" class="bm-pill" data-bm-filter="products">Products</button>
+              <button type="button" class="bm-pill" data-bm-filter="visibility">Visibility</button>
+              <button type="button" class="bm-pill" data-bm-filter="admin">Admin</button>
+            </div>
+          </div>
+
+          <ul class="bm-timeline" id="bmActivityTimeline">
+            <li class="bm-timeline-item" data-bm-type="verification">
+              <span class="bm-timeline-dot c-success"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Brand verified</strong><span class="bm-badge c-success">Success</span></div>
+                <p>All core verification documents approved by Sana Raza.</p>
+                <span class="bm-timeline-time">Mar 18, 2025 &middot; 1:20 PM</span>
+              </div>
+            </li>
+            <li class="bm-timeline-item" data-bm-type="verification">
+              <span class="bm-timeline-dot c-info"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Documents uploaded</strong></div>
+                <p>5 verification documents submitted for review.</p>
+                <span class="bm-timeline-time">Mar 15, 2025 &middot; 10:04 AM</span>
+              </div>
+            </li>
+            <li class="bm-timeline-item" data-bm-type="products">
+              <span class="bm-timeline-dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Product added</strong></div>
+                <p>"4K Action Camera" added to the NovaTech catalog.</p>
+                <span class="bm-timeline-time">Jul 21, 2026 &middot; 3:12 PM</span>
+              </div>
+            </li>
+            <li class="bm-timeline-item" data-bm-type="visibility">
+              <span class="bm-timeline-dot c-accent"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Brand featured</strong></div>
+                <p>Added to the homepage brand carousel by admin.</p>
+                <span class="bm-timeline-time">Jun 30, 2026 &middot; 9:45 AM</span>
+              </div>
+            </li>
+            <li class="bm-timeline-item" data-bm-type="brand">
+              <span class="bm-timeline-dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"></path></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Description updated</strong></div>
+                <p>Brand description refreshed to reflect new product lines.</p>
+                <span class="bm-timeline-time">May 12, 2026 &middot; 4:30 PM</span>
+              </div>
+            </li>
+            <li class="bm-timeline-item" data-bm-type="admin">
+              <span class="bm-timeline-dot c-info"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Admin updated SEO settings</strong></div>
+                <p>Hammad Ashraf updated the brand's SEO title and description.</p>
+                <span class="bm-timeline-time">Apr 2, 2026 &middot; 11:02 AM</span>
+              </div>
+            </li>
+            <li class="bm-timeline-item" data-bm-type="brand">
+              <span class="bm-timeline-dot c-accent"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path></svg></span>
+              <div class="bm-timeline-body">
+                <div class="bm-timeline-top"><strong>Brand created</strong></div>
+                <p>NovaTech was added to the marketplace catalog.</p>
+                <span class="bm-timeline-time">Feb 10, 2025 &middot; 2:00 PM</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ========== ADMIN NOTES PANEL ========== -->
+      <section class="bm-drawer-panel" data-bm-panel="notes" aria-label="Admin Notes">
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>
+              Private Admin Notes
+            </h3>
+            <button type="button" class="bm-btn bm-btn-primary bm-btn-sm" data-bm-open-modal="bmAddNoteModal">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Add Note
+            </button>
+          </div>
+
+          <div class="bm-notes-list" id="bmNotesList">
+            <div class="bm-note-card is-pinned">
+              <div class="bm-note-head">
+                <span class="bm-note-avatar">S</span>
+                <div class="bm-note-meta"><strong>Sana Raza</strong><span>Mar 18, 2025 &middot; 1:25 PM &middot; Verification</span></div>
+                <span class="bm-badge c-info">Pinned</span>
+              </div>
+              <p class="bm-note-content">Strong first-time verification submission — all documents were clear and consistent. Good candidate for early featured placement.</p>
+              <div class="bm-note-actions">
+                <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Editing notes isn&#8217;t available yet.">Edit</button>
+                <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Note unpinned.">Unpin</button>
+                <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm c-danger" data-bm-toast="danger" data-bm-toast-msg="Note deleted.">Delete</button>
+              </div>
+            </div>
+            <div class="bm-note-card">
+              <div class="bm-note-head">
+                <span class="bm-note-avatar">H</span>
+                <div class="bm-note-meta"><strong>Hammad Ashraf</strong><span>Jun 30, 2026 &middot; 9:50 AM &middot; Marketing</span></div>
+                <span class="bm-badge c-accent">Normal</span>
+              </div>
+              <p class="bm-note-content">Featured on homepage ahead of the smart-home promotion. Monitor conversion uplift over the next 2 weeks.</p>
+              <div class="bm-note-actions">
+                <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Editing notes isn&#8217;t available yet.">Edit</button>
+                <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm" data-bm-toast="info" data-bm-toast-msg="Note pinned.">Pin</button>
+                <button type="button" class="bm-btn bm-btn-ghost bm-btn-sm c-danger" data-bm-toast="danger" data-bm-toast-msg="Note deleted.">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ DRAWER FOOTER ============ -->
+    <div class="bm-drawer-footer">
+      <button type="button" class="bm-btn bm-btn-danger-outline bm-btn-sm" data-bm-open-modal="bmDeleteBrandModal">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Delete Brand
+      </button>
+      <button type="button" class="bm-btn bm-btn-outline bm-btn-sm" id="bmDeactivateFooterBtn">Deactivate</button>
+      <button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" id="bmDrawerExportBtn">Export Brand</button>
+      <button type="button" class="bm-btn bm-btn-primary bm-btn-sm" id="bmDrawerCloseFooterBtn">Close</button>
+    </div>
+  </aside>
+</div>
+
+<!-- ==========================================================================
+     MODALS
+     ========================================================================== -->
+
+<!-- ============ ADD / EDIT BRAND MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmAddBrandModal" data-bm-modal>
+  <div class="bm-modal bm-modal-xl" role="dialog" aria-modal="true" aria-labelledby="bmAddBrandModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+    </button>
+    <div class="bm-modal-header">
+      <div>
+        <h3 class="bm-modal-header-title" id="bmAddBrandModalTitle">Add New Brand</h3>
+        <p class="bm-modal-header-sub">Create a new marketplace brand profile.</p>
+      </div>
+    </div>
+
+    <div class="bm-modal-tabs" id="bmAddBrandTabs">
+      <button type="button" class="bm-modal-tab is-active" data-bm-modal-tab="basics">Basics</button>
+      <button type="button" class="bm-modal-tab" data-bm-modal-tab="contact">Contact</button>
+      <button type="button" class="bm-modal-tab" data-bm-modal-tab="visibility">Visibility</button>
+      <button type="button" class="bm-modal-tab" data-bm-modal-tab="seo">SEO</button>
+    </div>
+
+    <div class="bm-modal-body-scroll">
+      <form id="bmAddBrandForm">
+        <div class="bm-modal-tab-panel is-active" data-bm-modal-panel="basics">
+          <div class="bm-form-grid">
+            <div class="bm-form-group"><label for="bmNewBrandName">Brand Name <span class="c-danger">*</span></label><input type="text" id="bmNewBrandName" placeholder="e.g. Urban Threads Co." required /></div>
+            <div class="bm-form-group"><label for="bmNewSlug">Slug</label><input type="text" id="bmNewSlug" placeholder="urban-threads-co" /></div>
+            <div class="bm-form-group"><label for="bmNewBrandType">Brand Type</label>
+              <select id="bmNewBrandType"><option>Manufacturer</option><option>Distributor</option><option>Reseller</option><option>Private Label</option></select>
+            </div>
+            <div class="bm-form-group"><label for="bmNewWebsite">Website</label><input type="url" id="bmNewWebsite" placeholder="https://" /></div>
+            <div class="bm-form-group"><label for="bmNewCountry">Country of Origin</label><input type="text" id="bmNewCountry" placeholder="Pakistan" /></div>
+            <div class="bm-form-group"><label for="bmNewFounded">Founded Year</label><input type="number" id="bmNewFounded" min="1800" max="2026" placeholder="2020" /></div>
+            <div class="bm-form-group bm-form-group-full"><label for="bmNewDescription">Description</label><textarea id="bmNewDescription" placeholder="Short brand description shown across the marketplace"></textarea></div>
+            <div class="bm-form-group"><label>Brand Logo</label>
+              <div class="bm-upload-box">
+                <div class="bm-upload-preview"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></div>
+                <div><input type="file" id="bmNewLogo" hidden accept="image/*" /><button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-file-input="bmNewLogo">Upload Logo</button></div>
+              </div>
+            </div>
+            <div class="bm-form-group"><label>Cover Image</label>
+              <div class="bm-upload-box">
+                <div class="bm-upload-preview"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></div>
+                <div><input type="file" id="bmNewCover" hidden accept="image/*" /><button type="button" class="bm-btn bm-btn-secondary bm-btn-sm" data-file-input="bmNewCover">Upload Cover</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bm-modal-tab-panel" data-bm-modal-panel="contact">
+          <div class="bm-form-grid">
+            <div class="bm-form-group"><label for="bmNewEmail">Official Email</label><input type="email" id="bmNewEmail" placeholder="contact@brand.com" /></div>
+            <div class="bm-form-group"><label for="bmNewPhone">Official Phone</label><input type="text" id="bmNewPhone" placeholder="+92 300 0000000" /></div>
+            <div class="bm-form-group"><label for="bmNewContactPerson">Contact Person</label><input type="text" id="bmNewContactPerson" placeholder="Full name" /></div>
+            <div class="bm-form-group"><label for="bmNewRegNumber">Business Registration Number</label><input type="text" id="bmNewRegNumber" placeholder="REG-00000" /></div>
+            <div class="bm-form-group"><label for="bmNewTrademark">Trademark Number</label><input type="text" id="bmNewTrademark" placeholder="TM-0000-0000" /></div>
+            <div class="bm-form-group"><label for="bmNewFacebook">Facebook</label><input type="text" id="bmNewFacebook" placeholder="Page name" /></div>
+            <div class="bm-form-group"><label for="bmNewInstagram">Instagram</label><input type="text" id="bmNewInstagram" placeholder="@handle" /></div>
+            <div class="bm-form-group"><label for="bmNewLinkedin">LinkedIn</label><input type="text" id="bmNewLinkedin" placeholder="Company page" /></div>
+          </div>
+        </div>
+
+        <div class="bm-modal-tab-panel" data-bm-modal-panel="visibility">
+          <div class="bm-toggle-list">
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Status</strong><small>Active brands can list products immediately</small></div><label class="bm-switch"><input type="checkbox" checked /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Verification Status</strong><small>Set as pending until documents are reviewed</small></div>
+              <div class="bm-select-wrap"><select class="bm-select"><option>Unverified</option><option selected>Pending Verification</option><option>Verified</option></select></div>
+            </div>
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Featured</strong><small>Add to homepage rotation immediately</small></div><label class="bm-switch"><input type="checkbox" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Search Visibility</strong><small>Show in storefront search results</small></div><label class="bm-switch"><input type="checkbox" checked /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Homepage Visibility</strong><small>Eligible for homepage brand carousel</small></div><label class="bm-switch"><input type="checkbox" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Navigation Visibility</strong><small>Shown in the primary storefront navigation menu</small></div><label class="bm-switch"><input type="checkbox" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+            <div class="bm-toggle-row"><div class="bm-toggle-text"><strong>Display Order</strong><small>Lower numbers appear first</small></div><input type="number" class="bm-order-input" value="0" min="0" /></div>
+          </div>
+        </div>
+
+        <div class="bm-modal-tab-panel" data-bm-modal-panel="seo">
+          <div class="bm-form-grid">
+            <div class="bm-form-group bm-form-group-full"><label for="bmNewSeoTitle">SEO Title</label><input type="text" id="bmNewSeoTitle" maxlength="60" placeholder="Brand Name — Category | MarketSphere" /></div>
+            <div class="bm-form-group bm-form-group-full"><label for="bmNewSeoDesc">SEO Description</label><textarea id="bmNewSeoDesc" maxlength="160" placeholder="One or two sentences describing the brand for search results"></textarea></div>
+            <div class="bm-form-group bm-form-group-full"><label for="bmNewSeoKeywords">SEO Keywords</label><input type="text" id="bmNewSeoKeywords" placeholder="Comma-separated keywords" /></div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="submit" form="bmAddBrandForm" class="bm-btn bm-btn-primary" id="bmCreateBrandBtn"><span class="bm-btn-label">Create Brand</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VERIFY BRAND MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmVerifyModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmVerifyModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-success"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg></div>
+    <h3 class="bm-modal-title">Verify Brand</h3>
+    <p class="bm-modal-text">Confirm this brand meets MarketSphere's verification criteria. The brand will receive a verified badge across the marketplace.</p>
+    <div class="bm-form-group" style="margin-bottom: 14px;"><label for="bmVerifyNotes">Verification Notes</label><textarea id="bmVerifyNotes" placeholder="Internal notes about this verification (optional)"></textarea></div>
+    <div class="bm-toggle-row" style="padding: 10px 0;"><div class="bm-toggle-text"><strong>Notify Brand</strong><small>Send a confirmation email to the brand contact</small></div><label class="bm-switch"><input type="checkbox" checked /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-confirm-action data-bm-toast="success" data-bm-toast-msg="Brand verified successfully."><span class="bm-btn-label">Verify Brand</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REJECT VERIFICATION MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmRejectVerificationModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmRejectModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></div>
+    <h3 class="bm-modal-title" id="bmRejectModalTitle">Reject Verification</h3>
+    <p class="bm-modal-text">Provide a reason. This will be included in the notification sent to the brand.</p>
+    <div class="bm-form-group" style="margin-bottom: 14px;">
+      <label for="bmRejectReason">Rejection Reason</label>
+      <select id="bmRejectReason">
+        <option>Incomplete or invalid documentation</option>
+        <option>Failed ownership verification</option>
+        <option>Trademark could not be confirmed</option>
+        <option>Duplicate brand submission</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="bm-form-group" style="margin-bottom: 14px;"><label for="bmRejectMessage">Custom Message</label><textarea id="bmRejectMessage" placeholder="Explain the decision to help the brand understand&hellip;"></textarea></div>
+    <div class="bm-toggle-row" style="padding: 8px 0;"><div class="bm-toggle-text"><strong>Allow Reapplication</strong><small>Brand can resubmit for verification later</small></div><label class="bm-switch"><input type="checkbox" checked /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-danger" data-bm-confirm-action data-bm-toast="danger" data-bm-toast-msg="Verification rejected."><span class="bm-btn-label">Reject</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REQUEST DOCUMENTS MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmRequestDocsModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmRequestDocsModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-accent"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M17 8l-5-5-5 5"></path><path d="M12 3v12"></path></svg></div>
+    <h3 class="bm-modal-title" id="bmRequestDocsModalTitle">Request Documents</h3>
+    <p class="bm-modal-text">Select the documents required before verification can continue.</p>
+    <div class="bm-modal-checklist">
+      <label class="bm-checkbox-row"><input type="checkbox" /><span class="bm-checkbox-row-box"></span><span class="bm-checkbox-row-text">Business Registration Certificate</span></label>
+      <label class="bm-checkbox-row"><input type="checkbox" /><span class="bm-checkbox-row-box"></span><span class="bm-checkbox-row-text">Trademark Certificate</span></label>
+      <label class="bm-checkbox-row"><input type="checkbox" checked /><span class="bm-checkbox-row-box"></span><span class="bm-checkbox-row-text">Brand Identity Kit</span></label>
+      <label class="bm-checkbox-row"><input type="checkbox" /><span class="bm-checkbox-row-box"></span><span class="bm-checkbox-row-text">Tax Certificate</span></label>
+      <label class="bm-checkbox-row"><input type="checkbox" /><span class="bm-checkbox-row-box"></span><span class="bm-checkbox-row-text">Additional Supporting Document</span></label>
+    </div>
+    <div class="bm-form-group" style="margin-bottom: 14px;"><label for="bmRequestDocsInstructions">Custom Instructions</label><textarea id="bmRequestDocsInstructions" placeholder="Explain what is needed from the brand&hellip;"></textarea></div>
+    <div class="bm-form-group" style="margin-bottom: 14px;"><label for="bmRequestDocsDeadline">Deadline</label><input type="date" id="bmRequestDocsDeadline" /></div>
+    <div class="bm-toggle-row" style="padding: 8px 0;"><div class="bm-toggle-text"><strong>Notify Brand</strong><small>Send an email with the document request</small></div><label class="bm-switch"><input type="checkbox" checked /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-confirm-action data-bm-toast="info" data-bm-toast-msg="Document request sent to brand."><span class="bm-btn-label">Request Documents</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REVOKE VERIFICATION MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmRevokeVerificationModal" data-bm-modal>
+  <div class="bm-modal" role="dialog" aria-modal="true" aria-labelledby="bmRevokeModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg></div>
+    <h3 class="bm-modal-title" id="bmRevokeModalTitle">Revoke Verification?</h3>
+    <p class="bm-modal-text">This brand will lose its verified badge and marketplace trust signals until re-verified. This action should only be used when serious issues are found.</p>
+    <div class="bm-form-group" style="margin-bottom: 8px; text-align: left;"><label for="bmRevokeReason">Reason</label><textarea id="bmRevokeReason" placeholder="Explain why verification is being revoked&hellip;"></textarea></div>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-danger" data-bm-confirm-action data-bm-toast="danger" data-bm-toast-msg="Verification revoked."><span class="bm-btn-label">Revoke</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VISIBILITY ACTION MODALS ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmActivateModal" data-bm-modal>
+  <div class="bm-modal" role="dialog" aria-modal="true">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-success"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg></div>
+    <h3 class="bm-modal-title">Activate Brand?</h3>
+    <p class="bm-modal-text">Products under this brand will become visible and purchasable across the marketplace.</p>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-confirm-action data-bm-toast="success" data-bm-toast-msg="Brand activated."><span class="bm-btn-label">Activate</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="bm-modal-overlay is-hidden" id="bmDeactivateModal" data-bm-modal>
+  <div class="bm-modal" role="dialog" aria-modal="true">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-warning"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg></div>
+    <h3 class="bm-modal-title">Deactivate Brand?</h3>
+    <p class="bm-modal-text">Products under this brand will be hidden from the storefront until reactivated. Existing orders are not affected.</p>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-warning" data-bm-confirm-action data-bm-toast="info" data-bm-toast-msg="Brand deactivated."><span class="bm-btn-label">Deactivate</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="bm-modal-overlay is-hidden" id="bmFeatureModal" data-bm-modal>
+  <div class="bm-modal" role="dialog" aria-modal="true">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-accent"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.6 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2Z"></path></svg></div>
+    <h3 class="bm-modal-title">Feature this Brand?</h3>
+    <p class="bm-modal-text">The brand will be highlighted in the homepage carousel and directory feature rotation.</p>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-confirm-action data-bm-toast="success" data-bm-toast-msg="Brand featured."><span class="bm-btn-label">Feature Brand</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DELETE BRAND MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmDeleteBrandModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmDeleteModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"></path></svg></div>
+    <h3 class="bm-modal-title" id="bmDeleteModalTitle">Delete Brand?</h3>
+    <p class="bm-modal-text">This brand is currently associated with active products, categories, and orders. Deleting it permanently cannot be undone.</p>
+
+    <div class="bm-impact-list">
+      <div class="bm-impact-row"><span>Products affected</span><strong>312</strong></div>
+      <div class="bm-impact-row"><span>Categories affected</span><strong>4</strong></div>
+      <div class="bm-impact-row"><span>Orders affected</span><strong>4,981</strong></div>
+    </div>
+
+    <div class="bm-delete-options">
+      <button type="button" class="bm-btn bm-btn-outline" data-bm-toast="info" data-bm-toast-msg="Product reassignment is not configured yet.">Reassign Products to Another Brand</button>
+      <button type="button" class="bm-btn bm-btn-outline" id="bmRemoveBrandProductsBtn">Remove Brand From Products</button>
+      <button type="button" class="bm-btn bm-btn-outline" id="bmDeactivateInsteadBtn">Deactivate Instead</button>
+    </div>
+
+    <div class="bm-form-group" style="margin-bottom: 6px;">
+      <label for="bmDeleteConfirmInput">Type <strong>DELETE</strong> to confirm permanent deletion</label>
+      <input type="text" id="bmDeleteConfirmInput" placeholder="DELETE" autocomplete="off" />
+    </div>
+
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-danger" id="bmDeleteConfirmBtn" disabled data-bm-toast="danger" data-bm-toast-msg="Brand deleted permanently."><span class="bm-btn-label">Delete Permanently</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADD NOTE MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmAddNoteModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmAddNoteModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-accent"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></div>
+    <h3 class="bm-modal-title" id="bmAddNoteModalTitle">Add Admin Note</h3>
+    <p class="bm-modal-text">Private notes are visible only to marketplace administrators.</p>
+
+    <div class="bm-form-group" style="margin-bottom: 14px;"><label for="bmNewNoteText">Note</label><textarea id="bmNewNoteText" placeholder="Write a private note about this brand&hellip;"></textarea></div>
+
+    <div class="bm-form-grid" style="margin-bottom: 14px;">
+      <div class="bm-form-group">
+        <label for="bmNewNotePriority">Priority</label>
+        <select id="bmNewNotePriority"><option value="low">Low</option><option value="normal" selected>Normal</option><option value="high">High</option></select>
+      </div>
+      <div class="bm-form-group">
+        <label for="bmNewNoteCategory">Category</label>
+        <select id="bmNewNoteCategory"><option>General</option><option>Verification</option><option>Marketing</option><option>Compliance</option><option>Risk</option></select>
+      </div>
+    </div>
+
+    <div class="bm-toggle-row" style="padding: 6px 0;"><div class="bm-toggle-text"><strong>Pin Note</strong><small>Keep this note at the top of the list</small></div><label class="bm-switch"><input type="checkbox" id="bmNewNotePin" /><span class="bm-switch-track"><span class="bm-switch-thumb"></span></span></label></div>
+
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" id="bmSaveNoteBtn"><span class="bm-btn-label">Save Note</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DOCUMENT PREVIEW MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmDocPreviewModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmDocPreviewTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <h3 class="bm-modal-title" id="bmDocPreviewTitle">Document Preview</h3>
+    <div style="width:100%; min-height: 260px; border-radius: var(--bm-radius-sm); background-color: var(--bm-bg); border: 1px dashed var(--bm-border); display:flex; align-items:center; justify-content:center; color: var(--bm-accent);">
+      <svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+    </div>
+    <div class="bm-modal-actions" style="margin-top: 18px;">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Close</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-toast="info" data-bm-toast-msg="Downloading document&hellip;">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>Download
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXPORT MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmExportModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmExportModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-accent"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+    <h3 class="bm-modal-title" id="bmExportModalTitle">Export Brands</h3>
+    <p class="bm-modal-text">Choose what to export and the file format.</p>
+
+    <div class="bm-form-group" style="margin-bottom: 14px;">
+      <label for="bmExportScope">Scope</label>
+      <select id="bmExportScope">
+        <option value="all">Export All Brands</option>
+        <option value="selected">Export Selected</option>
+        <option value="visible">Export Visible (Filtered)</option>
+      </select>
+    </div>
+
+    <div class="bm-form-group" style="margin-bottom: 6px;">
+      <label>Format</label>
+      <div class="bm-chips-row">
+        <button type="button" class="bm-chip is-active" data-bm-export-format="csv">CSV</button>
+        <button type="button" class="bm-chip" data-bm-export-format="json">JSON</button>
+        <button type="button" class="bm-chip" data-bm-export-format="pdf">PDF</button>
+      </div>
+    </div>
+
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-confirm-action data-bm-toast="success" data-bm-toast-msg="Export started &mdash; you&#8217;ll be notified when it&#8217;s ready."><span class="bm-btn-label">Export</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ IMPORT MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmImportModal" data-bm-modal>
+  <div class="bm-modal bm-modal-lg" role="dialog" aria-modal="true" aria-labelledby="bmImportModalTitle">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon c-accent"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>
+    <h3 class="bm-modal-title" id="bmImportModalTitle">Import Brands</h3>
+    <p class="bm-modal-text">Upload a CSV or JSON file to preview and validate brand records before importing.</p>
+
+    <div class="bm-import-dropzone" id="bmImportDropzone" tabindex="0" role="button" aria-label="Upload import file">
+      <input type="file" id="bmImportFileInput" hidden accept=".csv,.json" />
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" style="margin: 0 auto 10px; color: var(--bm-accent-strong);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      <p style="font-weight: 700; color: var(--bm-heading); margin-bottom: 3px; font-size: 13.5px;">Drag &amp; drop your file here</p>
+      <p style="font-size: 12.5px; color: var(--bm-caption);">or <span style="color: var(--bm-accent-strong); font-weight: 700; text-decoration: underline;">browse from your device</span></p>
+      <p style="font-size: 11.5px; color: var(--bm-caption); margin-top: 6px;">CSV or JSON &middot; up to 5MB</p>
+    </div>
+
+    <div id="bmImportPreview" class="bm-hidden" style="margin-top: 16px;">
+      <p style="font-size: 12.5px; font-weight: 700; color: var(--bm-heading); margin-bottom: 8px;">Preview &amp; Validation</p>
+      <div class="bm-mini-table-wrap">
+        <table class="bm-mini-table">
+          <thead><tr><th>Brand Name</th><th>Slug</th><th>Country</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Sample Brand Co.</td><td>sample-brand-co</td><td>Pakistan</td><td><span class="bm-badge c-success">Valid</span></td></tr>
+            <tr><td>Test Imports Ltd</td><td>test-imports-ltd</td><td>UAE</td><td><span class="bm-badge c-success">Valid</span></td></tr>
+            <tr><td>(missing name)</td><td>&mdash;</td><td>China</td><td><span class="bm-badge c-danger">Error</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-primary" data-bm-confirm-action data-bm-toast="success" data-bm-toast-msg="2 brands imported successfully."><span class="bm-btn-label">Import Brands</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ BULK DELETE CONFIRM MODAL ============ -->
+<div class="bm-modal-overlay is-hidden" id="bmBulkDeleteModal" data-bm-modal>
+  <div class="bm-modal" role="dialog" aria-modal="true">
+    <button type="button" class="bm-modal-close" data-bm-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+    <div class="bm-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+    <h3 class="bm-modal-title" id="bmBulkDeleteModalTitle">Delete Selected Brands?</h3>
+    <p class="bm-modal-text" id="bmBulkDeleteModalText">This will permanently delete the selected brands. This cannot be undone.</p>
+    <div class="bm-modal-actions">
+      <button type="button" class="bm-btn bm-btn-secondary" data-bm-close-modal>Cancel</button>
+      <button type="button" class="bm-btn bm-btn-danger" id="bmBulkDeleteConfirmBtn"><span class="bm-btn-label">Yes, Delete</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST CONTAINER ================= -->
+<div class="bm-toast-container" id="bmToastContainer" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static '/js/brands.js' %}"></script>
+{% endblock %}

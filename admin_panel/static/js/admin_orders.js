@@ -199,10 +199,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const action = actionItem.dataset.rowAction;
         const row = actionItem.closest('.so-row');
-        let orderNumber = actionItem.dataset.orderNumber || (row ? row.dataset.orderNumber : '');
-        orderNumber = orderNumber.split('-')[1];
+
+        const orderNumber =
+            actionItem.dataset.orderNumber ||
+            (row ? row.dataset.orderNumber : '');
+
+        if (!orderNumber) return;
+
+
         if (action === 'view') {
-            window.location.href = "/seller/orders/"+orderNumber;
+            window.location.href = "/admin-db/sales/order/" + orderNumber;
         } else if (action === 'print') {
             window.open(`/order/${orderNumber}/invoice/`, "_blank");
         } else if (action === 'contact') {
@@ -366,8 +372,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (exportOrdersBtn) {
         exportOrdersBtn.addEventListener('click', function () {
-            let sellerId = exportOrdersBtn.dataset.sellerId;
-            window.location.href = `/admin-db/sellers/${sellerId}/export-orders/`;
+            window.alert('Exporting orders isn\u2019t available yet \u2014 check back soon.');
         });
     }
 

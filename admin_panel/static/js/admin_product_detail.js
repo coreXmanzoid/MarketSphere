@@ -82,27 +82,27 @@
     })();
 
     /* ================= TOASTS ================= */
-    var toastContainer = document.getElementById("apdToastContainer");
-    function showToast(message, type) {
-        if (!toastContainer || !message) return;
-        var toast = document.createElement("div");
-        toast.className = "apd-toast" + (type ? " apd-toast-" + type : "");
-        var iconPaths = {
-            success: '<path d="M20 6 9 17l-5-5"></path>',
-            danger: '<path d="M18 6 6 18M6 6l12 12"></path>',
-            warning: '<path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="10"></circle>',
-            info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>'
-        };
-        var icon = iconPaths[type] || iconPaths.info;
-        toast.innerHTML =
-            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg>" +
-            '<span>' + message + "</span>";
-        toastContainer.appendChild(toast);
-        setTimeout(function () {
-            toast.classList.add("is-leaving");
-            setTimeout(function () { toast.remove(); }, 220);
-        }, 3400);
-    }
+    // var toastContainer = document.getElementById("apdToastContainer");
+    // function showToast(message, type) {
+    //     if (!toastContainer || !message) return;
+    //     var toast = document.createElement("div");
+    //     toast.className = "apd-toast" + (type ? " apd-toast-" + type : "");
+    //     var iconPaths = {
+    //         success: '<path d="M20 6 9 17l-5-5"></path>',
+    //         danger: '<path d="M18 6 6 18M6 6l12 12"></path>',
+    //         warning: '<path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="10"></circle>',
+    //         info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>'
+    //     };
+    //     var icon = iconPaths[type] || iconPaths.info;
+    //     toast.innerHTML =
+    //         '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg>" +
+    //         '<span>' + message + "</span>";
+    //     toastContainer.appendChild(toast);
+    //     setTimeout(function () {
+    //         toast.classList.add("is-leaving");
+    //         setTimeout(function () { toast.remove(); }, 220);
+    //     }, 3400);
+    // }
 
     delegate(page, "click", "[data-apd-toast]", function (e, target) {
         var type = target.getAttribute("data-apd-toast");

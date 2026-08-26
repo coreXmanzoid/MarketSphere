@@ -62,9 +62,9 @@
     --so-shadow-md: 0 8px 22px rgba(78, 34, 15, 0.09);
     --so-shadow-lg: 0 18px 44px rgba(78, 34, 15, 0.16);
 
-    --so-radius-sm: 4px;
-    --so-radius-md: 10px;
-    --so-radius-lg: 20px;
+    --so-radius-sm: 2px;
+    --so-radius-md: 4px;
+    --so-radius-lg: 8px;
     --so-radius-pill: 999px;
 
     --so-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -315,6 +315,38 @@
     color: var(--so-muted);
     font-weight: 600;
 }
+
+.so-stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+
+.so-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--so-heading);
+    line-height: 1.2;
+}
+
+.so-stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.so-trend-up {
+    color: var(--so-success);
+}
+
+.so-trend-down {
+    color: var(--so-danger);
+}
+
 
 /* ================= 6. TOOLBAR & FILTERS ================= */
 .so-toolbar-card {

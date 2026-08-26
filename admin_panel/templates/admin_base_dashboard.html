@@ -106,7 +106,7 @@
               <div class="ad-nav-submenu">
                 <a href="{% url "catalog-products" %}" class="ad-nav-sublink" data-subpage="products">Product Management</a>
                 <a href="{% url "catalog-categories" %}" class="ad-nav-sublink" data-subpage="categories">Categories</a>
-                <a href="#" class="ad-nav-sublink" data-subpage="brands">Brands</a>
+                <a href="{% url "catalog-brands" %}" class="ad-nav-sublink" data-subpage="brands">Brands</a>
               </div>
             </li>
 
@@ -129,7 +129,7 @@
               </button>
 
               <div class="ad-nav-submenu">
-                <a href="#" class="ad-nav-sublink" data-subpage="orders">Orders</a>
+                <a href="{% url "sales-orders" %}" class="ad-nav-sublink" data-subpage="orders">Orders</a>
                 <a href="#" class="ad-nav-sublink" data-subpage="payments">Payments</a>
               </div>
             </li>

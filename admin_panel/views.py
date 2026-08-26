@@ -1,14 +1,21 @@
-from django.db.models import Sum, Q
+from django.db.models import Count, Sum, Q
 from django.db.models.functions import Coalesce
 from decimal import Decimal
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from accounts import services as account_services
 from accounts.models import User, Address
 from orders.models import Order
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.views.decorators.http import require_http_methods
+from django.db import IntegrityError, transaction
+from django.core.exceptions import ValidationError
+from products.models import Brand, Category
+import json
+import csv
+from django.utils.text import slugify
 
 # Create your views here.
 def dashboard(request):
@@ -93,8 +100,423 @@ def catalog_product(request, product_slug):
 
 
 def catalog_categories(request):
-    context = None
+    context = services.get_categories_data()
     return render(request, "catalog/categories/categories.html", context=context)
+
+from django.core.paginator import Paginator
+from django.shortcuts import render
+
+from orders import services as order_service
+
+
+from django.core.paginator import Paginator
+from django.shortcuts import render
+
+from orders import services as order_service
+
+
+def sales_orders(request):
+
+    orders = order_service.get_admin_orders()
+
+    paginator = Paginator(orders, 10)
+    page_obj = paginator.get_page(
+        request.GET.get("page", 1)
+    )
+
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+
+    admin_stats = order_service.get_admin_order_stats()
+
+    return render(request, "sales/orders/order_list.html", {
+        "dashboard_orders": page_obj,
+
+        "admin": admin_stats,
+
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "pagination_query": query_params,
+    })
+
+def sales_order(request, order_number):
+    order = Order.objects.filter(order_number=order_number).first()
+    return render(request, "sales/orders/order_detail.html", {'order' : order})
+
+def payment_management(request):
+    return render(request, "sales/payments/payment_management.html")
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+from . import services
+
+
+@require_http_methods(["GET"])
+def export_categories_api(request):
+    export_format = request.GET.get(
+        "format",
+        "CSV",
+    )
+
+    category_ids = request.GET.getlist(
+        "category_id"
+    )
+
+    try:
+        response = services.export_categories(
+            export_format=export_format,
+            category_ids=category_ids or None,
+        )
+
+        return response
+
+    except ValueError as exc:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": str(exc),
+            },
+            status=400,
+        )
+
+    except Exception:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "Unable to export categories.",
+            },
+            status=500,
+        )
+
+def _category_api_error(message, status=400):
+    return JsonResponse({"ok": False, "error": message}, status=status)
+
+@require_http_methods(["GET", "POST"])
+def category_api(request):
+
+    if request.method == "GET":
+        return JsonResponse({
+            "ok": True,
+            **services.get_categories_api_data(),
+        })
+
+    data = request.POST
+    image = request.FILES.get("image")
+
+    name = str(data.get("name") or "").strip()
+    slug = str(data.get("slug") or "").strip()
+
+    if not name or not slug:
+        return _category_api_error("Name and slug are required.")
+
+    parent = None
+    parent_id = data.get("parent_id")
+
+    if parent_id not in (None, ""):
+        try:
+            parent = Category.objects.filter(pk=parent_id).first()
+        except (TypeError, ValueError):
+            parent = None
+
+        if not parent:
+            return _category_api_error("Parent category was not found.")
+
+    is_active = str(
+        data.get("is_active", "true")
+    ).lower() == "true"
+
+    try:
+        with transaction.atomic():
+            if request.method == "POST":
+                category = Category(
+                    name=name,
+                    slug=slug,
+                    parent=parent,
+
+                    description=str(
+                        data.get("description") or ""
+                    ).strip(),
+                    icon=str(
+                        data.get("icon") or ""
+                    ).strip(),
+                    is_active=is_active,
+                    image=image if image else None,
+                )
+                category.full_clean()
+                category.save()
+            else:
+                category_id = request.resolver_match.kwargs.get(
+                    "category_id"
+                )
+
+                if not category_id:
+                    return _category_api_error(
+                        "Category ID is required for update."
+                    )
+
+                category = Category.objects.filter(
+                    pk=category_id
+                ).first()
+
+                if not category:
+                    return _category_api_error(
+                        "Category was not found.",
+                        status=404,
+                    )
+
+                if parent and parent.id == category.id:
+                    return _category_api_error(
+                        "A category cannot be its own parent."
+                    )
+
+                category.name = name
+                category.slug = slug
+                category.parent = parent
+                category.description = str(
+                    data.get("description") or ""
+                ).strip()
+                category.icon = str(
+                    data.get("icon") or ""
+                ).strip()
+                category.is_active = is_active
+
+                if image:
+                    category.image = image
+
+                category.full_clean()
+                category.save()
+
+    except IntegrityError:
+        return _category_api_error(
+            "A category with this name or slug already exists."
+        )
+    except ValidationError:
+        return _category_api_error(
+            "Category data or image is invalid. Please check the submitted fields."
+        )
+
+    return JsonResponse({
+        "ok": True,
+        "id": category.id,
+    })
+
+@require_http_methods(["POST", "PATCH", "PUT", "DELETE"])
+def category_api_detail(request, category_id):
+    category = Category.objects.filter(pk=category_id).first()
+
+    if not category:
+        return _category_api_error("Category was not found.", status=404)
+
+    if request.method == "DELETE":
+        if category.products.exists():
+            return _category_api_error(
+                "Categories with products cannot be deleted."
+            )
+        if category.children.exists():
+            return _category_api_error(
+                "Categories with subcategories cannot be deleted."
+            )
+
+        category.delete()
+        return JsonResponse({"ok": True})
+
+    content_type = request.content_type or ""
+
+    if content_type.startswith("multipart/form-data"):
+        data = request.POST
+        image = request.FILES.get("image")
+    else:
+        try:
+            data = json.loads(request.body or "{}")
+        except (TypeError, ValueError):
+            return _category_api_error("Invalid JSON request body.")
+
+        image = None
+
+    if "name" in data:
+        name = str(data.get("name") or "").strip()
+
+        if not name:
+            return _category_api_error("Name cannot be empty.")
+
+        category.name = name
+
+    if "slug" in data:
+        slug = str(data.get("slug") or "").strip()
+
+        if not slug:
+            return _category_api_error("Slug cannot be empty.")
+
+        category.slug = slug
+
+    if "description" in data:
+        category.description = str(
+            data.get("description") or ""
+        ).strip()
+
+    if "icon" in data:
+        category.icon = str(
+            data.get("icon") or ""
+        ).strip()
+
+    if "is_active" in data:
+        category.is_active = str(
+            data.get("is_active")
+        ).lower() == "true"
+
+    if "parent_id" in data:
+        parent_id = data.get("parent_id")
+
+        if parent_id in (None, ""):
+            category.parent = None
+        else:
+            if str(parent_id) == str(category.id):
+                return _category_api_error(
+                    "A category cannot be its own parent."
+                )
+
+            parent = Category.objects.filter(pk=parent_id).first()
+
+            if not parent:
+                return _category_api_error(
+                    "Parent category was not found."
+                )
+
+            descendant_ids = set()
+            pending_parent_ids = [category.id]
+            while pending_parent_ids:
+                child_ids = list(Category.objects.filter(
+                    parent_id__in=pending_parent_ids
+                ).values_list("id", flat=True))
+                descendant_ids.update(child_ids)
+                pending_parent_ids = child_ids
+
+            if parent.id in descendant_ids:
+                return _category_api_error(
+                    "A category cannot be moved below its descendant."
+                )
+
+            category.parent = parent
+
+    if image:
+        category.image = image
+
+    try:
+        category.full_clean()
+        category.save()
+
+    except IntegrityError:
+        return _category_api_error(
+            "A category with this name or slug already exists."
+        )
+    except ValidationError:
+        return _category_api_error(
+            "Category data or image is invalid. Please check the submitted fields."
+        )
+
+    return JsonResponse({
+        "ok": True,
+        "id": category.id,
+    })
+
+def catalog_brands(request):
+    context = services.get_brands_data()
+    return render(request, "catalog/brands/brands.html", context)
+
+
+def _brand_api_error(message, status=400):
+    return JsonResponse({"ok": False, "error": message}, status=status)
+
+
+@require_http_methods(["GET", "POST"])
+def brand_api(request):
+    if request.method == "GET":
+        return JsonResponse({"ok": True, **services.get_brands_api_data()})
+    try:
+        brand = services.save_brand(request.POST, request.FILES)
+        return JsonResponse({"ok": True, "brand": services.brand_payload(brand)})
+    except (ValidationError, IntegrityError, ValueError) as exc:
+        return _brand_api_error(str(exc) or "Invalid brand data.")
+
+
+@require_http_methods(["GET", "POST", "PATCH", "PUT", "DELETE"])
+def brand_api_detail(request, brand_id):
+    brand = Brand.objects.filter(pk=brand_id).first()
+    if not brand:
+        return _brand_api_error("Brand was not found.", 404)
+    if request.method == "GET":
+        return JsonResponse({"ok": True, "brand": services.brand_detail_payload(brand)})
+    if request.method == "DELETE":
+        try:
+            services.delete_brand(brand, request.GET.get("remove_products") == "true")
+            return JsonResponse({"ok": True})
+        except ValidationError as exc:
+            return _brand_api_error(str(exc))
+
+    data = request.POST
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except (TypeError, ValueError, UnicodeDecodeError):
+            return _brand_api_error("Invalid JSON request body.")
+    action = data.get("action") if data else None
+    if action:
+        if action == "toggle_active":
+            brand.is_active = not brand.is_active
+        elif action == "toggle_featured":
+            brand.is_featured = not brand.is_featured
+        elif action == "activate":
+            brand.is_active = True
+        elif action == "deactivate":
+            brand.is_active = False
+        elif action == "feature":
+            brand.is_featured = True
+        elif action == "unfeature":
+            brand.is_featured = False
+        else:
+            return _brand_api_error("This brand action is not supported by the current data model.")
+        brand.save(update_fields=["is_active", "is_featured", "updated_at"])
+        return JsonResponse({"ok": True, "brand": services.brand_payload(brand)})
+    try:
+        brand = services.save_brand(data, request.FILES, brand)
+        return JsonResponse({"ok": True, "brand": services.brand_payload(brand)})
+    except (ValidationError, IntegrityError, ValueError) as exc:
+        return _brand_api_error(str(exc) or "Invalid brand data.")
+
+
+@require_http_methods(["POST"])
+def brand_import_api(request):
+    upload = request.FILES.get("file")
+    if not upload:
+        return _brand_api_error("Choose a CSV or JSON file to import.")
+    if upload.size > 5 * 1024 * 1024:
+        return _brand_api_error("Import files must be smaller than 5MB.")
+    try:
+        count = services.import_brands(upload)
+        return JsonResponse({"ok": True, "imported": count})
+    except (ValidationError, IntegrityError, ValueError, json.JSONDecodeError) as exc:
+        return _brand_api_error(str(exc) or "Unable to import brands.")
+
+
+@require_http_methods(["GET"])
+def brand_export_api(request):
+    brands = Brand.objects.all()
+    ids = request.GET.getlist("id")
+    if ids:
+        brands = brands.filter(id__in=ids)
+    rows = [services.brand_payload(brand) for brand in brands]
+    export_format = request.GET.get("format", "json").lower()
+    if export_format == "json":
+        return JsonResponse({"brands": rows})
+    if export_format != "csv":
+        return _brand_api_error("Only CSV and JSON exports are supported.")
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="brands.csv"'
+    writer = csv.DictWriter(response, fieldnames=["id", "name", "slug", "country_of_origin", "website", "is_active", "is_featured"])
+    writer.writeheader()
+    writer.writerows({key: row.get(key, "") for key in writer.fieldnames} for row in rows)
+    return response
 
 def seller_application(request, sellerId):
     context = services.get_pending_seller(sellerId)
@@ -1208,24 +1630,10 @@ def update_product_pricing_view(request, product_slug):
     return JsonResponse(result)
 
 
-@require_POST
 def remove_product_discount_view(request, product_slug):
-
-    try:
-        seller = request.user.seller_profile
-
-    except AttributeError:
-        return JsonResponse(
-            {
-                "success": False,
-                "message": "Seller profile not found.",
-            },
-            status=403,
-        )
 
     result = product_services.remove_product_discount(
         product_slug=product_slug,
-        seller=seller,
     )
 
     if not result["success"]:

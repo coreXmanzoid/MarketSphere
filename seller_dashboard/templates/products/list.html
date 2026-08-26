@@ -218,6 +218,7 @@
               <th scope="col">Category</th>
               <th scope="col">Price (Rs.)</th>
               <th scope="col">Stock</th>
+              <th scope="col">Approval Status</th>
               <th scope="col">Status</th>
               <th scope="col">Last Updated</th>
               <th scope="col" class="pm-col-actions">
@@ -242,7 +243,7 @@
                   </div>
                 </td>
                 <td data-label="Product">
-                  <span class="pm-product-name">{{ product.name }}</span>
+                  <span class="pm-product-name" onclick="window.open('/product/{{ product.slug }}/', '_blank')">{{ product.name }}</span>
                   <span class="pm-product-sku">SKU: {{ product.sku }}</span>
                 </td>
                 <td data-label="Category">
@@ -259,6 +260,13 @@
                 </td>
                 <td data-label="Stock">
                   <span class="pm-stock">{{ product.stock_quantity }}</span>
+                </td>
+                <td data-label="Approval Status">
+                  {% if product.is_approved %}
+                  <span class="pm-badge pm-badge-published">Approved</span>
+                  {% else %}
+                  <span class="pm-badge pm-badge-out-of-stock">Not Approved</span>
+                  {% endif %}
                 </td>
                 <td data-label="Status">
                   {% if product.status == 'out_of_stock' %}

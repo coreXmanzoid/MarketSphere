@@ -72,6 +72,7 @@
 
                 <button class="wishlist-btn active"
                   type="button"
+                  data-product-slug="{{ item.product.slug }}"
                   aria-label="{% if item.product.id in wishlist_ids %}
                     Remove from wishlist
                   {% else %}

@@ -135,8 +135,10 @@ def admin_context(request):
 
     for category in top_selling_categories:
         # Annotate progress inline
-        category.progress = round((category.sold / max_sold) * 100)
-
+        try:
+            category.progress = round((category.sold / max_sold) * 100)
+        except:
+            category.progress = 0
     # ==========================================
     # 5. SELLERS & VERIFICATION
     # ==========================================

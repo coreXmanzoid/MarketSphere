@@ -264,6 +264,193 @@ def get_seller_orders(seller):
         .order_by("-created_at")
     )
 
+def _percentage_change(current, previous):
+    if previous == 0:
+        if current == 0:
+            return 0
+        return 100
+
+    return round(((current - previous) / previous) * 100, 1)
+
+from calendar import monthrange
+from datetime import datetime
+from decimal import Decimal
+
+from django.db.models import Count, Q, Sum
+from django.utils import timezone
+
+from orders.models import Order, SellerOrder
+from django.db.models import Count, F, Q, Sum
+
+def get_admin_order_stats():
+    now = timezone.localtime()
+
+    current_month_start = now.replace(
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+
+    if current_month_start.month == 1:
+        previous_month_start = current_month_start.replace(
+            year=current_month_start.year - 1,
+            month=12,
+        )
+    else:
+        previous_month_start = current_month_start.replace(
+            month=current_month_start.month - 1,
+        )
+
+    current_month_end = now
+
+    orders = Order.objects.all()
+
+    current_orders = orders.filter(
+        created_at__gte=current_month_start,
+        created_at__lte=current_month_end,
+    )
+
+    previous_orders = orders.filter(
+        created_at__gte=previous_month_start,
+        created_at__lt=current_month_start,
+    )
+
+    pending_orders = orders.filter(
+        seller_orders__status=SellerOrder.Status.PENDING
+    ).distinct().count()
+
+    processing_orders = orders.filter(
+        seller_orders__status=SellerOrder.Status.PROCESSING
+    ).distinct().count()
+
+    delivered_orders = orders.annotate(
+        seller_count=Count("seller_orders", distinct=True),
+        delivered_seller_count=Count(
+            "seller_orders",
+            filter=Q(
+                seller_orders__status=SellerOrder.Status.DELIVERED
+            ),
+            distinct=True,
+        ),
+    ).filter(
+        seller_count=F("delivered_seller_count")
+    ).count()
+
+    current_pending_orders = current_orders.filter(
+        seller_orders__status=SellerOrder.Status.PENDING
+    ).distinct().count()
+
+    previous_pending_orders = previous_orders.filter(
+        seller_orders__status=SellerOrder.Status.PENDING
+    ).distinct().count()
+
+    current_processing_orders = current_orders.filter(
+        seller_orders__status=SellerOrder.Status.PROCESSING
+    ).distinct().count()
+
+    previous_processing_orders = previous_orders.filter(
+        seller_orders__status=SellerOrder.Status.PROCESSING
+    ).distinct().count()
+
+    current_delivered_orders = current_orders.annotate(
+        seller_count=Count("seller_orders", distinct=True),
+        delivered_seller_count=Count(
+            "seller_orders",
+            filter=Q(
+                seller_orders__status=SellerOrder.Status.DELIVERED
+            ),
+            distinct=True,
+        ),
+    ).filter(
+        seller_count=F("delivered_seller_count")
+    ).count()
+
+    previous_delivered_orders = previous_orders.annotate(
+        seller_count=Count("seller_orders", distinct=True),
+        delivered_seller_count=Count(
+            "seller_orders",
+            filter=Q(
+                seller_orders__status=SellerOrder.Status.DELIVERED
+            ),
+            distinct=True,
+        ),
+    ).filter(
+        seller_count=F("delivered_seller_count")
+    ).count()
+
+    total_revenue = SellerOrder.objects.filter(
+        status=SellerOrder.Status.DELIVERED
+    ).aggregate(
+        total=Sum("total")
+    )["total"] or Decimal("0.00")
+
+    current_revenue = SellerOrder.objects.filter(
+        status=SellerOrder.Status.DELIVERED,
+        delivered_at__gte=current_month_start,
+        delivered_at__lte=current_month_end,
+    ).aggregate(
+        total=Sum("total")
+    )["total"] or Decimal("0.00")
+
+    previous_revenue = SellerOrder.objects.filter(
+        status=SellerOrder.Status.DELIVERED,
+        delivered_at__gte=previous_month_start,
+        delivered_at__lt=current_month_start,
+    ).aggregate(
+        total=Sum("total")
+    )["total"] or Decimal("0.00")
+
+    pending_change = _percentage_change(
+        current_pending_orders,
+        previous_pending_orders,
+    )
+
+    processing_change = _percentage_change(
+        current_processing_orders,
+        previous_processing_orders,
+    )
+
+    delivered_change = _percentage_change(
+        current_delivered_orders,
+        previous_delivered_orders,
+    )
+
+    revenue_change = _percentage_change(
+        current_revenue,
+        previous_revenue,
+    )
+
+    return {
+        "pending_orders": pending_orders,
+        "pending_orders_change": abs(pending_change),
+        "pending_orders_increased": pending_change >= 0,
+
+        "processing_orders": processing_orders,
+        "processing_orders_change": abs(processing_change),
+        "processing_orders_increased": processing_change >= 0,
+
+        "delivered_orders": delivered_orders,
+        "delivered_orders_change": abs(delivered_change),
+        "delivered_orders_increased": delivered_change >= 0,
+
+        "total_revenue": total_revenue,
+        "revenue_change": abs(revenue_change),
+        "revenue_increased": revenue_change >= 0,
+    }
+
+def get_admin_orders():
+    return (
+        Order.objects
+        .select_related("user")
+        .prefetch_related(
+            "seller_orders__seller",
+            "seller_orders__items",
+            "seller_orders__items__product",
+        )
+        .order_by("-created_at")
+    )
 
 from django.utils import timezone
 
@@ -286,8 +473,22 @@ def update_order_status(seller, order_number, status):
 
 
 from django.utils.dateparse import parse_date
+def update_seller_note(seller, order_number, note):
+    # 1. Use double underscores for order__order_number
+    seller_order = SellerOrder.objects.filter(
+        order__order_number=order_number, 
+        seller=seller
+    ).first()
 
-
+    # 2. Check if the order exists before updating
+    if seller_order:
+        seller_order.seller_notes = note
+        
+        # 3. Use .save(update_fields=[...]) instead of .update()
+        seller_order.save(update_fields=['seller_notes'])
+        return True
+        
+    return False
 def update_shipping_information(seller_order, data):
     seller_order.courier = data.get("courier", "").strip()
     seller_order.tracking_number = data.get("tracking_number", "").strip()

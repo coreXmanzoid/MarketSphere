@@ -196,7 +196,51 @@ def download_invoice(request, order_number):
         content_type="application/pdf",
     )
 
+def update_seller_note_view(request, order_number):
+    try:
+        # 1. Parse the JSON body to get the note
+        data = json.loads(request.body)
+        note = data.get("note", "").strip()
 
+        # 2. Get the seller instance associated with the logged-in user
+        # (Assuming your user model has a OneToOne relationship with Seller)
+        seller = request.user.seller_profile
+
+        # 3. Call your service function
+        success = order_service.update_seller_note(
+            seller=seller, 
+            order_number=order_number, 
+            note=note
+        )
+
+        # 4. Return appropriate JsonResponse
+        if success:
+            return JsonResponse({
+                "success": True, 
+                "message": "Seller note updated successfully."
+            })
+        else:
+            return JsonResponse({
+                "success": False, 
+                "message": "Order not found or you do not have permission to modify it."
+            }, status=404)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False, 
+            "message": "Invalid JSON data provided."
+        }, status=400)
+    except AttributeError:
+        return JsonResponse({
+            "success": False, 
+            "message": "User does not have an associated seller profile."
+        }, status=403)
+    except Exception as e:
+        return JsonResponse({
+            "success": False, 
+            "message": "An unexpected error occurred."
+        }, status=500)
+    
 @login_required
 def download_shipping_label(request, order_number):
     # 1. Get the seller record associated with the logged-in user

@@ -193,6 +193,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const card = button.closest(".product-card");
         if (card) {
+            if (card.dataset.productSlug) {
+                return card.dataset.productSlug;
+            }
+
             const cardName = card.querySelector(".product-name");
             if (cardName) {
                 return slugify(cardName.textContent);

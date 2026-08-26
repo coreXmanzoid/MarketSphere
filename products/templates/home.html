@@ -115,6 +115,7 @@
 
                 <button class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
                   type="button"
+                  data-product-slug="{{ product.slug }}"
                   aria-label="{% if product.id in wishlist_ids %}
                     Remove from wishlist
                   {% else %}
@@ -203,7 +204,7 @@
 
         {% for product in new_products|slice:4 %}
           <div class="col-lg-3 col-md-4 col-6">
-            <div class="product-card">
+            <div class="product-card" data-product-slug="{{ product.slug }}">
                <div class="product-card-media">
                 <div class="product-badges">
                   {% if product.discount_price %}
@@ -217,7 +218,9 @@
                     Remove from wishlist
                   {% else %}
                     Add to wishlist
-                  {% endif %}">
+                  {% endif %}"
+                  data-product-slug="{{ product.slug }}"
+                  >
                   <i class="bi bi-heart"></i>
                 </button>
 
