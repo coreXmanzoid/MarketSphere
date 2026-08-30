@@ -262,6 +262,7 @@
     document.addEventListener('keydown', function (event) {
         if (event.key !== 'Escape') return;
         if (shell.classList.contains('is-mobile-open')) closeMobileSidebar();
+        closeNotificationMenu();
         closeProfileMenu();
     });
 
@@ -304,7 +305,49 @@
     });
 
     /* =====================================================
-       5. PROFILE DROPDOWN
+       5. NOTIFICATIONS DROPDOWN
+       Frontend-only placeholder until admin notifications are
+       connected to the backend.
+       ===================================================== */
+    var notificationButton = document.getElementById('adNotifBtn');
+    var notificationPanel = document.getElementById('adNotificationPanel');
+    var clearNotifications = document.getElementById('adClearNotifications');
+    var notificationList = document.getElementById('adNotificationList');
+    var notificationEmpty = document.getElementById('adNotificationEmpty');
+    var notificationDot = document.querySelector('.ad-notif-dot');
+
+    function closeNotificationMenu() {
+        if (!notificationPanel) return;
+        notificationPanel.classList.remove('is-open');
+        notificationPanel.setAttribute('aria-hidden', 'true');
+        if (notificationButton) notificationButton.setAttribute('aria-expanded', 'false');
+    }
+
+    if (notificationButton && notificationPanel) {
+        notificationButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var isOpen = notificationPanel.classList.toggle('is-open');
+            notificationPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            notificationButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        notificationPanel.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', closeNotificationMenu);
+
+        if (clearNotifications) {
+            clearNotifications.addEventListener('click', function () {
+                if (notificationList) notificationList.hidden = true;
+                if (notificationEmpty) notificationEmpty.hidden = false;
+                if (notificationDot) notificationDot.hidden = true;
+            });
+        }
+    }
+
+    /* =====================================================
+       6. PROFILE DROPDOWN
        ===================================================== */
     var profile = document.getElementById('adProfile');
     var profileTrigger = document.getElementById('adProfileTrigger');
@@ -335,7 +378,7 @@
     });
 
     /* =====================================================
-       6. FLASH MESSAGE DISMISSAL
+       7. FLASH MESSAGE DISMISSAL
        ===================================================== */
     (function () {
 
@@ -435,7 +478,7 @@
     })();
 
     /* =====================================================
-       7. GLOBAL SEARCH SHORTCUT ( / )
+       8. GLOBAL SEARCH SHORTCUT ( / )
        Focuses the search input when "/" is pressed, unless the
        person is already typing in a field. No search logic —
        purely a UX affordance for the input already on screen.

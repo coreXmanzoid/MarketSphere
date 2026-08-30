@@ -22,7 +22,7 @@ from reportlab.platypus import (
 
 # NOTE: Adjust these imports based on your actual app structure
 from accounts.models import Seller
-from orders.models import SellerOrder, OrderItem
+from orders.models import Order, OrderItem
 from products.models import Product
 
 
@@ -390,7 +390,7 @@ def export_seller_profile_snapshot(seller, admin_user=None):
         archived=Count('id', filter=Q(status__iexact='archived'))
     )
 
-    ord_stats = SellerOrder.objects.filter(seller=seller).aggregate(
+    ord_stats = Order.objects.filter(seller=seller).aggregate(
         total_orders=Count("id"),
         pending=Count("id", filter=Q(status__iexact='pending')),
         processing=Count("id", filter=Q(status__iexact='processing')),
@@ -455,8 +455,8 @@ def export_seller_profile_snapshot(seller, admin_user=None):
     # --- TOP PRODUCTS ---
     try:
         top_product_aggs = OrderItem.objects.filter(
-            seller_order__seller=seller,
-            seller_order__status__iexact='delivered'
+            order__seller=seller,
+            order__status__iexact='delivered'
         ).values(
             'product__name', 'product__category__name', 'product__status', 'product__stock_quantity'
         ).annotate(
@@ -476,8 +476,8 @@ def export_seller_profile_snapshot(seller, admin_user=None):
         ]
     except Exception:
         top_product_aggs = OrderItem.objects.filter(
-            seller_order__seller=seller,
-            seller_order__status__iexact='delivered'
+            order__seller=seller,
+            order__status__iexact='delivered'
         ).values('product_id').annotate(
             units_sold=Sum('quantity'),
             revenue=Sum('total')
@@ -521,16 +521,15 @@ def export_seller_profile_snapshot(seller, admin_user=None):
     elements.append(Spacer(1, 15))
 
     # --- RECENT ORDERS ---
-    recent_orders = SellerOrder.objects.filter(seller=seller).select_related('order').order_by('-created_at')[:10]
+    recent_orders = Order.objects.filter(seller=seller).order_by('-created_at')[:10]
     recent_orders_data = []
     
     for order in recent_orders:
-        parent = getattr(order, 'order', None)
         tracking = getattr(order, 'tracking_number', None)
         if not tracking:
-            tracking = getattr(parent, 'order_number', str(order.id))
+            tracking = getattr(order, 'order_number', str(order.id))
             
-        customer = getattr(parent, 'shipping_name', 'Unknown Customer')
+        customer = getattr(order, 'shipping_name', 'Unknown Customer')
         date_str = order.created_at.strftime("%b %d, %Y") if getattr(order, 'created_at', None) else "—"
         
         recent_orders_data.append((
@@ -556,8 +555,8 @@ def export_seller_profile_snapshot(seller, admin_user=None):
 
     # --- TOP BUYERS ---
     try:
-        top_buyers_qs = SellerOrder.objects.filter(seller=seller).exclude(status__iexact='cancelled').values(
-            'order__shipping_name'
+        top_buyers_qs = Order.objects.filter(seller=seller).exclude(status__iexact='cancelled').values(
+            'shipping_name'
         ).annotate(
             orders_count=Count('id'),
             total_spent=Sum('total')
@@ -565,14 +564,14 @@ def export_seller_profile_snapshot(seller, admin_user=None):
         
         top_buyers_data = [
             (
-                _safe_str(b.get('order__shipping_name', 'Unknown')),
+                _safe_str(b.get('shipping_name', 'Unknown')),
                 str(b.get('orders_count', 0)),
                 _format_currency(b.get('total_spent', 0))
             ) for b in top_buyers_qs
         ]
     except Exception:
-        top_buyers_qs = SellerOrder.objects.filter(seller=seller).exclude(status__iexact='cancelled').values(
-            'order_id'
+        top_buyers_qs = Order.objects.filter(seller=seller).exclude(status__iexact='cancelled').values(
+            'user_id'
         ).annotate(
             orders_count=Count('id'),
             total_spent=Sum('total')
@@ -580,9 +579,9 @@ def export_seller_profile_snapshot(seller, admin_user=None):
 
         top_buyers_data = []
         for b in top_buyers_qs:
-            oid = b.get('order_id')
+            uid = b.get('user_id')
             top_buyers_data.append((
-                f"Order #{oid}" if oid else "Unknown",
+                f"User #{uid}" if uid else "Unknown",
                 str(b.get('orders_count', 0)),
                 _format_currency(b.get('total_spent', 0))
             ))

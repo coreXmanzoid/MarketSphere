@@ -397,6 +397,7 @@
 .brand-card{
     position:relative;
     overflow:hidden;
+    background-color: #e8e2cc;
 }
 
 .brand-logo-img{
@@ -630,8 +631,8 @@
     cursor: pointer;
     font-size: 15px;
     font-weight: 600;
-    margin: 4px 0 8px;
-    min-height: 40px;
+    margin: 4px 0 4px;
+    min-height: 20px;
 }
 
 .product-rating {
@@ -921,6 +922,7 @@ button i {
 
 .back-to-top-btn:hover {
     background-color: #4E220F !important;
+    border-radius: 50% !important;
 }
 
 /* ================= SCROLL REVEAL ================= */

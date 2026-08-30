@@ -216,9 +216,9 @@
               {% for order in dashboard_recent_orders %}
                 <tr>
                   <td data-label="Order">
-                    <span class="dh-order-number">#MS-{{ order.order.order_number|slice:5 }}</span>
+                    <span class="dh-order-number">#MS-{{ order.order_number|slice:5 }}</span>
                   </td>
-                  <td data-label="Customer">{{ order.order.user.first_name }}</td>
+                  <td data-label="Customer">{{ order.user.first_name }}</td>
                   <td data-label="Date">{{ order.created_at|date:'F j, Y' }}</td>
                   <td data-label="Amount">Rs. {{ order.total|floatformat:0 }}</td>
                   <td data-label="Status">
@@ -239,7 +239,7 @@
                     {% endif %}
                   </td>
                   <td data-label="" class="dh-table-action">
-                    <a href="{% url 'order-detail' order_no=order.order.order_number %}" class="dh-icon-link" aria-label="View order #MS-{{ order.order.order_number }}">
+                    <a href="{% url 'order-detail' order_no=order.order_number %}" class="dh-icon-link" aria-label="View order #MS-{{ order.order_number }}">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>

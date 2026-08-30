@@ -58,27 +58,81 @@
                   <!-- Wishlist -->
                   <a href="{% url 'wishlist' %}" class="btn position-relative me-1">
                     <i class="bi bi-heart-half"></i>
-
                     <span id="wishlistCounter" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ wishlist_count }}</span>
                   </a>
                   <!-- Cart -->
-                  <a href="{% url 'cart' %}" class="btn position-relative me-3">
+                  <a href="{% url 'cart' %}" class="btn position-relative me-1">
                     <i class="bi bi-cart4"></i>
-
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCounter">{{ cart_count }}</span>
                   </a>
-
-                  <!-- Profile -->
-                  <div class="dropdown">
-                    <a href="#" class="text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                      <span class="m-1 fs-5">{{ request.user.username }}</span>
-                      {% if request.user.profile_image_url %}
-                        <img src="{{ request.user.profile_image_url }}" class="rounded-circle" width="40" height="40" alt="Profile" />
-                      {% else %}
-                        <span class="rounded-circle d-inline-flex justify-content-center align-items-center" style="width:40px; height:40px; background-color: #9D6638; color:#F7F1DE; font-weight:600;">{{ request.user.username|slice:':1'|upper }}</span>
-                      {% endif %}
+                  <div class="ms-notification-wrap me-2">
+                    <a href="#" class="btn position-relative ms-notification-btn" id="msNotificationBtn" role="button" aria-label="Notifications" aria-expanded="false" aria-controls="msNotificationPanel">
+                      <i class="bi bi-bell fs-5"></i>
+                      <span class="ms-notification-dot" aria-hidden="true"></span>
                     </a>
 
+                    <section class="ms-notification-panel" id="msNotificationPanel" aria-label="Customer notifications" aria-hidden="true">
+                      <div class="ms-notification-head">
+                        <div>
+                          <span class="ms-notification-eyebrow">MarketSphere</span>
+                          <h2>Notifications</h2>
+                        </div>
+                        <button type="button" class="ms-notification-clear" id="msClearNotifications">Clear all</button>
+                      </div>
+
+                      <div class="ms-notification-list" id="msNotificationList">
+                        <article class="ms-notification-item is-unread">
+                          <span class="ms-notification-icon is-order" aria-hidden="true"><i class="bi bi-truck"></i></span>
+                          <div class="ms-notification-copy">
+                            <h3>Your order is on the way</h3>
+                            <p>Order <strong>#MS-1048</strong> has been handed to the courier.</p>
+                            <time datetime="2026-08-30T10:42:00">12 minutes ago</time>
+                          </div>
+                          <span class="ms-notification-status" aria-label="Unread"></span>
+                        </article>
+
+                        <article class="ms-notification-item">
+                          <span class="ms-notification-icon is-deal" aria-hidden="true"><i class="bi bi-tag"></i></span>
+                          <div class="ms-notification-copy">
+                            <h3>Fresh deals picked for you</h3>
+                            <p>Save up to 25% on products from shops you follow.</p>
+                            <time datetime="2026-08-30T08:15:00">2 hours ago</time>
+                          </div>
+                        </article>
+
+                        <article class="ms-notification-item">
+                          <span class="ms-notification-icon is-wishlist" aria-hidden="true"><i class="bi bi-heart"></i></span>
+                          <div class="ms-notification-copy">
+                            <h3>Price drop on your wishlist</h3>
+                            <p><strong>Canvas Tote Bag</strong> is now available at a lower price.</p>
+                            <time datetime="2026-08-29T15:30:00">Yesterday</time>
+                          </div>
+                        </article>
+                      </div>
+
+                      <div class="ms-notification-empty" id="msNotificationEmpty" hidden>
+                        <span class="ms-notification-empty-icon" aria-hidden="true"><i class="bi bi-check2"></i></span>
+                        <h3>You're all caught up</h3>
+                        <p>No new notifications right now.</p>
+                      </div>
+                    </section>
+                  </div>
+                  
+                  <!-- Profile -->
+                  <div class="buyer-chip dropdown-toggle">
+
+                      <span class="buyer-avatar" data-bs-toggle="dropdown">
+                        {% if request.user.profile_image_url %}
+                        <img src="{{ request.user.profile_image_url }}" class="rounded-circle" width="38" height="38" alt="Profile" />
+                        {% else %}
+                        <span class="rounded-circle d-inline-flex justify-content-center align-items-center" style="width:38px; height:38px; background-color: #9D6638; color:#F7F1DE; font-weight:600;">{{ request.user.username|slice:':1'|upper }}</span>
+                        {% endif %}
+                      </span>
+                      <span class="buyer-info" data-bs-toggle="dropdown">
+                        <strong class="buyer-name">{{ request.user.username }}</strong>
+                        <small class="buyer-role">buyer</small>
+                      </span>
+                      
                     <ul class="dropdown-menu dropdown-menu-end">
                       <li>
                         <a class="dropdown-item" href="#">My Profile</a>
@@ -260,7 +314,7 @@
 
     {% block footer %}
       <footer class="bg-dark text-light mt-5">
-        <div class="container-fluid py-5">
+        <div class="container-fluid py-3">
           <div class="row">
             <!-- Logo & About -->
             <div class="col-lg-4 col-md-6 mb-4">

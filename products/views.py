@@ -35,7 +35,7 @@ def search(request):
     discount_only = request.GET.get("discount") == "1"
     sort_value = request.GET.get("sort", "newest")
     page_number = request.GET.get("page", 1)
-    
+
     # Base set: query only. Sidebar options are computed from THIS,
     # so the sidebar doesn't shrink as filters are applied.
     base_products = services.get_search_products(q)
@@ -43,18 +43,18 @@ def search(request):
     new_arrivals = request.GET.get("new_arrivals") == "1"
     if featured:
         base_products = base_products.filter(is_featured=True)
-        q="Featured Products"
+        q = "Featured Products"
     if new_arrivals:
         base_products = base_products.order_by("-created_at")
-        q="New Arrivals"
+        q = "New Arrivals"
 
     if q == "":
         q = (
-            (category_slugs[0] if category_slugs else None) or 
-            (brand_slugs[0] if brand_slugs else None) or 
-            max_price or 
-            (availability[0] if availability else None) or 
-            sort_value
+            (category_slugs[0] if category_slugs else None)
+            or (brand_slugs[0] if brand_slugs else None)
+            or max_price
+            or (availability[0] if availability else None)
+            or sort_value
         )
     categories = services.get_search_categories(base_products)
     brands = services.get_search_brands(base_products)
@@ -158,14 +158,21 @@ def product(request, product_slug):
             if request.user.is_authenticated
             else False
         ),
+        "wishlist_ids": (
+            services.get_wishlist_ids(request.user)
+            if request.user.is_authenticated
+            else set()
+        ),
     }
     return render(request, "product_details.html", context)
+
 
 from django.core.exceptions import PermissionDenied
 
 from products.models import Product
 from .product_pdf import export_product_report
 from django.shortcuts import get_object_or_404
+
 
 @login_required
 def export_product_pdf(request, slug):
@@ -190,7 +197,6 @@ def export_product_pdf(request, slug):
     )
 
 
-
 def export_product_orders_view(request, slug):
     product = get_object_or_404(
         Product.objects.select_related("seller", "category", "brand"),
@@ -198,6 +204,7 @@ def export_product_orders_view(request, slug):
     )
 
     return services.export_product_orders(product)
+
 
 @login_required
 def wishlist(request):
@@ -223,15 +230,18 @@ def toggle_wishlist(request, product_slug):
         }
     )
 
+
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404
 
 from accounts.models import Seller
 
+
 # @staff_member_required
 def export_products_csv(request, seller_id):
     seller = get_object_or_404(Seller, id=seller_id)
     return services.export_products_csv(seller)
+
 
 @login_required
 def cart(request):

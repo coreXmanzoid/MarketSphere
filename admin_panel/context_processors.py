@@ -1,7 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from django.db.models import Q, Sum
+from django.db.models import Avg, DurationField, ExpressionWrapper, F, Q, Sum
 from django.utils import timezone
 
 from accounts.models import Seller, User
@@ -46,7 +46,7 @@ def admin_context(request):
     # ==========================================
     # 2. REVENUE & SALES
     # ==========================================
-    Total_revenue = Order.objects.filter(
+    total_revenue = Order.objects.filter(
         payment_status=Order.PaymentStatus.PAID
     ).aggregate(total=Sum("total"))["total"] or Decimal("0.00")
 
@@ -89,10 +89,9 @@ def admin_context(request):
     ).count()
 
     orders_change = _calculate_change(current_month_orders, previous_month_orders)
-
+    
     latest_orders = (
-        Order.objects.select_related("user")
-        .prefetch_related("seller_orders__seller")
+        Order.objects.select_related("user", "seller")
         .order_by("-created_at")[:5]
     )
 
@@ -113,36 +112,36 @@ def admin_context(request):
 
     products_change = _calculate_change(current_month_products, previous_month_products)
 
-    # BUG IDENTIFIED: Querying Seller model but using Product.Status.PENDING
     pending_products = Product.objects.filter(status=Product.Status.PENDING).count()
     low_stock_products = Product.objects.filter(stock_quantity__lte=20).count()
 
+    # Optimized Category Ranking: Only counts DELIVERED orders
     top_selling_categories = (
         Category.objects.filter(is_active=True)
-        .annotate(sold=Sum("products__order_items__quantity"))
+        .annotate(
+            sold=Sum(
+                "products__order_items__quantity",
+                filter=Q(products__order_items__order__status=Order.Status.DELIVERED)
+            )
+        )
         .order_by("-sold")[:5]
     )
 
-    # Tell the type checker about dynamic attributes
+    # Sanitize 'sold' data (handle Nones from Sum)
     for category in top_selling_categories:
-        sold: int = getattr(category, "sold", 0) or 0
-        category.sold = sold
+        category.sold = category.sold or 0
 
-    # Use getattr to prevent linter complaints on list comprehension
-    max_sold = max(
-        (getattr(cat, "sold", 0) for cat in top_selling_categories), default=1
-    )
+    max_sold = max((cat.sold for cat in top_selling_categories), default=1)
+    if max_sold == 0:
+        max_sold = 1
 
     for category in top_selling_categories:
-        # Annotate progress inline
-        try:
-            category.progress = round((category.sold / max_sold) * 100)
-        except:
-            category.progress = 0
+        category.progress = round((category.sold / max_sold) * 100)
+
     # ==========================================
     # 5. SELLERS & VERIFICATION
     # ==========================================
-    total_sellers = Seller.objects.all().count()
+    total_sellers = Seller.objects.count()
     current_month_sellers = Seller.objects.filter(
         created_at__gte=current_month_start
     ).count()
@@ -189,7 +188,6 @@ def admin_context(request):
     # =====================================================
     # Pending Sellers
     # =====================================================
-
     pending_sellers = Seller.objects.filter(
         status=Seller.Status.PENDING
     ).count()
@@ -215,11 +213,9 @@ def admin_context(request):
 
     pending_sellers_increased = current_month_pending >= previous_month_pending
 
-
     # =====================================================
     # Suspended Sellers
     # =====================================================
-
     suspended_sellers = Seller.objects.filter(
         status=Seller.Status.SUSPENDED
     ).count()
@@ -244,7 +240,6 @@ def admin_context(request):
         suspended_sellers_change = 100 if current_month_suspended > 0 else 0
 
     suspended_sellers_increased = current_month_suspended >= previous_month_suspended
-
 
     reviewed_today = (
         Seller.objects.filter(created_at__gte=today_start)
@@ -301,21 +296,23 @@ def admin_context(request):
             "Approval rate is below expectations. Manual review is recommended."
         )
 
+    # -----------------------------------------------------------------
+    # OPTIMIZED: Average Verification Time calculation
+    # Handled completely at the Database level using Aggregate & F-Expressions
+    # -----------------------------------------------------------------
     reviewed_sellers = Seller.objects.filter(
         status__in=[Seller.Status.VERIFIED, Seller.Status.REJECTED]
     )
 
-    if reviewed_sellers.exists():
-        total_hours = 0
-        # PERFORMANCE NOTICE: Iterating over potentially large querysets can be slow.
-        # (See recommendations below).
-        for seller in reviewed_sellers:
-            total_hours += (
-                seller.updated_at - seller.created_at
-            ).total_seconds() / 3600
-        avg_verification_time = round(total_hours / reviewed_sellers.count(), 1)
-    else:
-        avg_verification_time = 0
+    avg_timedelta = reviewed_sellers.aggregate(
+        avg_time=Avg(
+            ExpressionWrapper(
+                F("updated_at") - F("created_at"), output_field=DurationField()
+            )
+        )
+    )["avg_time"]
+
+    avg_verification_time = round(avg_timedelta.total_seconds() / 3600, 1) if avg_timedelta else 0
 
     verification_time_bars = [
         90,
@@ -340,7 +337,7 @@ def admin_context(request):
     # ==========================================
     # 6. BUYERS & USERS (Activity, Growth & Status)
     # ==========================================
-    total_buyers = User.objects.all().count()
+    total_buyers = User.objects.count()
     current_month_buyers = User.objects.filter(
         date_joined__gte=current_month_start
     ).count()
@@ -451,7 +448,7 @@ def admin_context(request):
     else:
         active_users_trend = "Significant decline"
 
-    # Fetching overall total for distribution (preserves exact logic from line 333 of original code)
+    # Fetching overall total for distribution
     total_users = User.objects.count()
     status_distribution = []
 
@@ -641,7 +638,7 @@ def admin_context(request):
 
     pending_recommendations = len(security_recommendations)
 
-    security_bars = [40,40,40,40,40,40,max(15, min(100, pending_recommendations * 20))]
+    security_bars = [40, 40, 40, 40, 40, 40, max(15, min(100, pending_recommendations * 20))]
     if pending_recommendations == 0:
         security_status = "d-success"
     elif pending_recommendations <= 2:
@@ -656,11 +653,10 @@ def admin_context(request):
 
     return {
         "admin": {
-            "total_revenue": Total_revenue,
+            "total_revenue": total_revenue,
             "revenue_change": round(percentage_change, 1),
             "revenue_increased": percentage_change >= 0,
             "total_orders": current_month_orders,
-            # "orders_last_month": previous_month_orders,
             "orders_change": round(orders_change, 1),
             "orders_increased": orders_change >= 0,
             "total_products": total_products,

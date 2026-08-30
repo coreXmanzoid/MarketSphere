@@ -227,19 +227,18 @@
           <tbody id="soOrdersTableBody">
             <!-- ================= ORDER ROWS ================= -->
             <!--    Order rows will be rendered here by Django from seller.orders queryset.
-                 Placeholder data below for frontend preview only.    -->
-
-            {% for orderItem in dashboard_seller_orders %}
-              <tr class="so-row" data-order-number="MS-{{ orderItem.order.order_number }}" data-customer-name="{{ orderItem.order.user.username }}">
+            Placeholder data below for frontend preview only.    -->
+            {% for order in dashboard_seller_orders %}
+              <tr class="so-row" data-order-number="MS-{{ order.order_number }}" data-customer-name="{{ order.user.username }}">
                 <td data-label="">
                   <label class="so-checkbox">
-                    <input type="checkbox" class="so-row-checkbox" aria-label="Select order MS-{{ orderItem.order.order_number }}" />
+                    <input type="checkbox" class="so-row-checkbox" aria-label="Select order MS-{{ order.order_number }}" />
                     <span class="so-checkbox-box"></span>
                   </label>
                 </td>
                 <td data-label="Order">
-                  <a href="{% url "order-detail" order_no=orderItem.order.order_number %}" class="so-order-number-link" data-view-order="{{ orderItem.order.order_number }}">
-                    #MS-{{ orderItem.order.order_number|slice:6 }}
+                  <a href="{% url 'order-detail' order_no=order.order_number %}" class="so-order-number-link" data-view-order="{{ order.order_number }}">
+                    #MS-{{ order.order_number|slice:":6" }}
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M7 17 17 7"></path>
                       <path d="M7 7h10v10"></path>
@@ -247,40 +246,40 @@
                   </a>
                 </td>
                 <td data-label="Customer">
-                  <span class="so-customer-name">{{ orderItem.order.user.first_name }} {{ orderItem.order.user.last_name }}</span>
-                  <span class="so-customer-email">{{ orderItem.order.user.email }}</span>
+                  <span class="so-customer-name">{{ order.user.first_name }} {{ order.user.last_name }}</span>
+                  <span class="so-customer-email">{{ order.user.email }}</span>
                 </td>
                 <td data-label="Items">
                   <span class="so-items-count">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
                       <path d="M3 8v8l9 5 9-5V8"></path>
-                    </svg>{{ orderItem.items.count }} items
+                    </svg>{{ order.items.count }} items
                   </span>
                 </td>
                 <td data-label="Date">
-                  <span class="so-date">{{ orderItem.order.created_at|date:'j F' }}</span>
+                  <span class="so-date">{{ order.created_at|date:'j F' }}</span>
                 </td>
-                {% if orderItem.order.payment_status == 'paid' %}
+                {% if order.payment_status == 'paid' %}
                   <td data-label="Payment">
                     <span class="so-badge so-badge-paid">Paid</span>
                   </td>
-                {% elif orderItem.order.payment_status == 'unpaid' %}
+                {% elif order.payment_status == 'unpaid' %}
                   <td data-label="Payment">
-                    <span class="so-badge so-badge-payment-pending">Pending</span>
+                    <span class="so-badge so-badge-payment-pending">Unpaid</span>
                   </td>
-                {% elif orderItem.order.payment_status == 'refunded' %}
+                {% elif order.payment_status == 'refunded' %}
                   <td data-label="Payment">
                     <span class="so-badge so-badge-refunded">Refunded</span>
                   </td>
                 {% endif %}
                 <td data-label="Status">
-                  {% if orderItem.order.overall_status %}
-                    <span class="so-badge so-badge-{{ orderItem.order.overall_status }}">{{ orderItem.order.overall_status|title }}</span>
+                  {% if order.status %}
+                    <span class="so-badge so-badge-{{ order.status }}">{{ order.status|title }}</span>
                   {% endif %}
                 </td>
                 <td data-label="Total">
-                  <span class="so-total">Rs. {{ orderItem.total|floatformat:0 }}</span>
+                  <span class="so-total">Rs. {{ order.total|floatformat:0 }}</span>
                 </td>
                 <td data-label="" class="so-col-actions">
                   <div class="so-dropdown so-row-dropdown">
@@ -310,7 +309,7 @@
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>Contact Customer
                       </button>
-                      {% if orderItem.order.overall_status != 'shipped' and orderItem.order.overall_status != 'delivered' %}
+                      {% if order.status != 'shipped' and order.status != 'delivered' %}
                       <div class="so-dropdown-divider" role="separator"></div>
                         <button type="button" class="so-dropdown-item so-dropdown-item-danger" role="menuitem" data-row-action="cancel" data-order-number="MS-748213">
                           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -340,7 +340,7 @@
     display: inline-flex;
     align-items: center;
     border: 1.5px solid var(--pd-accent);
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
     width: fit-content;
 }
@@ -459,7 +459,7 @@
     background-color: transparent !important;
     color: var(--pd-accent-dark) !important;
     border: 1.5px solid var(--border-color) !important;
-    border-radius: 8px !important;
+    border-radius: 4px !important;
     padding: 9px 16px !important;
     font-weight: 600 !important;
     font-size: 14px !important;
@@ -471,11 +471,11 @@
 
 .pd-icon-btn i {
     background-color: transparent;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .pd-icon-btn:hover {
-    border-color: var(--pd-accent) !important;
+    border: 1.5px solid var(--pd-accent) !important;
     color: var(--pd-accent) !important;
 }
 
@@ -1045,6 +1045,7 @@
 .pd-slider-btn:hover {
     background-color: var(--pd-accent) !important;
     color: #F7F1DE !important;
+    border-radius: 50% !important;
 }
 
 .pd-recent-slider {

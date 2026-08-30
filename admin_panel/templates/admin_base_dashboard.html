@@ -130,7 +130,7 @@
 
               <div class="ad-nav-submenu">
                 <a href="{% url "sales-orders" %}" class="ad-nav-sublink" data-subpage="orders">Orders</a>
-                <a href="#" class="ad-nav-sublink" data-subpage="payments">Payments</a>
+                <a href="{% url "payment-management" %}" class="ad-nav-sublink" data-subpage="payments">Payments</a>
               </div>
             </li>
           </ul>
@@ -170,7 +170,7 @@
 
           <ul class="ad-nav-list">
             <li class="ad-nav-item">
-              <a href="#" class="ad-nav-link" data-page="settings">
+              <a href="{% url "admin-settings" %}" class="ad-nav-link" data-page="settings">
                 <span class="ad-nav-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -216,13 +216,61 @@
           </div>
 
           <div class="ad-topbar-right">
-            <button type="button" class="ad-icon-btn" id="adNotifBtn" aria-label="Notifications">
-              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-              <span class="ad-notif-dot" aria-hidden="true"></span>
-            </button>
+            <div class="ad-notification-wrap">
+              <button type="button" class="ad-icon-btn" id="adNotifBtn" aria-label="Notifications" aria-expanded="false" aria-controls="adNotificationPanel">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="ad-notif-dot" aria-hidden="true"></span>
+              </button>
+
+              <section class="ad-notification-panel" id="adNotificationPanel" aria-label="Admin notifications" aria-hidden="true">
+                <div class="ad-notification-head">
+                  <div>
+                    <span class="ad-notification-eyebrow">Admin Control Room</span>
+                    <h2>Notifications</h2>
+                  </div>
+                  <button type="button" class="ad-notification-clear" id="adClearNotifications">Clear all</button>
+                </div>
+
+                <div class="ad-notification-list" id="adNotificationList">
+                  <article class="ad-notification-item is-unread">
+                    <span class="ad-notification-icon is-seller" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+                    <div class="ad-notification-copy">
+                      <h3>New seller application</h3>
+                      <p><strong>Northstar Goods</strong> submitted a seller account for review.</p>
+                      <time datetime="2026-08-30T10:42:00">12 minutes ago</time>
+                    </div>
+                    <span class="ad-notification-status" aria-label="Unread"></span>
+                  </article>
+
+                  <article class="ad-notification-item">
+                    <span class="ad-notification-icon is-order" aria-hidden="true"><i class="bi bi-receipt"></i></span>
+                    <div class="ad-notification-copy">
+                      <h3>Payment review needed</h3>
+                      <p>Payment <strong>#PAY-2094</strong> was flagged for manual review.</p>
+                      <time datetime="2026-08-30T08:15:00">2 hours ago</time>
+                    </div>
+                  </article>
+
+                  <article class="ad-notification-item">
+                    <span class="ad-notification-icon is-system" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+                    <div class="ad-notification-copy">
+                      <h3>System backup completed</h3>
+                      <p>The latest MarketSphere data backup completed successfully.</p>
+                      <time datetime="2026-08-29T15:30:00">Yesterday</time>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="ad-notification-empty" id="adNotificationEmpty" hidden>
+                  <span class="ad-notification-empty-icon" aria-hidden="true"><i class="bi bi-check2"></i></span>
+                  <h3>You're all caught up</h3>
+                  <p>No new notifications right now.</p>
+                </div>
+              </section>
+            </div>
 
             {% comment %} <button type="button" class="ad-icon-btn" id="adThemeBtn" aria-label="Toggle theme">
               <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

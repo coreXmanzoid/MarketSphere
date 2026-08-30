@@ -78,20 +78,20 @@
                   <div class="d-flex gap-1">
                     <span class="mo-order-date"><i class="bi bi-calendar-event"></i> Placed on {{ order.created_at|date }}</span>
                     <span class="mo-order-date">|</span>
-                    <span class="mo-order-date">Expected Delievery on <!-- order.ETA|date -->14 July</span>
+                    <span class="mo-order-date">Expected Delievery on <!-- order.ETA|date -->{{ order.estimated_delivery|date }}</span>
                   </div>
                 </div>
-                {% if order.overall_status == 'pending' %}
+                {% if order.status == 'pending' %}
                   <span class="mo-status-badge mo-status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
-                {% elif order.overall_status == 'confirmed' %}
+                {% elif order.status == 'confirmed' %}
                   <span class="mo-status-badge mo-status-confirmed"><i class="bi bi-check-circle"></i> Confirmed</span>
-                {% elif order.overall_status == 'processing' %}
+                {% elif order.status == 'processing' %}
                   <span class="mo-status-badge mo-status-processing"><i class="bi bi-gear"></i> Processing</span>
-                {% elif order.overall_status == 'shipped' %}
+                {% elif order.status == 'shipped' %}
                   <span class="mo-status-badge mo-status-shipped"><i class="bi bi-truck"></i> Shipped</span>
-                {% elif order.overall_status == 'delivered' %}
+                {% elif order.status == 'delivered' %}
                   <span class="mo-status-badge mo-status-delivered"><i class="bi bi-check2-circle"></i> Delivered</span>
-                {% elif order.overall_status == 'cancelled' %}
+                {% elif order.status == 'cancelled' %}
                   <span class="mo-status-badge mo-status-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>
                 {% endif %}
               </div>
@@ -100,7 +100,7 @@
                 <div class="mo-order-preview">
                   <!-- Product thumbnails will be rendered here by Django from order.items -->
                   <div class="mo-thumb-strip">
-                    {% for item in order.items|slice:3 %}
+                    {% for item in order.items.all|slice:3 %}
                       <span class="mo-order-thumb" title="{{ item.product.name }}"><img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" /></span>
                     {% endfor %}
                     <!-- Overflow count will be rendered here by Django, e.g. order.items.count|add:'-3' -->
@@ -129,15 +129,15 @@
                 </div>
               </div>
               <div class="mo-order-actions-secondary mt-3">
-                {% if order.overall_status in 'pending confirmed processing' %}
+                {% if order.status in 'pending confirmed processing' %}
                   <a href="{% url 'cancel-order' order_number=order.order_number %}" class="mo-action-link"><i class="bi bi-x-circle"></i> Cancel Order</a>
                   <span class="mo-order-date">|</span>
                 {% endif %}
-                {% if order.overall_status == 'delivered' %}
+                {% if order.status == 'delivered' %}
                   <a href="{% url 'reorder' order_number=order.order_number %}" class="mo-action-link"><i class="bi bi-arrow-repeat"></i> Reorder</a>
                   <span class="mo-order-date">|</span>
                 {% endif %}
-                {% if order.overall_status != 'canceled' %}
+                {% if order.status != 'canceled' %}
                   <a href="#" class="mo-action-link"><i class="bi bi-truck"></i> Track Order</a>
                 {% endif %}
                 <span class="mo-order-date">|</span>

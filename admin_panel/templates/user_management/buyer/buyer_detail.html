@@ -736,7 +736,7 @@
                         <td data-label="Items">{{ order.items_count }} item{{ order.items_count|pluralize }}</td>
                         <td data-label="Total">Rs. {{ order.total|floatformat:0 }}</td>
                         <td data-label="Status">
-                          <span class="bd-badge c-success">{{ order.overall_status }}</span>
+                          <span class="bd-badge c-success">{{ order.status }}</span>
                         </td>
                       </tr>
                     {% endfor %}
@@ -810,7 +810,7 @@
                           <span class="bd-badge c-success">{{ order.payment_status }}</span>
                         </td>
                         <td data-label="Delivery">
-                          <span class="bd-badge c-success">{{ order.overall_status }}</span>
+                          <span class="bd-badge c-success">{{ order.status }}</span>
                         </td>
                         <td data-label="Total">Rs. {{ order.total|floatformat }}</td>
                         <td data-label="" class="bd-col-actions">

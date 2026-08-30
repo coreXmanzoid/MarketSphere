@@ -79,9 +79,9 @@
       <div class="cf-card cf-info-card">
         <div class="cf-info-grid">
           <div class="cf-info-item">
-            <span class="cf-info-label"><i class="bi bi-hash"></i> Order Number</span>
+            <span class="cf-info-label"><i class="bi bi-shop"></i> Seller</span>
             <!-- Order number will be rendered here by Django -->
-            <span class="cf-info-value">{{ order.order_number|default:"—" }}</span>
+            <span class="cf-info-value">{{ order.seller.store_name|default:"—" }}</span>
           </div>
 
           <div class="cf-info-item">
@@ -179,7 +179,7 @@
 
             <div class="cf-items-list">
               <!-- Ordered items will be rendered here by Django from order.items -->
-              {% for item in order.items %}
+              {% for item in order.items.all %}
                 <div class="cf-order-item">
                   <div class="product-image-placeholder cf-order-item-img" onclick="window.location.href='{% url "product" item.product.slug %}';">
                     <img src="{{ item.product.primary_image.image.url }}" alt="">
@@ -254,7 +254,7 @@
               <div class="cf-summary-row">
                 <span>Subtotal</span>
                 <!-- Subtotal will be rendered here by Django -->
-                <span>Rs. {{ order.subtotal|default:"0" }}</span>
+                <span>Rs. {{ order.subtotal|default:"0"|floatformat:0 }}</span>
               </div>
 
               <div class="cf-summary-row">
@@ -283,7 +283,7 @@
             <div class="cf-summary-row cf-summary-grand-total">
               <span>Grand Total</span>
               <!-- Grand total will be rendered here by Django -->
-              <span>Rs. {{ order.total|default:"0" }}</span>
+              <span>Rs. {{ order.total|default:"0"|floatformat:0 }}</span>
             </div>
 
             <!-- ============ ACTION BUTTONS ============ -->

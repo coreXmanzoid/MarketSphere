@@ -1,13 +1,29 @@
-from .models import Category, Brand, Product, WishlistItem, Cart, CartItem, ProductImage
-from django.db.models import Prefetch, Sum
-from django.shortcuts import get_object_or_404
-from decimal import Decimal, InvalidOperation
-from accounts.models import Seller
+import csv
 import json
+import logging
+from decimal import Decimal, InvalidOperation
 
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Prefetch, Sum, Q, IntegerField
+from django.db.models.deletion import ProtectedError
+from django.db.models.functions import Coalesce
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
+from accounts.models import Seller
+from orders.models import Order, OrderItem
+from .models import Category, Brand, Product, WishlistItem, Cart, CartItem, ProductImage
+
+logger = logging.getLogger(__name__)
+
+
+# ==============================================================================
+# CATEGORY & BRAND SERVICES
+# ==============================================================================
 
 def get_all_categories():
-
     categories = Category.objects.filter(parent=None, is_active=True).prefetch_related(
         Prefetch(
             "children",
@@ -26,9 +42,11 @@ def get_all_brands():
     brands = Brand.objects.filter(is_active=True)
     return brands
 
-from django.db.models import Sum, Q, IntegerField
-from django.db.models.functions import Coalesce
-from orders.models import SellerOrder
+
+# ==============================================================================
+# PRODUCT RETRIEVAL SERVICES
+# ==============================================================================
+
 def get_featured_products():
     return (
         Product.objects.select_related("category", "brand")
@@ -38,7 +56,7 @@ def get_featured_products():
                 Sum(
                     "order_items__quantity",
                     filter=Q(
-                        order_items__seller_order__status=SellerOrder.Status.DELIVERED
+                        order_items__order__status=Order.Status.DELIVERED
                     ),
                 ),
                 0,
@@ -51,6 +69,31 @@ def get_featured_products():
             seller__status=Seller.Status.VERIFIED,
         )
     )
+
+
+def get_new_products(limit=8):
+    return (
+        Product.objects.select_related("category", "brand", "seller")
+        .prefetch_related("images")
+        .annotate(
+            total_sold=Coalesce(
+                Sum(
+                    "order_items__quantity",
+                    filter=Q(
+                        order_items__order__status=Order.Status.DELIVERED
+                    ),
+                ),
+                0,
+                output_field=IntegerField(),
+            )
+        )
+        .filter(
+            status=Product.Status.PUBLISHED,
+            seller__status=Seller.Status.VERIFIED,
+        )
+        .order_by("-created_at")[:limit]
+    )
+
 
 def get_frequent_products(product):
     return Product.objects.filter(
@@ -67,28 +110,6 @@ def get_related_products(product):
         status=Product.Status.PUBLISHED,
     ).exclude(id=product.id)
 
-def get_new_products(limit=8):
-    return (
-        Product.objects.select_related("category", "brand", "seller")
-        .prefetch_related("images")
-        .annotate(
-            total_sold=Coalesce(
-                Sum(
-                    "order_items__quantity",
-                    filter=Q(
-                        order_items__seller_order__status=SellerOrder.Status.DELIVERED
-                    ),
-                ),
-                0,
-                output_field=IntegerField(),
-            )
-        )
-        .filter(
-            status=Product.Status.PUBLISHED,
-            seller__status=Seller.Status.VERIFIED,
-        )
-        .order_by("-created_at")[:limit]
-    )
 
 def get_product_by_slug(product_slug):
     return get_object_or_404(
@@ -106,12 +127,70 @@ def get_edit_product_by_slug(product_slug, seller):
     )
 
 
-def create_product(user, post_data, files):
-    """
-    Creates a published product.
-    All required fields must be provided.
-    """
+def get_brand_products(brand_slug):
+    return (
+        Product.objects.select_related("brand", "category")
+        .prefetch_related("images")
+        .filter(brand__slug=brand_slug, status=Product.Status.PUBLISHED)
+    )
 
+
+def get_category_products(category_slug):
+    return (
+        Product.objects.select_related("brand", "category")
+        .prefetch_related("images")
+        .filter(category__slug=category_slug, status=Product.Status.PUBLISHED)
+    )
+
+
+def get_recently_viewed_products(request, current_product, limit=8):
+    recently_viewed_ids = request.session.get("recently_viewed", [])
+
+    products = list(
+        Product.objects.select_related("category", "brand", "seller")
+        .prefetch_related("images")
+        .filter(
+            id__in=recently_viewed_ids,
+            status=Product.Status.PUBLISHED,
+            seller__status=Seller.Status.VERIFIED,
+        )
+        .exclude(id=current_product.id)
+    )
+
+    products.sort(
+        key=lambda product: recently_viewed_ids.index(product.id)
+    )
+
+    return products[:limit]
+
+
+def update_recently_viewed_products(request, product):
+    recently_viewed = request.session.get("recently_viewed", [])
+
+    if product.id in recently_viewed:
+        recently_viewed.remove(product.id)
+
+    recently_viewed.insert(0, product.id)
+    recently_viewed = recently_viewed[:10]
+
+    request.session["recently_viewed"] = recently_viewed
+    request.session.modified = True
+
+
+# ==============================================================================
+# PRODUCT CREATION & MANAGEMENT SERVICES
+# ==============================================================================
+
+def nullable(value):
+    """
+    Converts empty or invalid values to None.
+    """
+    if value in ("", "null", "undefined", None):
+        return None
+    return value
+
+
+def create_product(user, post_data, files):
     required_fields = {
         "name": "Product name",
         "slug": "Slug",
@@ -125,14 +204,12 @@ def create_product(user, post_data, files):
     }
 
     missing_fields = []
-
     for field, label in required_fields.items():
         value = nullable(post_data.get(field))
         if value is None:
             missing_fields.append(label)
 
     images = files.getlist("images")
-
     if not images:
         missing_fields.append("At least one product image")
 
@@ -142,23 +219,14 @@ def create_product(user, post_data, files):
         )
 
     seller = Seller.objects.get(user=user)
-
     category = Category.objects.get(slug=nullable(post_data.get("category")))
-
-    brand = None
     brand_slug = nullable(post_data.get("brand"))
-
-    if brand_slug:
-        brand = Brand.objects.filter(slug=brand_slug).first()
+    brand = Brand.objects.filter(slug=brand_slug).first() if brand_slug else None
 
     # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
     collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
-
-    print(tags)
-    print(collections)
-    print(dimensions)
 
     product = Product.objects.create(
         seller=seller,
@@ -191,28 +259,13 @@ def create_product(user, post_data, files):
     return product
 
 
-def nullable(value):
-    """
-    Converts empty or invalid values to None.
-    """
-    if value in ("", "null", "undefined", None):
-        return None
-    return value
-
-
 def save_draft(user, post_data, files):
-    """
-    Saves a product as a draft.
-    Only the product name and slug are required.
-    """
-
     required_fields = {
         "name": "Product name",
         "slug": "Slug",
     }
 
     missing_fields = []
-
     for field, label in required_fields.items():
         if not post_data.get(field):
             missing_fields.append(label)
@@ -223,27 +276,16 @@ def save_draft(user, post_data, files):
         )
 
     seller = Seller.objects.get(user=user)
-
-    category = None
     category_slug = nullable(post_data.get("category"))
+    category = Category.objects.filter(slug=category_slug).first() if category_slug else None
 
-    if category_slug:
-        category = Category.objects.filter(slug=category_slug).first()
-
-    brand = None
     brand_slug = nullable(post_data.get("brand"))
-
-    if brand_slug:
-        brand = Brand.objects.filter(slug=brand_slug).first()
+    brand = Brand.objects.filter(slug=brand_slug).first() if brand_slug else None
 
     # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
     collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
-
-    print(tags)
-    print(collections)
-    print(dimensions)
 
     product = Product.objects.create(
         seller=seller,
@@ -265,7 +307,6 @@ def save_draft(user, post_data, files):
     )
 
     images = files.getlist("images")
-
     for index, image in enumerate(images):
         ProductImage.objects.create(
             product=product,
@@ -278,34 +319,17 @@ def save_draft(user, post_data, files):
     return product
 
 
-# search logic
-
-
 def edit_product(seller, product, post_data, files):
-    """
-    Updates an existing product.
-    """
-
-    category = None
     category_slug = nullable(post_data.get("category"))
+    category = Category.objects.filter(slug=category_slug).first() if category_slug else None
 
-    if category_slug:
-        category = Category.objects.filter(slug=category_slug).first()
-
-    brand = None
     brand_slug = nullable(post_data.get("brand"))
-
-    if brand_slug:
-        brand = Brand.objects.filter(slug=brand_slug).first()
+    brand = Brand.objects.filter(slug=brand_slug).first() if brand_slug else None
 
     # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
     collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
-
-    print(tags)
-    print(collections)
-    print(dimensions)
 
     product.category = category
     product.brand = brand
@@ -327,7 +351,6 @@ def edit_product(seller, product, post_data, files):
 
     # Delete existing images selected by the user
     deleted_images = json.loads(post_data.get("deleted_images", "[]"))
-
     if deleted_images:
         ProductImage.objects.filter(
             id__in=deleted_images,
@@ -336,11 +359,9 @@ def edit_product(seller, product, post_data, files):
 
     # Add newly uploaded images
     images = files.getlist("images")
-
     current_count = product.images.count()
 
     for index, image in enumerate(images):
-
         ProductImage.objects.create(
             product=product,
             image=image,
@@ -351,101 +372,13 @@ def edit_product(seller, product, post_data, files):
 
     # Ensure exactly one primary image exists
     primary = product.images.filter(is_primary=True).first()
-
     if not primary:
         first_image = product.images.order_by("display_order", "id").first()
-
         if first_image:
             first_image.is_primary = True
             first_image.save(update_fields=["is_primary"])
 
     return product
-
-
-from django.db.models import Q
-
-
-def get_search_products(q):
-    if not q:
-        return Product.objects.all()
-
-    return (
-        Product.objects.select_related(
-            "category",
-            "brand",
-        )
-        .prefetch_related("images")
-        .filter(
-            Q(name__icontains=q)
-            | Q(short_description__icontains=q)
-            | Q(description__icontains=q),
-            status=Product.Status.PUBLISHED,
-        )
-    )
-
-
-from django.db.models import Q
-from django.db.models.functions import Coalesce
-from django.core.paginator import Paginator
-
-# ... keep existing imports/functions ...
-
-
-def filter_products(
-    products,
-    category_slugs=None,
-    brand_slugs=None,
-    max_price=None,
-    availability=None,
-    discount_only=False,
-):
-    if category_slugs:
-        products = products.filter(category__slug__in=category_slugs)
-
-    if brand_slugs:
-        products = products.filter(brand__slug__in=brand_slugs)
-
-    if max_price:
-        try:
-            max_price = Decimal(max_price)
-            products = products.filter(
-                Q(discount_price__isnull=False, discount_price__lte=max_price)
-                | Q(discount_price__isnull=True, price__lte=max_price)
-            )
-        except (InvalidOperation, TypeError):
-            pass  # ignore malformed price param rather than 500ing
-
-    if availability:
-        avail_q = Q()
-        if "in_stock" in availability:
-            avail_q |= Q(stock_quantity__gt=0)
-        if "out_of_stock" in availability:
-            avail_q |= Q(stock_quantity=0)
-        if avail_q:
-            products = products.filter(avail_q)
-
-    if discount_only:
-        products = products.filter(discount_price__isnull=False)
-
-    # NOTE: rating_min is sent by the frontend but there's no Review/rating
-    # model yet, so it's a no-op for now — add a filter here once one exists.
-
-    return products
-
-
-def sort_products(products, sort_value):
-    effective_price = Coalesce("discount_price", "price")
-
-    if sort_value == "price_low_high":
-        return products.order_by(effective_price)
-    if sort_value == "price_high_low":
-        return products.order_by(effective_price.desc())
-    if sort_value == "popularity":
-        # NOTE: no popularity/sold-count field yet — falls back to newest
-        # until one is added (e.g. an order-count annotation).
-        return products.order_by("-created_at")
-
-    return products.order_by("-created_at")  # "newest" / default
 
 
 def hide_product_by_slug(product_slug, reason=None):
@@ -461,62 +394,34 @@ def unhide_product_by_slug(product_slug):
     product.status = Product.Status.PUBLISHED
     product.save(update_fields=["status"])
 
+
 def reject_product(product_slug, admin_note=""):
     product = get_product_by_slug(product_slug)
-
     product.is_approved = False
     product.status = Product.Status.REJECTED
     product.admin_notes = admin_note
-
-    product.save(
-        update_fields=[
-            "is_approved",
-            "admin_notes",
-            "status"
-        ]
-    )
-
+    product.save(update_fields=["is_approved", "admin_notes", "status"])
     return product
-
-from django.db.models.deletion import ProtectedError
 
 
 def delete_product_by_slug(product_slug):
     try:
-        product = Product.objects.get(
-            slug=product_slug,
-        )
-
+        product = Product.objects.get(slug=product_slug)
         try:
             product.delete()
-            return {
-                "success": True,
-                "archived": False,
-            }
-
+            return {"success": True, "archived": False}
         except ProtectedError:
             product.status = Product.Status.ARCHIVED
             product.save(update_fields=["status"])
-
-            return {
-                "success": True,
-                "archived": True,
-            }
-
+            return {"success": True, "archived": True}
     except Product.DoesNotExist:
-        return {
-            "success": False,
-            "archived": False,
-        }
+        return {"success": False, "archived": False}
 
 
-from django.db import transaction
-
+@transaction.atomic
 def approve_product(product_slug, publish_immediately=False):
     product = get_product_by_slug(product_slug)
-
     product.is_approved = True
-
     update_fields = ["is_approved"]
 
     if publish_immediately:
@@ -524,168 +429,237 @@ def approve_product(product_slug, publish_immediately=False):
         update_fields.append("status")
 
     product.save(update_fields=update_fields)
-
     return product
+
 
 def publish_product(product_slug, feature_homepage=False):
     try:
         product = Product.objects.get(slug=product_slug)
-
     except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
+        return {"success": False, "message": "Product not found."}
 
     if product.status == Product.Status.PUBLISHED:
-        return {
-            "success": True,
-            "changed": False,
-            "message": "Product is already published.",
-        }
+        return {"success": True, "changed": False, "message": "Product is already published."}
 
     product.status = Product.Status.PUBLISHED
-
     update_fields = ["status"]
-
-    # Add this later if/when your Product model has
-    # a featured/homepage field.
-    #
-    # if feature_homepage:
-    #     product.is_featured = True
-    #     update_fields.append("is_featured")
 
     product.save(update_fields=update_fields)
 
-    return {
-        "success": True,
-        "changed": True,
-        "message": "Product published successfully.",
-    }
+    return {"success": True, "changed": True, "message": "Product published successfully."}
+
 
 @transaction.atomic
 def toggle_product_featured(product_slug, action):
     try:
-        product = (
-            Product.objects
-            .select_for_update()
-            .get(
-                slug=product_slug
-            )
-        )
+        product = Product.objects.select_for_update().get(slug=product_slug)
     except Product.DoesNotExist:
-        return {
-            "success": False,
-            "error": "not_found",
-            "message": "Product not found.",
-        }
+        return {"success": False, "error": "not_found", "message": "Product not found."}
 
     if action == "feature":
         if product.is_featured:
-            return {
-                "success": True,
-                "featured": True,
-                "changed": False,
-                "message": "Product is already featured.",
-            }
-
+            return {"success": True, "featured": True, "changed": False, "message": "Product is already featured."}
         product.is_featured = True
         product.save(update_fields=["is_featured"])
-
-        return {
-            "success": True,
-            "featured": True,
-            "changed": True,
-            "message": "Product featured successfully.",
-        }
+        return {"success": True, "featured": True, "changed": True, "message": "Product featured successfully."}
 
     if action == "unfeature":
         if not product.is_featured:
-            return {
-                "success": True,
-                "featured": False,
-                "changed": False,
-                "message": "Product is already unfeatured.",
-            }
-
+            return {"success": True, "featured": False, "changed": False, "message": "Product is already unfeatured."}
         product.is_featured = False
         product.save(update_fields=["is_featured"])
+        return {"success": True, "featured": False, "changed": True, "message": "Product unfeatured successfully."}
 
-        return {
-            "success": True,
-            "featured": False,
-            "changed": True,
-            "message": "Product unfeatured successfully.",
-        }
-
-    return {
-        "success": False,
-        "error": "invalid_action",
-        "message": "Invalid featured action.",
-    }
+    return {"success": False, "error": "invalid_action", "message": "Invalid featured action."}
 
 
 @transaction.atomic
 def toggle_product_archive(product_slug, seller, action):
     try:
-        product = (
-            Product.objects
-            .select_for_update()
-            .get(
-                slug=product_slug,
-                seller=seller,
-            )
-        )
+        product = Product.objects.select_for_update().get(slug=product_slug, seller=seller)
     except Product.DoesNotExist:
-        return {
-            "success": False,
-            "error": "not_found",
-            "message": "Product not found.",
-        }
+        return {"success": False, "error": "not_found", "message": "Product not found."}
 
     if action == "archive":
         if product.status == Product.Status.ARCHIVED:
-            return {
-                "success": True,
-                "archived": True,
-                "changed": False,
-                "message": "Product is already archived.",
-            }
-
+            return {"success": True, "archived": True, "changed": False, "message": "Product is already archived."}
         product.status = Product.Status.ARCHIVED
         product.save(update_fields=["status"])
-
-        return {
-            "success": True,
-            "archived": True,
-            "changed": True,
-            "message": "Product archived successfully.",
-        }
+        return {"success": True, "archived": True, "changed": True, "message": "Product archived successfully."}
 
     if action == "unarchive":
         if product.status != Product.Status.ARCHIVED:
-            return {
-                "success": True,
-                "archived": False,
-                "changed": False,
-                "message": "Product is already active.",
-            }
-
+            return {"success": True, "archived": False, "changed": False, "message": "Product is already active."}
         product.status = Product.Status.PUBLISHED
         product.save(update_fields=["status"])
+        return {"success": True, "archived": False, "changed": True, "message": "Product restored successfully."}
 
-        return {
-            "success": True,
-            "archived": False,
-            "changed": True,
-            "message": "Product restored successfully.",
-        }
+    return {"success": False, "error": "invalid_action", "message": "Invalid archive action."}
+
+
+@transaction.atomic
+def update_product_pricing(product_slug, seller, price, discount_price=None):
+    try:
+        product = Product.objects.get(slug=product_slug, seller=seller)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
+
+    product.price = price
+    product.discount_price = discount_price
+    product.save(update_fields=["price", "discount_price"])
 
     return {
-        "success": False,
-        "error": "invalid_action",
-        "message": "Invalid archive action.",
+        "success": True,
+        "message": "Product pricing updated successfully.",
+        "price": product.price,
+        "discount_price": product.discount_price,
     }
+
+
+@transaction.atomic
+def remove_product_discount(product_slug):
+    try:
+        product = Product.objects.get(slug=product_slug)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
+
+    if product.discount_price is None:
+        return {"success": False, "message": "This product does not have a discount."}
+
+    product.discount_price = None
+    product.save(update_fields=["discount_price"])
+    return {"success": True, "message": "Discount removed successfully."}
+
+
+@transaction.atomic
+def adjust_product_stock(product_slug, seller, adjustment_type, quantity, reason="", note=""):
+    try:
+        product = Product.objects.select_for_update().get(slug=product_slug, seller=seller)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
+
+    current_stock = product.stock_quantity or 0
+
+    if adjustment_type == "increase":
+        new_stock = current_stock + quantity
+    elif adjustment_type == "decrease":
+        if quantity > current_stock:
+            return {"success": False, "message": "Stock cannot be reduced below zero."}
+        new_stock = current_stock - quantity
+    elif adjustment_type == "set":
+        new_stock = quantity
+    else:
+        return {"success": False, "message": "Invalid adjustment type."}
+
+    product.stock_quantity = new_stock
+    product.save(update_fields=["stock_quantity"])
+
+    return {
+        "success": True,
+        "message": "Stock adjustment applied successfully.",
+        "previous_stock": current_stock,
+        "new_stock": new_stock,
+        "adjustment_type": adjustment_type,
+        "quantity": quantity,
+        "reason": reason,
+        "note": note,
+    }
+
+
+@transaction.atomic
+def mark_product_out_of_stock(product_slug, seller):
+    try:
+        product = Product.objects.select_for_update().get(slug=product_slug, seller=seller)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
+
+    product.stock_quantity = 0
+    product.status = Product.Status.OUT_OF_STOCK
+    product.save(update_fields=["stock_quantity", "status"])
+
+    return {"success": True, "message": "Product marked as out of stock.", "stock_quantity": 0}
+
+
+@transaction.atomic
+def restore_product_stock(product_slug, seller):
+    try:
+        product = Product.objects.select_for_update().get(slug=product_slug, seller=seller)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
+
+    if product.stock_quantity <= 0:
+        return {"success": False, "message": "Cannot restore product because its stock quantity is zero."}
+
+    product.status = Product.Status.PUBLISHED
+    product.save(update_fields=["status"])
+
+    return {"success": True, "message": "Product stock restored successfully.", "stock_quantity": product.stock_quantity}
+
+
+# ==============================================================================
+# SEARCH, FILTER & PAGINATION SERVICES
+# ==============================================================================
+
+def get_search_products(q):
+    if not q:
+        return Product.objects.all()
+
+    return (
+        Product.objects.select_related("category", "brand")
+        .prefetch_related("images")
+        .filter(
+            Q(name__icontains=q)
+            | Q(short_description__icontains=q)
+            | Q(description__icontains=q),
+            status=Product.Status.PUBLISHED,
+        )
+    )
+
+
+def filter_products(products, category_slugs=None, brand_slugs=None, max_price=None, availability=None, discount_only=False):
+    if category_slugs:
+        products = products.filter(category__slug__in=category_slugs)
+
+    if brand_slugs:
+        products = products.filter(brand__slug__in=brand_slugs)
+
+    if max_price:
+        try:
+            max_price = Decimal(max_price)
+            products = products.filter(
+                Q(discount_price__isnull=False, discount_price__lte=max_price)
+                | Q(discount_price__isnull=True, price__lte=max_price)
+            )
+        except (InvalidOperation, TypeError):
+            pass
+
+    if availability:
+        avail_q = Q()
+        if "in_stock" in availability:
+            avail_q |= Q(stock_quantity__gt=0)
+        if "out_of_stock" in availability:
+            avail_q |= Q(stock_quantity=0)
+        if avail_q:
+            products = products.filter(avail_q)
+
+    if discount_only:
+        products = products.filter(discount_price__isnull=False)
+
+    return products
+
+
+def sort_products(products, sort_value):
+    effective_price = Coalesce("discount_price", "price")
+
+    if sort_value == "price_low_high":
+        return products.order_by(effective_price)
+    if sort_value == "price_high_low":
+        return products.order_by(effective_price.desc())
+    if sort_value == "popularity":
+        return products.order_by("-created_at")
+
+    return products.order_by("-created_at")
+
 
 def paginate_products(products, page_number, per_page=12):
     paginator = Paginator(products, per_page)
@@ -693,56 +667,28 @@ def paginate_products(products, page_number, per_page=12):
 
 
 def get_search_categories(products):
-    return Category.objects.filter(
-        products__in=products,
-        is_active=True,
-    ).distinct()[:5]
+    return Category.objects.filter(products__in=products, is_active=True).distinct()[:5]
 
 
 def get_search_brands(products):
-    return Brand.objects.filter(
-        products__in=products,
-        is_active=True,
-    ).distinct()[:5]
+    return Brand.objects.filter(products__in=products, is_active=True).distinct()[:5]
 
 
-def get_brand_products(brand_slug):
-    return (
-        Product.objects.select_related("brand", "category")
-        .prefetch_related("images")
-        .filter(brand__slug=brand_slug, status=Product.Status.PUBLISHED)
-    )
+# ==============================================================================
+# WISHLIST SERVICES
+# ==============================================================================
 
-
-def get_category_products(category_slug):
-    return (
-        Product.objects.select_related("brand", "category")
-        .prefetch_related("images")
-        .filter(category__slug=category_slug, status=Product.Status.PUBLISHED)
-    )
-
-
-# wishlist logic
 def add_to_wishlist(user, product_slug):
-    product = get_object_or_404(
-        Product, slug=product_slug, status=Product.Status.PUBLISHED
-    )
-    wishlist_item, created = WishlistItem.objects.get_or_create(
-        user=user, product=product
-    )
-
+    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
+    wishlist_item, created = WishlistItem.objects.get_or_create(user=user, product=product)
     return wishlist_item
 
 
 def remove_from_wishlist(user, product_slug):
-    wishlist_item = WishlistItem.objects.filter(
-        user=user, product__slug=product_slug
-    ).first()
-
+    wishlist_item = WishlistItem.objects.filter(user=user, product__slug=product_slug).first()
     if wishlist_item:
         wishlist_item.delete()
         return True
-
     return False
 
 
@@ -750,7 +696,6 @@ def toggle_wishlist(user, product_slug):
     if is_in_wishlist(user, product_slug):
         remove_from_wishlist(user, product_slug)
         return False
-
     add_to_wishlist(user, product_slug)
     return True
 
@@ -758,39 +703,30 @@ def toggle_wishlist(user, product_slug):
 def is_in_wishlist(user, product_slug):
     if not getattr(user, "is_authenticated", False):
         return False
-
     return WishlistItem.objects.filter(user=user, product__slug=product_slug).exists()
 
 
 def get_wishlist_ids(user):
-    wishlist_ids = set()
-
     if user.is_authenticated:
-        wishlist_ids = set(
-            WishlistItem.objects.filter(user=user).values_list("product_id", flat=True)
-        )
-        return wishlist_ids
-    return None
+        return set(WishlistItem.objects.filter(user=user).values_list("product_id", flat=True))
+    return set()
 
 
 def get_user_wishlist(user):
     if not getattr(user, "is_authenticated", False):
         return WishlistItem.objects.none()
-
-    return WishlistItem.objects.filter(user=user).select_related(
-        "product", "product__brand", "product__category"
-    )
+    return WishlistItem.objects.filter(user=user).select_related("product", "product__brand", "product__category")
 
 
 def wishlist_count(user):
     if not getattr(user, "is_authenticated", False):
         return 0
-
     return WishlistItem.objects.filter(user=user).count()
 
 
-# cart logic
-
+# ==============================================================================
+# CART SERVICES
+# ==============================================================================
 
 def get_or_create_cart(user):
     cart, created = Cart.objects.get_or_create(user=user)
@@ -798,86 +734,35 @@ def get_or_create_cart(user):
 
 
 def add_to_cart(user, product_slug):
-    product = get_object_or_404(
-        Product, slug=product_slug, status=Product.Status.PUBLISHED
-    )
+    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
     cart = get_or_create_cart(user)
-
-    cart_item, created = CartItem.objects.get_or_create(
-        cart=cart, product=product, defaults={"quantity": 1}
-    )
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={"quantity": 1})
 
     if not created:
         cart_item.quantity = (cart_item.quantity or 0) + 1
         cart_item.save()
-
     return cart_item
 
 
 def add_frequently_bought_products(user, body):
     data = json.loads(body)
     product_ids = data.get("products", [])
-
     cart, _ = Cart.objects.get_or_create(user=user)
 
     for product_id in product_ids:
         try:
-            product = Product.objects.get(
-                id=int(product_id),
-                status=Product.Status.PUBLISHED,
-            )
-
+            product = Product.objects.get(id=int(product_id), status=Product.Status.PUBLISHED)
             cart_item, created = CartItem.objects.get_or_create(
-                cart=cart,
-                product=product,
-                defaults={
-                    "quantity": 1,
-                },
+                cart=cart, product=product, defaults={"quantity": 1}
             )
-
             if not created:
                 cart_item.quantity += 1
                 cart_item.save(update_fields=["quantity", "updated_at"])
-
         except (Product.DoesNotExist, ValueError, TypeError):
             continue
 
     return cart
 
-
-def update_recently_viewed_products(request, product):
-    recently_viewed = request.session.get("recently_viewed", [])
-
-    if product.id in recently_viewed:
-        recently_viewed.remove(product.id)
-
-    recently_viewed.insert(0, product.id)
-
-    recently_viewed = recently_viewed[:10]
-
-    request.session["recently_viewed"] = recently_viewed
-    request.session.modified = True
-
-
-def get_recently_viewed_products(request, current_product, limit=8):
-    recently_viewed_ids = request.session.get("recently_viewed", [])
-
-    products = list(
-        Product.objects.select_related("category", "brand", "seller")
-        .prefetch_related("images")
-        .filter(
-            id__in=recently_viewed_ids,
-            status=Product.Status.PUBLISHED,
-            seller__status=Seller.Status.VERIFIED,
-        )
-        .exclude(id=current_product.id)
-    )
-
-    products.sort(
-        key=lambda product: recently_viewed_ids.index(product.id)
-    )
-
-    return products[:limit]
 
 def remove_from_cart(user, product_slug):
     cart = get_or_create_cart(user)
@@ -912,16 +797,13 @@ def increment_quantity(user, product_slug):
     cart = get_or_create_cart(user)
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
-        product=get_object_or_404(
-            Product, slug=product_slug, status=Product.Status.PUBLISHED
-        ),
+        product=get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED),
         defaults={"quantity": 1},
     )
 
     if not created:
         cart_item.quantity = (cart_item.quantity or 0) + 1
         cart_item.save()
-
     return cart_item
 
 
@@ -951,79 +833,142 @@ def cart_total(user):
     items = CartItem.objects.filter(cart=cart).select_related("product")
     total = Decimal("0.00")
     for item in items:
-        price = getattr(item.product, "discount_price", None) or getattr(
-            item.product, "price", Decimal("0.00")
-        )
+        price = getattr(item.product, "discount_price", None) or getattr(item.product, "price", Decimal("0.00"))
         total += Decimal(price) * Decimal(item.quantity or 0)
     return total
 
 
 def cart_subtotal(user):
-    # same as total for now (no taxes/shipping applied here)
     return cart_total(user)
 
 
 def cart_count(user):
     cart = get_or_create_cart(user)
-    return (
-        CartItem.objects.filter(cart=cart).aggregate(total_quantity=Sum("quantity"))[
-            "total_quantity"
-        ]
-        or 0
-    )
+    return CartItem.objects.filter(cart=cart).aggregate(total_quantity=Sum("quantity"))["total_quantity"] or 0
 
 
 def get_user_cart(user):
     if not getattr(user, "is_authenticated", False):
         return None
-
     cart = Cart.objects.filter(user=user).prefetch_related("items__product").first()
     return cart
 
 
-import csv
+# ==============================================================================
+# IMAGE MANAGEMENT SERVICES
+# ==============================================================================
 
-from django.http import HttpResponse
+def upload_product_image(product_slug, image_file, seller):
+    try:
+        product = Product.objects.get(slug=product_slug, seller=seller)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
 
+    last_order = (
+        ProductImage.objects.filter(product=product)
+        .order_by("-display_order")
+        .values_list("display_order", flat=True)
+        .first()
+    )
+
+    next_order = (last_order + 1) if last_order is not None else 0
+
+    product_image = ProductImage.objects.create(
+        product=product,
+        image=image_file,
+        display_order=next_order,
+    )
+
+    return {"success": True, "message": "Product image added successfully.", "image_id": product_image.id}
+
+
+@transaction.atomic
+def delete_product_image(product_slug, image_id, seller):
+    try:
+        product_image = ProductImage.objects.select_related("product").get(
+            id=image_id, product__slug=product_slug, product__seller=seller
+        )
+    except ProductImage.DoesNotExist:
+        return {"success": False, "message": "Product image not found."}
+
+    product = product_image.product
+    was_primary = product_image.is_primary
+    replacement = None
+
+    if was_primary:
+        replacement = (
+            ProductImage.objects.filter(product=product)
+            .exclude(id=product_image.id)
+            .order_by("display_order", "id")
+            .first()
+        )
+        if replacement:
+            replacement.is_primary = True
+            replacement.save(update_fields=["is_primary"])
+
+    product_image.delete()
+    return {"success": True, "message": "Product image deleted successfully.", "replacement_primary": was_primary and replacement is not None}
+
+
+@transaction.atomic
+def reorder_product_images(product_slug, image_ids, seller):
+    try:
+        product = Product.objects.get(slug=product_slug, seller=seller)
+    except Product.DoesNotExist:
+        return {"success": False, "message": "Product not found."}
+
+    images = list(ProductImage.objects.filter(product=product, id__in=image_ids))
+    image_map = {str(image.id): image for image in images}
+
+    if len(images) != len(image_ids):
+        return {"success": False, "message": "Invalid product image list."}
+
+    for index, image_id in enumerate(image_ids):
+        image = image_map.get(str(image_id))
+        if image:
+            image.display_order = index
+            image.save(update_fields=["display_order"])
+
+    return {"success": True, "message": "Media order updated successfully."}
+
+
+@transaction.atomic
+def set_primary_product_image(product_slug, image_id, seller):
+    try:
+        product_image = ProductImage.objects.select_related("product").get(
+            id=image_id, product__slug=product_slug, product__seller=seller
+        )
+    except ProductImage.DoesNotExist:
+        return {"success": False, "message": "Product image not found."}
+
+    ProductImage.objects.filter(product=product_image.product, is_primary=True).exclude(id=product_image.id).update(is_primary=False)
+
+    if not product_image.is_primary:
+        product_image.is_primary = True
+        product_image.save(update_fields=["is_primary"])
+
+    return {"success": True, "message": "Primary image updated successfully."}
+
+
+# ==============================================================================
+# EXPORT SERVICES
+# ==============================================================================
 
 def export_products_csv(seller):
     response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = (
-        f'attachment; filename="{seller.store_name}_products.csv"'
-    )
-
+    response["Content-Disposition"] = f'attachment; filename="{seller.store_name}_products.csv"'
     writer = csv.writer(response)
-
     writer.writerow([
-        "ID",
-        "Name",
-        "Slug",
-        "SKU",
-        "Barcode",
-        "Category",
-        "Brand",
-        "Seller",
-        "Price",
-        "Discount Price",
-        "Discount %",
-        "Stock",
-        "Minimum Stock",
-        "Weight",
-        "Status",
-        "Featured",
-        "Primary Image",
-        "Created",
-        "Updated",
+        "ID", "Name", "Slug", "SKU", "Barcode", "Category", "Brand",
+        "Seller", "Price", "Discount Price", "Discount %", "Stock",
+        "Minimum Stock", "Weight", "Status", "Featured", "Primary Image",
+        "Created", "Updated",
     ])
 
-    products = (
-        seller.products.select_related("category", "brand")
-        .prefetch_related("images")
-    )
+    products = seller.products.select_related("category", "brand").prefetch_related("images")
 
     for product in products:
         image = product.primary_image
-
         writer.writerow([
             product.id,
             product.name,
@@ -1048,488 +993,77 @@ def export_products_csv(seller):
 
     return response
 
-import csv
-
-from django.http import HttpResponse
-from django.utils import timezone
-
-from orders.models import OrderItem
-
 
 def export_product_orders(product):
     order_items = (
         OrderItem.objects.filter(product=product)
         .select_related(
-            "seller_order",
-            "seller_order__order",
-            "seller_order__seller",
+            "order",
+            "order__seller",
             "product",
         )
         .order_by("-created_at")
     )
 
     response = HttpResponse(content_type="text/csv")
-
-    filename = (
-        f"{product.slug}-orders-"
-        f"{timezone.now().strftime('%Y-%m-%d')}.csv"
-    )
-
-    response["Content-Disposition"] = (
-        f'attachment; filename="{filename}"'
-    )
+    filename = f"{product.slug}-orders-{timezone.now().strftime('%Y-%m-%d')}.csv"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
-
-    writer.writerow(
-        [
-            "Order Number",
-            "Order Date",
-            "Order Status",
-            "Payment Status",
-            "Customer",
-            "Customer Phone",
-            "Shipping Address",
-            "Shipping City",
-            "Product",
-            "SKU",
-            "Quantity",
-            "Unit Price",
-            "Product Total",
-            "Seller",
-            "Seller Order Subtotal",
-            "Seller Order Shipping",
-            "Seller Order Discount",
-            "Seller Order Tax",
-            "Seller Order Total",
-            "Tracking Number",
-            "Courier",
-            "Shipped At",
-            "Delivered At",
-        ]
-    )
+    writer.writerow([
+        "Order Number",
+        "Order Date",
+        "Order Status",
+        "Payment Status",
+        "Customer",
+        "Customer Phone",
+        "Shipping Address",
+        "Shipping City",
+        "Product",
+        "SKU",
+        "Quantity",
+        "Unit Price",
+        "Product Total",
+        "Seller",
+        "Order Subtotal",
+        "Order Shipping",
+        "Order Discount",
+        "Order Tax",
+        "Order Total",
+        "Tracking Number",
+        "Courier",
+        "Shipped At",
+        "Delivered At",
+    ])
 
     for item in order_items:
-        seller_order = item.seller_order
-        order = seller_order.order
-        seller = seller_order.seller
+        order = item.order
+        seller = order.seller
 
-        writer.writerow(
-            [
-                order.order_number,
-                order.created_at.strftime("%Y-%m-%d %H:%M"),
-                seller_order.get_status_display(),
-                order.get_payment_status_display(),
-                order.shipping_name,
-                order.shipping_phone or "",
-                order.shipping_address,
-                order.shipping_city,
-                product.name,
-                product.sku or "",
-                item.quantity,
-                item.price,
-                item.total,
-                seller.store_name,
-                seller_order.subtotal,
-                seller_order.shipping_cost,
-                seller_order.discount,
-                seller_order.tax,
-                seller_order.total,
-                seller_order.tracking_number,
-                seller_order.courier,
-                (
-                    seller_order.shipped_at.strftime("%Y-%m-%d %H:%M")
-                    if seller_order.shipped_at
-                    else ""
-                ),
-                (
-                    seller_order.delivered_at.strftime("%Y-%m-%d %H:%M")
-                    if seller_order.delivered_at
-                    else ""
-                ),
-            ]
-        )
+        writer.writerow([
+            order.order_number,
+            order.created_at.strftime("%Y-%m-%d %H:%M"),
+            order.get_status_display(),
+            order.get_payment_status_display(),
+            order.shipping_name,
+            order.shipping_phone or "",
+            order.shipping_address,
+            order.shipping_city,
+            product.name,
+            product.sku or "",
+            item.quantity,
+            item.price,
+            item.total,
+            seller.store_name,
+            order.subtotal,
+            order.shipping_cost,
+            order.discount,
+            order.tax,
+            order.total,
+            order.tracking_number,
+            order.courier,
+            order.shipped_at.strftime("%Y-%m-%d %H:%M") if order.shipped_at else "",
+            order.delivered_at.strftime("%Y-%m-%d %H:%M") if order.delivered_at else "",
+        ])
 
     return response
-
-from django.db import transaction
-
-
-def upload_product_image(product_slug, image_file, seller):
-    try:
-        product = Product.objects.get(
-            slug=product_slug,
-            seller=seller,
-        )
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    last_order = (
-        ProductImage.objects
-        .filter(product=product)
-        .order_by("-display_order")
-        .values_list("display_order", flat=True)
-        .first()
-    )
-
-    next_order = (last_order + 1) if last_order is not None else 0
-
-    product_image = ProductImage.objects.create(
-        product=product,
-        image=image_file,
-        display_order=next_order,
-    )
-
-    return {
-        "success": True,
-        "message": "Product image added successfully.",
-        "image_id": product_image.id,
-    }
-from django.db import transaction
-
-
-@transaction.atomic
-def delete_product_image(product_slug, image_id, seller):
-    try:
-        product_image = ProductImage.objects.select_related(
-            "product"
-        ).get(
-            id=image_id,
-            product__slug=product_slug,
-            product__seller=seller,
-        )
-
-    except ProductImage.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product image not found.",
-        }
-
-    product = product_image.product
-    was_primary = product_image.is_primary
-    replacement = None
-    if was_primary:
-        replacement = (
-            ProductImage.objects
-            .filter(product=product)
-            .exclude(id=product_image.id)
-            .order_by("display_order", "id")
-            .first()
-        )
-
-        if replacement:
-            replacement.is_primary = True
-            replacement.save(
-                update_fields=["is_primary"]
-            )
-
-    product_image.delete()
-
-    return {
-        "success": True,
-        "message": "Product image deleted successfully.",
-        "replacement_primary": was_primary and replacement is not None,
-    }
-
-@transaction.atomic
-def reorder_product_images(product_slug, image_ids, seller):
-    try:
-        product = Product.objects.get(
-            slug=product_slug,
-            seller=seller,
-        )
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    images = list(
-        ProductImage.objects.filter(
-            product=product,
-            id__in=image_ids,
-        )
-    )
-
-    image_map = {
-        str(image.id): image
-        for image in images
-    }
-
-    if len(images) != len(image_ids):
-        return {
-            "success": False,
-            "message": "Invalid product image list.",
-        }
-
-    for index, image_id in enumerate(image_ids):
-        image = image_map.get(str(image_id))
-
-        if image:
-            image.display_order = index
-            image.save(
-                update_fields=["display_order"]
-            )
-
-    return {
-        "success": True,
-        "message": "Media order updated successfully.",
-    }
-
-
-from django.db import transaction
-
-
-@transaction.atomic
-def set_primary_product_image(product_slug, image_id, seller):
-    try:
-        product_image = ProductImage.objects.select_related(
-            "product"
-        ).get(
-            id=image_id,
-            product__slug=product_slug,
-            product__seller=seller,
-        )
-
-    except ProductImage.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product image not found.",
-        }
-
-    ProductImage.objects.filter(
-        product=product_image.product,
-        is_primary=True,
-    ).exclude(
-        id=product_image.id
-    ).update(
-        is_primary=False
-    )
-
-    if not product_image.is_primary:
-        product_image.is_primary = True
-        product_image.save(
-            update_fields=["is_primary"]
-        )
-
-    return {
-        "success": True,
-        "message": "Primary image updated successfully.",
-    }
-
-import logging
-
-from django.db import transaction
-
-logger = logging.getLogger(__name__)
-
-
-@transaction.atomic
-def update_product_pricing(product_slug, seller, price, discount_price=None):
-    try:
-        product = Product.objects.get(
-            slug=product_slug,
-            seller=seller,
-        )
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    product.price = price
-    product.discount_price = discount_price
-
-    product.save(
-        update_fields=[
-            "price",
-            "discount_price",
-        ]
-    )
-
-    return {
-        "success": True,
-        "message": "Product pricing updated successfully.",
-        "price": product.price,
-        "discount_price": product.discount_price,
-    }
-
-@transaction.atomic
-def remove_product_discount(product_slug):
-    try:
-        product = Product.objects.get(
-            slug=product_slug,
-        )
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    if product.discount_price is None:
-        return {
-            "success": False,
-            "message": "This product does not have a discount.",
-        }
-
-    product.discount_price = None
-
-    product.save(
-        update_fields=[
-            "discount_price",
-        ]
-    )
-
-    return {
-        "success": True,
-        "message": "Discount removed successfully.",
-    }
-
-from django.db import transaction
-
-
-@transaction.atomic
-def adjust_product_stock(
-    product_slug,
-    seller,
-    adjustment_type,
-    quantity,
-    reason="",
-    note="",
-):
-    try:
-        product = (
-            Product.objects
-            .select_for_update()
-            .get(
-                slug=product_slug,
-                seller=seller,
-            )
-        )
-
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    current_stock = product.stock_quantity or 0
-
-    if adjustment_type == "increase":
-        new_stock = current_stock + quantity
-
-    elif adjustment_type == "decrease":
-        if quantity > current_stock:
-            return {
-                "success": False,
-                "message": "Stock cannot be reduced below zero.",
-            }
-
-        new_stock = current_stock - quantity
-
-    elif adjustment_type == "set":
-        new_stock = quantity
-
-    else:
-        return {
-            "success": False,
-            "message": "Invalid adjustment type.",
-        }
-
-    product.stock_quantity = new_stock
-
-    product.save(
-        update_fields=[
-            "stock_quantity",
-        ]
-    )
-
-    return {
-        "success": True,
-        "message": "Stock adjustment applied successfully.",
-        "previous_stock": current_stock,
-        "new_stock": new_stock,
-        "adjustment_type": adjustment_type,
-        "quantity": quantity,
-        "reason": reason,
-        "note": note,
-    }
-
-
-@transaction.atomic
-def mark_product_out_of_stock(product_slug, seller):
-    try:
-        product = (
-            Product.objects
-            .select_for_update()
-            .get(
-                slug=product_slug,
-                seller=seller,
-            )
-        )
-
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    product.stock_quantity = 0
-    product.status = Product.Status.OUT_OF_STOCK
-
-    product.save(
-        update_fields=[
-            "stock_quantity",
-            "status",
-        ]
-    )
-
-    return {
-        "success": True,
-        "message": "Product marked as out of stock.",
-        "stock_quantity": 0,
-    }
-
-
-@transaction.atomic
-def restore_product_stock(product_slug, seller):
-    try:
-        product = (
-            Product.objects
-            .select_for_update()
-            .get(
-                slug=product_slug,
-                seller=seller,
-            )
-        )
-
-    except Product.DoesNotExist:
-        return {
-            "success": False,
-            "message": "Product not found.",
-        }
-
-    if product.stock_quantity <= 0:
-        return {
-            "success": False,
-            "message": "Cannot restore product because its stock quantity is zero.",
-        }
-
-    product.status = Product.Status.PUBLISHED
-
-    product.save(
-        update_fields=[
-            "status",
-        ]
-    )
-
-    return {
-        "success": True,
-        "message": "Product stock restored successfully.",
-        "stock_quantity": product.stock_quantity,
-    }
-
-

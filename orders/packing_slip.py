@@ -1,7 +1,7 @@
 """
 orders/packing_slip.py
 
-Redesigned PDF packing slip generation for MarketSphere seller orders, built
+Redesigned PDF packing slip generation for MarketSphere orders, built
 with ReportLab Platypus for flow-based multi-page support.
 
 Designed specifically for warehouse fulfillment and customer order verification:
@@ -12,7 +12,7 @@ Designed specifically for warehouse fulfillment and customer order verification:
 
 Usage:
     from orders.packing_slip import generate_packing_slip
-    pdf_buffer = generate_packing_slip(seller_order)
+    pdf_buffer = generate_packing_slip(order)
 """
 
 from io import BytesIO
@@ -159,9 +159,9 @@ def _get_styles():
 # =============================================================
 # DATA HELPERS
 # =============================================================
-def _get_seller_info(seller_order):
-    """Extracts seller details with defensive fallbacks across model schemas."""
-    seller = getattr(seller_order, "seller", None)
+def _get_seller_info(order):
+    """Extracts seller details with defensive fallbacks."""
+    seller = getattr(order, "seller", None)
     user = getattr(seller, "user", None) if seller else None
 
     store_name = (
@@ -190,11 +190,8 @@ def _get_seller_info(seller_order):
     }
 
 
-def _get_customer_info(seller_order):
-    """Extract customer shipping information from the parent Order."""
-
-    order = seller_order.order
-
+def _get_customer_info(order):
+    """Extract customer shipping information."""
     return {
         "name": order.shipping_name or "—",
         "phone": order.shipping_phone or "—",
@@ -203,12 +200,11 @@ def _get_customer_info(seller_order):
         "postal_code": order.shipping_postal_code or "—",
     }
 
-def _get_items_list(seller_order):
-    """Safely retrieves order items from either `items` or `sellerorderitems`."""
-    if hasattr(seller_order, "items"):
-        return seller_order.items.all()
-    elif hasattr(seller_order, "sellerorderitems"):
-        return seller_order.sellerorderitems.all()
+
+def _get_items_list(order):
+    """Safely retrieves order items."""
+    if hasattr(order, "items"):
+        return order.items.all()
     return []
 
 
@@ -243,20 +239,19 @@ def _build_header(styles):
     ]
 
 
-def _build_meta_card(seller_order, styles):
+def _build_meta_card(order, styles):
     """Key/Value grid card for Order Number, Packing Date, Tracking Number, Courier, Status."""
-    parent_order = getattr(seller_order, "order", seller_order)
-    created_at = getattr(seller_order, "created_at", None) or getattr(parent_order, "created_at", None)
+    created_at = getattr(order, "created_at", None)
     date_str = created_at.strftime("%B %d, %Y") if created_at else "—"
 
-    order_num = getattr(parent_order, "order_number", "—")
-    tracking_num = getattr(seller_order, "tracking_number", None) or "—"
-    courier_name = getattr(seller_order, "courier", None) or "Standard Delivery"
+    order_num = getattr(order, "order_number", "—")
+    tracking_num = getattr(order, "tracking_number", None) or "—"
+    courier_name = getattr(order, "courier", None) or "Standard Delivery"
 
     status = (
-        seller_order.get_status_display()
-        if hasattr(seller_order, "get_status_display")
-        else getattr(seller_order, "status", "Pending").title()
+        order.get_status_display()
+        if hasattr(order, "get_status_display")
+        else getattr(order, "status", "Pending").title()
     )
 
     rows = [
@@ -288,10 +283,10 @@ def _build_meta_card(seller_order, styles):
     return table
 
 
-def _build_parties_section(seller_order, styles):
+def _build_parties_section(order, styles):
     """Seller (FROM) and Customer (SHIP TO) details formatted side-by-side."""
-    seller = _get_seller_info(seller_order)
-    customer = _get_customer_info(seller_order)
+    seller = _get_seller_info(order)
+    customer = _get_customer_info(order)
 
     seller_lines = [
         f"<b>{seller['name']}</b>",
@@ -341,7 +336,7 @@ def _build_parties_section(seller_order, styles):
     return table
 
 
-def _build_items_table(seller_order, styles):
+def _build_items_table(order, styles):
     """Warehouse items table featuring check boxes, index, product name, SKU, and quantity."""
     header = [
         Paragraph("<b>Check</b>", styles["TableHeader"]),
@@ -352,7 +347,7 @@ def _build_items_table(seller_order, styles):
     ]
     table_data = [header]
 
-    items = _get_items_list(seller_order)
+    items = _get_items_list(order)
 
     for idx, item in enumerate(items, start=1):
         product = getattr(item, "product", None)
@@ -389,9 +384,9 @@ def _build_items_table(seller_order, styles):
     return table
 
 
-def _build_summary_and_verification_section(seller_order, styles):
+def _build_summary_and_verification_section(order, styles):
     """Total quantity badge and warehouse audit signature fields."""
-    items = _get_items_list(seller_order)
+    items = _get_items_list(order)
 
     total_items = len(items)
     total_quantity = sum(int(getattr(item, "quantity", 1)) for item in items)
@@ -464,15 +459,14 @@ def _build_footer(styles):
 # =============================================================
 # PUBLIC ENTRY POINT
 # =============================================================
-def generate_packing_slip(seller_order):
-    """Builds a professional A4 PDF packing slip for the given SellerOrder and
+def generate_packing_slip(order):
+    """Builds a professional A4 PDF packing slip for the given Order and
     returns it as an in-memory BytesIO buffer ready to be written to a Django FileResponse.
     """
     buffer = BytesIO()
     styles = _get_styles()
 
-    parent_order = getattr(seller_order, "order", seller_order)
-    order_num = getattr(parent_order, "order_number", "0000")
+    order_num = getattr(order, "order_number", "0000")
 
     doc = SimpleDocTemplate(
         buffer,
@@ -486,15 +480,15 @@ def generate_packing_slip(seller_order):
 
     elements = []
     elements += _build_header(styles)
-    elements.append(_build_meta_card(seller_order, styles))
+    elements.append(_build_meta_card(order, styles))
     elements.append(Spacer(1, 14))
-    elements.append(_build_parties_section(seller_order, styles))
+    elements.append(_build_parties_section(order, styles))
     elements.append(Spacer(1, 14))
     elements.append(Paragraph("PACKED ITEMS CHECKLIST", styles["SectionHeading"]))
     elements.append(Spacer(1, 2))
-    elements.append(_build_items_table(seller_order, styles))
+    elements.append(_build_items_table(order, styles))
     elements.append(Spacer(1, 10))
-    elements += _build_summary_and_verification_section(seller_order, styles)
+    elements += _build_summary_and_verification_section(order, styles)
     elements += _build_footer(styles)
 
     doc.build(elements)

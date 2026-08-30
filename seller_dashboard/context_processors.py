@@ -4,7 +4,7 @@ from django.db.models import F, Sum
 from django.utils import timezone
 
 from accounts.models import Seller
-from orders.models import Order, SellerOrder
+from orders.models import Order
 from products.models import Product
 
 from orders.services import get_seller_orders
@@ -23,8 +23,7 @@ def seller_dashboard(request):
         return {}
 
     seller_products = Product.objects.filter(seller=seller)
-    seller_orders = SellerOrder.objects.filter(seller=seller)
-
+    seller_orders = Order.objects.filter(seller=seller)
 
     total_products = seller_products.count()
 
@@ -36,24 +35,22 @@ def seller_dashboard(request):
         status=Product.Status.PUBLISHED
     ).count()
 
-
     pending_orders = seller_orders.filter(
-        status=SellerOrder.Status.PENDING
+        status=Order.Status.PENDING
     ).count()
-
     
     processing_orders = seller_orders.filter(
-        status=SellerOrder.Status.PROCESSING
+        status=Order.Status.PROCESSING
     ).count()
 
     completed_orders = seller_orders.filter(
-        status=SellerOrder.Status.DELIVERED
+        status=Order.Status.DELIVERED
     ).count()
 
     completed_revenue = (
         seller_orders.filter(
-            status=SellerOrder.Status.DELIVERED,
-            order__payment_status=Order.PaymentStatus.PAID,
+            status=Order.Status.DELIVERED,
+            payment_status=Order.PaymentStatus.PAID,
         ).aggregate(
             revenue=Sum("total")
         )["revenue"]
@@ -70,7 +67,7 @@ def seller_dashboard(request):
     ).count()
 
     recent_orders = (
-        seller_orders.select_related("order", "order__user")
+        seller_orders.select_related("user")
         .prefetch_related("items", "items__product")
         .order_by("-created_at")[:4]
     )
@@ -98,5 +95,5 @@ def seller_dashboard(request):
         "dashboard_new_orders_this_week": new_orders_this_week,
         "dashboard_recent_orders": recent_orders,
         "dashboard_drafted_products": drafted_products,
-        "dashboard_seller_orders": get_seller_orders(request.user.seller_profile)
+        "dashboard_seller_orders": get_seller_orders(seller)
     }

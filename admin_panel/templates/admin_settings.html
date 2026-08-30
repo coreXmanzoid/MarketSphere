@@ -1,0 +1,1517 @@
+{% extends 'admin_base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Settings{% endblock %}
+{% block active_page %}settings{% endblock %}
+
+{% block breadcrumb %}
+  <nav class="adh-breadcrumb" aria-label="Breadcrumb">
+    <span>Admin</span>
+    <span class="adh-breadcrumb-sep">/</span>
+    <span class="adh-breadcrumb-current">Settings</span>
+  </nav>
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/admin_settings.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="set-page" id="setPage" data-active-section="overview">
+
+  <!-- ================= 1. HEADER ================= -->
+  <header class="set-header set-reveal">
+    <div class="set-header-text">
+      <h1 class="set-header-title">Settings</h1>
+      <p class="set-header-subtitle">Configure and control your MarketSphere marketplace.</p>
+      <span class="set-status-pill" id="setStatusPill">
+        <span class="set-status-dot" aria-hidden="true"></span>
+        {% if settings_up_to_date %}All settings up to date{% else %}System Operational{% endif %}
+      </span>
+    </div>
+
+    <div class="set-header-actions">
+      <button type="button" class="set-btn set-btn-secondary" id="setResetChangesBtn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
+        Reset Changes
+      </button>
+      <button type="button" class="set-btn set-btn-primary" id="setSaveChangesBtn" disabled>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+        <span class="set-btn-label">Save Changes</span>
+      </button>
+      <div class="set-dropdown" id="setMoreDropdown">
+        <button type="button" class="set-btn set-btn-icon-only" id="setMoreTrigger" aria-haspopup="true" aria-expanded="false" aria-label="More options">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg>
+        </button>
+        <div class="set-dropdown-menu" role="menu">
+          <button type="button" class="set-dropdown-item" role="menuitem" data-set-open-modal="setResetAllModal">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
+            Reset All Settings
+          </button>
+          <button type="button" class="set-dropdown-item" role="menuitem" data-set-goto-section="audit">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            View Audit Log
+          </button>
+          <div class="set-dropdown-divider"></div>
+          <button type="button" class="set-dropdown-item" role="menuitem" data-set-toast="info" data-set-toast-msg="Settings export isn&#8217;t available yet.">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export Configuration
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= UNSAVED CHANGES BAR ================= -->
+  <div class="set-unsaved-bar set-hidden" id="setUnsavedBar" role="status">
+    <span class="set-unsaved-text">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      You have unsaved changes in this section.
+    </span>
+    <div class="set-unsaved-actions">
+      <button type="button" class="set-btn set-btn-ghost set-btn-sm" id="setDiscardBtn">Discard</button>
+      <button type="button" class="set-btn set-btn-primary set-btn-sm" id="setUnsavedSaveBtn">Save Changes</button>
+    </div>
+  </div>
+
+  <!-- ================= 2. LAYOUT ================= -->
+  <div class="set-layout">
+
+    <!-- MOBILE SECTION SELECT -->
+    <div class="set-mobile-nav-wrap">
+      <div class="set-select-wrap">
+        <select id="setMobileNavSelect" class="set-select" aria-label="Jump to settings section">
+          <option value="overview">Settings Overview</option>
+          <option value="general">General</option>
+          <option value="marketplace">Marketplace</option>
+          <option value="orders">Orders &amp; Checkout</option>
+          <option value="catalog">Catalog</option>
+          <option value="users">Users &amp; Accounts</option>
+          <option value="sellers">Sellers</option>
+          <option value="payments">Payments</option>
+          <option value="shipping">Shipping</option>
+          <option value="notifications">Notifications</option>
+          <option value="email">Email</option>
+          <option value="security">Security</option>
+          <option value="appearance">Appearance</option>
+          <option value="seo">SEO</option>
+          <option value="system">System</option>
+          <option value="audit">Audit &amp; Activity</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ================= LEFT: SETTINGS NAV ================= -->
+    <nav class="set-nav" id="setNav" aria-label="Settings sections">
+      <button type="button" class="set-nav-link is-active" data-set-section="overview" aria-current="page">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg></span>
+        <span class="set-nav-text"><strong>Overview</strong><small>All categories</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="general">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg></span>
+        <span class="set-nav-text"><strong>General</strong><small>Marketplace identity</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="marketplace">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path><path d="M9 21V13h6v8"></path></svg></span>
+        <span class="set-nav-text"><strong>Marketplace</strong><small>Rules &amp; commission</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="orders">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path><path d="M14 2v5h5"></path></svg></span>
+        <span class="set-nav-text"><strong>Orders &amp; Checkout</strong><small>Cancellation, returns</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="catalog">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg></span>
+        <span class="set-nav-text"><strong>Catalog</strong><small>Products &amp; reviews</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="users">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle></svg></span>
+        <span class="set-nav-text"><strong>Users &amp; Accounts</strong><small>Registration, auth</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="sellers">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg></span>
+        <span class="set-nav-text"><strong>Sellers</strong><small>Verification &amp; status</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="payments">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span>
+        <span class="set-nav-text"><strong>Payments</strong><small>Coming soon</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="shipping">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></span>
+        <span class="set-nav-text"><strong>Shipping</strong><small>Delivery &amp; zones</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="notifications">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+        <span class="set-nav-text"><strong>Notifications</strong><small>Buyer, seller, admin</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="email">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg></span>
+        <span class="set-nav-text"><strong>Email</strong><small>SMTP &amp; templates</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="security">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg></span>
+        <span class="set-nav-text"><strong>Security</strong><small>Passwords, 2FA, IP</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="appearance">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2a10 10 0 1 0 0 20 2.5 2.5 0 0 0 0-5h-1a2 2 0 0 1 0-4h4a3 3 0 0 0 3-3 9.98 9.98 0 0 0-6-8Z"></path></svg></span>
+        <span class="set-nav-text"><strong>Appearance</strong><small>Branding &amp; theme</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="seo">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+        <span class="set-nav-text"><strong>SEO</strong><small>Meta &amp; sitemap</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="system">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M9 9h6v6H9z"></path><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"></path></svg></span>
+        <span class="set-nav-text"><strong>System</strong><small>Status &amp; diagnostics</small></span>
+      </button>
+      <button type="button" class="set-nav-link" data-set-section="audit">
+        <span class="set-nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span>
+        <span class="set-nav-text"><strong>Audit &amp; Activity</strong><small>Change history</small></span>
+      </button>
+    </nav>
+
+    <!-- ================= RIGHT: SETTINGS CONTENT ================= -->
+    <div class="set-content">
+
+      <!-- ============================================================
+           OVERVIEW
+      ============================================================ -->
+      <section class="set-panel is-active" data-set-panel="overview" aria-label="Settings Overview">
+        <div class="set-panel-head">
+          <h2 class="set-panel-title">Settings Overview</h2>
+          <p class="set-panel-subtitle">Manage your marketplace configuration from one place.</p>
+        </div>
+
+        <div class="set-overview-grid">
+          {% for card in settings_overview_cards %}
+          <button type="button" class="set-overview-card" data-set-goto-section="{{ card.section }}">
+            <div class="set-overview-card-top">
+              <span class="set-overview-icon"><i class="{{ card.icon }}"></i></span>
+              <span class="set-overview-status set-status-{{ card.status_color|default:'success' }}">{{ card.status|default:"Configured" }}</span>
+            </div>
+            <h3 class="set-overview-card-title">{{ card.title }}</h3>
+            <p class="set-overview-card-desc">{{ card.description }}</p>
+            <div class="set-overview-card-foot">
+              <span>Updated {{ card.last_updated|default:"—" }}</span>
+              <span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span>
+            </div>
+          </button>
+          {% empty %}
+          <!-- Fallback static cards (used until settings_overview_cards is wired from Django) -->
+          <button type="button" class="set-overview-card" data-set-goto-section="general">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-shop"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">General</h3>
+            <p class="set-overview-card-desc">Marketplace identity, contact details, localization and business information.</p>
+            <div class="set-overview-card-foot"><span>Updated 2 days ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="marketplace">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-bag-check"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Marketplace</h3>
+            <p class="set-overview-card-desc">Control marketplace behavior, seller rules, commissions and platform-wide settings.</p>
+            <div class="set-overview-card-foot"><span>Updated 5 days ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="orders">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-receipt"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Orders &amp; Checkout</h3>
+            <p class="set-overview-card-desc">Cancellation windows, return policy, checkout requirements and order numbering.</p>
+            <div class="set-overview-card-foot"><span>Updated 1 week ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="catalog">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-grid"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Catalog</h3>
+            <p class="set-overview-card-desc">Product approval, reviews, image limits and stock thresholds.</p>
+            <div class="set-overview-card-foot"><span>Updated 3 days ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="users">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-people"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Users &amp; Accounts</h3>
+            <p class="set-overview-card-desc">Registration, verification, password policy and account lifecycle rules.</p>
+            <div class="set-overview-card-foot"><span>Updated 6 days ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="sellers">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-shop-window"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Sellers</h3>
+            <p class="set-overview-card-desc">Application requirements, verification, approval flow and performance rules.</p>
+            <div class="set-overview-card-foot"><span>Updated 4 days ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="payments">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-credit-card"></i></span><span class="set-overview-status set-status-neutral">Coming Soon</span></div>
+            <h3 class="set-overview-card-title">Payments</h3>
+            <p class="set-overview-card-desc">Provider configuration, settlement and payout rules. Not yet implemented.</p>
+            <div class="set-overview-card-foot"><span>Not configured</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="shipping">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-truck"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Shipping</h3>
+            <p class="set-overview-card-desc">Delivery zones, handling time, free shipping thresholds and restrictions.</p>
+            <div class="set-overview-card-foot"><span>Updated 1 week ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="notifications">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-bell"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Notifications</h3>
+            <p class="set-overview-card-desc">Buyer, seller and admin notification channels for every marketplace event.</p>
+            <div class="set-overview-card-foot"><span>Updated 2 weeks ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="email">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-envelope"></i></span><span class="set-overview-status set-status-warning">Needs Review</span></div>
+            <h3 class="set-overview-card-title">Email</h3>
+            <p class="set-overview-card-desc">Sender identity, SMTP connection and transactional email templates.</p>
+            <div class="set-overview-card-foot"><span>Updated 1 month ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="security">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-shield-lock"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Security</h3>
+            <p class="set-overview-card-desc">Password policy, session limits, 2FA and suspicious activity detection.</p>
+            <div class="set-overview-card-foot"><span>Updated 3 days ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="appearance">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-palette"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">Appearance</h3>
+            <p class="set-overview-card-desc">Branding, theme colors, header/footer and custom CSS.</p>
+            <div class="set-overview-card-foot"><span>Updated 2 weeks ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="seo">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-search"></i></span><span class="set-overview-status set-status-success">Configured</span></div>
+            <h3 class="set-overview-card-title">SEO</h3>
+            <p class="set-overview-card-desc">Meta titles, descriptions, sitemap and per-content-type search settings.</p>
+            <div class="set-overview-card-foot"><span>Updated 1 week ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="system">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-hdd-stack"></i></span><span class="set-overview-status set-status-success">Operational</span></div>
+            <h3 class="set-overview-card-title">System</h3>
+            <p class="set-overview-card-desc">Maintenance mode, cache, background tasks and system diagnostics.</p>
+            <div class="set-overview-card-foot"><span>Checked just now</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          <button type="button" class="set-overview-card" data-set-goto-section="audit">
+            <div class="set-overview-card-top"><span class="set-overview-icon"><i class="bi bi-clock-history"></i></span><span class="set-overview-status set-status-neutral">124 events</span></div>
+            <h3 class="set-overview-card-title">Audit &amp; Activity</h3>
+            <p class="set-overview-card-desc">Full history of configuration changes made by every administrator.</p>
+            <div class="set-overview-card-foot"><span>Last event 2 hours ago</span><span class="set-overview-open">Open <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+          </button>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- ============================================================
+           GENERAL
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="general" aria-label="General Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">General</h2>
+            <p class="set-panel-subtitle">Marketplace identity, contact information and localization defaults.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <!-- Identity -->
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Marketplace Identity</h3>
+            <div class="set-upload-row">
+              <div class="set-upload-item">
+                <span class="set-field-label">Marketplace Logo</span>
+                <div class="set-upload-preview" id="setLogoPreview">
+                  <img src="{{ marketplace_logo_url|default:'' }}" alt="Marketplace logo" id="setLogoPreviewImg" {% if not marketplace_logo_url %}style="display:none;"{% endif %} />
+                  <span class="set-upload-placeholder" id="setLogoPlaceholder" {% if marketplace_logo_url %}style="display:none;"{% endif %}><i class="bi bi-image"></i></span>
+                </div>
+                <div class="set-upload-actions">
+                  <label class="set-btn set-btn-secondary set-btn-sm set-upload-btn">Upload<input type="file" accept="image/*" class="set-file-input" data-set-preview-target="setLogoPreviewImg" data-set-placeholder-target="setLogoPlaceholder" hidden /></label>
+                  <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-remove-preview="setLogoPreviewImg" data-set-placeholder-target="setLogoPlaceholder">Remove</button>
+                </div>
+              </div>
+              <div class="set-upload-item">
+                <span class="set-field-label">Favicon</span>
+                <div class="set-upload-preview set-upload-preview-sm" id="setFaviconPreview">
+                  <img src="{{ marketplace_favicon_url|default:'' }}" alt="Favicon" id="setFaviconPreviewImg" {% if not marketplace_favicon_url %}style="display:none;"{% endif %} />
+                  <span class="set-upload-placeholder" id="setFaviconPlaceholder" {% if marketplace_favicon_url %}style="display:none;"{% endif %}><i class="bi bi-app"></i></span>
+                </div>
+                <div class="set-upload-actions">
+                  <label class="set-btn set-btn-secondary set-btn-sm set-upload-btn">Upload<input type="file" accept="image/*" class="set-file-input" data-set-preview-target="setFaviconPreviewImg" data-set-placeholder-target="setFaviconPlaceholder" hidden /></label>
+                  <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-remove-preview="setFaviconPreviewImg" data-set-placeholder-target="setFaviconPlaceholder">Remove</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setMarketplaceName">Marketplace Name</label>
+                <input type="text" id="setMarketplaceName" name="marketplace_name" value="{{ marketplace_name|default:'MarketSphere' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setBusinessName">Business Name</label>
+                <input type="text" id="setBusinessName" name="business_name" value="{{ business_name|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field set-field-full">
+                <label for="setMarketplaceDesc">Marketplace Description</label>
+                <textarea id="setMarketplaceDesc" name="marketplace_description" rows="3" data-set-track>{{ marketplace_description|default:'' }}</textarea>
+                <span class="set-field-hint">Shown in search engine results and social previews when no page-specific description is set.</span>
+              </div>
+              <div class="set-field set-field-full">
+                <label for="setBusinessAddress">Business Address</label>
+                <textarea id="setBusinessAddress" name="business_address" rows="2" data-set-track>{{ business_address|default:'' }}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact -->
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Contact Information</h3>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setContactEmail">Contact Email</label>
+                <input type="email" id="setContactEmail" name="contact_email" value="{{ contact_email|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setSupportEmail">Support Email</label>
+                <input type="email" id="setSupportEmail" name="support_email" value="{{ support_email|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setPhone">Phone</label>
+                <input type="tel" id="setPhone" name="phone" value="{{ contact_phone|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setSupportUrl">Support URL</label>
+                <input type="url" id="setSupportUrl" name="support_url" value="{{ support_url|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setPrivacyUrl">Privacy Policy URL</label>
+                <input type="url" id="setPrivacyUrl" name="privacy_url" value="{{ privacy_url|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setTermsUrl">Terms &amp; Conditions URL</label>
+                <input type="url" id="setTermsUrl" name="terms_url" value="{{ terms_url|default:'' }}" data-set-track />
+              </div>
+            </div>
+          </div>
+
+          <!-- Localization -->
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Localization</h3>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setCountry">Country</label>
+                <select id="setCountry" name="country" data-set-track>
+                  <option value="PK" {% if country == 'PK' or not country %}selected{% endif %}>Pakistan</option>
+                  <option value="AE">United Arab Emirates</option>
+                  <option value="US">United States</option>
+                  <option value="GB">United Kingdom</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setTimezone">Timezone</label>
+                <select id="setTimezone" name="timezone" data-set-track>
+                  <option value="Asia/Karachi" {% if timezone == 'Asia/Karachi' or not timezone %}selected{% endif %}>Asia/Karachi (UTC+5)</option>
+                  <option value="UTC">UTC</option>
+                  <option value="Asia/Dubai">Asia/Dubai (UTC+4)</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setCurrency">Currency</label>
+                <select id="setCurrency" name="currency" data-set-track>
+                  <option value="PKR" {% if currency == 'PKR' or not currency %}selected{% endif %}>PKR — Pakistani Rupee</option>
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="AED">AED — UAE Dirham</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setLanguage">Language</label>
+                <select id="setLanguage" name="language" data-set-track>
+                  <option value="en" {% if language == 'en' or not language %}selected{% endif %}>English</option>
+                  <option value="ur">Urdu</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setDateFormat">Date Format</label>
+                <select id="setDateFormat" name="date_format" data-set-track>
+                  <option value="d/m/Y">DD/MM/YYYY</option>
+                  <option value="m/d/Y">MM/DD/YYYY</option>
+                  <option value="Y-m-d">YYYY-MM-DD</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setTimeFormat">Time Format</label>
+                <select id="setTimeFormat" name="time_format" data-set-track>
+                  <option value="12">12-hour</option>
+                  <option value="24">24-hour</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Registration / Tax -->
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Registration &amp; Tax <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setBizRegNum">Business Registration Number</label>
+                <input type="text" id="setBizRegNum" name="business_registration_number" value="{{ business_registration_number|default:'' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setTaxRegNum">Tax Registration Number</label>
+                <input type="text" id="setTaxRegNum" name="tax_registration_number" value="{{ tax_registration_number|default:'' }}" data-set-track />
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Social Links</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setSocialFb">Facebook</label><input type="url" id="setSocialFb" name="social_facebook" value="{{ social_facebook|default:'' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSocialIg">Instagram</label><input type="url" id="setSocialIg" name="social_instagram" value="{{ social_instagram|default:'' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSocialX">Twitter / X</label><input type="url" id="setSocialX" name="social_twitter" value="{{ social_twitter|default:'' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSocialLi">LinkedIn</label><input type="url" id="setSocialLi" name="social_linkedin" value="{{ social_linkedin|default:'' }}" data-set-track /></div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           MARKETPLACE
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="marketplace" aria-label="Marketplace Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Marketplace</h2>
+            <p class="set-panel-subtitle">Control marketplace behavior, seller rules, commissions and platform-wide visibility.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card set-form-card-danger">
+            <h3 class="set-form-card-title">Marketplace Status</h3>
+            <div class="set-switch-row">
+              <div class="set-switch-text">
+                <strong>Marketplace Online</strong>
+                <small>When disabled, the storefront shows a maintenance notice to all visitors.</small>
+              </div>
+              <label class="set-switch">
+                <input type="checkbox" name="marketplace_online" {% if marketplace_online|default:True %}checked{% endif %} data-set-track data-set-confirm-off="setDisableMarketplaceModal" />
+                <span class="set-switch-track"><span class="set-switch-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Registration &amp; Access</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Buyer Registration</strong><small>Allow new buyer sign-ups.</small></div><label class="set-switch"><input type="checkbox" name="buyer_registration" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Registration</strong><small>Allow new seller applications.</small></div><label class="set-switch"><input type="checkbox" name="seller_registration" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Guest Checkout</strong><small>Let buyers check out without an account.</small></div><label class="set-switch"><input type="checkbox" name="guest_checkout" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Multiple Sellers per Order</strong><small>Buyers can purchase from several sellers in one checkout.</small></div><label class="set-switch"><input type="checkbox" name="multi_seller_orders" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Approval Required</strong><small>New sellers must be manually approved by an admin.</small></div><label class="set-switch"><input type="checkbox" name="seller_approval_required" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Product Approval Required</strong><small>New listings must be approved before going live.</small></div><label class="set-switch"><input type="checkbox" name="product_approval_required" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Reviews &amp; Featuring</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Buyer Reviews</strong><small>Allow buyers to review purchased products.</small></div><label class="set-switch"><input type="checkbox" name="buyer_reviews" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Reviews</strong><small>Allow buyers to review sellers directly.</small></div><label class="set-switch"><input type="checkbox" name="seller_reviews" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Featured Products</strong><small>Enable the featured products carousel on the homepage.</small></div><label class="set-switch"><input type="checkbox" name="featured_products" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Featured Sellers</strong><small>Highlight top-performing sellers.</small></div><label class="set-switch"><input type="checkbox" name="featured_sellers" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Featured Brands</strong><small>Highlight selected brands on the homepage.</small></div><label class="set-switch"><input type="checkbox" name="featured_brands" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Commission &amp; Order Limits</h3>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setCommissionType">Commission Type</label>
+                <select id="setCommissionType" name="commission_type" data-set-track>
+                  <option value="percentage" selected>Percentage of order</option>
+                  <option value="flat">Flat fee per order</option>
+                  <option value="tiered">Tiered by category</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setCommissionRate">Commission Rate (%)</label>
+                <input type="number" id="setCommissionRate" name="commission_rate" min="0" max="100" step="0.1" value="{{ commission_rate|default:'8.0' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setMinOrder">Minimum Order Amount (Rs.)</label>
+                <input type="number" id="setMinOrder" name="min_order_amount" min="0" value="{{ min_order_amount|default:'0' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setMaxOrder">Maximum Order Amount (Rs.)</label>
+                <input type="number" id="setMaxOrder" name="max_order_amount" min="0" value="{{ max_order_amount|default:'500000' }}" data-set-track />
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           ORDERS & CHECKOUT
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="orders" aria-label="Orders and Checkout Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Orders &amp; Checkout</h2>
+            <p class="set-panel-subtitle">Configure order behavior — this does not manage live orders (see Sales → Orders for that).</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Order Processing</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Automatic Order Confirmation</strong><small>Confirm orders automatically once payment succeeds.</small></div><label class="set-switch"><input type="checkbox" name="auto_confirm_orders" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Order Cancellation</strong><small>Buyers may cancel within the configured window.</small></div><label class="set-switch"><input type="checkbox" name="allow_cancellation" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Order Notes</strong><small>Buyers can leave notes for the seller at checkout.</small></div><label class="set-switch"><input type="checkbox" name="allow_order_notes" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Seller Notes</strong><small>Sellers can attach internal notes to an order.</small></div><label class="set-switch"><input type="checkbox" name="allow_seller_notes" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setCancelWindow">Cancellation Window (hours)</label><input type="number" id="setCancelWindow" name="cancellation_window" min="0" value="{{ cancellation_window|default:'12' }}" data-set-track /></div>
+              <div class="set-field"><label for="setReturnWindow">Return Window (days)</label><input type="number" id="setReturnWindow" name="return_window" min="0" value="{{ return_window|default:'7' }}" data-set-track /></div>
+              <div class="set-field"><label for="setOrderNumberFormat">Order Number Format</label><input type="text" id="setOrderNumberFormat" name="order_number_format" value="{{ order_number_format|default:'MS-{YYYY}{#####}' }}" data-set-track /></div>
+              <div class="set-field"><label for="setMinCheckoutAmount">Minimum Order Amount (Rs.)</label><input type="number" id="setMinCheckoutAmount" name="min_checkout_amount" min="0" value="{{ min_checkout_amount|default:'0' }}" data-set-track /></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Checkout Requirements</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Guest Checkout</strong><small>Mirrors the Marketplace setting; override here if needed.</small></div><label class="set-switch"><input type="checkbox" name="checkout_guest" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Require Email</strong></div><label class="set-switch"><input type="checkbox" name="require_email" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Require Phone</strong></div><label class="set-switch"><input type="checkbox" name="require_phone" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Require Shipping Address</strong></div><label class="set-switch"><input type="checkbox" name="require_address" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setTaxCalc">Tax Calculation</label>
+                <select id="setTaxCalc" name="tax_calculation" data-set-track>
+                  <option value="none" selected>Not applied</option>
+                  <option value="inclusive">Included in price</option>
+                  <option value="exclusive">Added at checkout</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label for="setShippingCalc">Shipping Calculation</label>
+                <select id="setShippingCalc" name="shipping_calculation" data-set-track>
+                  <option value="flat" selected>Flat rate</option>
+                  <option value="weight">Weight-based</option>
+                  <option value="seller">Per-seller rules</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Advanced Order Handling <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Partial Orders</strong><small>Allow a seller order to ship in multiple partial shipments.</small></div><label class="set-switch"><input type="checkbox" name="partial_orders" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Split Orders</strong><small>Automatically split multi-seller orders into separate shipments.</small></div><label class="set-switch"><input type="checkbox" name="split_orders" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Backorders</strong><small>Allow purchasing out-of-stock items for later fulfilment.</small></div><label class="set-switch"><input type="checkbox" name="backorders" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Preorders</strong><small>Allow purchasing products ahead of their release date.</small></div><label class="set-switch"><input type="checkbox" name="preorders" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Order Hold</strong><small>Allow admins to place an order on hold pending review.</small></div><label class="set-switch"><input type="checkbox" name="order_hold" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Fraud Review Flagging</strong><small>Flag high-risk orders for manual review.</small></div><label class="set-switch"><input type="checkbox" name="fraud_review" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           CATALOG
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="catalog" aria-label="Catalog Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Catalog</h2>
+            <p class="set-panel-subtitle">Product approval, reviews, media limits and stock rules.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Product Publishing</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Product Approval Required</strong></div><label class="set-switch"><input type="checkbox" name="catalog_approval_required" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Seller Drafts</strong></div><label class="set-switch"><input type="checkbox" name="allow_seller_drafts" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Auto-Publish for Verified Sellers</strong><small>Skip manual review for sellers in good standing.</small></div><label class="set-switch"><input type="checkbox" name="auto_publish_verified" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Reviews</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Product Reviews</strong></div><label class="set-switch"><input type="checkbox" name="product_reviews" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Review Approval Required</strong></div><label class="set-switch"><input type="checkbox" name="review_approval" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Anonymous Reviews</strong></div><label class="set-switch"><input type="checkbox" name="anonymous_reviews" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Catalog Visibility</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Category Visibility</strong></div><label class="set-switch"><input type="checkbox" name="category_visibility" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Brand Visibility</strong></div><label class="set-switch"><input type="checkbox" name="brand_visibility" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Search Visibility</strong></div><label class="set-switch"><input type="checkbox" name="search_visibility" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Media &amp; Stock Limits</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setMaxImages">Maximum Product Images</label><input type="number" id="setMaxImages" name="max_product_images" min="1" value="{{ max_product_images|default:'8' }}" data-set-track /></div>
+              <div class="set-field"><label for="setMaxVariants">Maximum Product Variants</label><input type="number" id="setMaxVariants" name="max_product_variants" min="1" value="{{ max_product_variants|default:'20' }}" data-set-track /></div>
+              <div class="set-field"><label for="setMaxImageSize">Maximum Image Size (MB)</label><input type="number" id="setMaxImageSize" name="max_image_size_mb" min="1" value="{{ max_image_size_mb|default:'5' }}" data-set-track /></div>
+              <div class="set-field"><label for="setAllowedFileTypes">Allowed File Types</label><input type="text" id="setAllowedFileTypes" name="allowed_file_types" value="{{ allowed_file_types|default:'jpg, jpeg, png, webp' }}" data-set-track /></div>
+              <div class="set-field"><label for="setLowStockThreshold">Low Stock Threshold</label><input type="number" id="setLowStockThreshold" name="low_stock_threshold" min="0" value="{{ low_stock_threshold|default:'10' }}" data-set-track /></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Moderation <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Catalog Moderation Queue</strong></div><label class="set-switch"><input type="checkbox" name="catalog_moderation" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Duplicate Product Detection</strong></div><label class="set-switch"><input type="checkbox" name="duplicate_detection" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Restricted Products List</strong></div><label class="set-switch"><input type="checkbox" name="restricted_products" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           USERS & ACCOUNTS
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="users" aria-label="User Account Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Users &amp; Accounts</h2>
+            <p class="set-panel-subtitle">Registration, authentication and account lifecycle rules for buyers.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Registration</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Buyer Registration</strong></div><label class="set-switch"><input type="checkbox" name="users_buyer_registration" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Email Verification Required</strong></div><label class="set-switch"><input type="checkbox" name="email_verification" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Phone Verification Required</strong></div><label class="set-switch"><input type="checkbox" name="phone_verification" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Social Login</strong></div><label class="set-switch"><input type="checkbox" name="social_login" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Authentication</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setMinPwdLen">Minimum Password Length</label><input type="number" id="setMinPwdLen" name="min_password_length" min="6" value="{{ min_password_length|default:'8' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSessionDuration">Session Duration (hours)</label><input type="number" id="setSessionDuration" name="session_duration" min="1" value="{{ session_duration|default:'24' }}" data-set-track /></div>
+              <div class="set-field"><label for="setMaxLoginAttempts">Maximum Login Attempts</label><input type="number" id="setMaxLoginAttempts" name="max_login_attempts" min="1" value="{{ max_login_attempts|default:'5' }}" data-set-track /></div>
+              <div class="set-field"><label for="setLockoutDuration">Account Lockout Duration (minutes)</label><input type="number" id="setLockoutDuration" name="lockout_duration" min="1" value="{{ lockout_duration|default:'15' }}" data-set-track /></div>
+            </div>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Two-Factor Authentication</strong><small>Offer 2FA as an optional buyer security feature.</small></div><label class="set-switch"><input type="checkbox" name="users_2fa" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Login Notifications</strong></div><label class="set-switch"><input type="checkbox" name="login_notifications" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Suspicious Login Alerts</strong></div><label class="set-switch"><input type="checkbox" name="suspicious_login_alerts" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Account Lifecycle</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Account Deactivation</strong></div><label class="set-switch"><input type="checkbox" name="allow_deactivation" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Account Deletion</strong></div><label class="set-switch"><input type="checkbox" name="allow_deletion" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setInactivePolicy">Inactive Account Policy</label>
+                <select id="setInactivePolicy" name="inactive_policy" data-set-track>
+                  <option value="none" selected>No action</option>
+                  <option value="notify">Notify after 12 months</option>
+                  <option value="deactivate">Deactivate after 24 months</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           SELLERS
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="sellers" aria-label="Seller Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Sellers</h2>
+            <p class="set-panel-subtitle">Application requirements, verification, approval flow and performance rules.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Application &amp; Verification</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Application Required</strong></div><label class="set-switch"><input type="checkbox" name="seller_application_required" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Admin Approval Required</strong></div><label class="set-switch"><input type="checkbox" name="seller_admin_approval" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Product Approval</strong></div><label class="set-switch"><input type="checkbox" name="seller_product_approval" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Application Auto-Assignment</strong><small>Round-robin new applications to available reviewers.</small></div><label class="set-switch"><input type="checkbox" name="seller_auto_assignment" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+            <div class="set-field">
+              <label for="setRequiredDocs">Required Documents</label>
+              <input type="text" id="setRequiredDocs" name="required_documents" value="{{ required_documents|default:'CNIC Front, CNIC Back, Business Certificate' }}" data-set-track />
+              <span class="set-field-hint">Comma-separated list matching document types in the seller application flow.</span>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Status Rules</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Seller Suspension</strong></div><label class="set-switch"><input type="checkbox" name="allow_seller_suspension" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Allow Seller Deactivation</strong></div><label class="set-switch"><input type="checkbox" name="allow_seller_deactivation" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Store Visibility While Pending</strong></div><label class="set-switch"><input type="checkbox" name="seller_store_visibility_pending" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Performance Requirements</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setMinSellerRating">Minimum Seller Rating</label><input type="number" id="setMinSellerRating" name="min_seller_rating" min="0" max="5" step="0.1" value="{{ min_seller_rating|default:'3.5' }}" data-set-track /></div>
+              <div class="set-field"><label for="setMinFulfillmentRate">Minimum Fulfilment Rate (%)</label><input type="number" id="setMinFulfillmentRate" name="min_fulfillment_rate" min="0" max="100" value="{{ min_fulfillment_rate|default:'90' }}" data-set-track /></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Commission &amp; Payouts <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-field-grid">
+              <div class="set-field">
+                <label for="setSellerCommission">Seller Commission (%)</label>
+                <input type="number" id="setSellerCommission" name="seller_commission" min="0" max="100" step="0.1" value="{{ seller_commission|default:'8.0' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setPayoutSchedule">Payout Schedule</label>
+                <select id="setPayoutSchedule" name="payout_schedule" data-set-track>
+                  <option value="weekly" selected>Weekly</option>
+                  <option value="biweekly">Bi-weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           PAYMENTS (coming soon)
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="payments" aria-label="Payment Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Payments</h2>
+            <p class="set-panel-subtitle">Configure how the payment system will operate. This does not process real transactions — see Sales → Payments for that once available.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section disabled>Save Changes</button>
+          </div>
+        </div>
+
+        <div class="set-coming-soon-banner">
+          <i class="bi bi-hourglass-split"></i>
+          <div>
+            <strong>Payment processing is not yet implemented.</strong>
+            <span>These settings define the future configuration surface only — no provider is connected.</span>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Payment System Status</h3>
+            <div class="set-switch-row">
+              <div class="set-switch-text"><strong>Payment System</strong><small>Not configured</small></div>
+              <span class="set-badge-status set-status-neutral">Coming Soon</span>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Supported Methods</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Cash on Delivery</strong></div><label class="set-switch"><input type="checkbox" name="pay_cod" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Card Payments</strong></div><label class="set-switch"><input type="checkbox" name="pay_card" disabled data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Bank Transfer</strong></div><label class="set-switch"><input type="checkbox" name="pay_bank" disabled data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Digital Wallets</strong></div><label class="set-switch"><input type="checkbox" name="pay_wallet" disabled data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+            <div class="set-field">
+              <label for="setDefaultPaymentMethod">Default Payment Method</label>
+              <select id="setDefaultPaymentMethod" name="default_payment_method" data-set-track>
+                <option value="cod" selected>Cash on Delivery</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Transactions, Refunds &amp; Settlement</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setPaymentCapture">Payment Capture</label><select id="setPaymentCapture" name="payment_capture" data-set-track><option value="on_delivery" selected>On delivery</option><option value="immediate">Immediate</option></select></div>
+              <div class="set-field"><label for="setPaymentAuth">Payment Authorization</label><select id="setPaymentAuth" name="payment_authorization" data-set-track><option value="manual" selected>Manual</option><option value="auto">Automatic</option></select></div>
+              <div class="set-field"><label for="setRefundWindow">Refund Window (days)</label><input type="number" id="setRefundWindow" name="refund_window" min="0" value="{{ refund_window|default:'7' }}" data-set-track /></div>
+              <div class="set-field"><label for="setProcessingFee">Payment Processing Fee (%)</label><input type="number" id="setProcessingFee" name="processing_fee" min="0" step="0.1" value="{{ processing_fee|default:'0' }}" data-set-track /></div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           SHIPPING
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="shipping" aria-label="Shipping Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Shipping</h2>
+            <p class="set-panel-subtitle">Delivery zones, handling time and default shipping behavior.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">General Shipping</h3>
+            <div class="set-switch-row"><div class="set-switch-text"><strong>Shipping Enabled</strong></div><label class="set-switch"><input type="checkbox" name="shipping_enabled" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setDefaultShippingMethod">Default Shipping Method</label><select id="setDefaultShippingMethod" name="default_shipping_method" data-set-track><option value="flat" selected>Flat rate</option><option value="weight">Weight-based</option><option value="free">Free shipping</option></select></div>
+              <div class="set-field"><label for="setDefaultCourier">Default Courier</label><input type="text" id="setDefaultCourier" name="default_courier" value="{{ default_courier|default:'TCS' }}" data-set-track /></div>
+              <div class="set-field"><label for="setFreeShippingThreshold">Free Shipping Threshold (Rs.)</label><input type="number" id="setFreeShippingThreshold" name="free_shipping_threshold" min="0" value="{{ free_shipping_threshold|default:'5000' }}" data-set-track /></div>
+              <div class="set-field"><label for="setHandlingTime">Default Handling Time (days)</label><input type="number" id="setHandlingTime" name="default_handling_time" min="0" value="{{ default_handling_time|default:'2' }}" data-set-track /></div>
+              <div class="set-field"><label for="setEstimatedDelivery">Estimated Delivery (days)</label><input type="text" id="setEstimatedDelivery" name="estimated_delivery" value="{{ estimated_delivery|default:'3-5' }}" data-set-track /></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Zones &amp; Restrictions</h3>
+            <div class="set-field set-field-full">
+              <label for="setDeliveryZones">Delivery Zones</label>
+              <textarea id="setDeliveryZones" name="delivery_zones" rows="2" data-set-track>{{ delivery_zones|default:'All of Pakistan' }}</textarea>
+            </div>
+            <div class="set-field set-field-full">
+              <label for="setShippingRestrictions">Shipping Restrictions</label>
+              <textarea id="setShippingRestrictions" name="shipping_restrictions" rows="2" data-set-track>{{ shipping_restrictions|default:'' }}</textarea>
+            </div>
+            <div class="set-switch-row"><div class="set-switch-text"><strong>Return Shipping Covered by Seller</strong></div><label class="set-switch"><input type="checkbox" name="return_shipping_seller" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Integrations <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Courier Integrations</strong></div><label class="set-switch"><input type="checkbox" name="courier_integrations" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Seller Shipping Rules</strong></div><label class="set-switch"><input type="checkbox" name="seller_shipping_rules" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Live Tracking</strong></div><label class="set-switch"><input type="checkbox" name="live_tracking" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Shipping Labels</strong></div><label class="set-switch"><input type="checkbox" name="shipping_labels" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           NOTIFICATIONS
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="notifications" aria-label="Notification Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Notifications</h2>
+            <p class="set-panel-subtitle">Choose which channels are used for each marketplace event.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Buyer Notifications</h3>
+            <table class="set-notif-table">
+              <thead><tr><th>Event</th><th>Email</th><th>In-App</th><th>Push</th></tr></thead>
+              <tbody>
+                {% comment %} {% for event in "Order Confirmation,Order Shipped,Order Delivered,Order Cancelled,Refund Processed,Review Request,Password Reset,Account Verification"|split:"," %} {% endcomment %}
+                <tr><td>{{ event|default:"none" }}</td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                </tr>
+                {% comment %} {% endfor %} {% endcomment %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Seller Notifications</h3>
+            <table class="set-notif-table">
+              <thead><tr><th>Event</th><th>Email</th><th>In-App</th><th>Push</th></tr></thead>
+              <tbody>
+                {% comment %} {% for event in "New Order,Order Cancelled,Product Approved,Product Rejected,Application Status,Low Stock Alert,Payment Notification"|split:"," %} {% endcomment %}
+                <tr><td>{{ event|default:"None" }}</td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                </tr>
+                {% comment %} {% endfor %} {% endcomment %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Admin Notifications</h3>
+            <table class="set-notif-table">
+              <thead><tr><th>Event</th><th>Email</th><th>In-App</th><th>Push</th></tr></thead>
+              <tbody>
+                {% comment %} {% for event in "New Seller Application,Payment Failure,Fraud Alert,System Error,Security Alert"|split:"," %} {% endcomment %}
+                <tr><td>{{ event|default:"none" }}</td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                  <td><label class="set-switch set-switch-sm"><input type="checkbox" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></td>
+                </tr>
+                {% comment %} {% endfor %} {% endcomment %}
+              </tbody>
+            </table>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           EMAIL
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="email" aria-label="Email Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Email</h2>
+            <p class="set-panel-subtitle">Sender identity, SMTP connection and transactional templates.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-secondary set-btn-sm" data-set-open-modal="setTestEmailModal">Send Test Email</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Email Settings</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Sender Identity</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setSenderName">Sender Name</label><input type="text" id="setSenderName" name="sender_name" value="{{ sender_name|default:'MarketSphere' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSenderEmail">Sender Email</label><input type="email" id="setSenderEmail" name="sender_email" value="{{ sender_email|default:'' }}" data-set-track /></div>
+              <div class="set-field"><label for="setReplyTo">Reply-To</label><input type="email" id="setReplyTo" name="reply_to" value="{{ reply_to|default:'' }}" data-set-track /></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">SMTP Connection</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setEmailProvider">Email Provider</label><select id="setEmailProvider" name="email_provider" data-set-track><option value="smtp" selected>Custom SMTP</option><option value="managed">Managed Provider</option></select></div>
+              <div class="set-field"><label for="setSmtpHost">SMTP Host</label><input type="text" id="setSmtpHost" name="smtp_host" value="{{ smtp_host|default:'smtp.gmail.com' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSmtpPort">SMTP Port</label><input type="number" id="setSmtpPort" name="smtp_port" value="{{ smtp_port|default:'587' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSmtpEncryption">Encryption</label><select id="setSmtpEncryption" name="smtp_encryption" data-set-track><option value="tls" selected>TLS</option><option value="ssl">SSL</option><option value="none">None</option></select></div>
+              <div class="set-field"><label for="setSmtpUsername">Username</label><input type="text" id="setSmtpUsername" name="smtp_username" value="{{ smtp_username|default:'' }}" data-set-track /></div>
+              <div class="set-field">
+                <label for="setSmtpPassword">Password</label>
+                <div class="set-password-wrap">
+                  <input type="password" id="setSmtpPassword" name="smtp_password" value="{{ smtp_password_masked|default:'••••••••' }}" data-set-track />
+                  <button type="button" class="set-password-toggle" data-set-toggle-password="setSmtpPassword" aria-label="Show password">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Templates <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-template-list">
+              {% comment %} {% for tpl in "Order Email,Welcome Email,Password Reset,Verification Email,Seller Application Email,Refund Email"|split:"," %} {% endcomment %}
+              <div class="set-template-row">
+                <span>{{ tpl|default:"none" }}</span>
+                <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-toast="info" data-set-toast-msg="Template editing isn&#8217;t available yet.">Edit Template</button>
+              </div>
+              {% comment %} {% endfor %} {% endcomment %}
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           SECURITY
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="security" aria-label="Security Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Security</h2>
+            <p class="set-panel-subtitle">Password policy, sessions, admin two-factor and suspicious activity detection.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <form class="set-form" data-set-form novalidate>
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Password Policy</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setSecMinPwdLen">Minimum Password Length</label><input type="number" id="setSecMinPwdLen" name="sec_min_password_length" min="6" value="{{ sec_min_password_length|default:'8' }}" data-set-track /></div>
+              <div class="set-field"><label for="setPasswordExpiry">Password Expiry (days, 0 = never)</label><input type="number" id="setPasswordExpiry" name="password_expiry" min="0" value="{{ password_expiry|default:'0' }}" data-set-track /></div>
+            </div>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Require Uppercase Letter</strong></div><label class="set-switch"><input type="checkbox" name="require_uppercase" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Require Number</strong></div><label class="set-switch"><input type="checkbox" name="require_number" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Require Special Character</strong></div><label class="set-switch"><input type="checkbox" name="require_special" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Sessions &amp; Lockout</h3>
+            <div class="set-field-grid">
+              <div class="set-field"><label for="setSessionTimeout">Session Timeout (minutes)</label><input type="number" id="setSessionTimeout" name="session_timeout" min="1" value="{{ session_timeout|default:'60' }}" data-set-track /></div>
+              <div class="set-field"><label for="setAdminSessionTimeout">Admin Session Timeout (minutes)</label><input type="number" id="setAdminSessionTimeout" name="admin_session_timeout" min="1" value="{{ admin_session_timeout|default:'30' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSecMaxLoginAttempts">Maximum Login Attempts</label><input type="number" id="setSecMaxLoginAttempts" name="sec_max_login_attempts" min="1" value="{{ sec_max_login_attempts|default:'5' }}" data-set-track /></div>
+              <div class="set-field"><label for="setSecLockoutDuration">Account Lockout Duration (minutes)</label><input type="number" id="setSecLockoutDuration" name="sec_lockout_duration" min="1" value="{{ sec_lockout_duration|default:'15' }}" data-set-track /></div>
+            </div>
+          </div>
+
+          <div class="set-form-card set-form-card-danger">
+            <h3 class="set-form-card-title">Admin Security</h3>
+            <div class="set-switch-row">
+              <div class="set-switch-text"><strong>Require Admin 2FA</strong><small>Every administrator must enable two-factor authentication to sign in.</small></div>
+              <label class="set-switch"><input type="checkbox" name="require_admin_2fa" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label>
+            </div>
+            <div class="set-switch-row">
+              <div class="set-switch-text"><strong>IP Restrictions</strong><small>Restrict admin login to an allowlist of trusted IPs.</small></div>
+              <label class="set-switch"><input type="checkbox" name="ip_restrictions" data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Alerts &amp; API</h3>
+            <div class="set-switch-list">
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Security Alerts</strong></div><label class="set-switch"><input type="checkbox" name="security_alerts" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Login Notifications</strong></div><label class="set-switch"><input type="checkbox" name="sec_login_notifications" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>Suspicious Activity Detection</strong></div><label class="set-switch"><input type="checkbox" name="suspicious_activity_detection" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              <div class="set-switch-row"><div class="set-switch-text"><strong>API Security (rate limiting)</strong></div><label class="set-switch"><input type="checkbox" name="api_security" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+            </div>
+          </div>
+
+          <div class="set-form-card">
+            <h3 class="set-form-card-title">Trusted Access <span class="set-badge-future">Future-ready</span></h3>
+            <div class="set-field set-field-full">
+              <label for="setAdminAllowlist">Admin IP Allowlist</label>
+              <textarea id="setAdminAllowlist" name="admin_ip_allowlist" rows="2" data-set-track placeholder="One IP or CIDR range per line"></textarea>
+            </div>
+            <div class="set-field">
+              <label for="setAuditRetention">Security Audit Retention (days)</label>
+              <input type="number" id="setAuditRetention" name="audit_retention" min="30" value="{{ audit_retention|default:'365' }}" data-set-track />
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================
+           APPEARANCE
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="appearance" aria-label="Appearance Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Appearance</h2>
+            <p class="set-panel-subtitle">Branding, theme colors and storefront chrome. Preview only — does not change the live theme.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <div class="set-appearance-layout">
+          <form class="set-form" data-set-form novalidate>
+            <div class="set-form-card">
+              <h3 class="set-form-card-title">Theme Colors</h3>
+              <div class="set-field-grid">
+                <div class="set-field">
+                  <label for="setPrimaryColor">Primary Color</label>
+                  <div class="set-color-field"><input type="color" id="setPrimaryColor" name="primary_color" value="{{ primary_color|default:'#9D6638' }}" data-set-track data-set-preview-color="primary" /><span class="set-color-value">{{ primary_color|default:'#9D6638' }}</span></div>
+                </div>
+                <div class="set-field">
+                  <label for="setSecondaryColor">Secondary Color</label>
+                  <div class="set-color-field"><input type="color" id="setSecondaryColor" name="secondary_color" value="{{ secondary_color|default:'#4E220F' }}" data-set-track data-set-preview-color="secondary" /><span class="set-color-value">{{ secondary_color|default:'#4E220F' }}</span></div>
+                </div>
+              </div>
+              <div class="set-field">
+                <label for="setThemeMode">Theme Mode</label>
+                <select id="setThemeMode" name="theme_mode" data-set-track>
+                  <option value="light" selected>Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="system">Follow System</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="set-form-card">
+              <h3 class="set-form-card-title">Branding Surfaces</h3>
+              <div class="set-switch-list">
+                <div class="set-switch-row"><div class="set-switch-text"><strong>Login Page Branding</strong></div><label class="set-switch"><input type="checkbox" name="login_branding" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+                <div class="set-switch-row"><div class="set-switch-text"><strong>Email Branding</strong></div><label class="set-switch"><input type="checkbox" name="email_branding" checked data-set-track /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label></div>
+              </div>
+              <div class="set-field set-field-full">
+                <label for="setFooterText">Footer Text</label>
+                <textarea id="setFooterText" name="footer_text" rows="2" data-set-track>{{ footer_text|default:'© 2026 MarketSphere. All Rights Reserved.' }}</textarea>
+              </div>
+              <div class="set-field set-field-full">
+                <label for="setCustomCss">Custom CSS</label>
+                <textarea id="setCustomCss" name="custom_css" rows="5" class="set-code-textarea" data-set-track placeholder="/* Advanced: applied after the default stylesheet */"></textarea>
+              </div>
+            </div>
+          </form>
+
+          <aside class="set-preview-pane">
+            <span class="set-preview-label">Live Preview</span>
+            <div class="set-theme-preview" id="setThemePreview">
+              <div class="set-preview-header">
+                <span class="set-preview-logo">MarketSphere</span>
+                <span class="set-preview-nav">Home&nbsp;&nbsp;Shop&nbsp;&nbsp;Deals</span>
+              </div>
+              <div class="set-preview-body">
+                <button type="button" class="set-preview-btn">Shop Now</button>
+                <div class="set-preview-card">
+                  <span class="set-preview-card-title">Sample Product</span>
+                  <span class="set-preview-card-price">Rs. 2,499</span>
+                </div>
+              </div>
+              <div class="set-preview-footer">Footer &middot; Links &middot; Social</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           SEO
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="seo" aria-label="SEO Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">SEO</h2>
+            <p class="set-panel-subtitle">Default search-engine metadata for the storefront and content types.</p>
+          </div>
+          <div class="set-panel-actions">
+            <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-reset-section>Reset Section</button>
+            <button type="button" class="set-btn set-btn-primary set-btn-sm" data-set-save-section>Save Changes</button>
+          </div>
+        </div>
+
+        <div class="set-appearance-layout">
+          <form class="set-form" data-set-form novalidate>
+            <div class="set-form-card">
+              <h3 class="set-form-card-title">Default Metadata</h3>
+              <div class="set-field">
+                <label for="setSeoTitle">Site Title</label>
+                <input type="text" id="setSeoTitle" name="seo_title" value="{{ seo_title|default:'MarketSphere — Shop Smarter' }}" data-set-track data-set-seo-preview="title" />
+              </div>
+              <div class="set-field">
+                <label for="setSeoDesc">Meta Description</label>
+                <textarea id="setSeoDesc" name="seo_description" rows="2" data-set-track data-set-seo-preview="description">{{ seo_description|default:'Discover thousands of products from trusted sellers. Quality guaranteed, delivered fast.' }}</textarea>
+              </div>
+              <div class="set-field">
+                <label for="setSeoKeywords">Keywords</label>
+                <input type="text" id="setSeoKeywords" name="seo_keywords" value="{{ seo_keywords|default:'marketplace, online shopping, Pakistan' }}" data-set-track />
+              </div>
+              <div class="set-field">
+                <label for="setOgImage">Default Open Graph Image URL</label>
+                <input type="url" id="setOgImage" name="og_image" value="{{ og_image|default:'' }}" data-set-track />
+              </div>
+            </div>
+
+            <div class="set-form-card">
+              <h3 class="set-form-card-title">Crawling &amp; Indexing</h3>
+              <div class="set-field">
+                <label for="setRobotsTxt">Robots Directive</label>
+                <select id="setRobotsTxt" name="robots_directive" data-set-track>
+                  <option value="index,follow" selected>index, follow</option>
+                  <option value="noindex,nofollow">noindex, nofollow</option>
+                </select>
+              </div>
+              <div class="set-field"><label for="setSitemapUrl">Sitemap URL</label><input type="text" id="setSitemapUrl" name="sitemap_url" value="{{ sitemap_url|default:'/sitemap.xml' }}" data-set-track readonly /></div>
+              <div class="set-field"><label for="setCanonicalUrl">Canonical Base URL</label><input type="url" id="setCanonicalUrl" name="canonical_url" value="{{ canonical_url|default:'' }}" data-set-track /></div>
+            </div>
+
+            <div class="set-form-card">
+              <h3 class="set-form-card-title">Content-Type SEO</h3>
+              <div class="set-template-list">
+                <div class="set-template-row"><span>Product SEO</span><button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-toast="info" data-set-toast-msg="Per-type SEO editing isn&#8217;t available yet.">Configure</button></div>
+                <div class="set-template-row"><span>Category SEO</span><button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-toast="info" data-set-toast-msg="Per-type SEO editing isn&#8217;t available yet.">Configure</button></div>
+                <div class="set-template-row"><span>Brand SEO</span><button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-toast="info" data-set-toast-msg="Per-type SEO editing isn&#8217;t available yet.">Configure</button></div>
+                <div class="set-template-row"><span>Seller Store SEO</span><button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-toast="info" data-set-toast-msg="Per-type SEO editing isn&#8217;t available yet.">Configure</button></div>
+              </div>
+            </div>
+          </form>
+
+          <aside class="set-preview-pane">
+            <span class="set-preview-label">Search Result Preview</span>
+            <div class="set-serp-preview">
+              <span class="set-serp-url">marketsphere.com</span>
+              <span class="set-serp-title" id="setSerpTitle">MarketSphere — Shop Smarter</span>
+              <span class="set-serp-desc" id="setSerpDesc">Discover thousands of products from trusted sellers. Quality guaranteed, delivered fast.</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           SYSTEM
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="system" aria-label="System Settings">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">System</h2>
+            <p class="set-panel-subtitle">Platform status, maintenance mode and diagnostic tools.</p>
+          </div>
+        </div>
+
+        <div class="set-system-grid">
+          <div class="set-system-card"><span class="set-system-label">System Status</span><span class="set-system-value set-status-success">Operational</span></div>
+          <div class="set-system-card"><span class="set-system-label">Application Version</span><span class="set-system-value">{{ app_version|default:'v1.4.2' }}</span></div>
+          <div class="set-system-card"><span class="set-system-label">Environment</span><span class="set-system-value">{{ app_environment|default:'Production' }}</span></div>
+          <div class="set-system-card"><span class="set-system-label">Database Status</span><span class="set-system-value set-status-success">Connected</span></div>
+          <div class="set-system-card"><span class="set-system-label">Cache Status</span><span class="set-system-value set-status-success">Healthy</span></div>
+          <div class="set-system-card"><span class="set-system-label">Media Storage</span><span class="set-system-value set-status-success">Operational</span></div>
+          <div class="set-system-card"><span class="set-system-label">Background Tasks</span><span class="set-system-value set-status-warning">Degraded</span></div>
+          <div class="set-system-card"><span class="set-system-label">Search Index</span><span class="set-system-value set-status-success">Up to date</span></div>
+          <div class="set-system-card"><span class="set-system-label">Last Backup</span><span class="set-system-value">{{ last_backup|default:'6 hours ago' }}</span></div>
+        </div>
+
+        <div class="set-form-card">
+          <h3 class="set-form-card-title set-form-card-title-danger">Maintenance Mode</h3>
+          <div class="set-switch-row">
+            <div class="set-switch-text"><strong>Enable Maintenance Mode</strong><small>Takes the storefront offline for all non-admin visitors.</small></div>
+            <label class="set-switch"><input type="checkbox" name="maintenance_mode" data-set-track data-set-confirm-on="setMaintenanceModal" /><span class="set-switch-track"><span class="set-switch-thumb"></span></span></label>
+          </div>
+        </div>
+
+        <div class="set-form-card">
+          <h3 class="set-form-card-title">Diagnostic Actions</h3>
+          <div class="set-system-actions">
+            <button type="button" class="set-btn set-btn-secondary" data-set-open-modal="setClearCacheModal">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"></path></svg>
+              Clear Cache
+            </button>
+            <button type="button" class="set-btn set-btn-secondary" data-set-open-modal="setRebuildIndexModal">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3.5-7.1"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+              Rebuild Search Index
+            </button>
+            <button type="button" class="set-btn set-btn-secondary" data-set-open-modal="setDiagnosticsModal">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>
+              Run System Diagnostics
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           AUDIT & ACTIVITY
+      ============================================================ -->
+      <section class="set-panel" data-set-panel="audit" aria-label="Audit and Activity">
+        <div class="set-panel-head">
+          <div>
+            <h2 class="set-panel-title">Audit &amp; Activity</h2>
+            <p class="set-panel-subtitle">Full history of configuration changes made by every administrator.</p>
+          </div>
+        </div>
+
+        <div class="set-audit-filters" id="setAuditFilters">
+          <button type="button" class="set-pill is-active" data-set-audit-filter="all">All</button>
+          <button type="button" class="set-pill" data-set-audit-filter="general">General</button>
+          <button type="button" class="set-pill" data-set-audit-filter="marketplace">Marketplace</button>
+          <button type="button" class="set-pill" data-set-audit-filter="users">Users</button>
+          <button type="button" class="set-pill" data-set-audit-filter="sellers">Sellers</button>
+          <button type="button" class="set-pill" data-set-audit-filter="orders">Orders</button>
+          <button type="button" class="set-pill" data-set-audit-filter="catalog">Catalog</button>
+          <button type="button" class="set-pill" data-set-audit-filter="security">Security</button>
+          <button type="button" class="set-pill" data-set-audit-filter="system">System</button>
+        </div>
+
+        <div class="set-table-wrap">
+          <table class="set-table">
+            <thead>
+              <tr><th>Admin</th><th>Action</th><th>Setting</th><th>Old Value</th><th>New Value</th><th>Date</th><th>IP</th></tr>
+            </thead>
+            <tbody>
+              {% for entry in audit_log_entries %}
+              <tr data-set-audit-category="{{ entry.category }}">
+                <td data-label="Admin">{{ entry.admin_name }}</td>
+                <td data-label="Action">{{ entry.action }}</td>
+                <td data-label="Setting">{{ entry.setting_name }}</td>
+                <td data-label="Old Value">{{ entry.old_value|default:"—" }}</td>
+                <td data-label="New Value">{{ entry.new_value|default:"—" }}</td>
+                <td data-label="Date">{{ entry.created_at|date:"M j, Y H:i" }}</td>
+                <td data-label="IP">{{ entry.ip_address|default:"—" }}</td>
+              </tr>
+              {% empty %}
+              <tr data-set-audit-category="marketplace"><td data-label="Admin">Hammad Ashraf</td><td data-label="Action">Updated</td><td data-label="Setting">Marketplace commission rate</td><td data-label="Old Value">6.0%</td><td data-label="New Value">8.0%</td><td data-label="Date">Jul 26, 2026 &middot; 10:14 AM</td><td data-label="IP">182.176.44.12</td></tr>
+              <tr data-set-audit-category="sellers"><td data-label="Admin">Sana Raza</td><td data-label="Action">Enabled</td><td data-label="Setting">Seller registration</td><td data-label="Old Value">Disabled</td><td data-label="New Value">Enabled</td><td data-label="Date">Jul 25, 2026 &middot; 4:02 PM</td><td data-label="IP">182.176.44.8</td></tr>
+              <tr data-set-audit-category="orders"><td data-label="Admin">Hammad Ashraf</td><td data-label="Action">Updated</td><td data-label="Setting">Order cancellation window</td><td data-label="Old Value">24 hours</td><td data-label="New Value">12 hours</td><td data-label="Date">Jul 24, 2026 &middot; 9:47 AM</td><td data-label="IP">182.176.44.12</td></tr>
+              <tr data-set-audit-category="security"><td data-label="Admin">Hammad Ashraf</td><td data-label="Action">Enabled</td><td data-label="Setting">Admin two-factor authentication</td><td data-label="Old Value">Disabled</td><td data-label="New Value">Enabled</td><td data-label="Date">Jul 20, 2026 &middot; 2:31 PM</td><td data-label="IP">182.176.44.12</td></tr>
+              <tr data-set-audit-category="catalog"><td data-label="Admin">Sana Raza</td><td data-label="Action">Updated</td><td data-label="Setting">Low stock threshold</td><td data-label="Old Value">5</td><td data-label="New Value">10</td><td data-label="Date">Jul 18, 2026 &middot; 11:05 AM</td><td data-label="IP">182.176.44.8</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <p class="set-table-empty is-hidden" id="setAuditEmpty">No activity matches this filter.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="set-modal-overlay is-hidden" id="setResetSectionModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setResetSectionModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></div>
+    <h3 class="set-modal-title" id="setResetSectionModalTitle">Reset this section?</h3>
+    <p class="set-modal-text">This will restore every setting in this section to its default value. Unsaved changes will be lost.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Cancel</button>
+      <button type="button" class="set-btn set-btn-danger" id="setConfirmResetSectionBtn">Reset Settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setResetAllModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setResetAllModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon set-modal-icon-danger"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+    <h3 class="set-modal-title" id="setResetAllModalTitle">Reset all settings?</h3>
+    <p class="set-modal-text">This will restore the selected settings to their default values across every category. This cannot be undone.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Cancel</button>
+      <button type="button" class="set-btn set-btn-danger" id="setConfirmResetAllBtn">Reset Settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setDiscardChangesModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setDiscardChangesModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>
+    <h3 class="set-modal-title" id="setDiscardChangesModalTitle">Discard unsaved changes?</h3>
+    <p class="set-modal-text">You have unsaved changes on this page. Leaving now will discard them.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Stay on Page</button>
+      <button type="button" class="set-btn set-btn-danger" id="setConfirmDiscardNavBtn">Discard &amp; Leave</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setTestEmailModal" data-set-modal>
+  <div class="set-modal set-modal-lg" role="dialog" aria-modal="true" aria-labelledby="setTestEmailModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg></div>
+    <h3 class="set-modal-title" id="setTestEmailModalTitle">Send a test email</h3>
+    <p class="set-modal-text">Send a sample email using the current SMTP configuration to confirm it's working.</p>
+    <div class="set-field set-field-full">
+      <label for="setTestEmailAddress">Send to</label>
+      <input type="email" id="setTestEmailAddress" placeholder="you@example.com" />
+    </div>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Cancel</button>
+      <button type="button" class="set-btn set-btn-primary" id="setConfirmTestEmailBtn">Send Test Email</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setMaintenanceModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setMaintenanceModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon set-modal-icon-danger"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+    <h3 class="set-modal-title" id="setMaintenanceModalTitle">Enable maintenance mode?</h3>
+    <p class="set-modal-text">The storefront will be taken offline for all buyers and sellers immediately. Only administrators will be able to access the platform.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal data-set-cancel-toggle>Cancel</button>
+      <button type="button" class="set-btn set-btn-danger" data-set-confirm-toggle>Enable Maintenance Mode</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setDisableMarketplaceModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setDisableMarketplaceModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon set-modal-icon-danger"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+    <h3 class="set-modal-title" id="setDisableMarketplaceModalTitle">Take the marketplace offline?</h3>
+    <p class="set-modal-text">Visitors will see a maintenance notice instead of the storefront until this is turned back on.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal data-set-cancel-toggle>Cancel</button>
+      <button type="button" class="set-btn set-btn-danger" data-set-confirm-toggle>Take Offline</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setClearCacheModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setClearCacheModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"></path></svg></div>
+    <h3 class="set-modal-title" id="setClearCacheModalTitle">Clear application cache?</h3>
+    <p class="set-modal-text">This may briefly slow down the marketplace while the cache rebuilds. Safe to run at any time.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Cancel</button>
+      <button type="button" class="set-btn set-btn-primary" data-set-run-diagnostic="Cache cleared successfully.">Clear Cache</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setRebuildIndexModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setRebuildIndexModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3.5-7.1"></path><polyline points="21 3 21 9 15 9"></polyline></svg></div>
+    <h3 class="set-modal-title" id="setRebuildIndexModalTitle">Rebuild search index?</h3>
+    <p class="set-modal-text">Product search results may be briefly incomplete while the index rebuilds.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Cancel</button>
+      <button type="button" class="set-btn set-btn-primary" data-set-run-diagnostic="Search index rebuild started.">Rebuild Index</button>
+    </div>
+  </div>
+</div>
+
+<div class="set-modal-overlay is-hidden" id="setDiagnosticsModal" data-set-modal>
+  <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setDiagnosticsModalTitle">
+    <button type="button" class="set-modal-close" data-set-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="set-modal-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg></div>
+    <h3 class="set-modal-title" id="setDiagnosticsModalTitle">Run system diagnostics?</h3>
+    <p class="set-modal-text">Checks database connectivity, cache, media storage and background task health.</p>
+    <div class="set-modal-actions">
+      <button type="button" class="set-btn set-btn-secondary" data-set-close-modal>Cancel</button>
+      <button type="button" class="set-btn set-btn-primary" data-set-run-diagnostic="System diagnostics started.">Run Diagnostics</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST CONTAINER ================= -->
+<div class="set-toast-container" id="setToastContainer" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/admin_settings.js' %}"></script>
+{% endblock %}

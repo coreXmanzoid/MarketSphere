@@ -181,41 +181,149 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ================= SHARE POPOVER ================= */
+
     const shareBtn = document.getElementById('pdShareBtn');
     const sharePopover = document.getElementById('pdSharePopover');
     const copyLinkBtn = document.getElementById('pdCopyLinkBtn');
 
+    const shareWrap = document.querySelector('.pd-share-wrap');
+
+    const productUrl = window.location.href;
+
+    const productName =
+        shareWrap?.dataset.productName ||
+        'Check out this product';
+
+    const shareText = `Check out ${productName} on MarketSphere`;
     if (shareBtn && sharePopover) {
+
         shareBtn.addEventListener('click', function (e) {
             e.stopPropagation();
+
             const isOpen = sharePopover.classList.toggle('is-open');
-            shareBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+            shareBtn.setAttribute(
+                'aria-expanded',
+                isOpen ? 'true' : 'false'
+            );
         });
 
         document.addEventListener('click', function (e) {
-            if (!sharePopover.contains(e.target) && e.target !== shareBtn) {
+            if (
+                !sharePopover.contains(e.target) &&
+                e.target !== shareBtn
+            ) {
                 sharePopover.classList.remove('is-open');
                 shareBtn.setAttribute('aria-expanded', 'false');
             }
         });
     }
 
-    if (copyLinkBtn) {
-        copyLinkBtn.addEventListener('click', function () {
-            const icon = copyLinkBtn.querySelector('i');
-            if (!icon) return;
 
-            const originalClass = 'bi-link-45deg';
-            icon.classList.remove(originalClass);
-            icon.classList.add('bi-check2');
+    /* ================= SOCIAL SHARING ================= */
 
-            window.setTimeout(function () {
-                icon.classList.remove('bi-check2');
-                icon.classList.add(originalClass);
-            }, 1500);
+    const facebookShareBtn = document.querySelector('.pd-share-facebook');
+    const twitterShareBtn = document.querySelector('.pd-share-twitter');
+    const whatsappShareBtn = document.querySelector('.pd-share-whatsapp');
+    const linkedinShareBtn = document.querySelector('.pd-share-linkedin');
+
+    function openShareWindow(url) {
+        window.open(
+            url,
+            '_blank',
+            'width=600,height=600,noopener,noreferrer'
+        );
+    }
+
+
+    /* Facebook */
+
+    if (facebookShareBtn) {
+        facebookShareBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
+
+            openShareWindow(url);
         });
     }
 
+
+    /* X */
+
+    if (twitterShareBtn) {
+        twitterShareBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const url =
+                `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`;
+
+            openShareWindow(url);
+        });
+    }
+
+
+    /* WhatsApp */
+
+    if (whatsappShareBtn) {
+        whatsappShareBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const message = `${shareText}\n${productUrl}`;
+
+            const url =
+                `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+            openShareWindow(url);
+        });
+    }
+
+
+    /* LinkedIn */
+
+    if (linkedinShareBtn) {
+        linkedinShareBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const url =
+                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(productUrl)}`;
+
+            openShareWindow(url);
+        });
+    }
+
+
+    /* ================= COPY LINK ================= */
+
+    if (copyLinkBtn) {
+
+        copyLinkBtn.addEventListener('click', async function () {
+
+            try {
+
+                await navigator.clipboard.writeText(productUrl);
+
+                const icon = copyLinkBtn.querySelector('i');
+
+                if (!icon) return;
+
+                const originalClass = 'bi-link-45deg';
+
+                icon.classList.remove(originalClass);
+                icon.classList.add('bi-check2');
+
+                window.setTimeout(function () {
+                    icon.classList.remove('bi-check2');
+                    icon.classList.add(originalClass);
+                }, 1500);
+
+            } catch (error) {
+
+                console.error('Failed to copy product link:', error);
+
+            }
+        });
+    }
     /* ================= ADD TO CART FEEDBACK ================= */
     function bindAddToCartFeedback(btn) {
         if (!btn) return;
@@ -369,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.disabled = true;
 
         try {
-            const response = await fetch( btn.dataset.addUrl, {
+            const response = await fetch(btn.dataset.addUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -392,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 btn.innerHTML = '<i class="bi bi-check2"></i> Added';
 
-                
+
                 setTimeout(() => {
                     btn.innerHTML =
                         '<i class="bi bi-cart-plus"></i> Add All to Cart';

@@ -1,21 +1,19 @@
-from django.shortcuts import render, redirect
-from accounts import services as account_service
-from products import services as cart_service
-from django.http import JsonResponse
-from . import services as order_service
-from django.contrib.auth.decorators import login_required
-from django.http import FileResponse
-from django.shortcuts import get_object_or_404
-from django.core.paginator import Paginator
-
-from .invoice import generate_invoice
-from .shipping_label import generate_shipping_label
-from .packing_slip import generate_packing_slip
-from .models import Order
-
 import json
 
-# Create your views here.
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.http import JsonResponse, FileResponse
+from django.shortcuts import render, get_object_or_404
+
+from accounts import services as account_service
+from accounts.models import Seller
+from products import services as cart_service
+
+from . import services as order_service
+from .invoice import generate_invoice
+from .models import Order
+from .packing_slip import generate_packing_slip
+from .shipping_label import generate_shipping_label
 
 
 def orders(request):
@@ -58,14 +56,14 @@ def place_new_order(request):
         return JsonResponse(
             {
                 "success": False,
-                "message": str(e),
+                "message": "Invalid request method.",
             },
             status=400,
         )
     try:
         data = json.loads(request.body)
 
-        order = order_service.place_order(
+        created_orders = order_service.place_order(
             user=request.user,
             address_id=data["addressId"],
             full_name=data.get("fullName"),
@@ -74,10 +72,14 @@ def place_new_order(request):
             notes=data.get("notes", ""),
         )
 
+        # Assuming standard checkout redirects to a single order confirmation.
+        # Grabbing the first order's number if multiple sellers were involved.
+        primary_order_number = created_orders[0].order_number if created_orders else ""
+
         return JsonResponse(
             {
                 "status": "success",
-                "orderNumber": order.order_number,
+                "orderNumber": primary_order_number,
             }
         )
 
@@ -96,7 +98,6 @@ def place_new_order(request):
 
 @login_required
 def order_confirmation(request, order_number):
-
     order = order_service.get_user_order(request.user, order_number)
 
     return render(
@@ -107,12 +108,9 @@ def order_confirmation(request, order_number):
         },
     )
 
-from orders.services import update_shipping_information
-
 
 @login_required
 def update_shipping(request, order_number):
-
     if request.method != "POST":
         return JsonResponse(
             {
@@ -122,14 +120,14 @@ def update_shipping(request, order_number):
             status=405
         )
 
-    seller_order = get_object_or_404(
-        SellerOrder,
-        order__order_number=order_number,
+    order = get_object_or_404(
+        Order,
+        order_number=order_number,
         seller=request.user.seller_profile,
     )
 
-    update_shipping_information(
-        seller_order,
+    order_service.update_shipping_information(
+        order,
         request.POST,
     )
 
@@ -137,10 +135,10 @@ def update_shipping(request, order_number):
         {
             "success": True,
             "message": "Shipping information updated successfully.",
-            "courier": seller_order.courier,
-            "tracking_number": seller_order.tracking_number,
-            "estimated_delivery": seller_order.estimated_delivery,
-            "shipping_notes": seller_order.shipping_notes,
+            "courier": order.courier,
+            "tracking_number": order.tracking_number,
+            "estimated_delivery": order.estimated_delivery,
+            "shipping_notes": order.shipping_notes,
         }
     )
 
@@ -161,59 +159,42 @@ def order_cancelation(request, order_number):
             "message": "The order can't be canceled due to a hard reason.",
         }
     )
-from django.contrib.auth.decorators import login_required
-from django.http import FileResponse
-from django.shortcuts import get_object_or_404
-
-from accounts.models import Seller
-from .invoice import generate_invoice
-from .models import SellerOrder
 
 
 @login_required
 def download_invoice(request, order_number):
-    # 1. Get the seller record associated with the logged-in user
     seller = get_object_or_404(Seller, user=request.user)
 
-    # 2. Query the SellerOrder matching this order_number and seller,
-    # optimizing DB queries with select_related and prefetch_related
-    seller_order = get_object_or_404(
-        SellerOrder.objects.select_related("order", "seller").prefetch_related(
+    order = get_object_or_404(
+        Order.objects.select_related("user", "seller").prefetch_related(
             "items__product"
         ),
-        order__order_number=order_number,
+        order_number=order_number,
         seller=seller,
     )
 
-    # 3. Pass the SellerOrder object into the invoice generator
-    pdf_buffer = generate_invoice(seller_order)
+    pdf_buffer = generate_invoice(order)
 
-    # 4. Stream the generated PDF response back to the client
     return FileResponse(
         pdf_buffer,
         as_attachment=False,
-        filename=f"invoice-{seller_order.order.order_number}.pdf",
+        filename=f"invoice-{order.order_number}.pdf",
         content_type="application/pdf",
     )
 
+
 def update_seller_note_view(request, order_number):
     try:
-        # 1. Parse the JSON body to get the note
         data = json.loads(request.body)
         note = data.get("note", "").strip()
-
-        # 2. Get the seller instance associated with the logged-in user
-        # (Assuming your user model has a OneToOne relationship with Seller)
         seller = request.user.seller_profile
 
-        # 3. Call your service function
         success = order_service.update_seller_note(
             seller=seller, 
             order_number=order_number, 
             note=note
         )
 
-        # 4. Return appropriate JsonResponse
         if success:
             return JsonResponse({
                 "success": True, 
@@ -241,57 +222,50 @@ def update_seller_note_view(request, order_number):
             "message": "An unexpected error occurred."
         }, status=500)
     
+
 @login_required
 def download_shipping_label(request, order_number):
-    # 1. Get the seller record associated with the logged-in user
     seller = get_object_or_404(Seller, user=request.user)
 
-    # 2. Query the SellerOrder matching this order_number and seller,
-    # optimizing DB queries with select_related and prefetch_related
-    seller_order = get_object_or_404(
-        SellerOrder.objects.select_related("order", "seller").prefetch_related(
+    order = get_object_or_404(
+        Order.objects.select_related("user", "seller").prefetch_related(
             "items__product"
         ),
-        order__order_number=order_number,
+        order_number=order_number,
         seller=seller,
     )
 
-    # 3. Pass the SellerOrder object into the invoice generator
-    pdf_buffer = generate_shipping_label(seller_order)
+    pdf_buffer = generate_shipping_label(order)
 
-    # 4. Stream the generated PDF response back to the client
     return FileResponse(
         pdf_buffer,
         as_attachment=False,
-        filename=f"packing-slip-{seller_order.order.order_number}.pdf",
+        filename=f"shipping-label-{order.order_number}.pdf",
         content_type="application/pdf",
     )
+
 
 @login_required
 def download_packing_slip(request, order_number):
-    # 1. Get the seller record associated with the logged-in user
     seller = get_object_or_404(Seller, user=request.user)
 
-    # 2. Query the SellerOrder matching this order_number and seller,
-    # optimizing DB queries with select_related and prefetch_related
-    seller_order = get_object_or_404(
-        SellerOrder.objects.select_related("order", "seller").prefetch_related(
+    order = get_object_or_404(
+        Order.objects.select_related("user", "seller").prefetch_related(
             "items__product"
         ),
-        order__order_number=order_number,
+        order_number=order_number,
         seller=seller,
     )
 
-    # 3. Pass the SellerOrder object into the invoice generator
-    pdf_buffer = generate_packing_slip(seller_order)
+    pdf_buffer = generate_packing_slip(order)
 
-    # 4. Stream the generated PDF response back to the client
     return FileResponse(
         pdf_buffer,
         as_attachment=False,
-        filename=f"packing-slip-{seller_order.order.order_number}.pdf",
+        filename=f"packing-slip-{order.order_number}.pdf",
         content_type="application/pdf",
     )
+
 
 @login_required
 def reorder(request, order_number):

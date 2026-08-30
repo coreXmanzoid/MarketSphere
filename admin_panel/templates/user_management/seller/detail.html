@@ -873,12 +873,12 @@
                     {% for order in orders %}
                       <tr class="sld-row" data-status="{{ order.overall_status }}">
                         <td data-label="Order">
-                          <span class="sld-order-link">#MS-{{ order.order.order_number|slice:'5' }}</span>
+                          <span class="sld-order-link">#MS-{{ order.order_number|slice:'5' }}</span>
                         </td>
-                        <td data-label="Buyer">{{ order.order.user.first_name }} {{ order.order.user.last_name }}</td>
+                        <td data-label="Buyer">{{ order.user.first_name }} {{ order.user.last_name }}</td>
                         <td data-label="Items">3</td>
                         <td data-label="Payment">
-                          <span class="sld-badge c-success">{{ order.order.payment_status }}</span>
+                          <span class="sld-badge c-success">{{ order.payment_status }}</span>
                         </td>
                         <td data-label="Shipping">{{ order.courier|default:'Not Assigned' }}</td>
                         <td data-label="Status">
@@ -895,9 +895,9 @@
                                 <circle cx="12" cy="19" r="1.2"></circle>
                               </svg>
                             </button><div class="sld-dropdown-menu" role="menu">
-                              <button type="button" class="sld-dropdown-item" onclick="window.location.href='{% url 'order' order_number=order.order.order_number %}'">View Order</button>
-                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'download_invoice' order_number=order.order.order_number %}', '_blank')">Invoice</button>
-                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'download-shipping-label' order_number=order.order.order_number %}', '_blank')">Shipping Label</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.location.href='{% url 'order' order_number=order.order_number %}'">View Order</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'download_invoice' order_number=order.order_number %}', '_blank')">Invoice</button>
+                              <button type="button" class="sld-dropdown-item" onclick="window.open('{% url 'download-shipping-label' order_number=order.order_number %}', '_blank')">Shipping Label</button>
                               <button type="button" class="sld-dropdown-item" data-toast="Tracking isn&#8217;t available for delivered orders.">Track</button>
                             </div>
                           </div>
@@ -921,11 +921,11 @@
                 <div class="sld-customer-list">
                   {% for buyer in top_buyers %}
                     <div class="sld-customer-row">
-                      <span class="sld-customer-avatar">{{ buyer.order__user__first_name|first|upper }}</span>
+                      <span class="sld-customer-avatar">{{ buyer.user__first_name|first|upper }}</span>
 
                       <div class="sld-customer-info">
-                        <strong class="sld-customer-link">{{ buyer.order__user__first_name }} {{ buyer.order__user__last_name }}</strong>
-                        <small>{{ buyer.total_orders }} order{{ buyer.total_orders|pluralize }}</small>
+                        <strong class="sld-customer-link">{{ buyer.user__first_name }} {{ buyer.user__last_name }}</strong>
+                        <small>{{ buyer.orders }} order{{ buyer.orders|pluralize }}</small>
                       </div>
 
                       <div class="sld-customer-value">
@@ -946,7 +946,7 @@
                 <div class="sld-locations-list">
                   {% for location in customer_locations %}
                     <div class="sld-location-row">
-                      <span>{{ location.order__shipping_city }}</span>
+                      <span>{{ location.shipping_city }}</span>
 
                       <div class="sld-location-bar">
                         <span class="sld-location-bar-fill" style="width: {{ location.percentage }}%;"></span>
@@ -980,7 +980,7 @@
                     {% for customer in recent_customers %}
                       <tr>
                         <td data-label="Customer">
-                          <span class="sld-customer-link">{{ customer.order__user__first_name }} {{ customer.order__user__last_name }}</span>
+                          <span class="sld-customer-link">{{ customer.user__first_name }} {{ customer.order__user__last_name }}</span>
                         </td>
 
                         <td data-label="Orders">{{ customer.total_orders }}</td>

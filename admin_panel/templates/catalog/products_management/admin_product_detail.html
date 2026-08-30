@@ -1117,16 +1117,16 @@
                           <tr
                               class="apd-row"
                               data-status="{{ order.status|lower }}"
-                              data-search="{{ order.order.order_number }} {{ order.order.user.get_full_name|default:order.order.user.username }}"
+                              data-search="{{ order.order_number }} {{ order.user.get_full_name|default:order.user.username }}"
                           >
                               <td data-label="Order">
-                                  <span class="apd-order-link" onclick="window.open('{% url 'order-detail' order_no=order.order.order_number %}', '_blank')">
-                                      #{{ order.order.order_number|slice:":6" }}
+                                  <span class="apd-order-link" onclick="window.open('{% url 'order-detail' order_no=order.order_number %}', '_blank')">
+                                      #{{ order.order_number|slice:":6" }}
                                   </span>
                               </td>
 
                               <td data-label="Buyer">
-                                  {{ order.order.user.get_full_name|default:order.order.user.username }}
+                                  {{ order.user.get_full_name|default:order.user.username }}
                               </td>
 
                               <td data-label="Qty">
@@ -1138,13 +1138,13 @@
                               </td>
 
                               <td data-label="Payment">
-                                  {% if order.order.payment_status|lower == "paid" %}
+                                  {% if order.payment_status|lower == "paid" %}
                                       <span class="apd-badge c-success">Paid</span>
-                                  {% elif order.order.payment_status|lower == "refunded" %}
+                                  {% elif order.payment_status|lower == "refunded" %}
                                       <span class="apd-badge c-warning">Refunded</span>
                                   {% else %}
                                       <span class="apd-badge c-muted">
-                                          {{ order.order.payment_status|title }}
+                                          {{ order.payment_status|title }}
                                       </span>
                                   {% endif %}
                               </td>

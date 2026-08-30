@@ -146,9 +146,12 @@ def sales_order(request, order_number):
 def payment_management(request):
     return render(request, "sales/payments/payment_management.html")
 
+
+def admin_settings(request):
+    return render(request, "admin_settings.html")
+
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-
 from . import services
 
 

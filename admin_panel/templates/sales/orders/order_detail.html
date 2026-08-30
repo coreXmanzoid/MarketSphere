@@ -40,14 +40,14 @@
             </button>
           </h1>
 
-          {% if order.overall_status == 'cancelled' %}
+          {% if order.status == 'cancelled' %}
             <span class="od-badge-pill od-badge-danger">Cancelled</span>
-          {% elif order.overall_status == 'delivered' %}
+          {% elif order.status == 'delivered' %}
             <span class="od-badge-pill od-badge-success">Delivered</span>
-          {% elif order.overall_status == 'on_hold' %}
+          {% elif order.status == 'on_hold' %}
             <span class="od-badge-pill od-badge-warning">On Hold</span>
           {% else %}
-            <span class="od-badge-pill od-badge-accent">{{ order.get_overall_status_display|default:"Processing" }}</span>
+            <span class="od-badge-pill od-badge-accent">{{ order.get_status_display|default:"Processing" }}</span>
           {% endif %}
         </div>
 
@@ -83,25 +83,25 @@
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>Contact Buyer
         </button>
 
-        {% if order.overall_status == 'pending' %}
+        {% if order.status == 'pending' %}
           <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="confirmed">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Confirm Order
           </button>
-        {% elif order.overall_status == 'confirmed' %}
+        {% elif order.status == 'confirmed' %}
           <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="processing">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Mark Processing
           </button>
-        {% elif order.overall_status == 'processing' %}
+        {% elif order.status == 'processing' %}
           <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="shipped">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Mark Shipped
           </button>
-        {% elif order.overall_status == 'shipped' %}
+        {% elif order.status == 'shipped' %}
           <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" data-next-status="delivered">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>Mark Delivered
           </button>
         {% else %}
           <button type="button" class="od-btn od-btn-primary" id="odPrimaryActionBtn" disabled>
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>{{ order.get_overall_status_display|default:"Order Complete" }}
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>{{ order.status|default:"Order Complete" }}
           </button>
         {% endif %}
 
@@ -128,7 +128,7 @@
     <section class="od-status-grid od-reveal" aria-label="Order status summary">
       <div class="od-status-card">
         <span class="od-status-label">Order Status</span>
-        <span class="od-status-value od-status-{{ order.overall_status|default:'processing' }}">{{ order.get_overall_status_display|default:"Processing" }}</span>
+        <span class="od-status-value od-status-{{ order.status|default:'processing' }}">{{ order.status|default:"Processing" }}</span>
       </div>
       <div class="od-status-card">
         <span class="od-status-label">Payment Status</span>
@@ -136,7 +136,7 @@
       </div>
       <div class="od-status-card">
         <span class="od-status-label">Fulfillment Status</span>
-        <span class="od-status-value od-status-{{ order.fulfillment_status|default:'pending' }}">{{ order.get_fulfillment_status_display|default:order.get_overall_status_display|default:"Pending" }}</span>
+        <span class="od-status-value od-status-{{ order.fulfillment_status|default:'pending' }}">{{ order.get_fulfillment_status_display|default:order.status|default:"Pending" }}</span>
       </div>
       <div class="od-status-card">
         <span class="od-status-label">Refund Status</span>
@@ -211,7 +211,7 @@
               </li>
             {% endfor %}
 
-            <li class="od-timeline-item {% if order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %} {% if order.overall_status == 'processing' %}is-current{% endif %}">
+            <li class="od-timeline-item {% if order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %} {% if order.status == 'processing' %}is-current{% endif %}">
               <span class="od-timeline-dot">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path></svg>
               </span>
@@ -223,7 +223,7 @@
               </div>
             </li>
 
-            <li class="od-timeline-item {% if order.overall_status == 'shipped' or order.overall_status == 'delivered' %}is-complete{% endif %} {% if order.overall_status == 'shipped' %}is-current{% endif %}">
+            <li class="od-timeline-item {% if order.status == 'shipped' or order.status == 'delivered' %}is-complete{% endif %} {% if order.status == 'shipped' %}is-current{% endif %}">
               <span class="od-timeline-dot">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3h13v13H3z"></path><path d="M16 8h4l3 4v5h-7V8Z"></path><circle cx="7" cy="19" r="2"></circle><circle cx="18" cy="19" r="2"></circle></svg>
               </span>
@@ -236,7 +236,7 @@
               </div>
             </li>
 
-            <li class="od-timeline-item {% if order.overall_status == 'delivered' %}is-complete{% endif %}">
+            <li class="od-timeline-item {% if order.status == 'delivered' %}is-complete{% endif %}">
               <span class="od-timeline-dot">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"></path></svg>
               </span>
@@ -249,7 +249,7 @@
               </div>
             </li>
 
-            {% if order.overall_status == 'cancelled' %}
+            {% if order.status == 'cancelled' %}
               <li class="od-timeline-item is-complete is-danger">
                 <span class="od-timeline-dot">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>
@@ -285,121 +285,114 @@
           <div class="od-card-head">
             <h2 class="od-card-title">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path><path d="M9 21V13h6v8"></path></svg>
-              Seller Orders <span class="od-count-pill">{{ order.seller_orders.count }}</span>
+              Seller Orders <span class="od-count-pill">{{ order.items.count }}</span>
             </h2>
           </div>
 
           <div class="od-seller-orders-list">
-            {% for seller_order in order.seller_orders.all %}
-              <div class="od-seller-order-card">
-                <div class="od-seller-order-head">
-                  <div class="od-seller-order-identity">
-                    <span class="od-seller-avatar">
-                      {% if seller_order.seller.store_logo %}
-                        <img src="{{ seller_order.seller.store_logo.url }}" alt="{{ seller_order.seller.store_name }}" />
-                      {% else %}
-                        {{ seller_order.seller.store_name|slice:':1'|upper }}
-                      {% endif %}
-                    </span>
-                    <div>
-                      <strong class="od-seller-order-name">{{ seller_order.seller.store_name }}</strong>
-                      <span class="od-seller-order-id">Seller Order #{{ seller_order.id }}</span>
-                    </div>
+            <div class="od-seller-order-card">
+              <div class="od-seller-order-head">
+                <div class="od-seller-order-identity">
+                  <span class="od-seller-avatar">
+                    {% if order.seller.store_logo %}
+                      <img src="{{ order.seller.store_logo.url }}" alt="{{ order.seller.store_name }}" />
+                    {% else %}
+                      {{ order.seller.store_name|slice:':1'|upper }}
+                    {% endif %}
+                  </span>
+                  <div>
+                    <strong class="od-seller-order-name">{{ order.seller.store_name }}</strong>
+                    <span class="od-seller-order-id">Order #{{ order.order_number }}</span>
                   </div>
-
-                  <span class="od-badge-pill od-badge-{{ seller_order.status|default:'accent' }}">{{ seller_order.get_status_display }}</span>
                 </div>
 
-                <div class="od-seller-order-meta-row">
-                  <span><strong>{{ seller_order.items.count }}</strong> item{{ seller_order.items.count|pluralize }}</span>
+                <span class="od-badge-pill od-badge-{{ order.status|lower|default:'accent' }}">{{ order.get_status_display }}</span>
+              </div>
+
+              <div class="od-seller-order-meta-row">
+                <span><strong>{{ order.items.count }}</strong> item{{ order.items.count|pluralize }}</span>
+                <span class="od-meta-sep">&middot;</span>
+                <span>Fulfillment: <strong>{{ order.get_status_display }}</strong></span>
+                {% if order.tracking_number %}
                   <span class="od-meta-sep">&middot;</span>
-                  <span>Fulfillment: <strong>{{ seller_order.get_status_display }}</strong></span>
-                  {% if seller_order.tracking_number %}
-                    <span class="od-meta-sep">&middot;</span>
-                    <span>Tracking: <strong>{{ seller_order.tracking_number }}</strong></span>
-                  {% endif %}
-                </div>
+                  <span>Tracking: <strong>{{ order.tracking_number }}</strong></span>
+                {% endif %}
+              </div>
 
-                <div class="od-seller-order-totals">
-                  <div><span>Subtotal</span><strong>Rs. {{ seller_order.subtotal|floatformat:0 }}</strong></div>
-                  <div><span>Shipping</span><strong>Rs. {{ seller_order.shipping_cost|default:"0"|floatformat:0 }}</strong></div>
-                  <div><span>Discount</span><strong>- Rs. {{ seller_order.discount|default:"0"|floatformat:0 }}</strong></div>
-                  <div><span>Tax</span><strong>Rs. {{ seller_order.tax|default:"0"|floatformat:0 }}</strong></div>
-                  <div class="od-seller-order-total-final"><span>Total</span><strong>Rs. {{ seller_order.total|floatformat:0 }}</strong></div>
-                </div>
+              <div class="od-seller-order-totals">
+                <div><span>Subtotal</span><strong>Rs. {{ order.subtotal|floatformat:0 }}</strong></div>
+                <div><span>Shipping</span><strong>Rs. {{ order.shipping_cost|default:"0"|floatformat:0 }}</strong></div>
+                <div><span>Discount</span><strong>- Rs. {{ order.discount|default:"0"|floatformat:0 }}</strong></div>
+                <div><span>Tax</span><strong>Rs. {{ order.tax|default:"0"|floatformat:0 }}</strong></div>
+                <div class="od-seller-order-total-final"><span>Total</span><strong>Rs. {{ order.total|floatformat:0 }}</strong></div>
+              </div>
 
-                <div class="od-seller-order-actions">
-                  <a href="{% url 'user-seller' sellerId=seller_order.seller.id %}" class="od-btn od-btn-secondary od-btn-sm">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>View Seller
-                  </a>
-                  <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-toggle-seller-order="{{ forloop.counter0 }}">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>View Items
-                  </button>
-                  <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-od-open-modal="odContactSellerModal" data-seller-name="{{ seller_order.seller.store_name }}">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>Contact Seller
-                  </button>
-                </div>
+              <div class="od-seller-order-actions">
+                <a href="{% url 'user-seller' sellerId=order.seller.id %}" class="od-btn od-btn-secondary od-btn-sm">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>View Seller
+                </a>
+                <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-toggle-seller-order="{{ order.id }}">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>View Items
+                </button>
+                <button type="button" class="od-btn od-btn-ghost od-btn-sm" data-od-open-modal="odContactSellerModal" data-seller-name="{{ order.seller.store_name }}">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>Contact Seller
+                </button>
+              </div>
 
-                <!-- ================= ORDER ITEMS FOR THIS SELLER ================= -->
-                <div class="od-seller-order-items" id="odSellerOrderItems{{ forloop.counter0 }}">
-                  <div class="od-table-wrap">
-                    <table class="od-table">
-                      <thead>
+              <!-- ================= ORDER ITEMS ================= -->
+              <div class="od-seller-order-items" id="odSellerOrderItems{{ order.id }}">
+                <div class="od-table-wrap">
+                  <table class="od-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Discount</th>
+                        <th>Tax</th>
+                        <th>Subtotal</th>
+                        <th class="od-col-actions"><span class="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in order.items.all %}
                         <tr>
-                          <th>Product</th>
-                          <th>SKU</th>
-                          <th>Qty</th>
-                          <th>Unit Price</th>
-                          <th>Discount</th>
-                          <th>Tax</th>
-                          <th>Subtotal</th>
-                          <th class="od-col-actions"><span class="sr-only">Actions</span></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for item in seller_order.items.all %}
-                          <tr>
-                            <td data-label="Product">
-                              <div class="od-item-cell">
-                                <span class="od-item-thumb">
-                                  {% if item.product.primary_image %}
-                                    <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" />
-                                  {% else %}
-                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
-                                  {% endif %}
-                                </span>
-                                <div class="od-item-name-cell">
-                                  <strong>{{ item.product.name }}</strong>
-                                  <small class="od-badge-pill od-badge-{{ item.product.status|default:'accent' }} od-item-status-badge">{{ item.product.get_status_display|default:item.product.status }}</small>
-                                </div>
+                          <td data-label="Product">
+                            <div class="od-item-cell">
+                              <span class="od-item-thumb">
+                                {% if item.product.primary_image %}
+                                  <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" />
+                                {% else %}
+                                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+                                {% endif %}
+                              </span>
+                              <div class="od-item-name-cell">
+                                <strong>{{ item.product.name }}</strong>
+                                <small class="od-badge-pill od-badge-{{ item.product.status|lower|default:'accent' }} od-item-status-badge">{{ item.product.get_status_display|default:item.product.status }}</small>
                               </div>
-                            </td>
-                            <td data-label="SKU">{{ item.product.sku|default:"—" }}</td>
-                            <td data-label="Qty">{{ item.quantity }}</td>
-                            <td data-label="Unit Price">Rs. {{ item.unit_price|default:item.product.price|floatformat:0 }}</td>
-                            <td data-label="Discount">Rs. {{ item.discount|default:"0"|floatformat:0 }}</td>
-                            <td data-label="Tax">Rs. {{ item.tax|default:"0"|floatformat:0 }}</td>
-                            <td data-label="Subtotal"><strong>Rs. {{ item.total|floatformat:0 }}</strong></td>
-                            <td class="od-col-actions">
-                              <a href="{% url 'product' product_slug=item.product.slug %}" class="od-icon-btn" target="_blank" rel="noopener" aria-label="View product">
-                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                              </a>
-                            </td>
-                          </tr>
-                        {% empty %}
-                          <tr><td colspan="8" class="od-table-empty">No items found for this seller order.</td></tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
+                            </div>
+                          </td>
+                          <td data-label="SKU">{{ item.product.sku|default:"—" }}</td>
+                          <td data-label="Qty">{{ item.quantity }}</td>
+                          <td data-label="Unit Price">Rs. {{ item.unit_price|default:item.product.price|floatformat:0 }}</td>
+                          <td data-label="Discount">Rs. {{ item.discount|default:"0"|floatformat:0 }}</td>
+                          <td data-label="Tax">Rs. {{ item.tax|default:"0"|floatformat:0 }}</td>
+                          <td data-label="Subtotal"><strong>Rs. {{ item.total|floatformat:0 }}</strong></td>
+                          <td class="od-col-actions">
+                            <a href="{% url 'product' product_slug=item.product.slug %}" class="od-icon-btn" target="_blank" rel="noopener" aria-label="View product">
+                              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </a>
+                          </td>
+                        </tr>
+                      {% empty %}
+                        <tr><td colspan="8" class="od-table-empty">No items found for this order.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            {% empty %}
-              <div class="od-empty-state">
-                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-5h16l1 5"></path><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path></svg>
-                <p>No seller orders are linked to this order yet.</p>
-              </div>
-            {% endfor %}
+            </div>
           </div>
         </section>
 
@@ -415,18 +408,16 @@
           <div class="od-notes-grid">
             <div class="od-note-block">
               <span class="od-note-block-label">Buyer Note</span>
-              <p class="od-note-block-text">{{ order.buyer_note|default:"No note left by the buyer for this order." }}</p>
+              <p class="od-note-block-text">{{ order.buyer_notes|default:"No note left by the buyer for this order." }}</p>
             </div>
             <div class="od-note-block">
               <span class="od-note-block-label">Shipping Note</span>
-              <p class="od-note-block-text">{{ order.shipping_note|default:"No special shipping instructions provided." }}</p>
+              <p class="od-note-block-text">{{ order.shipping_notes|default:"No special shipping instructions provided." }}</p>
             </div>
-            {% for seller_order in order.seller_orders.all %}
               <div class="od-note-block">
-                <span class="od-note-block-label">{{ seller_order.seller.store_name }} — Seller Note</span>
-                <p class="od-note-block-text">{{ seller_order.seller_note|default:"No note from this seller." }}</p>
+                <span class="od-note-block-label">{{ order.seller.store_name }} — Seller Note</span>
+                <p class="od-note-block-text">{{ order.seller_notes|default:"No note from this seller." }}</p>
               </div>
-            {% endfor %}
           </div>
         </section>
 

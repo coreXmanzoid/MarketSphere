@@ -288,6 +288,47 @@
     initCollapseState();
 })();
 document.addEventListener("DOMContentLoaded", () => {
+    const notificationButton = document.getElementById("sdNotifBtn");
+    const notificationPanel = document.getElementById("sdNotificationPanel");
+    const clearNotifications = document.getElementById("sdClearNotifications");
+    const notificationList = document.getElementById("sdNotificationList");
+    const notificationEmpty = document.getElementById("sdNotificationEmpty");
+    const notificationDot = document.querySelector(".sd-notif-dot");
+
+    if (notificationButton && notificationPanel) {
+        function openNotifications() {
+            notificationPanel.classList.add("is-open");
+            notificationPanel.setAttribute("aria-hidden", "false");
+            notificationButton.setAttribute("aria-expanded", "true");
+        }
+
+        function closeNotifications() {
+            notificationPanel.classList.remove("is-open");
+            notificationPanel.setAttribute("aria-hidden", "true");
+            notificationButton.setAttribute("aria-expanded", "false");
+        }
+
+        notificationButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            notificationPanel.classList.contains("is-open") ? closeNotifications() : openNotifications();
+        });
+
+        notificationPanel.addEventListener("click", (event) => event.stopPropagation());
+
+        document.addEventListener("click", closeNotifications);
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closeNotifications();
+        });
+
+        if (clearNotifications) {
+            clearNotifications.addEventListener("click", () => {
+                if (notificationList) notificationList.hidden = true;
+                if (notificationEmpty) notificationEmpty.hidden = false;
+                if (notificationDot) notificationDot.hidden = true;
+            });
+        }
+    }
+
     const profileChip = document.querySelector(".sd-seller-chip");
     const profileMenu = document.getElementById("adProfileMenu");
 

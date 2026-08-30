@@ -39,7 +39,7 @@ Shopping Cart • MarketSphere
         <!-- Item count will be recalculated live by cart.js; initial value rendered by Django -->
         <p class="cart-item-count" id="cartItemCount">
           <!-- e.g. {{ cart_items|length }} item(s) in your cart -->
-          <span id="cartItemCountValue">{{ cart_count }}</span> item(s) in your cart
+          <span id="cartItemCountValue">{{ cart_count }}</span> item({{ cart_count|pluralize }}) in your cart
         </p>
       </div>
       <a href="{% url 'home' %}" class="view-all-link cart-continue-link"><i class="bi bi-arrow-left"></i> Continue
@@ -70,7 +70,7 @@ Shopping Cart • MarketSphere
       <!-- ================= LEFT: CART ITEMS ================= -->
       <div class="col-lg-8 col-12">
         <div class="cart-items-toolbar">
-          <span class="cart-items-toolbar-label"><i class="bi bi-bag-check"></i> <span id="cartToolbarCount">{{ cart_count }}</span> Products</span>
+          <span class="cart-items-toolbar-label"><i class="bi bi-bag-check"></i> <span id="cartToolbarCount">{{ cart_count }}</span> Product{{ cart_count|pluralize }}</span>
           <button type="button" class="cart-clear-btn" id="cartClearBtn"><i class="bi bi-trash3"></i> Clear
             Cart</button>
         </div>
@@ -101,11 +101,11 @@ Shopping Cart • MarketSphere
                     <!-- Product name will be rendered here by Django -->
                     <h6 class="cart-item-name">{{ item.product.name }}</h6>
                   </a>
-                  <span class="product-brand cart-item-brand">{{ item.product.brand }}</span>
+                  <span class="product-brand cart-item-brand">{{ item.product.brand|default:"No Brand" }}</span>
                   {% if item.product.stock_quantity == 0 %}
-                  <span class="stock-badge in-stock cart-item-stock">Out of stock</span>
+                  <span class="stock-badge out-of-stock cart-item-stock">Out of stock</span>
                   {% elif item.product.stock_quantity <= 80 %}
-                  <span class="stock-badge in-stock cart-item-stock">Only <strong>{{ item.product.stock_quantity }}</strong> left</span>
+                  <span class="stock-badge low-stock cart-item-stock">Only <strong>{{ item.product.stock_quantity }}</strong> left</span>
                   {% else %}
                   <span class="stock-badge in-stock cart-item-stock">In Stock</span>
               {% endif %}
@@ -129,7 +129,7 @@ Shopping Cart • MarketSphere
                 <div class="cart-qty-selector" role="group" aria-label="Quantity for Wireless Over-Ear Headphones">
                   <button type="button" class="cart-qty-btn cart-qty-decrement" aria-label="Decrease quantity"><i
                       class="bi bi-dash"></i></button>
-                  <input type="number" class="cart-qty-input" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}" aria-label="Quantity" />
+                  <input type="number" class="cart-qty-input" value="{{ item.quantity }}" min="1" max="5" aria-label="Quantity" />
                   <button type="button" class="cart-qty-btn cart-qty-increment" aria-label="Increase quantity"><i
                       class="bi bi-plus"></i></button>
                 </div>
@@ -201,8 +201,7 @@ Shopping Cart • MarketSphere
             </div>
           </form>
 
-          <button type="button" class="btn btn-hero-primary cart-checkout-btn" id="cartCheckoutBtn" onclick="window.location.href='{% url "checkout" %}'"><i
-              class="bi bi-lock"></i> Proceed to Checkout</button>
+          <button type="button" class="btn btn-hero-primary cart-checkout-btn" id="cartCheckoutBtn" onclick="window.location.href='{% url "checkout" %}'"><i class="bi bi-lock"></i> Proceed to Checkout</button>
           <a href="{% url 'home' %}" class="cart-continue-shopping-link">Continue Shopping</a>
 
           <div class="cart-trust-row">

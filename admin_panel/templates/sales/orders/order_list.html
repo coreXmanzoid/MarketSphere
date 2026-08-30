@@ -407,20 +407,8 @@
 
                 <td data-label="Seller">
                   <span class="so-customer-name">
-                    {% with seller_count=order.seller_orders.count %}
-                      {% if seller_count == 1 %}
-                        {{ order.seller_orders.first.seller.store_name }}
-                      {% else %}
-                        {{ seller_count }} sellers
-                      {% endif %}
-                    {% endwith %}
+                    {{ order.seller.store_name }}
                   </span>
-
-                  {% if order.seller_orders.count > 1 %}
-                    <span class="so-customer-email">
-                      Multiple sellers
-                    </span>
-                  {% endif %}
                 </td>
 
                 <td data-label="Items">
@@ -477,10 +465,10 @@
 
                 <td data-label="Status">
 
-                  {% if order.overall_status %}
+                  {% if order.status %}
 
-                    <span class="so-badge so-badge-{{ order.overall_status }}">
-                      {{ order.get_overall_status_display }}
+                    <span class="so-badge so-badge-{{ order.status }}">
+                      {{ order.status }}
                     </span>
 
                   {% endif %}
@@ -624,7 +612,7 @@
                         Contact Seller
                       </button>
 
-                      {% if order.overall_status != 'shipped' and order.overall_status != 'delivered' and order.overall_status != 'cancelled' %}
+                      {% if order.status != 'shipped' and order.status != 'delivered' and order.status != 'cancelled' %}
 
                         <div class="so-dropdown-divider" role="separator"></div>
 

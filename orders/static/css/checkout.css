@@ -177,9 +177,9 @@
 
 /* ================= ADD ADDRESS BUTTON ================= */
 .co-add-address-btn {
+    background-color: var(--co-accent) !important;
+    color: #F7F1DE !important;
     width: auto !important;
-    background-color: transparent !important;
-    color: var(--co-accent-dark) !important;
     border: 1.5px solid var(--co-accent) !important;
     border-radius: 2px !important;
     padding: 8px 16px !important;
@@ -192,7 +192,16 @@
 }
 
 .co-add-address-btn:hover {
-    background-color: var(--co-accent) !important;
+    background-color: transparent !important;
+    color: var(--co-accent-dark) !important;
+    border-width: 1.5px !important;
+}
+.btn-secondary {
+    background-color: transparent !important;
+    color: #9D6638 !important;
+}
+.btn-secondary:hover{
+    background-color: #9D6638 !important;
     color: #F7F1DE !important;
 }
 
@@ -646,7 +655,7 @@
     align-items: center;
     justify-content: space-between;
     font-size: 14.5px;
-    color: #4f7d54;
+    color: #4E220F;
 }
 
 .co-summary-row span:last-child {
@@ -748,7 +757,7 @@
 .modal-body textarea:focus,
 .modal-body textarea{
     background-color: #F7F1DE;
-    border: 2px solid #9D6638;
+    border: 1.5px solid #9D6638;
     resize: none;
     border-radius: 1px;
 }

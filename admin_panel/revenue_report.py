@@ -14,8 +14,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, KeepTogether
 )
 
-# Replace with your actual app model imports
-from orders.models import SellerOrder, OrderItem
+from orders.models import Order, OrderItem
 from products.models import Product
 
 
@@ -99,7 +98,7 @@ def _calculate_metrics(seller):
     first_day_prev_month = last_day_prev_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # 1. Order & Revenue Stats (Excluding cancelled for valid revenue)
-    orders = SellerOrder.objects.filter(seller=seller)
+    orders = Order.objects.filter(seller=seller)
     total_orders = orders.count()
     
     order_stats = orders.aggregate(
@@ -141,8 +140,8 @@ def _calculate_metrics(seller):
     # 3. Top Selling Products (Top 10)
     top_products = (
         OrderItem.objects.filter(
-            seller_order__seller=seller,
-            seller_order__status=SellerOrder.Status.DELIVERED,
+            order__seller=seller,
+            order__status=Order.Status.DELIVERED,
         )
         .values("product__name")
         .annotate(
@@ -154,8 +153,8 @@ def _calculate_metrics(seller):
     # 4. Top Categories (Top 10) - Assumes 'category' is a string/CharField or related model name
     top_categories = (
         OrderItem.objects.filter(
-            seller_order__seller=seller,
-            seller_order__status=SellerOrder.Status.DELIVERED,
+            order__seller=seller,
+            order__status=Order.Status.DELIVERED,
         )
         .values("product__category__name")
         .annotate(
@@ -165,9 +164,7 @@ def _calculate_metrics(seller):
         .order_by("-units_sold")[:10]
     )
     # 5. Largest Orders (Top 10)
-    largest_orders = SellerOrder.objects.filter(seller=seller) \
-        .select_related('order') \
-        .order_by('-total')[:10]
+    largest_orders = Order.objects.filter(seller=seller).order_by('-total')[:10]
 
     return {
         "order_stats": order_stats,
@@ -383,17 +380,16 @@ def export_revenue_report(seller):
     
     # --- LARGEST ORDERS ---
     largest_order_rows = []
-    for so in metrics["largest_orders"]:
-        parent_order = getattr(so, 'order', None)
-        cust_name = parent_order.shipping_name if parent_order else "Unknown Customer"
-        order_num = parent_order.order_number if parent_order else "N/A"
-        date_str = so.created_at.strftime("%b %d, %Y") if so.created_at else "—"
+    for order in metrics["largest_orders"]:
+        cust_name = order.shipping_name or "Unknown Customer"
+        order_num = order.order_number or "N/A"
+        date_str = order.created_at.strftime("%b %d, %Y") if order.created_at else "—"
         largest_order_rows.append((
             order_num,
             cust_name,
             date_str,
-            so.get_status_display() if hasattr(so, 'get_status_display') else str(so.status).title(),
-            _currency(so.total)
+            order.get_status_display() if hasattr(order, 'get_status_display') else str(order.status).title(),
+            _currency(order.total)
         ))
 
     elements.append(KeepTogether([

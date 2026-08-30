@@ -1,4 +1,44 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const notificationButton = document.getElementById("msNotificationBtn");
+    const notificationPanel = document.getElementById("msNotificationPanel");
+    const clearNotifications = document.getElementById("msClearNotifications");
+    const notificationList = document.getElementById("msNotificationList");
+    const notificationEmpty = document.getElementById("msNotificationEmpty");
+    const notificationDot = document.querySelector(".ms-notification-dot");
+
+    if (notificationButton && notificationPanel) {
+        function closeNotifications() {
+            notificationPanel.classList.remove("is-open");
+            notificationPanel.setAttribute("aria-hidden", "true");
+            notificationButton.setAttribute("aria-expanded", "false");
+        }
+
+        notificationButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const isOpen = notificationPanel.classList.toggle("is-open");
+            notificationPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+            notificationButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        notificationPanel.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("click", closeNotifications);
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") closeNotifications();
+        });
+
+        if (clearNotifications) {
+            clearNotifications.addEventListener("click", function () {
+                if (notificationList) notificationList.hidden = true;
+                if (notificationEmpty) notificationEmpty.hidden = false;
+                if (notificationDot) notificationDot.hidden = true;
+            });
+        }
+    }
+
     const messages = document.querySelectorAll(".header-message-row [data-auto-hide='true']");
 
     messages.forEach((message) => {

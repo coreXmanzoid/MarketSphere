@@ -40,7 +40,7 @@
         </div>
 
         {% if wishlist_products %}
-          <a href="{% url 'home' %}" class="btn btn-hero-secondary wishlist-continue-link">
+          <a href="{% url 'home' %}" class="btn btn-hero-primary wishlist-continue-link">
             <i class="bi bi-bag"></i> Continue Shopping
           </a>
         {% endif %}
@@ -60,7 +60,7 @@
           {% for item in wishlist_products %}
             <div class="col-lg-3 col-md-6 col-6 wishlist-grid-item" data-wishlist-item-id="{{ item.product.id }}">
               <div class="product-card wishlist-product-card">
-<div class="product-card-media">
+              <div class="product-card-media">
                 <div class="product-badges">
                   {% if 'week' not in item.product.created_at|timesince and 'month' not in itemm.product.created_at|timesince %}
                     <span class="badge-new">New</span>
@@ -112,10 +112,10 @@
                   <!-- Price: current / original will be rendered here by Django -->
                   <div class="product-price">
                     {% if item.product.discount_price %}
-                    <span class="price-current">Rs. {{ item.product.discount_price }}</span>
-                    <span class="price-origional">Rs. {{ item.product.price }}</span>
+                    <span class="price-current">Rs. {{ item.product.discount_price|floatformat:0 }}</span>
+                    <span class="price-original">Rs. {{ item.product.price|floatformat:0 }}</span>
                     {% else  %}
-                    <span class="price-current">Rs. {{ item.product.price }}</span>
+                    <span class="price-current">Rs. {{ item.product.price|floatformat:0 }}</span>
                     {% endif %}
                   </div>
 

@@ -1,21 +1,26 @@
 from collections import defaultdict
 from decimal import Decimal
 from uuid import uuid4
+from calendar import monthrange
+from datetime import datetime
 
 from django.db import transaction
-from django.db.models import Prefetch, Sum
+from django.db.models import Prefetch, Sum, Count, F, Q, IntegerField
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 from accounts.models import Address
 from products.models import CartItem, Product
 from products.services import get_or_create_cart
 
-from .models import Order, OrderItem, SellerOrder
+from .models import Order, OrderItem
 
-CANCELABLE_SELLER_ORDER_STATUSES = (
-    SellerOrder.Status.PENDING,
-    SellerOrder.Status.CONFIRMED,
-    SellerOrder.Status.PROCESSING,
+CANCELABLE_ORDER_STATUSES = (
+    Order.Status.PENDING,
+    Order.Status.CONFIRMED,
+    Order.Status.PROCESSING,
 )
 
 
@@ -42,17 +47,13 @@ def place_order(
         user=user,
     )
 
-    full_name = (
-        full_name or f"{user.first_name} {user.last_name}".strip() or user.username
-    )
-
+    full_name = full_name or f"{user.first_name} {user.last_name}".strip() or user.username
     email = email or user.email
-
     phone = phone or address.phone or user.contact
 
     # --------------------------------------------------
-    # Group cart items by seller — each seller gets its
-    # own SellerOrder under the parent Order.
+    # Group cart items by seller — each seller now gets 
+    # their own dedicated Order instance.
     # --------------------------------------------------
     items_by_seller = defaultdict(list)
     for item in cart_items:
@@ -62,22 +63,23 @@ def place_order(
             )
         items_by_seller[item.product.seller_id].append(item)
 
-    order = Order.objects.create(
-        user=user,
-        order_number=uuid4().hex[:12].upper(),
-        shipping_name=full_name,
-        shipping_phone=phone,
-        shipping_address=address.address_line_1,
-        shipping_city=address.city,
-        shipping_postal_code=address.postal_code,
-        notes=notes,
-    )
-
-    order_subtotal = Decimal("0.00")
+    created_orders = []
 
     for seller_id, items in items_by_seller.items():
-        seller_subtotal = Decimal("0.00")
+        order_subtotal = Decimal("0.00")
         pending_order_items = []
+
+        order = Order.objects.create(
+            user=user,
+            seller_id=seller_id,
+            order_number=uuid4().hex[:12].upper(),
+            shipping_name=full_name,
+            shipping_phone=phone,
+            shipping_address=address.address_line_1,
+            shipping_city=address.city,
+            shipping_postal_code=address.postal_code,
+            buyer_notes=notes,
+        )
 
         for item in items:
             product = item.product
@@ -89,7 +91,7 @@ def place_order(
                 )
 
             item_total = price * item.quantity
-            seller_subtotal += item_total
+            order_subtotal += item_total
 
             product.stock_quantity -= item.quantity
             product.status = (
@@ -100,97 +102,64 @@ def place_order(
             product.save(update_fields=["stock_quantity", "status"])
 
             pending_order_items.append(
-                (product, price, item.quantity, item_total)
-            )
-
-        seller_shipping_cost = Decimal("0.00")
-        seller_discount = Decimal("0.00")
-        seller_tax = Decimal("0.00")
-        seller_total = seller_subtotal + seller_shipping_cost + seller_tax - seller_discount
-
-        seller_order = SellerOrder.objects.create(
-            order=order,
-            seller_id=seller_id,
-            subtotal=seller_subtotal,
-            shipping_cost=seller_shipping_cost,
-            discount=seller_discount,
-            tax=seller_tax,
-            total=seller_total,
-        )
-
-        OrderItem.objects.bulk_create(
-            [
                 OrderItem(
-                    seller_order=seller_order,
+                    order=order,
                     product=product,
                     price=price,
-                    quantity=quantity,
+                    quantity=item.quantity,
                     total=item_total,
                 )
-                for product, price, quantity, item_total in pending_order_items
-            ]
+            )
+
+        OrderItem.objects.bulk_create(pending_order_items)
+
+        shipping_cost = Decimal("0.00")
+        discount = Decimal("0.00")
+        tax = Decimal("0.00")
+        total = order_subtotal + shipping_cost + tax - discount
+
+        order.subtotal = order_subtotal
+        order.shipping_cost = shipping_cost
+        order.discount = discount
+        order.tax = tax
+        order.total = total
+        order.save(
+            update_fields=["subtotal", "shipping_cost", "discount", "tax", "total"]
         )
 
-        order_subtotal += seller_subtotal
-
-    shipping_cost = Decimal("0.00")
-    discount = Decimal("0.00")
-    tax = Decimal("0.00")
-    total = order_subtotal + shipping_cost + tax - discount
-
-    order.subtotal = order_subtotal
-    order.shipping_cost = shipping_cost
-    order.discount = discount
-    order.tax = tax
-    order.total = total
-    order.save()
+        created_orders.append(order)
 
     cart_items.delete()
 
-    return order
-
-
-def _seller_orders_prefetch():
-    return Prefetch(
-        "seller_orders",
-        queryset=SellerOrder.objects.select_related("seller").prefetch_related(
-            Prefetch(
-                "items",
-                queryset=OrderItem.objects.select_related("product"),
-            )
-        ),
-    )
+    return created_orders
 
 
 def get_user_orders(user):
     return (
         Order.objects.filter(user=user)
-        .prefetch_related(_seller_orders_prefetch())
-        .annotate(total_items=Sum("seller_orders__items__quantity"))
+        .select_related("seller")
+        .prefetch_related("items__product")
+        .annotate(total_items=Sum("items__quantity"))
         .order_by("-created_at")
     )
 
 
 def get_user_order(user, order_number):
-    order = get_object_or_404(
-        Order.objects.prefetch_related(_seller_orders_prefetch()),
+    return get_object_or_404(
+        Order.objects.select_related("seller").prefetch_related("items__product"),
         order_number=order_number,
         user=user,
     )
-    return order
 
 
 def cancel_user_order(user, order_number):
     order = get_user_order(user, order_number)
-    seller_orders = list(order.seller_orders.all())
 
-    if not seller_orders:
+    if order.status not in CANCELABLE_ORDER_STATUSES:
         return False
 
-    if any(so.status not in CANCELABLE_SELLER_ORDER_STATUSES for so in seller_orders):
-        return False
-
-    SellerOrder.objects.filter(order=order).update(status=SellerOrder.Status.CANCELLED)
+    order.status = Order.Status.CANCELLED
+    order.save(update_fields=["status"])
     return True
 
 
@@ -212,30 +181,24 @@ def add_to_cart(user, product, quantity=1):
 
 def reorder_user_order(user, order_number):
     order = get_user_order(user, order_number)
-    seller_orders = list(order.seller_orders.all())
 
-    if not seller_orders:
+    if order.status != Order.Status.DELIVERED:
         return None
 
-    if any(so.status != SellerOrder.Status.DELIVERED for so in seller_orders):
-        return None
-
-    for seller_order in seller_orders:
-        for item in seller_order.items.select_related("product"):
-            add_to_cart(
-                user=user,
-                product=item.product,
-                quantity=item.quantity,
-            )
+    for item in order.items.select_related("product"):
+        add_to_cart(
+            user=user,
+            product=item.product,
+            quantity=item.quantity,
+        )
 
     return order
 
 
 def get_user_order_for_seller(seller, order_number):
     return get_object_or_404(
-        SellerOrder.objects.select_related(
-            "order",
-            "order__user",
+        Order.objects.select_related(
+            "user",
             "seller",
         ).prefetch_related(
             "items",
@@ -243,26 +206,24 @@ def get_user_order_for_seller(seller, order_number):
             "items__product__images",
         ),
         seller=seller,
-        order__order_number=order_number,
+        order_number=order_number,
     )
+
 
 def get_seller_orders(seller):
     """
     Returns all orders belonging to a specific seller.
     """
-
     return (
-        SellerOrder.objects.filter(seller=seller)
-        .select_related(
-            "order",
-            "order__user",
-        )
+        Order.objects.filter(seller=seller)
+        .select_related("user")
         .prefetch_related(
             "items",
             "items__product",
         )
         .order_by("-created_at")
     )
+
 
 def _percentage_change(current, previous):
     if previous == 0:
@@ -272,15 +233,6 @@ def _percentage_change(current, previous):
 
     return round(((current - previous) / previous) * 100, 1)
 
-from calendar import monthrange
-from datetime import datetime
-from decimal import Decimal
-
-from django.db.models import Count, Q, Sum
-from django.utils import timezone
-
-from orders.models import Order, SellerOrder
-from django.db.models import Count, F, Q, Sum
 
 def get_admin_order_stats():
     now = timezone.localtime()
@@ -317,110 +269,41 @@ def get_admin_order_stats():
         created_at__lt=current_month_start,
     )
 
-    pending_orders = orders.filter(
-        seller_orders__status=SellerOrder.Status.PENDING
-    ).distinct().count()
+    pending_orders = orders.filter(status=Order.Status.PENDING).count()
+    processing_orders = orders.filter(status=Order.Status.PROCESSING).count()
+    delivered_orders = orders.filter(status=Order.Status.DELIVERED).count()
 
-    processing_orders = orders.filter(
-        seller_orders__status=SellerOrder.Status.PROCESSING
-    ).distinct().count()
+    current_pending_orders = current_orders.filter(status=Order.Status.PENDING).count()
+    previous_pending_orders = previous_orders.filter(status=Order.Status.PENDING).count()
 
-    delivered_orders = orders.annotate(
-        seller_count=Count("seller_orders", distinct=True),
-        delivered_seller_count=Count(
-            "seller_orders",
-            filter=Q(
-                seller_orders__status=SellerOrder.Status.DELIVERED
-            ),
-            distinct=True,
-        ),
-    ).filter(
-        seller_count=F("delivered_seller_count")
-    ).count()
+    current_processing_orders = current_orders.filter(status=Order.Status.PROCESSING).count()
+    previous_processing_orders = previous_orders.filter(status=Order.Status.PROCESSING).count()
 
-    current_pending_orders = current_orders.filter(
-        seller_orders__status=SellerOrder.Status.PENDING
-    ).distinct().count()
+    current_delivered_orders = current_orders.filter(status=Order.Status.DELIVERED).count()
+    previous_delivered_orders = previous_orders.filter(status=Order.Status.DELIVERED).count()
 
-    previous_pending_orders = previous_orders.filter(
-        seller_orders__status=SellerOrder.Status.PENDING
-    ).distinct().count()
-
-    current_processing_orders = current_orders.filter(
-        seller_orders__status=SellerOrder.Status.PROCESSING
-    ).distinct().count()
-
-    previous_processing_orders = previous_orders.filter(
-        seller_orders__status=SellerOrder.Status.PROCESSING
-    ).distinct().count()
-
-    current_delivered_orders = current_orders.annotate(
-        seller_count=Count("seller_orders", distinct=True),
-        delivered_seller_count=Count(
-            "seller_orders",
-            filter=Q(
-                seller_orders__status=SellerOrder.Status.DELIVERED
-            ),
-            distinct=True,
-        ),
-    ).filter(
-        seller_count=F("delivered_seller_count")
-    ).count()
-
-    previous_delivered_orders = previous_orders.annotate(
-        seller_count=Count("seller_orders", distinct=True),
-        delivered_seller_count=Count(
-            "seller_orders",
-            filter=Q(
-                seller_orders__status=SellerOrder.Status.DELIVERED
-            ),
-            distinct=True,
-        ),
-    ).filter(
-        seller_count=F("delivered_seller_count")
-    ).count()
-
-    total_revenue = SellerOrder.objects.filter(
-        status=SellerOrder.Status.DELIVERED
+    total_revenue = orders.filter(
+        status=Order.Status.DELIVERED
     ).aggregate(
         total=Sum("total")
     )["total"] or Decimal("0.00")
 
-    current_revenue = SellerOrder.objects.filter(
-        status=SellerOrder.Status.DELIVERED,
-        delivered_at__gte=current_month_start,
-        delivered_at__lte=current_month_end,
+    current_revenue = current_orders.filter(
+        status=Order.Status.DELIVERED
     ).aggregate(
         total=Sum("total")
     )["total"] or Decimal("0.00")
 
-    previous_revenue = SellerOrder.objects.filter(
-        status=SellerOrder.Status.DELIVERED,
-        delivered_at__gte=previous_month_start,
-        delivered_at__lt=current_month_start,
+    previous_revenue = previous_orders.filter(
+        status=Order.Status.DELIVERED
     ).aggregate(
         total=Sum("total")
     )["total"] or Decimal("0.00")
 
-    pending_change = _percentage_change(
-        current_pending_orders,
-        previous_pending_orders,
-    )
-
-    processing_change = _percentage_change(
-        current_processing_orders,
-        previous_processing_orders,
-    )
-
-    delivered_change = _percentage_change(
-        current_delivered_orders,
-        previous_delivered_orders,
-    )
-
-    revenue_change = _percentage_change(
-        current_revenue,
-        previous_revenue,
-    )
+    pending_change = _percentage_change(current_pending_orders, previous_pending_orders)
+    processing_change = _percentage_change(current_processing_orders, previous_processing_orders)
+    delivered_change = _percentage_change(current_delivered_orders, previous_delivered_orders)
+    revenue_change = _percentage_change(current_revenue, previous_revenue)
 
     return {
         "pending_orders": pending_orders,
@@ -440,19 +323,17 @@ def get_admin_order_stats():
         "revenue_increased": revenue_change >= 0,
     }
 
+
 def get_admin_orders():
     return (
         Order.objects
-        .select_related("user")
+        .select_related("user", "seller")
         .prefetch_related(
-            "seller_orders__seller",
-            "seller_orders__items",
-            "seller_orders__items__product",
+            "items",
+            "items__product",
         )
         .order_by("-created_at")
     )
-
-from django.utils import timezone
 
 
 def update_order_status(seller, order_number, status):
@@ -460,49 +341,44 @@ def update_order_status(seller, order_number, status):
         "status": status,
     }
 
-    if status == SellerOrder.Status.SHIPPED:
+    if status == Order.Status.SHIPPED:
         update_fields["shipped_at"] = timezone.now()
-
-    elif status == SellerOrder.Status.DELIVERED:
+    elif status == Order.Status.DELIVERED:
         update_fields["delivered_at"] = timezone.now()
 
-    return SellerOrder.objects.filter(
-        order__order_number=order_number,
+    return Order.objects.filter(
+        order_number=order_number,
         seller=seller,
     ).update(**update_fields)
 
 
-from django.utils.dateparse import parse_date
 def update_seller_note(seller, order_number, note):
-    # 1. Use double underscores for order__order_number
-    seller_order = SellerOrder.objects.filter(
-        order__order_number=order_number, 
+    order = Order.objects.filter(
+        order_number=order_number, 
         seller=seller
     ).first()
 
-    # 2. Check if the order exists before updating
-    if seller_order:
-        seller_order.seller_notes = note
-        
-        # 3. Use .save(update_fields=[...]) instead of .update()
-        seller_order.save(update_fields=['seller_notes'])
+    if order:
+        order.seller_notes = note
+        order.save(update_fields=['seller_notes'])
         return True
         
     return False
-def update_shipping_information(seller_order, data):
-    seller_order.courier = data.get("courier", "").strip()
-    seller_order.tracking_number = data.get("tracking_number", "").strip()
+
+
+def update_shipping_information(order, data):
+    order.courier = data.get("courier", "").strip()
+    order.tracking_number = data.get("tracking_number", "").strip()
 
     eta = data.get("estimated_delivery")
-
     if eta:
-        seller_order.estimated_delivery = parse_date(eta)
+        order.estimated_delivery = parse_date(eta)
     else:
-        seller_order.estimated_delivery = None
+        order.estimated_delivery = None
 
-    seller_order.shipping_notes = data.get("shipping_notes", "").strip()
+    order.shipping_notes = data.get("shipping_notes", "").strip()
 
-    seller_order.save(
+    order.save(
         update_fields=[
             "courier",
             "tracking_number",
@@ -512,4 +388,4 @@ def update_shipping_information(seller_order, data):
         ]
     )
 
-    return seller_order
+    return order

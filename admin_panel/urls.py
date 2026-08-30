@@ -26,6 +26,7 @@ urlpatterns = [
         views.category_api_detail,
         name="admin-category-api-detail",
     ),
+
     path("catalog/brands", views.catalog_brands, name="catalog-brands"),
     path("catalog/brands/api/", views.brand_api, name="admin-brand-api"),
     path("catalog/brands/api/<int:brand_id>/", views.brand_api_detail, name="admin-brand-api-detail"),
@@ -34,6 +35,7 @@ urlpatterns = [
     path("sales/orders", views.sales_orders, name="sales-orders"),
     path("sales/order/<str:order_number>", views.sales_order, name="sales-order"),
     path("sales/payments", views.payment_management, name="payment-management"),
+    path("settings", views.admin_settings, name="admin-settings"),
     path("change-account-state/", views.change_state, name="change-account-state"),
 
     path(

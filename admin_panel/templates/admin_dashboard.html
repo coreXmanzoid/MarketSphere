@@ -398,7 +398,7 @@
       </div>
 
       <div class="adh-quick-actions">
-        <button type="button" class="adh-action-card">
+        <button type="button" class="adh-action-card" onclick="window.location.href='{% url "user-sellers" %}'">
           <span class="adh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
@@ -408,7 +408,7 @@
           <span class="adh-action-text"><strong>Manage Sellers</strong><small>Review, verify or suspend sellers</small></span>
         </button>
 
-        <button type="button" class="adh-action-card">
+        <button type="button" class="adh-action-card" onclick="window.location.href='{% url "catalog-products" %}'">
           <span class="adh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 8 12 3 3 8l9 5 9-5Z"></path>
@@ -418,7 +418,7 @@
           <span class="adh-action-text"><strong>Manage Products</strong><small>Approve, edit or remove listings</small></span>
         </button>
 
-        <button type="button" class="adh-action-card">
+        <button type="button" class="adh-action-card" onclick="window.location.href='{% url "catalog-categories" %}'">
           <span class="adh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 4h16v4H4z"></path>
@@ -429,7 +429,7 @@
           <span class="adh-action-text"><strong>Manage Categories</strong><small>Organize the product catalog</small></span>
         </button>
 
-        <button type="button" class="adh-action-card">
+        <button type="button" class="adh-action-card" onclick="window.location.href='{% url "catalog-brands" %}'">
           <span class="adh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.36-4.36a2 2 0 0 0 0-2.82Z"></path>
@@ -439,7 +439,7 @@
           <span class="adh-action-text"><strong>Manage Brands</strong><small>Add or edit marketplace brands</small></span>
         </button>
 
-        <button type="button" class="adh-action-card">
+        <button type="button" class="adh-action-card" onclick="window.location.href='{% url "sales-orders" %}'">
           <span class="adh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path>
@@ -451,7 +451,7 @@
           <span class="adh-action-text"><strong>View Orders</strong><small>Track fulfilment across the platform</small></span>
         </button>
 
-        <button type="button" class="adh-action-card">
+        <button type="button" class="adh-action-card" onclick="window.location.href='{% url "payment-management" %}'">
           <span class="adh-action-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="1" y="4" width="22" height="16" rx="2"></rect>
@@ -628,27 +628,22 @@
             {% for order in admin.latest_orders %}
             <tr>
               <td data-label="Order ID">
-                <span class="adh-order-number">#MS-{{ order.order_number|slice:6 }}</span>
+                <span class="adh-order-number">#MS-{{ order.order_number|slice:":6" }}</span>
               </td>
               <td data-label="Customer">{{ order.user.first_name }} {{ order.user.last_name }}</td>
               <td data-label="Seller">
-                  {% for seller_order in order.seller_orders.all|slice:":2" %}
-                      {{ seller_order.seller.store_name }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
-                  {% if order.seller_orders.count > 2 %}
-                      +{{ order.seller_orders.count|add:"-2" }} more
-                  {% endif %}
+                {{ order.seller.store_name|default:"Unknown Seller" }}
               </td>
               <td data-label="Amount">Rs. {{ order.total|floatformat:0 }}</td>
               <td data-label="Payment">
-                <span class="adh-badge adh-badge-{{ order.payment_status }}">{{ order.payment_status }}</span>
+                <span class="adh-badge adh-badge-{{ order.payment_status|lower }}">{{ order.get_payment_status_display|default:order.payment_status }}</span>
               </td>
               <td data-label="Status">
-                <span class="adh-badge adh-badge-{{ order.overall_status }}">{{ order.overall_status }}</span>
+                <span class="adh-badge adh-badge-{{ order.status|lower }}">{{ order.get_status_display|default:order.status }}</span>
               </td>
               <td data-label="Date">{{ order.created_at|date:"N j, Y" }}</td>
               <td data-label="" class="adh-table-action">
-                <button type="button" class="adh-icon-link" aria-label="View order #MS-748099">
+                <button type="button" class="adh-icon-link" onclick="window.location.href='{% url 'sales-order' order_number=order.order_number %}'">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
                     <circle cx="12" cy="12" r="3"></circle>

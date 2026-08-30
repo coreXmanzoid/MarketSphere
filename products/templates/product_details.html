@@ -21,7 +21,7 @@
           </li>
           <!-- Category breadcrumb will be rendered here by Django, e.g. {{ product.category.name }} -->
           <li class="breadcrumb-item">
-            <a href="{{ product.category.slug }}">{{ product.category.name }}</a>
+            <a href="/search?category={{ product.category.slug }}">{{ product.category.name }}</a>
           </li>
           <!-- Product name breadcrumb will be rendered here by Django -->
           <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
@@ -151,7 +151,7 @@
             <div class="pd-purchase-controls">
               <div class="pd-quantity-selector" role="group" aria-label="Product quantity">
                 <button type="button" class="pd-qty-btn" id="pdQtyMinus" aria-label="Decrease quantity"><i class="bi bi-dash"></i></button>
-                <input type="number" class="pd-qty-input" id="pdQtyInput" value="1" min="1" max="4" aria-label="Quantity" />
+                <input type="number" class="pd-qty-input" id="pdQtyInput" value="1" min="1" max="5" aria-label="Quantity" />
                 <button type="button" class="pd-qty-btn" id="pdQtyPlus" aria-label="Increase quantity"><i class="bi bi-plus"></i></button>
               </div>
 
@@ -199,17 +199,63 @@
                   <i class="bi bi-heart"></i> <span>Wishlist</span>
                 </button>
 
-                <div class="pd-share-wrap">
-                  <button type="button" class="pd-icon-btn pd-share-btn" id="pdShareBtn" aria-label="Share this product" aria-expanded="false"><i class="bi bi-share"></i> <span>Share</span></button>
+                <div class="pd-share-wrap" data-product-name="{{ product.name }}">
+                  <button
+                      type="button"
+                      class="pd-icon-btn pd-share-btn"
+                      id="pdShareBtn"
+                      aria-label="Share this product"
+                      aria-expanded="false"
+                  >
+                      <i class="bi bi-share"></i>
+                      <span>Share</span>
+                  </button>
 
                   <div class="pd-share-popover" id="pdSharePopover">
-                    <a href="#" class="pd-share-option pd-share-facebook" aria-label="Share on Facebook"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="pd-share-option pd-share-twitter" aria-label="Share on X"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#" class="pd-share-option pd-share-whatsapp" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></a>
-                    <a href="#" class="pd-share-option pd-share-linkedin" aria-label="Share on LinkedIn"><i class="bi bi-linkedin"></i></a>
-                    <button type="button" class="pd-share-option pd-share-copy" id="pdCopyLinkBtn" aria-label="Copy product link"><i class="bi bi-link-45deg"></i></button>
+
+                      <a
+                          href="#"
+                          class="pd-share-option pd-share-facebook"
+                          aria-label="Share on Facebook"
+                      >
+                          <i class="bi bi-facebook"></i>
+                      </a>
+
+                      <a
+                          href="#"
+                          class="pd-share-option pd-share-twitter"
+                          aria-label="Share on X"
+                      >
+                          <i class="bi bi-twitter-x"></i>
+                      </a>
+
+                      <a
+                          href="#"
+                          class="pd-share-option pd-share-whatsapp"
+                          aria-label="Share on WhatsApp"
+                      >
+                          <i class="bi bi-whatsapp"></i>
+                      </a>
+
+                      <a
+                          href="#"
+                          class="pd-share-option pd-share-linkedin"
+                          aria-label="Share on LinkedIn"
+                      >
+                          <i class="bi bi-linkedin"></i>
+                      </a>
+
+                      <button
+                          type="button"
+                          class="pd-share-option pd-share-copy"
+                          id="pdCopyLinkBtn"
+                          aria-label="Copy product link"
+                      >
+                          <i class="bi bi-link-45deg"></i>
+                      </button>
+
                   </div>
-                </div>
+              </div>
               </div>
             </div>
 
@@ -688,7 +734,7 @@
           <span class="section-label">You May Also Like</span>
           <h2>Related Products</h2>
         </div>
-        <a href="#" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
+        <a href="/search?categories={{ product.category }}" class="view-all-link">View All <i class="bi bi-arrow-right"></i></a>
       </div>
 
       <div class="row g-4">
@@ -742,10 +788,10 @@
                 </div>
                 <div class="product-price">
                   {% if product.discount_price %}
-                    <span class="price-current">Rs. {{ product.discount_price }}</span>
-                    <span class="price-original">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
+                    <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
                   {% else %}
-                    <span class="price-current">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
                   {% endif %}
                 </div>
                 {% if product.stock_quantity <= 0 %}
@@ -753,7 +799,7 @@
                 {% elif product.stock_quantity <= 80 %}
                   <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
                 {% else %}
-                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                  <span class="stock-badge in-stock">In Stock ({{ product.total_sold|default:"0"}} sold)</span>
                 {% endif %}
                 <button class="btn add-to-cart-tn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
@@ -835,10 +881,10 @@
                 </div>
                 <div class="product-price">
                   {% if product.discount_price %}
-                    <span class="price-current">Rs. {{ product.discount_price }}</span>
-                    <span class="price-original">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
+                    <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
                   {% else %}
-                    <span class="price-current">Rs. {{ product.price }}</span>
+                    <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
                   {% endif %}
                 </div>
                 {% if product.stock_quantity <= 0 %}
@@ -846,9 +892,9 @@
                 {% elif product.stock_quantity <= 80 %}
                   <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
                 {% else %}
-                  <span class="stock-badge in-stock">In Stock (2.5k sold)</span>
+                  <span class="stock-badge in-stock">In Stock ({{ product.total_sales|default:0 }}k sold)</span>
                 {% endif %}
-                <button class="btn add-to-cart-tn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
+                <button class="btn add-to-cart-btn w-100" {% if product.stock_quantity <= 0 %} disabled {% endif %} data-add-url="{% url 'add_to_cart' product.slug %}"> <i class="bi bi-cart4"></i> Add to Cart</button>
               </div>
             </div>
           </div>
