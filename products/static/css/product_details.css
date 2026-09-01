@@ -709,22 +709,21 @@
     border-radius: 1px !important;
     background-color: #9D6638;
     font-weight: 600 !important;
-    border: 1.5px solid #9D6638;
 }
 .pdp-seller-actions a:hover{
     background-color: transparent;
-    border: 1.5px solid #9D6638 !important;
 }
 
 .pdp-btn-outline {
     background-color: transparent !important;
     color: #4E220F !important;
-    border: var(--button-border) solid #4E220F !important;
+    border: 1.5px solid #4E220F !important;
 }
 
 .pdp-btn-outline:hover {
     background-color: #4E220F !important;
     color: #F7F1DE !important;
+    border: 1.5px solid #4E220F !important;
 }
 
 

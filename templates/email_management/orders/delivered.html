@@ -1,0 +1,153 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Order Delivered — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Order Has Been Delivered
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Your order has been successfully delivered.
+</p>
+
+<p>
+    We hope you enjoy your purchase. Thank you for shopping with
+    MarketSphere.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Delivery Details
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Number
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+
+                {% if order.delivered_at %}
+                <tr>
+                    <td class="info-row info-label">
+                        Delivered On
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.delivered_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% endif %}
+
+                {% if order.courier %}
+                <tr>
+                    <td class="info-row info-label">
+                        Courier
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.courier }}
+                    </td>
+                </tr>
+                {% endif %}
+
+                {% if order.tracking_number %}
+                <tr>
+                    <td class="info-row info-label">
+                        Tracking Number
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.tracking_number }}
+                    </td>
+                </tr>
+                {% endif %}
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ order_url }}"
+                class="email-button"
+            >
+                View My Order
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ order_url }}
+</p>
+
+{% endblock %}

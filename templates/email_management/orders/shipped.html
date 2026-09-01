@@ -1,0 +1,174 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Your Order Is On Its Way — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Order Is On Its Way
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Great news! Your order has been shipped and is now on its way to you.
+</p>
+
+<p>
+    You can use the tracking information below to follow your delivery.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Shipping Details
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Number
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+
+                {% if order.courier %}
+                <tr>
+                    <td class="info-row info-label">
+                        Courier
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.courier }}
+                    </td>
+                </tr>
+                {% endif %}
+
+                {% if order.tracking_number %}
+                <tr>
+                    <td class="info-row info-label">
+                        Tracking Number
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.tracking_number }}
+                    </td>
+                </tr>
+                {% endif %}
+
+                {% if order.shipped_at %}
+                <tr>
+                    <td class="info-row info-label">
+                        Shipped On
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.shipped_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% endif %}
+
+                {% if order.estimated_delivery %}
+                <tr>
+                    <td class="info-row info-label">
+                        Estimated Delivery
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.estimated_delivery|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% endif %}
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% if order.shipping_notes %}
+<p>
+    <strong>Shipping Note:</strong><br>
+    {{ order.shipping_notes }}
+</p>
+{% endif %}
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ order_url }}"
+                class="email-button"
+            >
+                Track My Order
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ order_url }}
+</p>
+
+{% endblock %}

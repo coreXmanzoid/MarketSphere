@@ -1,0 +1,135 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Verify Your Email — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Verify Your Email Address
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Welcome to MarketSphere! Your account has been created successfully.
+</p>
+
+<p>
+    Before you start shopping, please verify your email address to
+    complete your account setup.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td>
+
+            <p class="info-card-title">
+                After Verification
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Place Orders
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Track Deliveries
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Save Items to Your Wishlist
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Become a Seller
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Enjoy the Complete MarketSphere Experience
+                        </span>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ activate_url }}"
+                class="email-button"
+            >
+                Verify My Email
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ activate_url }}
+</p>
+
+{% endblock %}

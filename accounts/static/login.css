@@ -58,7 +58,7 @@ body {
     padding: 6px 6px !important;
     background-color: #9D6638 !important;
     color: #F7F1DE;
-    border: var(--button-border) solid #9D6638;
+    border: var(--button-border) solid #9D6638 !important;
     border-radius: var(--border-radius);
     text-align: center;
 
@@ -72,7 +72,7 @@ body {
 .continue-button a:hover {
     background-color: #F7F1DE !important;
     color: #B0BA99;
-    border: var(--button-border) solid #9D6638;
+    border: var(--button-border) solid #9D6638 !important;
     i {
         color: #9D6638;
         background-color: #F7F1DE;

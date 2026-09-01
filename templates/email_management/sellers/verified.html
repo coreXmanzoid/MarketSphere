@@ -1,0 +1,137 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Seller Account Verified — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Seller Account Is Verified
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Congratulations! Your MarketSphere seller account has been
+    successfully verified.
+</p>
+
+<p>
+    You can now access your seller dashboard, list products, and start
+    selling on MarketSphere.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Seller Account Details
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Store Name
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ seller.store_name }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Account Status
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        Verified
+                    </td>
+                </tr>
+
+                {% if seller.updated_at %}
+                <tr>
+                    <td class="info-row info-label">
+                        Verified On
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ seller.updated_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% endif %}
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ seller_dashboard_url }}"
+                class="email-button"
+            >
+                Open Seller Dashboard
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ seller_dashboard_url }}
+</p>
+
+{% endblock %}

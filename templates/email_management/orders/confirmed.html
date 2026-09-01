@@ -1,0 +1,147 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Order Confirmed — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Order Has Been Confirmed
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Great news! Your order has been confirmed and the seller is now
+    preparing your items for shipment.
+</p>
+
+<p>
+    We'll let you know when your order is on its way.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Order Details
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Number
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Date
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.created_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Status
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        Confirmed
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Total
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.total }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ order_url }}"
+                class="email-button"
+            >
+                View My Order
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ order_url }}
+</p>
+
+{% endblock %}

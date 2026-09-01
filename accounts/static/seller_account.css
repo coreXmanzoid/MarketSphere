@@ -695,8 +695,8 @@
 .sa-edit-btn {
     width: auto !important;
     background-color: transparent !important;
-    color: var(--sa-accent-dark) !important;
-    border: 1.5px solid var(--sa-accent) !important;
+    color: #4E220F !important;
+    border: 1.5px solid #9D6638 !important;
     border-radius: 2px !important;
     padding: 8px 16px !important;
     font-weight: 600 !important;
@@ -704,6 +704,11 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+}
+.sa-edit-btn:hover {
+    border: 1.5px solid #9D6638!important;
+    color: #F7F1DE !important;
+    background-color: #9D6638 !important;
 }
 
 .sa-edit-btn:disabled {
@@ -1159,7 +1164,7 @@
 .sa-edit-modal .modal-content {
     background-color: #F7F1DE;
     border: 1.5px solid var(--sa-accent);
-    border-radius: 16px;
+    border-radius: 4px;
 }
 
 .sa-edit-modal .modal-header {

@@ -28,7 +28,7 @@ ALLOWED_HOSTS = os.environ.get(
     "127.0.0.1,localhost"
 ).split(",")
 
-
+SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
 # -------------------------------------------------------------------
 # APPLICATIONS
 # -------------------------------------------------------------------
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "orders",
     "seller_dashboard",
     "admin_panel",
+    "notifications",
 ]
 
 

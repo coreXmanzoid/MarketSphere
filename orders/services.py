@@ -16,7 +16,7 @@ from products.models import CartItem, Product
 from products.services import get_or_create_cart
 
 from .models import Order, OrderItem
-
+from notifications.emails.orders import send_order_placed_email, send_order_confirmed_email, send_order_delivered_email, send_order_shipped_email, send_order_cancelled_email
 CANCELABLE_ORDER_STATUSES = (
     Order.Status.PENDING,
     Order.Status.CONFIRMED,
@@ -129,10 +129,16 @@ def place_order(
 
         created_orders.append(order)
 
-    cart_items.delete()
+        cart_items.delete()
 
-    return created_orders
+        def _send_order_emails():
+            for order in created_orders:
+                send_order_placed_email(order)
 
+
+        transaction.on_commit(_send_order_emails)
+
+        return created_orders
 
 def get_user_orders(user):
     return (
@@ -160,6 +166,9 @@ def cancel_user_order(user, order_number):
 
     order.status = Order.Status.CANCELLED
     order.save(update_fields=["status"])
+    transaction.on_commit(
+    lambda: send_order_cancelled_email(order)
+    )
     return True
 
 
@@ -336,21 +345,25 @@ def get_admin_orders():
     )
 
 
-def update_order_status(seller, order_number, status):
-    update_fields = {
-        "status": status,
-    }
-
-    if status == Order.Status.SHIPPED:
-        update_fields["shipped_at"] = timezone.now()
-    elif status == Order.Status.DELIVERED:
-        update_fields["delivered_at"] = timezone.now()
-
-    return Order.objects.filter(
-        order_number=order_number,
-        seller=seller,
-    ).update(**update_fields)
-
+def update_order_status(seller, order_number, status): 
+    update_fields = { "status": status, } 
+    if status == Order.Status.SHIPPED: 
+        update_fields["shipped_at"] = timezone.now() 
+    elif status == Order.Status.DELIVERED: 
+        update_fields["delivered_at"] = timezone.now() 
+    updated = Order.objects.filter( order_number=order_number, seller=seller, ).update(**update_fields) 
+    if not updated: 
+        return 0 
+    order = Order.objects.get( order_number=order_number, seller=seller, ) 
+    if status == Order.Status.CONFIRMED: 
+        transaction.on_commit( lambda: send_order_confirmed_email(order) )
+    elif status == Order.Status.SHIPPED: 
+        transaction.on_commit( lambda: send_order_shipped_email(order) ) 
+    elif status == Order.Status.DELIVERED: 
+        transaction.on_commit( lambda: send_order_delivered_email(order) ) 
+    elif status == Order.Status.CANCELLED: 
+        transaction.on_commit( lambda: send_order_cancelled_email(order) ) 
+    return updated
 
 def update_seller_note(seller, order_number, note):
     order = Order.objects.filter(

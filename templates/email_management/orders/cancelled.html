@@ -1,0 +1,154 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Order Cancelled — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Order Has Been Cancelled
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Your order has been cancelled and will not be processed for delivery.
+</p>
+
+{% if cancellation_reason %}
+<p>
+    <strong>Reason for cancellation:</strong><br>
+    {{ cancellation_reason }}
+</p>
+{% endif %}
+
+<p>
+    If you did not request this cancellation or believe this was done in
+    error, please review your order details or contact MarketSphere support.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Cancelled Order
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Number
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Date
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.created_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Status
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        Cancelled
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Order Total
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ order.total }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ order_url }}"
+                class="email-button"
+            >
+                View Order Details
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ order_url }}
+</p>
+
+{% endblock %}

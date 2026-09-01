@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
+
+    <title>
+      {% block email_title %}
+        MarketSphere
+      {% endblock %}
+    </title>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100% !important;
+        background-color: #f5f5f5;
+        font-family: Arial, Helvetica, sans-serif;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      
+      table {
+        border-spacing: 0;
+        border-collapse: collapse;
+      }
+      
+      img {
+        border: 0;
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+      
+      a {
+        text-decoration: none;
+      }
+      
+      .email-wrapper {
+        width: 100%;
+        background-color: #f5f5f5;
+        padding: 40px 0;
+      }
+      
+      .email-container {
+        width: 600px;
+        max-width: 600px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      
+      .email-header {
+        background-color: #9d6638;
+        padding: 30px 40px;
+        text-align: center;
+      }
+      
+      .brand-name {
+        margin: 0;
+        color: #f7f1de;
+        font-size: 30px;
+        line-height: 36px;
+        font-weight: 700;
+      }
+      
+      .brand-tagline {
+        margin: 10px 0 0;
+        color: #f7f1de;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      
+      .email-body {
+        padding: 40px;
+        color: #333333;
+      }
+      
+      .email-greeting {
+        margin: 0 0 20px;
+        color: #4e220f;
+        font-size: 18px;
+        line-height: 26px;
+        font-weight: 600;
+      }
+      
+      .email-title {
+        margin: 0 0 20px;
+        color: #4e220f;
+        font-size: 26px;
+        line-height: 34px;
+        font-weight: 700;
+      }
+      
+      .email-content {
+        color: #333333;
+        font-size: 15px;
+        line-height: 24px;
+      }
+      
+      .email-content p {
+        margin: 0 0 18px;
+      }
+      
+      .email-content ul,
+      .email-content ol {
+        margin: 0 0 20px;
+        padding-left: 22px;
+      }
+      
+      .email-content li {
+        margin-bottom: 8px;
+      }
+      
+      .info-card {
+        margin: 28px 0;
+        padding: 22px;
+        background-color: #f7f1de;
+        border-left: 4px solid #9d6638;
+        border-radius: 6px;
+      }
+      
+      .info-card-title {
+        margin: 0 0 14px;
+        color: #4e220f;
+        font-size: 16px;
+        line-height: 22px;
+        font-weight: 700;
+      }
+      
+      .info-row {
+        padding: 7px 0;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      
+      .info-label {
+        color: #666666;
+      }
+      
+      .info-value {
+        color: #333333;
+        font-weight: 600;
+      }
+      
+      .button-wrapper {
+        padding: 18px 0 28px;
+        text-align: center;
+      }
+      
+      .email-button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #9d6638;
+        color: #f7f1de !important;
+        border: 1px solid #9d6638;
+        border-radius: 3px;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+      }
+      
+      .fallback {
+        margin: 25px 0 0;
+        padding-top: 20px;
+        border-top: 1px solid #dddddd;
+        color: #666666;
+        font-size: 13px;
+        line-height: 20px;
+      }
+      
+      .fallback-url {
+        margin: 8px 0 0;
+        color: #9d6638;
+        font-size: 13px;
+        line-height: 20px;
+        word-break: break-all;
+      }
+      
+      .email-closing {
+        margin-top: 30px;
+        color: #333333;
+        font-size: 14px;
+        line-height: 22px;
+      }
+      
+      .email-footer {
+        padding: 25px 35px;
+        background-color: #f8f8f8;
+        color: #777777;
+        text-align: center;
+        font-size: 12px;
+        line-height: 19px;
+      }
+      
+      .footer-brand {
+        color: #4e220f;
+        font-weight: 700;
+      }
+      
+      .footer-divider {
+        margin: 14px auto;
+        width: 45px;
+        border-top: 1px solid #dddddd;
+      }
+      
+      @media only screen and (max-width: 620px) {
+        .email-wrapper {
+          padding: 20px 10px !important;
+        }
+      
+        .email-container {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+      
+        .email-header {
+          padding: 25px 20px !important;
+        }
+      
+        .email-body {
+          padding: 30px 22px !important;
+        }
+      
+        .email-title {
+          font-size: 23px !important;
+          line-height: 30px !important;
+        }
+      
+        .email-footer {
+          padding: 22px 20px !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-wrapper">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="email-container">
+            <!-- Header -->
+            <tr>
+              <td class="email-header">
+                <h1 class="brand-name">MarketSphere</h1>
+
+                <p class="brand-tagline">Your Marketplace. Your Community.</p>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td class="email-body">
+                {% block greeting %}
+                  {% if recipient_name %}
+                    <p class="email-greeting">Hi {{ recipient_name }},</p>
+                  {% endif %}
+                {% endblock %}
+
+                {% block title %}
+                  <h2 class="email-title">
+                    {% block heading %}
+                    {% endblock %}
+                  </h2>
+                {% endblock %}
+
+                <div class="email-content">
+                  {% block content %}
+
+                  {% endblock %}
+                </div>
+
+                {% block information %}
+
+                {% endblock %}
+
+                {% block action %}
+
+                {% endblock %}
+
+                {% block fallback %}
+
+                {% endblock %}
+
+                {% block closing %}
+                  <div class="email-closing">
+                    Thank you for using MarketSphere.<br /><br />
+                    <strong>The MarketSphere Team</strong>
+                  </div>
+                {% endblock %}
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td class="email-footer">
+                <span class="footer-brand">MarketSphere</span>
+
+                <div class="footer-divider"></div>© 2026 MarketSphere
+
+                <br /><br />
+
+                This is an automated email from MarketSphere. Please do not reply directly to this email.{% block footer_note %}
+
+                {% endblock %}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

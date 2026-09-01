@@ -65,9 +65,9 @@
                     <i class="bi bi-cart4"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCounter">{{ cart_count }}</span>
                   </a>
-                  <div class="ms-notification-wrap me-2">
-                    <a href="#" class="btn position-relative ms-notification-btn" id="msNotificationBtn" role="button" aria-label="Notifications" aria-expanded="false" aria-controls="msNotificationPanel">
-                      <i class="bi bi-bell fs-5"></i>
+                  <div class="ms-notification-wrap me-2 rounded-circle">
+                    <a href="#" class="btn position-relative ms-notification-btn " id="msNotificationBtn" role="button" aria-label="Notifications" aria-expanded="false" aria-controls="msNotificationPanel">
+                      <i class="bi bi-bell fs-5" style="-webkit-text-stroke: 0.5px;"></i>
                       <span class="ms-notification-dot" aria-hidden="true"></span>
                     </a>
 
@@ -119,54 +119,81 @@
                   </div>
                   
                   <!-- Profile -->
-                  <div class="buyer-chip dropdown-toggle">
+              <div class="buyer-chip" id="buyerProfile" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-controls="buyerProfileMenu">
 
-                      <span class="buyer-avatar" data-bs-toggle="dropdown">
-                        {% if request.user.profile_image_url %}
-                        <img src="{{ request.user.profile_image_url }}" class="rounded-circle" width="38" height="38" alt="Profile" />
-                        {% else %}
-                        <span class="rounded-circle d-inline-flex justify-content-center align-items-center" style="width:38px; height:38px; background-color: #9D6638; color:#F7F1DE; font-weight:600;">{{ request.user.username|slice:':1'|upper }}</span>
-                        {% endif %}
-                      </span>
-                      <span class="buyer-info" data-bs-toggle="dropdown">
-                        <strong class="buyer-name">{{ request.user.username }}</strong>
-                        <small class="buyer-role">buyer</small>
-                      </span>
+                <span class="buyer-avatar">
+                  {% if request.user.profile_image_url %}
+                  <img src="{{ request.user.profile_image_url }}" class="rounded-circle" width="38" height="38" alt="Profile" />
+                  {% else %}
+                  <span class="rounded-circle d-inline-flex justify-content-center align-items-center" style="width:38px; height:38px; background-color: #9D6638; color:#F7F1DE; font-weight:600;">{{ request.user.username|slice:':1'|upper }}</span>
+                  {% endif %}
+                </span>
+                <span class="buyer-info">
+                  <strong class="buyer-name">{{ request.user.username }}</strong>
+                  <small class="buyer-role">buyer</small>
+                </span>
+                
+                <ul class="dropdown-menu dropdown-menu-end buyer-profile-menu p-0 overflow-hidden" id="buyerProfileMenu" role="menu">
+                  <!-- Copied Header -->
+                  <li>
+                    <div class="ms-notification-head">
+                      <div>
+                        <span class="ms-notification-eyebrow">MarketSphere</span>
+                        <h2>Account Profile</h2>
+                      </div>
+                    </div>
+                  </li>
+
+                  <!-- Copied List Design for Dropdown Items -->
+                  <li>
+                    <div class="ms-notification-list">
                       
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <a class="dropdown-item" href="#">My Profile</a>
-                      </li>
+                      <a class="dropdown-item ms-notification-item" href="#">
+                        <div class="ms-notification-copy">
+                          <h3>My Profile</h3>
+                        </div>
+                      </a>
 
-                      <li>
-                        <a class="dropdown-item" href="{% url 'orders' %}">My Orders</a>
-                      </li>
+                      <a class="dropdown-item ms-notification-item" href="{% url 'orders' %}">
+                        <div class="ms-notification-copy">
+                          <h3>My Orders</h3>
+                        </div>
+                      </a>
 
-                      <li>
-                        <hr class="dropdown-divider" />
-                      </li>
+                      <hr class="dropdown-divider my-0" />
 
                       {% if seller %}
                         {% if seller.status == 'verified' %}
-                          <li>
-                            <a class="dropdown-item" href="{% url "dashboard" %}">Seller Dashboard</a>
-                          </li>
+                          <a class="dropdown-item ms-notification-item" href="{% url 'dashboard' %}">
+                            <div class="ms-notification-copy">
+                              <h3>Seller Dashboard</h3>
+                            </div>
+                          </a>
                         {% else %}
-                          <li>
-                            <a class="dropdown-item" href="{% url 'seller-account' %}">Seller Account</a>
-                          </li>
+                          <a class="dropdown-item ms-notification-item" href="{% url 'seller-account' %}">
+                            <div class="ms-notification-copy">
+                              <h3>Seller Account</h3>
+                            </div>
+                          </a>
                         {% endif %}
                       {% else %}
-                        <li>
-                          <a class="dropdown-item" href="{% url 'seller-signup' %}">Apply for Seller Account</a>
-                        </li>
+                        <a class="dropdown-item ms-notification-item" href="{% url 'seller-signup' %}">
+                          <div class="ms-notification-copy">
+                            <h3>Apply for Seller Account</h3>
+                          </div>
+                        </a>
                       {% endif %}
 
-                      <li>
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                      </li>
-                    </ul>
-                  </div>
+                      <a class="dropdown-item ms-notification-item" href="{% url 'logout' %}">
+                        <div class="ms-notification-copy">
+                          <h3>Logout</h3>
+                        </div>
+                      </a>
+
+                    </div>
+                  </li>
+                </ul>
+              </div>
                 </div>
               </div>
             {% endif %}

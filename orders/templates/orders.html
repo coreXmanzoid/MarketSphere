@@ -78,7 +78,7 @@
                   <div class="d-flex gap-1">
                     <span class="mo-order-date"><i class="bi bi-calendar-event"></i> Placed on {{ order.created_at|date }}</span>
                     <span class="mo-order-date">|</span>
-                    <span class="mo-order-date">Expected Delievery on <!-- order.ETA|date -->{{ order.estimated_delivery|date }}</span>
+                    <span class="mo-order-date">Expected Delievery on <!-- order.ETA|date -->{{ order.estimated_delivery|date|default:"5-7 business days" }}</span>
                   </div>
                 </div>
                 {% if order.status == 'pending' %}

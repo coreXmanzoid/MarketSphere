@@ -39,6 +39,39 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    const profileChip = document.getElementById("buyerProfile");
+    const profileMenu = document.getElementById("buyerProfileMenu");
+
+    if (profileChip && profileMenu) {
+        function closeProfileMenu() {
+            profileMenu.classList.remove("show");
+            profileChip.setAttribute("aria-expanded", "false");
+        }
+
+        profileChip.addEventListener("click", function (event) {
+            if (event.target.closest(".buyer-profile-menu")) return;
+            event.stopPropagation();
+            const isOpen = profileMenu.classList.toggle("show");
+            profileChip.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        profileChip.addEventListener("keydown", function (event) {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            if (event.target.closest(".buyer-profile-menu")) return;
+            event.preventDefault();
+            profileChip.click();
+        });
+
+        profileMenu.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("click", closeProfileMenu);
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") closeProfileMenu();
+        });
+    }
+
     const messages = document.querySelectorAll(".header-message-row [data-auto-hide='true']");
 
     messages.forEach((message) => {

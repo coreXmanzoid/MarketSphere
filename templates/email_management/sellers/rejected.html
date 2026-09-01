@@ -1,0 +1,151 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Seller Application Update — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Seller Application Was Not Approved
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Thank you for your interest in becoming a seller on MarketSphere.
+</p>
+
+<p>
+    After reviewing your seller application, we were unable to approve it
+    at this time.
+</p>
+
+{% if rejection_reason %}
+<p>
+    <strong>Reason for this decision:</strong>
+</p>
+
+<p>
+    {{ rejection_reason }}
+</p>
+{% endif %}
+
+<p>
+    Please review the information provided below. If changes are requested,
+    you may update your application and submit it again.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Application Details
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Store Name
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ seller.store_name }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row info-label">
+                        Application Status
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        Rejected
+                    </td>
+                </tr>
+
+                {% if application.reviewed_at %}
+                <tr>
+                    <td class="info-row info-label">
+                        Reviewed On
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ application.reviewed_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% endif %}
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ application_url }}"
+                class="email-button"
+            >
+                Review Application
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ application_url }}
+</p>
+
+{% endblock %}

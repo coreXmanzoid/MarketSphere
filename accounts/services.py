@@ -7,7 +7,16 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.text import slugify
-
+from notifications.emails.sellers import (
+    send_application_received_email,
+    send_application_incomplete_email,
+    send_seller_verified_email,
+    send_seller_rejected_email,
+)
+from notifications.emails.account import (
+    send_welcome_email,
+    send_verification_email as send_successfully_verification_email,
+)
 from orders.models import Order
 from . import validator
 from .models import (
@@ -20,10 +29,10 @@ from .models import (
     SellerProfile,
 )
 
-
 # ==============================================================================
 # USER SERVICES
 # ==============================================================================
+
 
 def create_user(user):
     new_user = User.objects.create_user(
@@ -35,6 +44,7 @@ def create_user(user):
         password=user["password"],
         account_status=User.AccountStatus.UNVERIFIED,
     )
+    transaction.on_commit(lambda: send_welcome_email(new_user))
     return new_user
 
 
@@ -121,6 +131,7 @@ def update_buyer_profile(request, buyer_id):
 # ADDRESS SERVICES
 # ==============================================================================
 
+
 def save_user_address(user, address_data):
     address_id = address_data.get("addressId")
     if address_id == "null":
@@ -185,7 +196,7 @@ def update_user_address(user, data):
     user_address.address_type = data.get("type", "").strip()
 
     is_default = data.get("isDefault") == True
-    
+
     if is_default:
         Address.objects.filter(user=user).exclude(id=user_address.id).update(
             is_default=False
@@ -246,6 +257,7 @@ def update_seller_address(user, data):
 # SELLER APPLICATION & MANAGEMENT SERVICES
 # ==============================================================================
 
+
 def reject_seller_application_service(application_id, reason, notes):
     application = SellerApplication.objects.get(pk=application_id)
 
@@ -263,22 +275,22 @@ def reject_seller_application_service(application_id, reason, notes):
         ]
     )
 
+    transaction.on_commit(lambda: send_seller_rejected_email(application, reason))
+
     return application
 
 
 @transaction.atomic
 def request_application_changes_service(application_id, requested_changes, notes):
-    application = SellerApplication.objects.select_related(
-        "seller"
-    ).get(pk=application_id)
+    application = SellerApplication.objects.select_related("seller").get(
+        pk=application_id
+    )
 
     seller = application.seller
     message = notes.strip()
 
     if requested_changes:
-        checklist = "\n".join(
-            f"• {item}" for item in requested_changes
-        )
+        checklist = "\n".join(f"• {item}" for item in requested_changes)
 
         if message:
             message = f"{message}\n\nRequested Changes:\n{checklist}"
@@ -299,8 +311,8 @@ def request_application_changes_service(application_id, requested_changes, notes
 
     seller.status = Seller.Status.PENDING
     seller.save(update_fields=["status"])
+    transaction.on_commit(lambda: send_seller_rejected_email(application, notes))
     return application
-
 
 @transaction.atomic
 def approve_seller_application_service(application_id):
@@ -313,7 +325,6 @@ def approve_seller_application_service(application_id):
 
     application.status = SellerApplication.Status.APPROVED
     application.reviewed_at = timezone.now()
-
     application.save(
         update_fields=[
             "status",
@@ -322,10 +333,16 @@ def approve_seller_application_service(application_id):
     )
 
     seller.status = Seller.Status.VERIFIED
-    seller.save(update_fields=["status"])
+    seller.save(
+        update_fields=["status"]
+    )
+
+    transaction.on_commit(
+        lambda seller=seller: send_seller_verified_email(seller),
+        robust=True,
+    )
 
     return application
-
 
 @transaction.atomic
 def delete_seller_account_service(seller_id):
@@ -418,8 +435,7 @@ def calculate_application_progress(seller):
 
     if application:
         documents = {
-            document.document_type: document
-            for document in application.documents.all()
+            document.document_type: document for document in application.documents.all()
         }
 
     def check(condition, label):
@@ -475,7 +491,9 @@ def calculate_application_progress(seller):
 
 def update_application_progress(seller):
     progress = calculate_application_progress(seller)
+
     application = seller.application
+    was_submitted = application.status == SellerApplication.Status.SUBMITTED
 
     if progress["is_complete"]:
         seller.status = Seller.Status.PENDING
@@ -483,6 +501,9 @@ def update_application_progress(seller):
 
         application.status = SellerApplication.Status.SUBMITTED
         application.save(update_fields=["status"])
+        print("Application submitted, sending email...")
+        transaction.on_commit(lambda: send_application_received_email(application))
+
     else:
         seller.status = Seller.Status.DRAFT
         seller.save(update_fields=["status"])
@@ -495,12 +516,10 @@ def update_application_progress(seller):
 
 @transaction.atomic
 def create_seller_application(user, data, files):
-    # Update user contact
     if hasattr(user, "contact"):
         user.contact = data.get("phone", "").strip()
         user.save(update_fields=["contact"])
 
-    # Create / Update Business Address
     Address.objects.update_or_create(
         user=user,
         address_type=Address.BUSINESS,
@@ -514,7 +533,6 @@ def create_seller_application(user, data, files):
         },
     )
 
-    # Generate Unique Store Slug
     base_slug = slugify(data.get("store_name"))
     slug = base_slug
     counter = 1
@@ -523,11 +541,9 @@ def create_seller_application(user, data, files):
         slug = f"{base_slug}-{counter}"
         counter += 1
 
-    # Prevent Duplicate Seller
     if hasattr(user, "seller_profile"):
         raise ValueError("Seller profile already exists.")
 
-    # Create Seller
     seller = Seller.objects.create(
         user=user,
         store_name=data.get("store_name"),
@@ -538,7 +554,6 @@ def create_seller_application(user, data, files):
         store_banner=files.get("store_banner"),
     )
 
-    # Create Seller Application
     application = SellerApplication.objects.create(
         seller=seller,
         status=SellerApplication.Status.DRAFT,
@@ -547,7 +562,6 @@ def create_seller_application(user, data, files):
         referral_code=data.get("referral_code", ""),
     )
 
-    # Upload Documents
     document_mapping = {
         SellerApplicationDocument.DocumentType.CNIC_FRONT: "cnic_front",
         SellerApplicationDocument.DocumentType.CNIC_BACK: "cnic_back",
@@ -559,6 +573,7 @@ def create_seller_application(user, data, files):
 
     for document_type, input_name in document_mapping.items():
         uploaded_file = files.get(input_name)
+
         if uploaded_file:
             SellerApplicationDocument.objects.create(
                 application=application,
@@ -566,21 +581,25 @@ def create_seller_application(user, data, files):
                 file=uploaded_file,
             )
 
-    # Create Seller Settings
     SellerSettings.objects.create(
         seller=seller,
-        business_registration_number=data.get("business_registration_number", ""),
+        business_registration_number=data.get(
+            "business_registration_number",
+            "",
+        ),
         tax_id=data.get("tax_id", ""),
     )
 
-    # Create Seller Profile
     SellerProfile.objects.create(
         seller=seller,
         business_category=data.get("business_category", ""),
         business_type=data.get("business_type", ""),
         national_id_number=data.get("national_id_number", ""),
         years_in_business=data.get("years_in_business") or None,
-        expected_monthly_volume=data.get("expected_monthly_volume", ""),
+        expected_monthly_volume=data.get(
+            "expected_monthly_volume",
+            "",
+        ),
         product_categories=data.get("product_categories", ""),
         website=data.get("website", ""),
         facebook_label=data.get("facebook_label", ""),
@@ -593,12 +612,15 @@ def create_seller_application(user, data, files):
         twitter_url=data.get("twitter_url", ""),
     )
 
+    transaction.on_commit(lambda: send_application_incomplete_email(seller))
+
     return seller
 
 
 # ==============================================================================
 # SELLER PROFILE, SETTINGS & ANALYTICS
 # ==============================================================================
+
 
 def get_all_sellers():
     # UPDATED: We now query Order.Status.DELIVERED directly instead of SellerOrder
@@ -725,11 +747,19 @@ def update_notification_preferences(seller, data):
     settings, _ = SellerSettings.objects.get_or_create(seller=seller)
 
     settings.email_new_order = str(data.get("email_new_order")).lower() == "true"
-    settings.email_cancelled_order = str(data.get("email_cancelled_order")).lower() == "true"
-    settings.email_delivered_order = str(data.get("email_delivered_order")).lower() == "true"
+    settings.email_cancelled_order = (
+        str(data.get("email_cancelled_order")).lower() == "true"
+    )
+    settings.email_delivered_order = (
+        str(data.get("email_delivered_order")).lower() == "true"
+    )
     settings.email_low_stock = str(data.get("email_low_stock")).lower() == "true"
-    settings.weekly_sales_summary = str(data.get("weekly_sales_summary")).lower() == "true"
-    settings.monthly_store_report = str(data.get("monthly_store_report")).lower() == "true"
+    settings.weekly_sales_summary = (
+        str(data.get("weekly_sales_summary")).lower() == "true"
+    )
+    settings.monthly_store_report = (
+        str(data.get("monthly_store_report")).lower() == "true"
+    )
 
     settings.save()
     return settings
@@ -765,7 +795,7 @@ def update_seller_profile_service(user, data):
     profile.expected_monthly_volume = data.get("expected_monthly_volume", "")
     profile.product_categories = data.get("product_categories", "")
     profile.website = data.get("website", "")
-    
+
     profile.facebook_label = data.get("facebook_label", "")
     profile.facebook_url = data.get("facebook_url", "")
     profile.linkedin_label = data.get("linkedin_label", "")
@@ -804,13 +834,12 @@ def update_seller_document_service(user, data, files):
         return False, "Please select a document.", None
 
     valid_document_types = {
-        choice[0]
-        for choice in SellerApplicationDocument.DocumentType.choices
+        choice[0] for choice in SellerApplicationDocument.DocumentType.choices
     }
 
     if document_type not in valid_document_types:
         return False, "Invalid document type.", None
-    
+
     document, created = SellerApplicationDocument.objects.get_or_create(
         application=application,
         document_type=document_type,
@@ -835,8 +864,7 @@ def get_seller_application_documents(seller):
         return {}
 
     uploaded_documents = {
-        document.document_type: document
-        for document in application.documents.all()
+        document.document_type: document for document in application.documents.all()
     }
 
     return {
@@ -849,9 +877,7 @@ def get_seller_application_documents(seller):
         "business_certificate": uploaded_documents.get(
             SellerApplicationDocument.DocumentType.BUSINESS_CERTIFICATE
         ),
-        "ntn": uploaded_documents.get(
-            SellerApplicationDocument.DocumentType.NTN
-        ),
+        "ntn": uploaded_documents.get(SellerApplicationDocument.DocumentType.NTN),
         "bank_statement": uploaded_documents.get(
             SellerApplicationDocument.DocumentType.BANK_STATEMENT
         ),

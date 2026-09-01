@@ -1,0 +1,140 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Seller Application Received — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Your Seller Application Has Been Received
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Thank you for applying to become a seller on MarketSphere.
+</p>
+
+<p>
+    We've successfully received your application and our team will review
+    the information you provided.
+</p>
+
+<p>
+    We'll notify you once there is an update on your application.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Application Details
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row info-label">
+                        Store Name
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ seller.store_name }}
+                    </td>
+                </tr>
+
+                {% if application.submitted_at %}
+                <tr>
+                    <td class="info-row info-label">
+                        Submitted On
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        {{ application.submitted_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% endif %}
+
+                <tr>
+                    <td class="info-row info-label">
+                        Application Status
+                    </td>
+
+                    <td
+                        class="info-row info-value"
+                        align="right"
+                    >
+                        Under Review
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ application_url }}"
+                class="email-button"
+            >
+                View Application
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ application_url }}
+</p>
+
+{% endblock %}

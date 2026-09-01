@@ -248,6 +248,7 @@
 .cf-copy-btn:hover {
     background-color: var(--cf-accent) !important;
     color: #F7F1DE !important;
+    border-radius: 50% !important;
 }
 
 .cf-copy-btn.is-copied {
@@ -374,6 +375,7 @@
 }
 
 .cf-status-badge.cf-status-pending,
+.cf-status-badge.cf-status-unpaid,
 .cf-status-badge.cf-status-processing {
     background-color: rgba(183, 128, 43, 0.16);
     color: var(--cf-warning);
@@ -632,7 +634,7 @@
     align-items: center;
     justify-content: space-between;
     font-size: 14.5px;
-    color: #4f7d54;
+    color: #4E220F;
 }
 
 .cf-summary-row span:last-child {

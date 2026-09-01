@@ -96,9 +96,9 @@
 .ms-notification-eyebrow { display: block; margin-bottom: 4px; color: #9D6638; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
 .ms-notification-head h2 { margin: 0; color: #4E220F; font-size: 18px; line-height: 1.2; }
 .ms-notification-clear { width: auto !important; margin-top: 2px; padding: 0 !important; color: #9D6638 !important; background: transparent !important; border: 0 !important; font-size: 12px !important; font-weight: 700; white-space: nowrap; }
-.ms-notification-clear:hover { color: #4E220F !important; text-decoration: underline; text-underline-offset: 3px; }
+.ms-notification-clear:hover { color: #4E220F !important; text-decoration: underline; text-underline-offset: 3px; border: none !important; }
 .ms-notification-list { max-height: 350px; overflow-y: auto; background: #FFFDF8 !important; }
-.ms-notification-item { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; background: #FFFDF8 !important; border-bottom: 1px solid rgba(217, 210, 196, .75); transition: background-color .18s ease; }
+.ms-notification-item { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 8px 18px; background: #FFFDF8 !important; border-bottom: 1px solid rgba(217, 210, 196, .75); transition: background-color .18s ease; }
 .ms-notification-item:hover, .ms-notification-item.is-unread { background: #FFFBF3 !important; }
 .ms-notification-icon, .ms-notification-empty-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; font-size: 16px; }
 .ms-notification-icon.is-order { color: #4f7d54; background: rgba(79, 125, 84, .13) !important; }
@@ -312,12 +312,33 @@ input[type=checkbox]:checked {
     }
 
     .buyer-chip {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 10px;
         padding: 6px 10px 6px 6px;
         border-radius: 50px;
         transition: background-color 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .buyer-profile-menu {
+        top: calc(100% + 10px);
+        right: 0;
+        left: auto;
+        min-width: 220px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px) scale(.98);
+        transform-origin: top right;
+        pointer-events: none;
+        transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+    }
+
+    .buyer-profile-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
     }
 
     .buyer-chip:hover {
@@ -355,6 +376,7 @@ input[type=checkbox]:checked {
         font-size: 11.5px;
         color: #9A9082;
         font-weight: 500;
+        text-align: start;
     }
 
     .buyer-caret {
@@ -444,7 +466,7 @@ input[type=checkbox]:checked {
     text-align: center;
     background-color: #9D6638;
     color: #F7F1DE;
-    border: var(--button-border) solid #9D6638;
+    border: var(--button-border) solid #9D6638 !important;
     border-radius: var(--border-radius);
 }
 

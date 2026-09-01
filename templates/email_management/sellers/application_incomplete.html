@@ -1,0 +1,141 @@
+{% extends "email_management/base.html" %}
+
+{% block email_title %}
+Complete Your Seller Application — MarketSphere
+{% endblock %}
+
+{% block heading %}
+Complete Your Seller Application
+{% endblock %}
+
+{% block content %}
+
+<p>
+    You've started your journey to becoming a seller on MarketSphere.
+</p>
+
+<p>
+    Your seller application has been created, but it isn't complete yet.
+    Before we can review your application, you need to provide the remaining
+    information and required documents.
+</p>
+
+<p>
+    Please complete your application and submit it for verification when
+    you're ready.
+</p>
+
+{% endblock %}
+
+
+{% block information %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    class="info-card"
+>
+    <tr>
+        <td style="padding: 14px 18px;">
+
+            <p class="info-card-title">
+                Complete These Steps
+            </p>
+
+            <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+            >
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Complete your business information
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Provide your seller profile details
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Upload the required verification documents
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Review your application information
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="info-row">
+                        <span class="info-value">
+                            Submit your application for verification
+                        </span>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block action %}
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+>
+    <tr>
+        <td class="button-wrapper">
+
+            <a
+                href="{{ application_url }}"
+                class="email-button"
+            >
+                Complete My Application
+            </a>
+
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
+
+
+{% block fallback %}
+
+<p class="fallback">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<p class="fallback-url">
+    {{ application_url }}
+</p>
+
+{% endblock %}

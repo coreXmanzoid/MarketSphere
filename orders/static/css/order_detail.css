@@ -595,7 +595,7 @@
     align-items: center;
     justify-content: space-between;
     font-size: 14.5px;
-    color: #4f7d54;
+    color: var(--od-accent-dark);
 }
 
 .od-summary-row span:last-child {
