@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+
     const notificationButton = document.getElementById("msNotificationBtn");
     const notificationPanel = document.getElementById("msNotificationPanel");
     const clearNotifications = document.getElementById("msClearNotifications");
@@ -7,18 +8,168 @@ document.addEventListener("DOMContentLoaded", function () {
     const notificationDot = document.querySelector(".ms-notification-dot");
 
     if (notificationButton && notificationPanel) {
+
+        const userId = notificationButton.dataset.userId;
+        let notificationsWereOpened = false;
+
+        function getCsrfToken() {
+            const csrfInput = document.querySelector(
+                "[name=csrfmiddlewaretoken]"
+            );
+
+            if (csrfInput) {
+                return csrfInput.value;
+            }
+
+            const cookie = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("csrftoken="));
+
+            return cookie
+                ? decodeURIComponent(cookie.split("=")[1])
+                : "";
+        }
+
+        async function markNotificationsAsRead() {
+            if (!userId || !notificationsWereOpened) return;
+
+            const unreadNotifications = notificationList
+                ? notificationList.querySelectorAll(".is-unread")
+                : [];
+
+            if (!unreadNotifications.length) {
+                notificationsWereOpened = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/notifications/mark-all-as-read/${userId}/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCsrfToken(),
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        credentials: "same-origin",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Failed to mark notifications as read."
+                    );
+                }
+
+                unreadNotifications.forEach(notification => {
+                    notification.classList.remove("is-unread");
+
+                    const status = notification.querySelector(
+                        ".ms-notification-status"
+                    );
+
+                    if (status) {
+                        status.remove();
+                    }
+                });
+
+                if (notificationDot) {
+                    notificationDot.hidden = true;
+                }
+
+            } catch (error) {
+                console.error(
+                    "Notification read error:",
+                    error
+                );
+            } finally {
+                notificationsWereOpened = false;
+            }
+        }
+
+        async function clearAllNotifications() {
+            if (!userId) return;
+
+            try {
+                const response = await fetch(
+                    `/notifications/clear-all/${userId}/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCsrfToken(),
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        credentials: "same-origin",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Failed to clear notifications."
+                    );
+                }
+
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    if (notificationList) {
+                        notificationList.hidden = true;
+                    }
+
+                    if (notificationEmpty) {
+                        notificationEmpty.hidden = false;
+                    }
+
+                    if (notificationDot) {
+                        notificationDot.hidden = true;
+                    }
+
+                    notificationsWereOpened = false;
+                }
+
+            } catch (error) {
+                console.error(
+                    "Notification clear error:",
+                    error
+                );
+            }
+        }
+
         function closeNotifications() {
+            if (!notificationPanel.classList.contains("is-open")) {
+                return;
+            }
+
             notificationPanel.classList.remove("is-open");
             notificationPanel.setAttribute("aria-hidden", "true");
             notificationButton.setAttribute("aria-expanded", "false");
+
+            markNotificationsAsRead();
         }
 
         notificationButton.addEventListener("click", function (event) {
             event.preventDefault();
             event.stopPropagation();
-            const isOpen = notificationPanel.classList.toggle("is-open");
-            notificationPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
-            notificationButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+            const isOpen = notificationPanel.classList.toggle(
+                "is-open"
+            );
+
+            notificationPanel.setAttribute(
+                "aria-hidden",
+                isOpen ? "false" : "true"
+            );
+
+            notificationButton.setAttribute(
+                "aria-expanded",
+                isOpen ? "true" : "false"
+            );
+
+            if (isOpen) {
+                notificationsWereOpened = true;
+            } else {
+                markNotificationsAsRead();
+            }
         });
 
         notificationPanel.addEventListener("click", function (event) {
@@ -26,16 +177,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         document.addEventListener("click", closeNotifications);
+
         document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") closeNotifications();
+            if (event.key === "Escape") {
+                closeNotifications();
+            }
         });
 
         if (clearNotifications) {
-            clearNotifications.addEventListener("click", function () {
-                if (notificationList) notificationList.hidden = true;
-                if (notificationEmpty) notificationEmpty.hidden = false;
-                if (notificationDot) notificationDot.hidden = true;
-            });
+            clearNotifications.addEventListener(
+                "click",
+                function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    clearAllNotifications();
+                }
+            );
         }
     }
 
@@ -43,21 +201,39 @@ document.addEventListener("DOMContentLoaded", function () {
     const profileMenu = document.getElementById("buyerProfileMenu");
 
     if (profileChip && profileMenu) {
+
         function closeProfileMenu() {
             profileMenu.classList.remove("show");
-            profileChip.setAttribute("aria-expanded", "false");
+            profileChip.setAttribute(
+                "aria-expanded",
+                "false"
+            );
         }
 
         profileChip.addEventListener("click", function (event) {
-            if (event.target.closest(".buyer-profile-menu")) return;
+            if (event.target.closest(".buyer-profile-menu")) {
+                return;
+            }
+
             event.stopPropagation();
+
             const isOpen = profileMenu.classList.toggle("show");
-            profileChip.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+            profileChip.setAttribute(
+                "aria-expanded",
+                isOpen ? "true" : "false"
+            );
         });
 
         profileChip.addEventListener("keydown", function (event) {
-            if (event.key !== "Enter" && event.key !== " ") return;
-            if (event.target.closest(".buyer-profile-menu")) return;
+            if (event.key !== "Enter" && event.key !== " ") {
+                return;
+            }
+
+            if (event.target.closest(".buyer-profile-menu")) {
+                return;
+            }
+
             event.preventDefault();
             profileChip.click();
         });
@@ -67,14 +243,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         document.addEventListener("click", closeProfileMenu);
+
         document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") closeProfileMenu();
+            if (event.key === "Escape") {
+                closeProfileMenu();
+            }
         });
     }
 
-    const messages = document.querySelectorAll(".header-message-row [data-auto-hide='true']");
+    const messages = document.querySelectorAll(
+        ".header-message-row [data-auto-hide='true']"
+    );
 
-    messages.forEach((message) => {
+    messages.forEach(message => {
         setTimeout(() => {
             message.classList.remove("show");
 
@@ -88,6 +269,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 10000);
     });
 });
+
+
 function showToast(message, type = "info", autoHide = true) {
     const messageRow = document.querySelector(".header-message-row .container");
 

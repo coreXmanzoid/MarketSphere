@@ -217,12 +217,14 @@
 
           <div class="ad-topbar-right">
             <div class="ad-notification-wrap">
-              <button type="button" class="ad-icon-btn" id="adNotifBtn" aria-label="Notifications" aria-expanded="false" aria-controls="adNotificationPanel">
+              <button type="button" class="ad-icon-btn" id="adNotifBtn" aria-label="Notifications" data-user-id="{{ request.user.id }}" aria-expanded="false" aria-controls="adNotificationPanel">
                 <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
+                {% if admin_unread_notifications_count > 0 %}
                 <span class="ad-notif-dot" aria-hidden="true"></span>
+                {% endif %}
               </button>
 
               <section class="ad-notification-panel" id="adNotificationPanel" aria-label="Admin notifications" aria-hidden="true">
@@ -235,37 +237,37 @@
                 </div>
 
                 <div class="ad-notification-list" id="adNotificationList">
-                  <article class="ad-notification-item is-unread">
-                    <span class="ad-notification-icon is-seller" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
-                    <div class="ad-notification-copy">
-                      <h3>New seller application</h3>
-                      <p><strong>Northstar Goods</strong> submitted a seller account for review.</p>
-                      <time datetime="2026-08-30T10:42:00">12 minutes ago</time>
-                    </div>
-                    <span class="ad-notification-status" aria-label="Unread"></span>
-                  </article>
+                    {% if admin_notifications.count > 0 %}
+                        {% for notification in admin_notifications %}
+                            <article 
+                                class="ad-notification-item{% if not notification.is_read %} is-unread{% endif %}"
+                                {% if notification.target_url %}
+                                    data-notification-url="{{ notification.target_url }}"
+                                {% endif %}
+                            >
+                                <span class="ad-notification-icon" aria-hidden="true">
+                                    <i class="bi {{ notification.icon }}"></i>
+                                </span>
 
-                  <article class="ad-notification-item">
-                    <span class="ad-notification-icon is-order" aria-hidden="true"><i class="bi bi-receipt"></i></span>
-                    <div class="ad-notification-copy">
-                      <h3>Payment review needed</h3>
-                      <p>Payment <strong>#PAY-2094</strong> was flagged for manual review.</p>
-                      <time datetime="2026-08-30T08:15:00">2 hours ago</time>
-                    </div>
-                  </article>
+                                <div class="ad-notification-copy">
+                                    <h3>{{ notification.title }}</h3>
+                                    <p>{{ notification.message|safe }}</p>
+                                    <time datetime="{{ notification.created_at|date:'c' }}">
+                                        {{ notification.created_at|timesince }} ago
+                                    </time>
+                                </div>
 
-                  <article class="ad-notification-item">
-                    <span class="ad-notification-icon is-system" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
-                    <div class="ad-notification-copy">
-                      <h3>System backup completed</h3>
-                      <p>The latest MarketSphere data backup completed successfully.</p>
-                      <time datetime="2026-08-29T15:30:00">Yesterday</time>
-                    </div>
-                  </article>
+                                {% if not notification.is_read %}
+                                    <span class="ad-notification-status" aria-label="Unread"></span>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    {% endif %}
                 </div>
-
-                <div class="ad-notification-empty" id="adNotificationEmpty" hidden>
-                  <span class="ad-notification-empty-icon" aria-hidden="true"><i class="bi bi-check2"></i></span>
+                <div class="ad-notification-empty" id="adNotificationEmpty" {% if admin_notifications.count > 0 %} hidden {% endif %}>
+                  <span class="ad-notification-empty-icon" aria-hidden="true">
+                    <i class="bi bi-check2"></i>
+                  </span>
                   <h3>You're all caught up</h3>
                   <p>No new notifications right now.</p>
                 </div>

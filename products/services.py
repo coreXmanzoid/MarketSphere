@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from accounts.models import Seller
 from orders.models import Order, OrderItem
+from notifications.services.notifications import schedule_low_stock_event
 from .models import Category, Brand, Product, WishlistItem, Cart, CartItem, ProductImage
 
 logger = logging.getLogger(__name__)
@@ -320,6 +321,7 @@ def save_draft(user, post_data, files):
 
 
 def edit_product(seller, product, post_data, files):
+    previous_stock = Product.objects.only("stock_quantity").get(pk=product.pk).stock_quantity
     category_slug = nullable(post_data.get("category"))
     category = Category.objects.filter(slug=category_slug).first() if category_slug else None
 
@@ -348,6 +350,7 @@ def edit_product(seller, product, post_data, files):
     product.status = post_data.get("visibility")
 
     product.save()
+    schedule_low_stock_event(product, previous_stock, product.stock_quantity)
 
     # Delete existing images selected by the user
     deleted_images = json.loads(post_data.get("deleted_images", "[]"))
@@ -553,6 +556,7 @@ def adjust_product_stock(product_slug, seller, adjustment_type, quantity, reason
 
     product.stock_quantity = new_stock
     product.save(update_fields=["stock_quantity"])
+    schedule_low_stock_event(product, current_stock, new_stock)
 
     return {
         "success": True,
@@ -573,9 +577,11 @@ def mark_product_out_of_stock(product_slug, seller):
     except Product.DoesNotExist:
         return {"success": False, "message": "Product not found."}
 
+    previous_stock = product.stock_quantity
     product.stock_quantity = 0
     product.status = Product.Status.OUT_OF_STOCK
     product.save(update_fields=["stock_quantity", "status"])
+    schedule_low_stock_event(product, previous_stock, 0)
 
     return {"success": True, "message": "Product marked as out of stock.", "stock_quantity": 0}
 

@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -14,6 +15,8 @@ from .invoice import generate_invoice
 from .models import Order
 from .packing_slip import generate_packing_slip
 from .shipping_label import generate_shipping_label
+
+logger = logging.getLogger(__name__)
 
 
 def orders(request):
@@ -84,8 +87,7 @@ def place_new_order(request):
         )
 
     except Exception as e:
-        print(type(e))
-        print(repr(e))
+        logger.exception("Order placement failed")
 
         return JsonResponse(
             {

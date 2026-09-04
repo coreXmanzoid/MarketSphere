@@ -1,0 +1,44 @@
+{% extends "email_management/base.html" %}
+
+{% block title %}New Order Received — MarketSphere{% endblock %}
+
+{% block content %}
+<h1>New Order Received</h1>
+
+<p>Hello {{ recipient_name }},</p>
+
+<p>
+    Great news! You have received a new order for your store.
+</p>
+
+<div class="info-card">
+    <div class="info-row">
+        <span>Order Number</span>
+        <strong>#{{ order.order_number }}</strong>
+    </div>
+
+    <div class="info-row">
+        <span>Customer</span>
+        <strong>{{ order.shipping_name }}</strong>
+    </div>
+
+    <div class="info-row">
+        <span>Total</span>
+        <strong>{{ order.total }}</strong>
+    </div>
+</div>
+
+<p>
+    Please review the order and begin processing it as soon as possible.
+</p>
+
+<div class="button-container">
+    <a href="{{ order_url }}" class="button">
+        View Order
+    </a>
+</div>
+
+<p>
+    Thank you for selling with MarketSphere.
+</p>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "email_management/base.html" %}
+
+{% block title %}Low Stock Alert — MarketSphere{% endblock %}
+
+{% block content %}
+
+<h1>Low Stock Alert</h1>
+
+<p>Hello {{ recipient_name }},</p>
+
+<p>
+    One of your products has reached its low-stock threshold.
+</p>
+
+<div class="info-card">
+    <div class="info-row">
+        <span>Product</span>
+        <strong>{{ product.name }}</strong>
+    </div>
+
+<div class="info-row">
+    <span>Current Stock</span>
+    <strong>{{ product.stock_quantity }}</strong>
+</div>
+
+<div class="info-row">
+    <span>Minimum Stock Level</span>
+    <strong>{{ product.min_stock_level }}</strong>
+</div>
+
+
+</div>
+
+<p>
+    Please review your inventory and consider restocking this product to
+    avoid running out of stock and missing potential sales.
+</p>
+
+<div class="button-container">
+    <a href="{{ product_url }}" class="button">
+        Manage Product
+    </a>
+</div>
+
+<p>
+    Thank you for selling with MarketSphere.
+</p>
+{% endblock %}

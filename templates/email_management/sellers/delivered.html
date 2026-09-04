@@ -1,0 +1,54 @@
+{% extends "email_management/base.html" %}
+
+{% block title %}Order Delivered — MarketSphere{% endblock %}
+
+{% block content %}
+
+<h1>Order Delivered</h1>
+
+<p>Hello {{ recipient_name }},</p>
+
+<p>
+    Your order has been successfully delivered to the customer.
+</p>
+
+<div class="info-card">
+    <div class="info-row">
+        <span>Order Number</span>
+        <strong>#{{ order.order_number }}</strong>
+    </div>
+
+<div class="info-row">
+    <span>Customer</span>
+    <strong>{{ order.shipping_name }}</strong>
+</div>
+
+<div class="info-row">
+    <span>Order Total</span>
+    <strong>{{ order.total }}</strong>
+</div>
+
+{% if order.delivered_at %}
+<div class="info-row">
+    <span>Delivered On</span>
+    <strong>{{ order.delivered_at|date:"M d, Y, h:i A" }}</strong>
+</div>
+{% endif %}
+
+</div>
+
+<p>
+    The order is now marked as delivered. You can review the complete
+    order details from your seller dashboard.
+</p>
+
+<div class="button-container">
+    <a href="{{ order_url }}" class="button">
+        View Order
+    </a>
+</div>
+
+<p>
+    Thank you for selling with MarketSphere.
+</p>
+{% endblock %}

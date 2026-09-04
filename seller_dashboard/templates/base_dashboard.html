@@ -181,12 +181,14 @@
 
           <div class="sd-topbar-right">
             <div class="sd-notification-wrap">
-              <button type="button" class="sd-icon-btn sd-notif-btn" id="sdNotifBtn" aria-label="Notifications" aria-expanded="false" aria-controls="sdNotificationPanel">
+              <button type="button" class="sd-icon-btn sd-notif-btn" id="sdNotifBtn" aria-label="Notifications" data-user-id="{{ request.user.id }}" aria-expanded="false" aria-controls="sdNotificationPanel">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
-                <span class="sd-notif-dot" aria-hidden="true"></span>
+                {% if seller_unread_notifications_count > 0 %}
+                  <span class="sd-notif-dot" aria-hidden="true"></span>
+                {% endif %}
               </button>
 
               <section class="sd-notification-panel" id="sdNotificationPanel" aria-label="Seller notifications" aria-hidden="true">
@@ -197,38 +199,36 @@
                   </div>
                   <button type="button" class="sd-notification-clear" id="sdClearNotifications">Clear all</button>
                 </div>
-
                 <div class="sd-notification-list" id="sdNotificationList">
-                  <article class="sd-notification-item is-unread">
-                    <span class="sd-notification-icon is-order" aria-hidden="true"><i class="bi bi-bag-check"></i></span>
-                    <div class="sd-notification-copy">
-                      <h3>New order received</h3>
-                      <p>Order <strong>#MS-1048</strong> is ready for processing.</p>
-                      <time datetime="2026-08-30T10:42:00">12 minutes ago</time>
-                    </div>
-                    <span class="sd-notification-status" aria-label="Unread"></span>
-                  </article>
+                    {% if seller_notifications.count > 0 %}
+                        {% for notification in seller_notifications %}
+                            <article 
+                                class="sd-notification-item{% if not notification.is_read %} is-unread{% endif %}"
+                                {% if notification.target_url %}
+                                    data-notification-url="{{ notification.target_url }}"
+                                {% endif %}
+                            >
+                                <span class="sd-notification-icon" aria-hidden="true">
+                                    <i class="bi {{ notification.icon }}"></i>
+                                </span>
 
-                  <article class="sd-notification-item">
-                    <span class="sd-notification-icon is-stock" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
-                    <div class="sd-notification-copy">
-                      <h3>Stock running low</h3>
-                      <p><strong>Canvas Tote Bag</strong> has only 4 units left.</p>
-                      <time datetime="2026-08-30T08:15:00">2 hours ago</time>
-                    </div>
-                  </article>
+                                <div class="sd-notification-copy">
+                                    <h3>{{ notification.title }}</h3>
+                                    <p>{{ notification.message|safe }}</p>
+                                    <time datetime="{{ notification.created_at|date:'c' }}">
+                                        {{ notification.created_at|timesince }} ago
+                                    </time>
+                                </div>
 
-                  <article class="sd-notification-item">
-                    <span class="sd-notification-icon is-store" aria-hidden="true"><i class="bi bi-shop"></i></span>
-                    <div class="sd-notification-copy">
-                      <h3>Store profile approved</h3>
-                      <p>Your seller profile is now visible to customers.</p>
-                      <time datetime="2026-08-29T15:30:00">Yesterday</time>
-                    </div>
-                  </article>
+                                {% if not notification.is_read %}
+                                    <span class="sd-notification-status" aria-label="Unread"></span>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    {% endif %}
                 </div>
 
-                <div class="sd-notification-empty" id="sdNotificationEmpty" hidden>
+                <div class="sd-notification-empty" id="sdNotificationEmpty" {% if seller_notifications.count > 0 %}hidden{% endif %}>
                   <span class="sd-notification-empty-icon" aria-hidden="true"><i class="bi bi-check2"></i></span>
                   <h3>You're all caught up</h3>
                   <p>No new notifications right now.</p>

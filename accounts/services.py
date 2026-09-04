@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from allauth.account.models import EmailAddress
 from django.db import transaction
-from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models import Sum, Q, DecimalField, Value, Count
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -46,6 +46,41 @@ def create_user(user):
     )
     transaction.on_commit(lambda: send_welcome_email(new_user))
     return new_user
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
+
+
+
+def change_user_password(user, current_password, new_password, confirm_password):
+    if not current_password:
+        raise ValueError("Please enter your current password.")
+
+    if not new_password:
+        raise ValueError("Please enter a new password.")
+
+    if not confirm_password:
+        raise ValueError("Please confirm your new password.")
+
+    if not user.check_password(current_password):
+        raise ValueError("Your current password is incorrect.")
+
+    if user.check_password(new_password):
+        raise ValueError("Your new password must be different from your current password.")
+
+    if new_password != confirm_password:
+        raise ValueError("New password and confirmation don't match.")
+
+    try:
+        validate_password(new_password, user)
+    except ValidationError as error:
+        raise ValueError(" ".join(error.messages))
+
+    user.set_password(new_password)
+    user.save(update_fields=["password"])
+
+    return user
 
 
 def get_user_by_identifier(identifier):
@@ -101,40 +136,142 @@ def change_account_state(user_id, state):
     user.account_status = state
     user.save(update_fields=["account_status"])
 
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from allauth.account.models import EmailAddress
 
-def update_buyer_profile(request, buyer_id):
-    try:
-        buyer = User.objects.get(pk=buyer_id)
-    except User.DoesNotExist:
-        return False, "Buyer not found.", None
 
-    buyer.first_name = request.POST.get("first_name", "").strip()
-    buyer.last_name = request.POST.get("last_name", "").strip()
-    buyer.username = request.POST.get("username", "").strip()
-    buyer.email = request.POST.get("email", "").strip()
-    buyer.contact = request.POST.get("contact", "").strip()
-    buyer.account_status = request.POST.get("account_status").strip()
+User = get_user_model()
 
-    profile_image = request.FILES.get("profile_image")
 
-    if profile_image:
-        buyer.profile_image_url = profile_image
-    else:
-        buyer.profile_image_url = None
+@transaction.atomic
+def update_buyer_profile(
+    *,
+    user,
+    first_name=None,
+    last_name=None,
+    username=None,
+    email=None,
+    contact=None,
+    account_status=None,
+    profile_image=None,
+    allow_status_change=False,
+    request=None,
+):
+    errors = {}
 
-    buyer.save()
+    if username is not None:
+        username = username.strip()
 
-    return True, "Buyer profile updated successfully.", buyer
+        if not username:
+            errors["username"] = ["Username is required."]
+        elif (
+            User.objects
+            .filter(username__iexact=username)
+            .exclude(pk=user.pk)
+            .exists()
+        ):
+            errors["username"] = ["This username is already taken."]
 
+    email_changed = False
+
+    if email is not None:
+        email = email.strip()
+
+        if not email:
+            errors["email"] = ["Email address is required."]
+        else:
+            current_email = (user.email or "").strip().lower()
+            new_email = email.lower()
+
+            email_changed = current_email != new_email
+
+            if email_changed:
+                email_in_use = (
+                    EmailAddress.objects
+                    .filter(email__iexact=email)
+                    .exclude(user=user)
+                    .exists()
+                )
+
+                if email_in_use:
+                    errors["email"] = [
+                        "This email address is already in use."
+                    ]
+
+    if errors:
+        return False, "Please correct the errors.", None, False, errors
+
+    if first_name is not None:
+        user.first_name = first_name.strip()
+
+    if last_name is not None:
+        user.last_name = last_name.strip()
+
+    if username is not None:
+        user.username = username
+
+    if contact is not None:
+        user.contact = contact.strip()
+
+    if allow_status_change and account_status is not None:
+        user.account_status = account_status.strip()
+
+    if profile_image is not None:
+        user.profile_image_url = profile_image
+
+    if email_changed:
+        user.email = email
+
+    user.save()
+
+    if email_changed:
+        EmailAddress.objects.filter(user=user).update(
+            primary=False,
+        )
+
+        email_address, created = EmailAddress.objects.get_or_create(
+            user=user,
+            email=email,
+            defaults={
+                "primary": True,
+                "verified": False,
+            },
+        )
+
+        if not created:
+            email_address.primary = True
+            email_address.verified = False
+            email_address.save(
+                update_fields=["primary", "verified"]
+            )
+
+        user.account_status = User.AccountStatus.UNVERIFIED
+        user.save(update_fields=["account_status"])
+
+        if request is not None:
+            email_address.send_confirmation(
+                request,
+                signup=False,
+            )
+
+    message = (
+        "Profile updated successfully."
+        if not email_changed
+        else "Your email address was changed. "
+             "Please verify your new email address."
+    )
+
+    return True, message, user, email_changed, {}
 
 # ==============================================================================
 # ADDRESS SERVICES
 # ==============================================================================
 
-
 def save_user_address(user, address_data):
     address_id = address_data.get("addressId")
-    if address_id == "null":
+
+    if address_id in (None, "", "null"):
         address = Address(
             user=user,
         )
@@ -149,14 +286,16 @@ def save_user_address(user, address_data):
     address.full_name = address_data["fullName"]
     address.phone = address_data["phoneNumber"]
     address.address_line_1 = address_data["address"]
+    address.address_line_2 = address_data.get("addressLine2", "")
     address.city = address_data["city"]
     address.postal_code = address_data["ptCode"]
     address.is_default = address_data.get(
         "isDefault",
-        address.is_default if address_id else False,
+        False,
     )
 
     address.save()
+
     return address
 
 
@@ -184,21 +323,29 @@ def update_user_address(user, data):
     address_id = data.get("addressId", "").strip()
 
     try:
-        user_address = Address.objects.get(id=address_id, user=user)
+        user_address = Address.objects.get(
+            id=address_id,
+            user=user,
+        )
     except Address.DoesNotExist:
         raise ValueError("Address not found.")
 
     user_address.full_name = data.get("fullName", "").strip()
     user_address.phone = data.get("phone", "").strip()
     user_address.address_line_1 = data.get("address", "").strip()
+    user_address.address_line_2 = data.get("addressLine2", "").strip()
     user_address.city = data.get("city", "").strip()
     user_address.postal_code = data.get("postalCode", "").strip()
     user_address.address_type = data.get("type", "").strip()
 
-    is_default = data.get("isDefault") == True
+    is_default = data.get("isDefault") is True
 
     if is_default:
-        Address.objects.filter(user=user).exclude(id=user_address.id).update(
+        Address.objects.filter(
+            user=user
+        ).exclude(
+            id=user_address.id
+        ).update(
             is_default=False
         )
 
@@ -206,7 +353,6 @@ def update_user_address(user, data):
     user_address.save()
 
     return user_address
-
 
 @transaction.atomic
 def delete_user_address(user, data):
@@ -884,4 +1030,239 @@ def get_seller_application_documents(seller):
         "store_photo": uploaded_documents.get(
             SellerApplicationDocument.DocumentType.STORE_PHOTO
         ),
+    }
+
+
+# ==============================================================================
+# BUYER PROFILE / MY ACCOUNT SERVICES
+# ==============================================================================
+#
+# NOTE ON ASSUMPTIONS:
+# The buyer profile page pulls together data from a few apps whose exact
+# schema isn't fully visible from accounts/ alone (orders' three-tier
+# Order -> SellerOrder -> OrderItem structure, plus wishlist/reviews/
+# notifications models that may live in other apps). Every helper below
+# is written defensively with getattr()/hasattr() so the page degrades
+# to sensible empty states instead of raising if a related-manager name
+# doesn't match your actual models. Search for "ASSUMPTION" and adjust
+# the attribute names to match your real schema.
+# ==============================================================================
+
+
+def _order_status_value(order):
+    """Returns a lowercase status string, preferring the newer
+    `overall_status` computed property and falling back to a flat
+    `status` field if that's what exists on this Order instance."""
+    value = getattr(order, "overall_status", None)
+    if value is None:
+        value = getattr(order, "status", "")
+    return str(value or "").lower()
+
+
+def _order_status_display(order):
+    if hasattr(order, "get_overall_status_display"):
+        try:
+            return order.get_overall_status_display()
+        except Exception:
+            pass
+    if hasattr(order, "get_status_display"):
+        try:
+            return order.get_status_display()
+        except Exception:
+            pass
+    return _order_status_value(order).title() or "—"
+
+
+def _order_items_count(order):
+    """ASSUMPTION: tries the common related_name spellings for an
+    order's line items, then falls back to summing items across
+    per-seller orders for the three-tier Order -> SellerOrder ->
+    OrderItem structure."""
+    for attr in ("items", "order_items", "orderitem_set"):
+        manager = getattr(order, attr, None)
+        if manager is not None and hasattr(manager, "count"):
+            try:
+                return manager.count()
+            except Exception:
+                continue
+
+    seller_orders = getattr(order, "seller_orders", None)
+    if seller_orders is not None and hasattr(seller_orders, "all"):
+        total = 0
+        for seller_order in seller_orders.all():
+            for attr in ("items", "order_items", "orderitem_set"):
+                manager = getattr(seller_order, attr, None)
+                if manager is not None and hasattr(manager, "count"):
+                    total += manager.count()
+                    break
+        return total
+
+    return 0
+
+
+def _get_wishlist_queryset(user):
+    """ASSUMPTION: no wishlist model is visible from accounts/, so this
+    tries the most likely related-manager names on the user. Update the
+    attr list once the wishlist app is finalized, e.g.:
+    return user.wishlist_items.select_related('product')
+    """
+    for attr in ("wishlist_items", "wishlistitem_set", "wishlist_set"):
+        manager = getattr(user, attr, None)
+        if manager is not None and hasattr(manager, "all"):
+            return manager.all()
+    return None
+
+
+def _get_reviews_queryset(user):
+    """ASSUMPTION: same caveat as wishlist above — adjust once the
+    reviews model/related_name is finalized."""
+    for attr in ("review_set", "reviews"):
+        manager = getattr(user, attr, None)
+        if manager is not None and hasattr(manager, "all"):
+            return manager.all()
+    return None
+
+
+def get_buyer_orders_queryset(user):
+    return Order.objects.filter(user=user).order_by("-created_at")
+
+
+def get_buyer_recent_orders(user, limit=5):
+    return list(get_buyer_orders_queryset(user)[:limit])
+
+
+def get_buyer_dashboard_stats(user):
+    orders = list(get_buyer_orders_queryset(user))
+
+    total_orders = len(orders)
+    completed_orders = sum(
+        1 for order in orders if _order_status_value(order) in ("delivered", "completed")
+    )
+    cancelled_orders = sum(
+        1 for order in orders if _order_status_value(order) == "cancelled"
+    )
+    pending_orders = sum(
+        1
+        for order in orders
+        if _order_status_value(order) in ("pending", "confirmed", "processing")
+    )
+
+    total_spent = sum(
+        (getattr(order, "total", 0) or 0)
+        for order in orders
+        if _order_status_value(order) != "cancelled"
+    )
+
+    wishlist_qs = _get_wishlist_queryset(user)
+    wishlist_count = wishlist_qs.count() if wishlist_qs is not None else 0
+
+    reviews_qs = _get_reviews_queryset(user)
+    reviews_count = reviews_qs.count() if reviews_qs is not None else 0
+
+    return {
+        "total_orders": total_orders,
+        "completed_orders": completed_orders,
+        "cancelled_orders": cancelled_orders,
+        "pending_orders": pending_orders,
+        "total_spent": total_spent,
+        "wishlist_count": wishlist_count,
+        "reviews_count": reviews_count,
+        "saved_addresses": user.addresses.count(),
+    }
+
+
+def calculate_buyer_profile_completion(user):
+    completed = 0
+    total = 0
+    missing = []
+
+    def check(condition, label):
+        nonlocal completed, total
+        total += 1
+        if condition:
+            completed += 1
+        else:
+            missing.append(label)
+
+    check(bool(user.first_name), "First name")
+    check(bool(user.last_name), "Last name")
+    check(bool(user.contact), "Phone number")
+    check(bool(user.profile_image_url), "Profile photo")
+    check(user.addresses.filter(is_default=True).exists(), "Default address")
+    check(user.account_status == User.AccountStatus.VERIFIED, "Email verification")
+
+    percentage = round((completed / total) * 100) if total else 0
+
+    return {
+        "percentage": percentage,
+        "completed": completed,
+        "total": total,
+        "missing": missing,
+        "is_complete": percentage == 100,
+    }
+
+from products.models import WishlistItem
+
+def get_buyer_wishlist_preview(user, limit=4):
+    return list(
+        WishlistItem.objects
+        .filter(user=user)
+        .select_related(
+            "product",
+            "product__brand",
+        )
+        .prefetch_related(
+            "product__images",
+        )[:limit]
+    )
+def get_buyer_recent_activity(user, limit=6):
+    """ASSUMPTION: there is no activity/audit-log model in the codebase
+    yet. Once one exists (e.g. an AccountActivity model related to
+    User), this will start returning real entries automatically as
+    long as the related_name is one of the ones below; otherwise it
+    degrades to an empty list and the template shows its empty state."""
+    for attr in ("activities", "activity_set", "account_activities"):
+        manager = getattr(user, attr, None)
+        if manager is not None and hasattr(manager, "all"):
+            try:
+                return list(manager.order_by("-created_at")[:limit])
+            except Exception:
+                return list(manager.all()[:limit])
+    return []
+
+
+def get_buyer_notifications(user, limit=5):
+    """ASSUMPTION: notifications/models.py has no Notification model
+    defined yet (it's currently a placeholder app). Once one is added
+    with a FK to the user, this will pick it up automatically via one
+    of the related_names below; otherwise it returns an empty list and
+    the template falls back to its own static preview."""
+    for attr in ("notifications", "notification_set"):
+        manager = getattr(user, attr, None)
+        if manager is not None and hasattr(manager, "all"):
+            qs = manager.order_by("-created_at")
+            try:
+                unread_count = qs.filter(is_read=False).count()
+            except Exception:
+                unread_count = 0
+            return list(qs[:limit]), unread_count
+    return [], 0
+
+
+def get_buyer_profile_context(user):
+    """Orchestrator for the buyer profile / my account page. Gathers
+    everything the template needs into a single context dict so the
+    view itself can stay a thin wrapper."""
+    notifications, notifications_unread_count = get_buyer_notifications(user)
+
+    return {
+        "addresses": get_user_addresses(user),
+        "default_address": get_default_address(user),
+        "recent_orders": get_buyer_recent_orders(user),
+        "buyer_stats": get_buyer_dashboard_stats(user),
+        "profile_completion": calculate_buyer_profile_completion(user),
+        "wishlist_items": get_buyer_wishlist_preview(user),
+        "activities": get_buyer_recent_activity(user),
+        "notifications": notifications,
+        "notifications_unread_count": notifications_unread_count,
     }

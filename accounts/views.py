@@ -232,44 +232,96 @@ def seller_account(request):
 
 
 @login_required
+def profile_view(request):
+    """
+    Buyer-facing "My Profile" / My Account page.
+
+    Kept intentionally thin — all data-gathering (orders, addresses,
+    wishlist preview, profile completion, activity, notifications)
+    lives in services.get_buyer_profile_context() so this view stays
+    easy to read and the template stays fully driven by context data.
+    """
+    context = services.get_buyer_profile_context(request.user)
+
+    return render(request, "buyer_profile.html", context)
+
+@login_required
 def save_user_address(request):
     if request.method != "POST":
-        return JsonResponse({"success": False}, status=405)
+        return JsonResponse(
+            {"success": False},
+            status=405,
+        )
 
     data = json.loads(request.body)
 
-    services.save_user_address(request.user, data)
-
-    return JsonResponse(
-        {
-            "success": True,
-        }
+    address = services.save_user_address(
+        request.user,
+        data,
     )
 
-
+    return JsonResponse({
+        "success": True,
+        "message": "Address added successfully.",
+        "address": {
+            "id": address.id,
+            "address_type": address.address_type,
+            "address_type_display": address.get_address_type_display(),
+            "full_name": address.full_name,
+            "phone": address.phone,
+            "address_line_1": address.address_line_1,
+            "address_line_2": address.address_line_2,
+            "city": address.city,
+            "postal_code": address.postal_code,
+            "is_default": address.is_default,
+        },
+    })
 import json
-
 
 @login_required
 def update_user_address(request):
     try:
         data = json.loads(request.body)
 
-        services.update_user_address(request.user, data)
-
-        return JsonResponse(
-            {"success": True, "message": "Address updated successfully."}
+        address = services.update_user_address(
+            request.user,
+            data,
         )
 
+        return JsonResponse({
+            "success": True,
+            "message": "Address updated successfully.",
+            "address": {
+                "id": address.id,
+                "address_type": address.address_type,
+                "address_type_display": address.get_address_type_display(),
+                "full_name": address.full_name,
+                "phone": address.phone,
+                "address_line_1": address.address_line_1,
+                "address_line_2": address.address_line_2,
+                "city": address.city,
+                "postal_code": address.postal_code,
+                "is_default": address.is_default,
+            },
+        })
+
     except ValueError as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=400)
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(e),
+            },
+            status=400,
+        )
 
     except Exception:
         return JsonResponse(
-            {"success": False, "message": "Something went wrong. Please try again."},
+            {
+                "success": False,
+                "message": "Something went wrong. Please try again.",
+            },
             status=500,
         )
-
 
 import json
 
@@ -300,7 +352,48 @@ def delete_user_address_view(request):
             status=500,
         )
 
+import json
+from django.contrib.auth import logout
+from django.contrib.auth import update_session_auth_hash
+def change_password(request):
+    try:
+        data = json.loads(request.body or "{}")
 
+        current_password = data.get("current_password", "").strip()
+        new_password = data.get("new_password", "")
+        confirm_password = data.get("confirm_password", "")
+        services.change_user_password(
+            user=request.user,
+            current_password=current_password,
+            new_password=new_password,
+            confirm_password=confirm_password,
+        )
+
+        logout(request)
+
+        return JsonResponse({
+            "success": True,
+            "message": "Your password has been changed successfully.",
+        })
+
+    except ValueError as error:
+        return JsonResponse({
+            "success": False,
+            "message": str(error),
+        }, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid request data.",
+        }, status=400)
+
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "message": "Something went wrong. Please try again.",
+        }, status=500)
+    
 @login_required
 def update_shipping_preferences_view(request):
 
@@ -488,6 +581,60 @@ def update_seller_profile(request):
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+@login_required
+@require_POST
+def update_my_profile_view(request):
+    buyer = request.user
+
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid request data.",
+            },
+            status=400,
+        )
+
+    success, message, buyer, email_changed, errors = (
+        services.update_buyer_profile(
+            user=buyer,
+            first_name=data.get("first_name"),
+            last_name=data.get("last_name"),
+            username=data.get("username"),
+            email=data.get("email"),
+            contact=data.get("phone"),
+            allow_status_change=False,
+            request=request,
+        )
+    )
+
+    if not success:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": message,
+                "errors": errors,
+            },
+            status=400,
+        )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": message,
+            "email_changed": email_changed,
+            "user": {
+                "id": buyer.id,
+                "first_name": buyer.first_name,
+                "last_name": buyer.last_name,
+                "username": buyer.username,
+                "email": buyer.email,
+                "contact": buyer.contact,
+            },
+        }
+    )
 
 @login_required
 def update_seller_document(request):

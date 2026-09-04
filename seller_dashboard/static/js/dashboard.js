@@ -287,7 +287,9 @@
     highlightActiveNavLink();
     initCollapseState();
 })();
+
 document.addEventListener("DOMContentLoaded", () => {
+
     const notificationButton = document.getElementById("sdNotifBtn");
     const notificationPanel = document.getElementById("sdNotificationPanel");
     const clearNotifications = document.getElementById("sdClearNotifications");
@@ -296,35 +298,205 @@ document.addEventListener("DOMContentLoaded", () => {
     const notificationDot = document.querySelector(".sd-notif-dot");
 
     if (notificationButton && notificationPanel) {
+
+        const userId = notificationButton.dataset.userId;
+        let notificationsWereOpened = false;
+
+        function getCsrfToken() {
+            const csrfInput = document.querySelector(
+                "[name=csrfmiddlewaretoken]"
+            );
+
+            if (csrfInput) {
+                return csrfInput.value;
+            }
+
+            const cookie = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("csrftoken="));
+
+            return cookie
+                ? decodeURIComponent(cookie.split("=")[1])
+                : "";
+        }
+
+        async function markNotificationsAsRead() {
+            if (!userId || !notificationsWereOpened) {
+                return;
+            }
+
+            const unreadNotifications = notificationList
+                ? notificationList.querySelectorAll(".is-unread")
+                : [];
+
+            if (!unreadNotifications.length) {
+                notificationsWereOpened = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/notifications/mark-all-as-read/${userId}/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCsrfToken(),
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        credentials: "same-origin",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Failed to mark notifications as read."
+                    );
+                }
+
+                unreadNotifications.forEach(notification => {
+                    notification.classList.remove("is-unread");
+
+                    const status = notification.querySelector(
+                        ".sd-notification-status"
+                    );
+
+                    if (status) {
+                        status.remove();
+                    }
+                });
+
+                if (notificationDot) {
+                    notificationDot.hidden = true;
+                }
+
+            } catch (error) {
+                console.error(
+                    "Notification read error:",
+                    error
+                );
+            } finally {
+                notificationsWereOpened = false;
+            }
+        }
+
+        async function clearAllNotifications() {
+            if (!userId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/notifications/clear-all/${userId}/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCsrfToken(),
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        credentials: "same-origin",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Failed to clear notifications."
+                    );
+                }
+
+                const data = await response.json();
+
+                if (data.status === "success") {
+
+                    if (notificationList) {
+                        notificationList.hidden = true;
+                    }
+
+                    if (notificationEmpty) {
+                        notificationEmpty.hidden = false;
+                    }
+
+                    if (notificationDot) {
+                        notificationDot.hidden = true;
+                    }
+
+                    notificationsWereOpened = false;
+                }
+
+            } catch (error) {
+                console.error(
+                    "Notification clear error:",
+                    error
+                );
+            }
+        }
+
         function openNotifications() {
             notificationPanel.classList.add("is-open");
-            notificationPanel.setAttribute("aria-hidden", "false");
-            notificationButton.setAttribute("aria-expanded", "true");
+
+            notificationPanel.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            notificationButton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+            notificationsWereOpened = true;
         }
 
         function closeNotifications() {
+            if (!notificationPanel.classList.contains("is-open")) {
+                return;
+            }
+
             notificationPanel.classList.remove("is-open");
-            notificationPanel.setAttribute("aria-hidden", "true");
-            notificationButton.setAttribute("aria-expanded", "false");
+
+            notificationPanel.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            notificationButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+            markNotificationsAsRead();
         }
 
-        notificationButton.addEventListener("click", (event) => {
+        notificationButton.addEventListener("click", event => {
+            event.preventDefault();
             event.stopPropagation();
-            notificationPanel.classList.contains("is-open") ? closeNotifications() : openNotifications();
+
+            notificationPanel.classList.contains("is-open")
+                ? closeNotifications()
+                : openNotifications();
         });
 
-        notificationPanel.addEventListener("click", (event) => event.stopPropagation());
+        notificationPanel.addEventListener(
+            "click",
+            event => event.stopPropagation()
+        );
 
-        document.addEventListener("click", closeNotifications);
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") closeNotifications();
+        document.addEventListener(
+            "click",
+            closeNotifications
+        );
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                closeNotifications();
+            }
         });
 
         if (clearNotifications) {
-            clearNotifications.addEventListener("click", () => {
-                if (notificationList) notificationList.hidden = true;
-                if (notificationEmpty) notificationEmpty.hidden = false;
-                if (notificationDot) notificationDot.hidden = true;
+            clearNotifications.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                clearAllNotifications();
             });
         }
     }
@@ -332,7 +504,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const profileChip = document.querySelector(".sd-seller-chip");
     const profileMenu = document.getElementById("adProfileMenu");
 
-    if (!profileChip || !profileMenu) return;
+    if (!profileChip || !profileMenu) {
+        return;
+    }
 
     profileChip.setAttribute("aria-expanded", "false");
 
@@ -352,12 +526,12 @@ document.addEventListener("DOMContentLoaded", () => {
             : openProfileMenu();
     }
 
-    profileChip.addEventListener("click", (e) => {
+    profileChip.addEventListener("click", e => {
         e.stopPropagation();
         toggleProfileMenu();
     });
 
-    profileMenu.addEventListener("click", (e) => {
+    profileMenu.addEventListener("click", e => {
         e.stopPropagation();
     });
 
@@ -365,13 +539,13 @@ document.addEventListener("DOMContentLoaded", () => {
         closeProfileMenu();
     });
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", e => {
         if (e.key === "Escape") {
             closeProfileMenu();
         }
     });
 
-    profileMenu.querySelectorAll("a").forEach((item) => {
+    profileMenu.querySelectorAll("a").forEach(item => {
         item.addEventListener("click", () => {
             closeProfileMenu();
         });

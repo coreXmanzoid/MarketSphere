@@ -901,19 +901,48 @@ def export_seller_profile(request, seller_id):
     )
     
     return export_seller_profile_snapshot(seller)
-
 @require_POST
 def update_buyer_profile_view(request, buyer_id):
+    try:
+        buyer = User.objects.get(pk=buyer_id)
+    except User.DoesNotExist:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Buyer not found.",
+            },
+            status=404,
+        )
 
-    success, message, buyer = account_services.update_buyer_profile(request=request, buyer_id=buyer_id)
+    success, message, buyer, email_changed, errors = (
+        account_services.update_buyer_profile(
+            user=buyer,
+            first_name=request.POST.get("first_name"),
+            last_name=request.POST.get("last_name"),
+            username=request.POST.get("username"),
+            email=request.POST.get("email"),
+            contact=request.POST.get("contact"),
+            account_status=request.POST.get("account_status"),
+            allow_status_change=True,
+            request=request,
+        )
+    )
 
     if not success:
-        return JsonResponse({"success": False, "message": message}, status=400)
+        return JsonResponse(
+            {
+                "success": False,
+                "message": message,
+                "errors": errors,
+            },
+            status=400,
+        )
 
     return JsonResponse(
         {
             "success": True,
             "message": message,
+            "email_changed": email_changed,
             "buyer": {
                 "id": buyer.id,
                 "first_name": buyer.first_name,

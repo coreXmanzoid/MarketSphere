@@ -306,9 +306,8 @@
 
     /* =====================================================
        5. NOTIFICATIONS DROPDOWN
-       Frontend-only placeholder until admin notifications are
-       connected to the backend.
        ===================================================== */
+
     var notificationButton = document.getElementById('adNotifBtn');
     var notificationPanel = document.getElementById('adNotificationPanel');
     var clearNotifications = document.getElementById('adClearNotifications');
@@ -316,33 +315,233 @@
     var notificationEmpty = document.getElementById('adNotificationEmpty');
     var notificationDot = document.querySelector('.ad-notif-dot');
 
+    var notificationsWereOpened = false;
+
+    function getCsrfToken() {
+        var csrfInput = document.querySelector(
+            '[name=csrfmiddlewaretoken]'
+        );
+
+        if (csrfInput) {
+            return csrfInput.value;
+        }
+
+        var cookie = document.cookie
+            .split('; ')
+            .find(function (row) {
+                return row.startsWith('csrftoken=');
+            });
+
+        return cookie
+            ? decodeURIComponent(cookie.split('=')[1])
+            : '';
+    }
+
+    function markAdminNotificationsAsRead() {
+        if (!notificationButton || !notificationsWereOpened) {
+            return;
+        }
+
+        var userId = notificationButton.dataset.userId;
+
+        if (!userId) {
+            return;
+        }
+
+        var unreadNotifications = notificationList
+            ? notificationList.querySelectorAll('.is-unread')
+            : [];
+
+        if (!unreadNotifications.length) {
+            notificationsWereOpened = false;
+            return;
+        }
+
+        fetch('/notifications/mark-all-as-read/' + userId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error(
+                        'Failed to mark notifications as read.'
+                    );
+                }
+
+                return response.json();
+            })
+            .then(function () {
+                unreadNotifications.forEach(function (notification) {
+                    notification.classList.remove('is-unread');
+
+                    var status = notification.querySelector(
+                        '.ad-notification-status'
+                    );
+
+                    if (status) {
+                        status.remove();
+                    }
+                });
+
+                if (notificationDot) {
+                    notificationDot.hidden = true;
+                }
+            })
+            .catch(function (error) {
+                console.error(
+                    'Notification read error:',
+                    error
+                );
+            })
+            .finally(function () {
+                notificationsWereOpened = false;
+            });
+    }
+
+    function clearAllAdminNotifications() {
+        if (!notificationButton) {
+            return;
+        }
+
+        var userId = notificationButton.dataset.userId;
+
+        if (!userId) {
+            return;
+        }
+
+        fetch('/notifications/clear-all/' + userId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error(
+                        'Failed to clear notifications.'
+                    );
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.status !== 'success') {
+                    return;
+                }
+
+                if (notificationList) {
+                    notificationList.hidden = true;
+                }
+
+                if (notificationEmpty) {
+                    notificationEmpty.hidden = false;
+                }
+
+                if (notificationDot) {
+                    notificationDot.hidden = true;
+                }
+
+                notificationsWereOpened = false;
+            })
+            .catch(function (error) {
+                console.error(
+                    'Notification clear error:',
+                    error
+                );
+            });
+    }
+
     function closeNotificationMenu() {
-        if (!notificationPanel) return;
+        if (!notificationPanel) {
+            return;
+        }
+
+        if (!notificationPanel.classList.contains('is-open')) {
+            return;
+        }
+
         notificationPanel.classList.remove('is-open');
         notificationPanel.setAttribute('aria-hidden', 'true');
-        if (notificationButton) notificationButton.setAttribute('aria-expanded', 'false');
+
+        if (notificationButton) {
+            notificationButton.setAttribute(
+                'aria-expanded',
+                'false'
+            );
+        }
+
+        markAdminNotificationsAsRead();
     }
 
     if (notificationButton && notificationPanel) {
-        notificationButton.addEventListener('click', function (event) {
-            event.stopPropagation();
-            var isOpen = notificationPanel.classList.toggle('is-open');
-            notificationPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-            notificationButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        });
 
-        notificationPanel.addEventListener('click', function (event) {
-            event.stopPropagation();
-        });
+        notificationButton.addEventListener(
+            'click',
+            function (event) {
+                event.preventDefault();
+                event.stopPropagation();
 
-        document.addEventListener('click', closeNotificationMenu);
+                var isOpen =
+                    notificationPanel.classList.contains('is-open');
+
+                if (isOpen) {
+                    closeNotificationMenu();
+                    return;
+                }
+
+                notificationPanel.classList.add('is-open');
+
+                notificationPanel.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+
+                notificationButton.setAttribute(
+                    'aria-expanded',
+                    'true'
+                );
+
+                notificationsWereOpened = true;
+            }
+        );
+
+        notificationPanel.addEventListener(
+            'click',
+            function (event) {
+                event.stopPropagation();
+            }
+        );
+
+        document.addEventListener(
+            'click',
+            closeNotificationMenu
+        );
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+                if (event.key === 'Escape') {
+                    closeNotificationMenu();
+                }
+            }
+        );
 
         if (clearNotifications) {
-            clearNotifications.addEventListener('click', function () {
-                if (notificationList) notificationList.hidden = true;
-                if (notificationEmpty) notificationEmpty.hidden = false;
-                if (notificationDot) notificationDot.hidden = true;
-            });
+            clearNotifications.addEventListener(
+                'click',
+                function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    clearAllAdminNotifications();
+                }
+            );
         }
     }
 

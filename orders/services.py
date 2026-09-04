@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 from decimal import Decimal
 from uuid import uuid4
 from calendar import monthrange
@@ -8,6 +9,7 @@ from django.db import transaction
 from django.db.models import Prefetch, Sum, Count, F, Q, IntegerField
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
@@ -16,12 +18,58 @@ from products.models import CartItem, Product
 from products.services import get_or_create_cart
 
 from .models import Order, OrderItem
-from notifications.emails.orders import send_order_placed_email, send_order_confirmed_email, send_order_delivered_email, send_order_shipped_email, send_order_cancelled_email
+from notifications.emails.orders import (
+    send_order_placed_email,
+    send_order_confirmed_email,
+    send_order_delivered_email,
+    send_order_shipped_email,
+    send_order_cancelled_email,
+)
+from notifications.emails.sellers import (
+    send_new_order_email,
+    send_cancelled_order_email,
+    send_delivered_order_email,
+)
 CANCELABLE_ORDER_STATUSES = (
     Order.Status.PENDING,
     Order.Status.CONFIRMED,
     Order.Status.PROCESSING,
 )
+
+from notifications.models import Notification
+from notifications.services.notifications import (
+    schedule_low_stock_event,
+    schedule_notification,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def _send_order_created_emails(order):
+    for sender in (send_order_placed_email, send_new_order_email):
+        try:
+            sender(order)
+        except Exception:
+            logger.exception("Order-created email failed for %s", order.order_number)
+
+
+def _send_cancelled_emails(order):
+    reason = getattr(order, "cancellation_reason", None)
+    for sender in (send_order_cancelled_email, send_cancelled_order_email):
+        try:
+            sender(order, reason)
+        except Exception:
+            logger.exception("Order-cancelled email failed for %s", order.order_number)
+
+
+def _send_delivered_emails(order):
+    for sender in (send_order_delivered_email, send_delivered_order_email):
+        try:
+            sender(order)
+        except Exception:
+            logger.exception("Order-delivered email failed for %s", order.order_number)
+
+from accounts.models import Address
 
 
 @transaction.atomic
@@ -34,7 +82,8 @@ def place_order(
     notes="",
 ):
     cart_items = (
-        CartItem.objects.select_related("product", "product__seller", "cart")
+        CartItem.objects
+        .select_related("product", "product__seller", "cart")
         .filter(cart__user=user)
     )
 
@@ -47,20 +96,22 @@ def place_order(
         user=user,
     )
 
-    full_name = full_name or f"{user.first_name} {user.last_name}".strip() or user.username
+    full_name = (
+        full_name
+        or f"{user.first_name} {user.last_name}".strip()
+        or user.username
+    )
     email = email or user.email
     phone = phone or address.phone or user.contact
 
-    # --------------------------------------------------
-    # Group cart items by seller — each seller now gets 
-    # their own dedicated Order instance.
-    # --------------------------------------------------
     items_by_seller = defaultdict(list)
+
     for item in cart_items:
         if item.product.seller_id is None:
             raise ValueError(
                 f"'{item.product.name}' has no seller assigned and cannot be ordered."
             )
+
         items_by_seller[item.product.seller_id].append(item)
 
     created_orders = []
@@ -87,19 +138,25 @@ def place_order(
 
             if product.stock_quantity < item.quantity:
                 raise ValueError(
-                    f"Only {product.stock_quantity} units of '{product.name}' are available."
+                    f"Only {product.stock_quantity} units of "
+                    f"'{product.name}' are available."
                 )
 
             item_total = price * item.quantity
             order_subtotal += item_total
 
+            previous_stock = product.stock_quantity
             product.stock_quantity -= item.quantity
             product.status = (
                 Product.Status.OUT_OF_STOCK
                 if product.stock_quantity == 0
                 else Product.Status.PUBLISHED
             )
-            product.save(update_fields=["stock_quantity", "status"])
+
+            product.save(
+                update_fields=["stock_quantity", "status"]
+            )
+            schedule_low_stock_event(product, previous_stock, product.stock_quantity)
 
             pending_order_items.append(
                 OrderItem(
@@ -123,22 +180,54 @@ def place_order(
         order.discount = discount
         order.tax = tax
         order.total = total
+
         order.save(
-            update_fields=["subtotal", "shipping_cost", "discount", "tax", "total"]
+            update_fields=[
+                "subtotal",
+                "shipping_cost",
+                "discount",
+                "tax",
+                "total",
+            ]
         )
 
         created_orders.append(order)
 
-        cart_items.delete()
+        seller = order.seller
 
-        def _send_order_emails():
-            for order in created_orders:
-                send_order_placed_email(order)
+        schedule_notification(
+            user_id=user.id,
+            notification_type=Notification.NotificationType.ORDER_CREATED,
+            title="Order placed successfully",
+            message=(
+                f"Your order #{order.order_number} has been placed successfully."
+            ),
+            audience=Notification.Audience.BUYER,
+            icon="bi-bag-check",
+            target_url=reverse("order", kwargs={"order_number": order.order_number}),
+        )
 
+        schedule_notification(
+            user_id=seller.user_id,
+            notification_type=Notification.NotificationType.ORDER_CREATED,
+            title="New order needs attention",
+            message=(
+                f"You received a new order #{order.order_number} "
+                f"worth {order.total}."
+            ),
+            audience=Notification.Audience.SELLER,
+            icon="bi-bag-check",
+            target_url=reverse("order-detail", kwargs={"order_no": order.order_number}),
+        )
 
-        transaction.on_commit(_send_order_emails)
+        transaction.on_commit(
+            lambda order=order: _send_order_created_emails(order),
+            robust=True,
+        )
 
-        return created_orders
+    cart_items.delete()
+
+    return created_orders
 
 def get_user_orders(user):
     return (
@@ -158,6 +247,7 @@ def get_user_order(user, order_number):
     )
 
 
+@transaction.atomic
 def cancel_user_order(user, order_number):
     order = get_user_order(user, order_number)
 
@@ -165,9 +255,19 @@ def cancel_user_order(user, order_number):
         return False
 
     order.status = Order.Status.CANCELLED
-    order.save(update_fields=["status"])
+    order.save(update_fields=["status", "updated_at"])
+    schedule_notification(
+        user_id=order.seller.user_id,
+        notification_type=Notification.NotificationType.ORDER_CANCELLED,
+        title="Order cancelled",
+        message=f"Order #{order.order_number} has been cancelled.",
+        icon="bi-x-circle",
+        audience=Notification.Audience.SELLER,
+        target_url=reverse("order-detail", kwargs={"order_no": order.order_number}),
+    )
     transaction.on_commit(
-    lambda: send_order_cancelled_email(order)
+        lambda order=order: _send_cancelled_emails(order),
+        robust=True,
     )
     return True
 
@@ -345,25 +445,84 @@ def get_admin_orders():
     )
 
 
-def update_order_status(seller, order_number, status): 
-    update_fields = { "status": status, } 
+@transaction.atomic
+def update_order_status(seller, order_number, status):
+    order = Order.objects.select_for_update().filter(
+        order_number=order_number, seller=seller,
+    ).first()
+    if not order or status == order.status:
+        return 0
+
+    update_fields = {"status": status, "updated_at": timezone.now()}
     if status == Order.Status.SHIPPED: 
         update_fields["shipped_at"] = timezone.now() 
     elif status == Order.Status.DELIVERED: 
         update_fields["delivered_at"] = timezone.now() 
-    updated = Order.objects.filter( order_number=order_number, seller=seller, ).update(**update_fields) 
-    if not updated: 
-        return 0 
-    order = Order.objects.get( order_number=order_number, seller=seller, ) 
-    if status == Order.Status.CONFIRMED: 
-        transaction.on_commit( lambda: send_order_confirmed_email(order) )
-    elif status == Order.Status.SHIPPED: 
-        transaction.on_commit( lambda: send_order_shipped_email(order) ) 
-    elif status == Order.Status.DELIVERED: 
-        transaction.on_commit( lambda: send_order_delivered_email(order) ) 
-    elif status == Order.Status.CANCELLED: 
-        transaction.on_commit( lambda: send_order_cancelled_email(order) ) 
-    return updated
+    for field, value in update_fields.items():
+        setattr(order, field, value)
+    order.save(update_fields=list(update_fields))
+
+    seller_url = reverse("order-detail", kwargs={"order_no": order.order_number})
+    notification_type = getattr(
+        Notification.NotificationType,
+        f"ORDER_{status.upper()}",
+        None,
+    )
+    if notification_type and status in {
+        Order.Status.CONFIRMED,
+        Order.Status.SHIPPED,
+        Order.Status.DELIVERED,
+        Order.Status.CANCELLED,
+    }:
+        status_display = order.get_status_display().lower()
+        schedule_notification(
+            user_id=order.user_id,
+            notification_type=notification_type,
+            title=f"Order {status_display}",
+            message=f"Order #{order.order_number} is now {status_display}.",
+            icon="bi-box-seam",
+            target_url=reverse("order", kwargs={"order_number": order.order_number}),
+            audience=Notification.Audience.BUYER,
+        )
+        if notification_type and status in {
+                Order.Status.DELIVERED,
+                Order.Status.CANCELLED,
+            }:
+            schedule_notification(
+                user_id=order.seller.user_id,
+                notification_type=notification_type,
+                title=f"Order {status_display}",
+                message=f"Order #{order.order_number} is now {status_display}.",
+                icon="bi-box-seam",
+                target_url=seller_url,
+                audience=Notification.Audience.SELLER,
+            )
+
+    if status == Order.Status.CONFIRMED:
+        transaction.on_commit(
+            lambda: send_order_confirmed_email(order),
+            robust=True,
+        )
+
+    elif status == Order.Status.SHIPPED:
+        transaction.on_commit(
+            lambda: send_order_shipped_email(order),
+            robust=True,
+        )
+
+    elif status == Order.Status.DELIVERED:
+        transaction.on_commit(
+            lambda: _send_delivered_emails(order),
+            robust=True,
+        )
+
+    elif status == Order.Status.CANCELLED:
+        transaction.on_commit(
+            lambda: _send_cancelled_emails(order),
+            robust=True,
+        )
+
+    return 1
 
 def update_seller_note(seller, order_number, note):
     order = Order.objects.filter(

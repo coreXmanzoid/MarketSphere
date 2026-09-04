@@ -66,9 +66,11 @@
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCounter">{{ cart_count }}</span>
                   </a>
                   <div class="ms-notification-wrap me-2 rounded-circle">
-                    <a href="#" class="btn position-relative ms-notification-btn " id="msNotificationBtn" role="button" aria-label="Notifications" aria-expanded="false" aria-controls="msNotificationPanel">
+                    <a href="#" class="btn position-relative ms-notification-btn " id="msNotificationBtn" role="button" aria-label="Notifications" data-user-id="{{ request.user.id }}" aria-expanded="false" aria-controls="msNotificationPanel">
                       <i class="bi bi-bell fs-5" style="-webkit-text-stroke: 0.5px;"></i>
-                      <span class="ms-notification-dot" aria-hidden="true"></span>
+                      {% if buyer_unread_notifications_count > 0 %}
+                        <span class="ms-notification-dot" aria-hidden="true"></span>
+                      {% endif %}
                     </a>
 
                     <section class="ms-notification-panel" id="msNotificationPanel" aria-label="Customer notifications" aria-hidden="true">
@@ -80,41 +82,48 @@
                         <button type="button" class="ms-notification-clear" id="msClearNotifications">Clear all</button>
                       </div>
 
+
                       <div class="ms-notification-list" id="msNotificationList">
-                        <article class="ms-notification-item is-unread">
-                          <span class="ms-notification-icon is-order" aria-hidden="true"><i class="bi bi-truck"></i></span>
-                          <div class="ms-notification-copy">
-                            <h3>Your order is on the way</h3>
-                            <p>Order <strong>#MS-1048</strong> has been handed to the courier.</p>
-                            <time datetime="2026-08-30T10:42:00">12 minutes ago</time>
-                          </div>
-                          <span class="ms-notification-status" aria-label="Unread"></span>
-                        </article>
+                          {% if buyer_notifications.count > 0 %}
+                              {% for notification in buyer_notifications %}
+                                  <article
+                                      class="ms-notification-item{% if not notification.is_read %} is-unread{% endif %}"
+                                      {% if notification.target_url %}
+                                          data-notification-url="{{ notification.target_url }}"
+                                      {% endif %}
+                                  >
+                                      <span
+                                          class="ms-notification-icon"
+                                          aria-hidden="true"
+                                      >
+                                          <i class="bi {{ notification.icon }}"></i>
+                                      </span>
 
-                        <article class="ms-notification-item">
-                          <span class="ms-notification-icon is-deal" aria-hidden="true"><i class="bi bi-tag"></i></span>
-                          <div class="ms-notification-copy">
-                            <h3>Fresh deals picked for you</h3>
-                            <p>Save up to 25% on products from shops you follow.</p>
-                            <time datetime="2026-08-30T08:15:00">2 hours ago</time>
-                          </div>
-                        </article>
+                                      <div class="ms-notification-copy">
+                                          <h3>{{ notification.title }}</h3>
 
-                        <article class="ms-notification-item">
-                          <span class="ms-notification-icon is-wishlist" aria-hidden="true"><i class="bi bi-heart"></i></span>
-                          <div class="ms-notification-copy">
-                            <h3>Price drop on your wishlist</h3>
-                            <p><strong>Canvas Tote Bag</strong> is now available at a lower price.</p>
-                            <time datetime="2026-08-29T15:30:00">Yesterday</time>
-                          </div>
-                        </article>
-                      </div>
+                                          <p>{{ notification.message|safe }}</p>
 
-                      <div class="ms-notification-empty" id="msNotificationEmpty" hidden>
-                        <span class="ms-notification-empty-icon" aria-hidden="true"><i class="bi bi-check2"></i></span>
-                        <h3>You're all caught up</h3>
-                        <p>No new notifications right now.</p>
-                      </div>
+                                          <time datetime="{{ notification.created_at|date:'c' }}">
+                                              {{ notification.created_at|timesince }} ago
+                                          </time>
+                                      </div>
+
+                                      {% if not notification.is_read %}
+                                          <span
+                                              class="ms-notification-status"
+                                              aria-label="Unread"
+                                          ></span>
+                                      {% endif %}
+                                  </article>
+                              {% endfor %}                              
+                          {% endif %}
+                        </div>
+                          <div class="ms-notification-empty" id="msNotificationEmpty" {% if buyer_notifications.count > 0 %}hidden{% endif %}>
+                            <span class="ms-notification-empty-icon" aria-hidden="true"><i class="bi bi-check2"></i></span>
+                            <h3>You're all caught up</h3>
+                            <p>No new notifications right now.</p>
+                          </div>
                     </section>
                   </div>
                   
@@ -148,7 +157,7 @@
                   <li>
                     <div class="ms-notification-list">
                       
-                      <a class="dropdown-item ms-notification-item" href="#">
+                      <a class="dropdown-item ms-notification-item" href="{% url "profile" %}">
                         <div class="ms-notification-copy">
                           <h3>My Profile</h3>
                         </div>

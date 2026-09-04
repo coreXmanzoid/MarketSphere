@@ -5,7 +5,9 @@ urlpatterns = [
     path("products/", views.products, name="products-list"),
     path("products/add-product/", views.add_product, name="add-product"),
     path("products/save-draft/", views.draft_product, name="save-draft"),
-    path("products/edit-product/<slug:product_slug>", views.edit_products, name="edit-product"),
+    # Keep the seller route distinct from the admin route that also uses
+    # ``edit-product`` in the project-wide URL resolver.
+    path("products/edit-product/<slug:product_slug>", views.edit_products, name="seller-edit-product"),
     path("products/hide-product", views.hide_product, name="hide-product"),
     path("products/unhide-product", views.unhide_product, name="unhide-product"),
     path(

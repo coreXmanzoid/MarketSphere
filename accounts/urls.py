@@ -6,6 +6,12 @@ urlpatterns = [
     path("signup/", views.signup_view, name="signup"),
     path("seller-signup/", views.seller_signup_view, name="seller-signup"),
     path("seller-account/", views.seller_account, name="seller-account"),
+    path("profile/", views.profile_view, name="profile"),
+    path(
+        "profile/update/",
+        views.update_my_profile_view,
+        name="update_my_profile",
+    ),
     path("update-seller-info/", views.update_seller_info, name="update_seller_info"),
     path(
         "update-seller-address/",
@@ -21,6 +27,11 @@ urlpatterns = [
         "buyer/address/delete/",
         views.delete_user_address_view,
         name="delete_user_address",
+    ),
+    path(
+        "change-password/",
+        views.change_password,
+        name="change_password",
     ),
     path("logout", views.logout_user, name="logout"),
     path(

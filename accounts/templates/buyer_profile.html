@@ -1,0 +1,1096 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  My Profile • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <link rel="stylesheet" href="{% static 'profile.css' %}">
+{% endblock %}
+
+{% block content %}
+
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="bp-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">My Profile</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <div id="bpTop"></div>
+
+  <!-- ================= PROFILE HERO ================= -->
+  <section class="bp-hero-section">
+    <div class="container">
+      <div class="bp-hero-card">
+        <div class="bp-hero-main">
+          <div class="bp-hero-avatar-wrap">
+            {% if request.user.profile_image_url %}
+              <img src="{{ request.user.profile_image_url }}" alt="{{ request.user.username }}" class="bp-hero-avatar">
+            {% else %}
+              <span class="bp-hero-avatar bp-hero-avatar-fallback">
+                {{ request.user.first_name|slice:':1'|upper|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}
+              </span>
+            {% endif %}
+            <button type="button" class="bp-avatar-edit-btn" id="bpAvatarEditBtn" aria-label="Change profile photo">
+              <i class="bi bi-camera-fill"></i>
+            </button>
+          </div>
+
+          <div class="bp-hero-details">
+            <div class="bp-hero-name-row">
+              <h1 class="bp-hero-name">
+                {% if request.user.first_name or request.user.last_name %}
+                  {{ request.user.first_name }} {{ request.user.last_name }}
+                {% else %}
+                  {{ request.user.username }}
+                {% endif %}
+              </h1>
+
+              {% if request.user.account_status == 'VERIFIED' %}
+                <span class="bp-status-badge bp-status-verified"><i class="bi bi-patch-check-fill"></i> Verified Account</span>
+              {% elif request.user.account_status == 'UNVERIFIED' %}
+                <span class="bp-status-badge bp-status-pending"><i class="bi bi-hourglass-split"></i> Verification Needed</span>
+              {% elif request.user.account_status == 'SUSPENDED' %}
+                <span class="bp-status-badge bp-status-warning"><i class="bi bi-exclamation-triangle-fill"></i> Temporarily Unavailable</span>
+              {% elif request.user.account_status == 'DEACTIVATED' %}
+                <span class="bp-status-badge bp-status-muted"><i class="bi bi-power"></i> Account Deactivated</span>
+              {% elif request.user.account_status == 'BLOCKED' %}
+                <span class="bp-status-badge bp-status-warning"><i class="bi bi-slash-circle-fill"></i> Account Restricted</span>
+              {% else %}
+                <span class="bp-status-badge bp-status-pending"><i class="bi bi-hourglass-split"></i> Verification Needed</span>
+              {% endif %}
+            </div>
+
+            <div class="bp-hero-meta">
+              <span class="bp-hero-meta-item"><i class="bi bi-envelope"></i> {{ request.user.email|default:'No email on file' }}</span>
+              <span class="bp-hero-meta-item"><i class="bi bi-telephone"></i> {{ request.user.contact|default:'No phone on file' }}</span>
+              <span class="bp-hero-meta-item"><i class="bi bi-calendar-check"></i> Member since {{ request.user.date_joined|date:'F Y'|default:'—' }}</span>
+            </div>
+
+            <div class="bp-hero-completion">
+              <div class="bp-hero-completion-top">
+                <span>Profile completion</span>
+                <span class="bp-hero-completion-pct">{{ profile_completion.percentage|default:'65' }}%</span>
+              </div>
+              <div class="bp-progress-track">
+                <div class="bp-progress-fill" style="width: {{ profile_completion.percentage|default:'65' }}%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-hero-actions">
+          <button type="button" class="btn bp-btn-primary" id="bpEditProfileBtn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">
+            <i class="bi bi-pencil-square"></i> Edit Profile
+          </button>
+          {% if request.user.account_status == 'UNVERIFIED' %}
+            <form method="post" action="{% url 'resend_verification_email' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn bp-btn-outline">
+                <i class="bi bi-shield-check"></i> Verify Email
+              </button>
+            </form>
+          {% else %}
+            <span class="bp-verified-inline"><i class="bi bi-check-circle-fill"></i> Email verified</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ACCOUNT NAVIGATION ================= -->
+  <section class="bp-nav-section">
+    <div class="container">
+      <nav class="bp-account-nav" aria-label="Account sections">
+        <button type="button" class="bp-nav-toggle" id="bpNavToggle" aria-expanded="false" aria-controls="bpNavList">
+          <span><i class="bi bi-person-circle"></i> My Profile</span>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+
+        <ul class="bp-nav-list" id="bpNavList">
+          <li><a href="#bpTop" class="bp-nav-link is-active" data-bp-nav><i class="bi bi-person-circle"></i> My Profile</a></li>
+          <li><a href="{% url 'orders' %}" class="bp-nav-link" data-bp-nav><i class="bi bi-bag-check"></i> My Orders</a></li>
+          <li><a href="#bpAddresses" class="bp-nav-link" data-bp-nav><i class="bi bi-geo-alt"></i> Addresses</a></li>
+          <li><a href="{% url 'wishlist' %}" class="bp-nav-link" data-bp-nav><i class="bi bi-heart"></i> Wishlist</a></li>
+          <li><a href="#" class="bp-nav-link bp-nav-soon" data-bp-coming-soon><i class="bi bi-star"></i> Reviews</a></li>
+          <li><a href="#bpNotifications" class="bp-nav-link" data-bp-nav><i class="bi bi-bell"></i> Notifications</a></li>
+          <li><a href="#bpSecurity" class="bp-nav-link" data-bp-nav><i class="bi bi-shield-lock"></i> Security</a></li>
+          <li><a href="#" class="bp-nav-link bp-nav-soon" data-bp-coming-soon><i class="bi bi-gear"></i> Settings</a></li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <section class="bp-section">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- ================= MAIN COLUMN ================= -->
+        <div class="col-lg-8 col-12 bp-main-col">
+
+          <!-- ============ PROFILE OVERVIEW ============ -->
+          <div class="bp-card bp-overview-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-graph-up-arrow"></i> Account Overview</h2>
+            </div>
+
+            <div class="bp-stats-grid">
+              <div class="bp-stat-item">
+                <span class="bp-stat-icon bp-stat-icon-orders"><i class="bi bi-bag-check"></i></span>
+                <span class="bp-stat-value">{{ buyer_stats.total_orders|default:'12' }}</span>
+                <span class="bp-stat-label">Total Orders</span>
+              </div>
+
+              <div class="bp-stat-item">
+                <span class="bp-stat-icon bp-stat-icon-complete"><i class="bi bi-check-circle"></i></span>
+                <span class="bp-stat-value">{{ buyer_stats.completed_orders|default:'9' }}</span>
+                <span class="bp-stat-label">Completed</span>
+              </div>
+
+              <div class="bp-stat-item">
+                <span class="bp-stat-icon bp-stat-icon-wishlist"><i class="bi bi-heart"></i></span>
+                <span class="bp-stat-value">{{ wishlist_count|default:'-' }}</span>
+                <span class="bp-stat-label">Wishlist Items</span>
+              </div>
+
+              <div class="bp-stat-item">
+                <span class="bp-stat-icon bp-stat-icon-reviews"><i class="bi bi-star"></i></span>
+                <span class="bp-stat-value">{{ buyer_stats.reviews_count|default:'4' }}</span>
+                <span class="bp-stat-label">Reviews</span>
+              </div>
+
+              <div class="bp-stat-item bp-stat-item-wide">
+                <span class="bp-stat-icon bp-stat-icon-spent"><i class="bi bi-wallet2"></i></span>
+                <span class="bp-stat-value">Rs. {{ buyer_stats.total_spent|floatformat:0 }}</span>
+                <span class="bp-stat-label">Total Spent</span>
+              </div>
+
+              <div class="bp-stat-item">
+                <span class="bp-stat-icon bp-stat-icon-pending"><i class="bi bi-hourglass-split"></i></span>
+                <span class="bp-stat-value">{{ buyer_stats.pending_orders|default:'2' }}</span>
+                <span class="bp-stat-label">Pending Orders</span>
+              </div>
+
+              <div class="bp-stat-item">
+                <span class="bp-stat-icon bp-stat-icon-addresses"><i class="bi bi-geo-alt"></i></span>
+                <span class="bp-stat-value">{{ buyer_stats.saved_addresses|default:addresses.count|default:'3' }}</span>
+                <span class="bp-stat-label">Saved Addresses</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PERSONAL INFORMATION ============ -->
+          <div class="bp-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-person-vcard"></i> Personal Information</h2>
+              <button type="button" class="btn bp-edit-btn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">
+                <i class="bi bi-pencil-square"></i> Edit
+              </button>
+            </div>
+
+            <div class="bp-info-grid">
+              <div class="bp-info-item">
+                <span class="bp-info-label">First Name</span>
+                <span class="bp-info-value">{{ request.user.first_name|default:'—' }}</span>
+              </div>
+
+              <div class="bp-info-item">
+                <span class="bp-info-label">Last Name</span>
+                <span class="bp-info-value">{{ request.user.last_name|default:'—' }}</span>
+              </div>
+
+              <div class="bp-info-item">
+                <span class="bp-info-label">Username</span>
+                <span class="bp-info-value">{{ request.user.username }}</span>
+              </div>
+
+              <div class="bp-info-item">
+                <span class="bp-info-label">Email Address</span>
+                <span class="bp-info-value">
+                  {{ request.user.email }}
+                  {% if request.user.account_status == 'VERIFIED' %}
+                    <i class="bi bi-patch-check-fill bp-verified-tick" title="Verified"></i>
+                  {% endif %}
+                </span>
+              </div>
+
+              <div class="bp-info-item">
+                <span class="bp-info-label">Phone Number</span>
+                <span class="bp-info-value">{{ request.user.contact|default:'Not provided' }}</span>
+              </div>
+
+              <div class="bp-info-item">
+                <span class="bp-info-label">Date Joined</span>
+                <span class="bp-info-value">{{ request.user.date_joined|date:'M j, Y'|default:'—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PROFILE COMPLETION ============ -->
+          <div class="bp-card bp-completion-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-clipboard-check"></i> Profile Completion</h2>
+              <span class="bp-completion-pct-badge">{{ profile_completion.percentage|default:'65' }}%</span>
+            </div>
+
+            <div class="bp-progress-track bp-progress-track-lg">
+              <div class="bp-progress-fill" style="width: {{ profile_completion.percentage|default:'65' }}%;"></div>
+            </div>
+
+            {% if profile_completion.missing %}
+              <div class="bp-completion-missing">
+                <h6><i class="bi bi-list-check"></i> Still missing</h6>
+                <ul>
+                  {% for item in profile_completion.missing %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% else %}
+              <div class="bp-completion-missing">
+                <h6><i class="bi bi-list-check"></i> Still missing</h6>
+                <ul>
+                  <li>Phone number</li>
+                  <li>Profile photo</li>
+                  <li>Default address</li>
+                </ul>
+              </div>
+            {% endif %}
+
+            <button type="button" class="btn bp-btn-outline bp-completion-btn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">
+              Complete Profile
+            </button>
+          </div>
+
+          <!-- ============ RECENT ORDERS ============ -->
+          <div class="bp-card" id="bpOrders">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-bag-check"></i> Recent Orders</h2>
+              <a href="{% url 'orders' %}" class="bp-view-all-link">View All Orders <i class="bi bi-arrow-right"></i></a>
+            </div>
+
+            <div class="bp-orders-list">
+              {% for order in recent_orders %}
+                <div class="bp-order-row">
+                  <div class="bp-order-row-main">
+                    <span class="bp-order-number">#{{ order.order_number }}</span>
+                    <span class="bp-order-date"><i class="bi bi-calendar3"></i> {{ order.created_at|date:'M j, Y' }}</span>
+                    <span class="bp-order-items"><i class="bi bi-box-seam"></i> {{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+                  </div>
+
+                  <div class="bp-order-row-side">
+                    <span class="bp-order-total">Rs. {{ order.total|floatformat:0 }}</span>
+
+                    <span class="bp-badge bp-payment-{{ order.payment_status|lower }}">{{ order.get_payment_status_display }}</span>
+
+                    <span class="bp-badge bp-order-status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+
+                    <a href="{% url 'order' order_number=order.order_number %}" class="btn bp-btn-outline bp-order-view-btn">View Order</a>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="bp-empty-state">
+                  <i class="bi bi-bag"></i>
+                  <h3>No Orders Yet</h3>
+                  <p>Once you place an order, it will show up here so you can track it easily.</p>
+                  <a href="{% url 'home' %}" class="btn bp-btn-primary">Start Shopping</a>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- ============ SAVED ADDRESSES ============ -->
+          <div class="bp-card" id="bpAddresses">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-geo-alt"></i> Saved Addresses</h2>
+              <button type="button" class="btn bp-edit-btn" id="bpAddAddressBtn" data-bs-toggle="modal" data-bs-target="#bpAddressModal">
+                <i class="bi bi-plus-lg"></i> Add New Address
+              </button>
+            </div>
+
+            <div class="bp-address-grid">
+              {% for address in addresses %}
+                <div class="bp-address-card {% if address.is_default %}is-default{% endif %}"
+                     data-address-id="{{ address.id }}"
+                     data-full-name="{{ address.full_name }}"
+                     data-phone="{{ address.phone }}"
+                     data-address-line1 ="{{ address.address_line_1 }}"
+                     data-address-line2 ="{{ address.address_line_2 }}"
+                     data-city="{{ address.city }}"
+                     data-postal-code="{{ address.postal_code }}"
+                     data-address-type="{{ address.address_type }}"
+                     data-is-default="{{ address.is_default|yesno:'true,false' }}">
+
+                  <div class="bp-address-card-top">
+                    <span class="bp-address-type-badge bp-address-type-{{ address.address_type }}">
+                      {% if address.address_type == 'home' %}<i class="bi bi-house-door"></i>{% elif address.address_type == 'office' %}<i class="bi bi-building"></i>{% elif address.address_type == 'business' %}<i class="bi bi-shop"></i>{% else %}<i class="bi bi-geo"></i>{% endif %}
+                      {{ address.get_address_type_display }}
+                    </span>
+                    {% if address.is_default %}
+                      <span class="bp-default-pill"><i class="bi bi-star-fill"></i> Default</span>
+                    {% endif %}
+                  </div>
+
+                  <h3 class="bp-address-name">{{ address.full_name }}</h3>
+                  <p class="bp-address-phone"><i class="bi bi-telephone"></i> {{ address.phone }}</p>
+                  <p class="bp-address-lines">
+                    {{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}<br>
+                    {{ address.city }}, {{ address.postal_code }}
+                  </p>
+
+                  <div class="bp-address-actions">
+                    <button type="button" class="bp-address-action-btn bp-view-address-btn" title="View address"><i class="bi bi-eye"></i></button>
+                    <button type="button" class="bp-address-action-btn bp-edit-address-btn" title="Edit address"><i class="bi bi-pencil"></i></button>
+                    {% if not address.is_default %}
+                      <button type="button" class="bp-address-action-btn bp-default-address-btn" title="Set as default"><i class="bi bi-star"></i></button>
+                    {% endif %}
+                    <button type="button" class="bp-address-action-btn bp-delete-address-btn is-danger" title="Remove address"><i class="bi bi-trash"></i></button>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="bp-empty-state bp-empty-state-full">
+                  <i class="bi bi-geo-alt"></i>
+                  <h3>No Saved Addresses</h3>
+                  <p>Add an address to make checkout quick and easy next time.</p>
+                  <button type="button" class="btn bp-btn-primary" data-bs-toggle="modal" data-bs-target="#bpAddressModal">Add Your First Address</button>
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if not addresses %}
+              <div class="bp-default-address-note">
+                <i class="bi bi-info-circle"></i> No default address selected.
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- ============ WISHLIST PREVIEW ============ -->
+          <div class="bp-card" id="bpWishlist">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-heart"></i> Wishlist Preview</h2>
+              <a href="{% url 'wishlist' %}" class="bp-view-all-link">View Full Wishlist <i class="bi bi-arrow-right"></i></a>
+            </div>
+
+            <div class="bp-wishlist-grid">
+              {% for item in wishlist_items %}
+                <div class="bp-wishlist-product-card" data-product-slug="{{ item.product.slug }}">
+
+                  <div class="bp-wishlist-product-image">
+
+                    {% with primary_image=item.product.primary_image %}
+                      {% if primary_image and primary_image.image %}
+                        <img
+                          src="{{ primary_image.image.url }}"
+                          alt="{{ primary_image.alt_text|default:item.product.name }}"
+                        >
+                      {% else %}
+                        <div class="product-image-placeholder">
+                          <i class="bi bi-image"></i>
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+
+                    {% if item.product.discount_percentage %}
+                      <span class="bp-discount-badge">
+                        -{{ item.product.discount_percentage }}%
+                      </span>
+                    {% endif %}
+
+                    <button
+                      type="button"
+                      class="bp-wishlist-remove-btn"
+                      title="Remove from wishlist"
+                      data-product-id="{{ item.product.id }}"
+                      data-url="{% url 'toggle_wishlist' product_slug=item.product.slug %}"
+                    >
+                      <i class="bi bi-heart-fill"></i>
+                    </button>
+
+                  </div>
+
+                  <div class="bp-wishlist-product-body">
+
+                    {% if item.product.brand %}
+                      <span class="bp-wishlist-brand">
+                        {{ item.product.brand.name }}
+                      </span>
+                    {% endif %}
+
+                    <h3 class="bp-wishlist-product-name">
+                      {{ item.product.name }}
+                    </h3>
+
+                    <div class="bp-wishlist-price-row">
+
+                      {% if item.product.discount_price %}
+                        <span class="bp-wishlist-price">
+                          Rs. {{ item.product.discount_price|floatformat:0 }}
+                        </span>
+
+                        <span class="bp-wishlist-original-price">
+                          Rs. {{ item.product.price|floatformat:0 }}
+                        </span>
+                      {% else %}
+                        <span class="bp-wishlist-price">
+                          Rs. {{ item.product.price|floatformat:0 }}
+                        </span>
+                      {% endif %}
+
+                    </div>
+
+                    <a
+                      href="{% url 'product' item.product.slug %}"
+                      class="btn bp-btn-outline bp-wishlist-view-btn"
+                    >
+                      View Product
+                    </a>
+
+                  </div>
+
+                </div>
+
+              {% empty %}
+
+                <div class="bp-empty-state bp-empty-state-full">
+                  <i class="bi bi-heart"></i>
+                  <h3>Your Wishlist is Empty</h3>
+                  <p>Save products you love and find them here later.</p>
+                  <a href="{% url 'home' %}" class="btn bp-btn-primary">Explore Products</a>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- ============ RECENT ACTIVITY ============ -->
+          <div class="bp-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-activity"></i> Recent Activity</h2>
+            </div>
+
+            <ul class="bp-activity-list">
+              {% for activity in activities %}
+                <li class="bp-activity-item">
+                  <span class="bp-activity-icon"><i class="bi {{ activity.icon|default:'bi-clock-history' }}"></i></span>
+                  <div class="bp-activity-body">
+                    <p class="bp-activity-desc">{{ activity.description }}</p>
+                    <time class="bp-activity-time">{{ activity.created_at|timesince }} ago</time>
+                  </div>
+                </li>
+              {% empty %}
+                <div class="bp-empty-state bp-empty-state-full">
+                  <i class="bi bi-activity"></i>
+                  <h3>No Activity Yet</h3>
+                  <p>Your account activity will appear here as you use MarketSphere.</p>
+                </div>
+              {% endfor %}
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ================= SIDEBAR COLUMN ================= -->
+        <div class="col-lg-4 col-12 bp-side-col">
+
+          <!-- ============ SECURITY & ACCOUNT ============ -->
+          <div class="bp-card" id="bpSecurity">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-shield-lock"></i> Security & Account</h2>
+            </div>
+
+            <ul class="bp-security-list">
+              <li class="bp-security-row">
+                <div class="bp-security-row-copy">
+                  <span class="bp-security-row-title"><i class="bi bi-key"></i> Password</span>
+                  <span class="bp-security-row-sub">Last changed {{ password_changed_at|timesince|default:'some time' }} ago</span>
+                </div>
+                <button type="button" class="btn bp-btn-outline bp-security-btn" data-bs-toggle="modal" data-bs-target="#bpChangePasswordModal">Change</button>
+              </li>
+
+              <li class="bp-security-row">
+                <div class="bp-security-row-copy">
+                  <span class="bp-security-row-title"><i class="bi bi-envelope-check"></i> Email Verification</span>
+                  <span class="bp-security-row-sub">
+                    {% if request.user.account_status == 'VERIFIED' %}Your email is verified{% else %}Verification needed{% endif %}
+                  </span>
+                </div>
+                {% if request.user.account_status == 'VERIFIED' %}
+                  <span class="bp-security-check"><i class="bi bi-check-circle-fill"></i></span>
+                {% else %}
+                  <form method="post" action="{% url 'resend_verification_email' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn bp-btn-outline bp-security-btn">Verify</button>
+                  </form>
+                {% endif %}
+              </li>
+
+              <li class="bp-security-row">
+                <div class="bp-security-row-copy">
+                  <span class="bp-security-row-title"><i class="bi bi-phone"></i> Phone Verification</span>
+                  <span class="bp-security-row-sub">{{ request.user.contact|default:'No phone on file' }}</span>
+                </div>
+                <button type="button" class="btn bp-btn-outline bp-security-btn" data-bp-toast-info="Phone verification isn't available yet.">Verify</button>
+              </li>
+
+              <li class="bp-security-row">
+                <div class="bp-security-row-copy">
+                  <span class="bp-security-row-title"><i class="bi bi-laptop"></i> Active Sessions</span>
+                  <span class="bp-security-row-sub">{{ active_sessions_count|default:'1' }} device currently signed in</span>
+                </div>
+                <button type="button" class="btn bp-btn-outline bp-security-btn" data-bs-toggle="modal" data-bs-target="#bpSessionsModal">Manage</button>
+              </li>
+
+              <li class="bp-security-row">
+                <div class="bp-security-row-copy">
+                  <span class="bp-security-row-title"><i class="bi bi-shield-plus"></i> Two-Factor Authentication</span>
+                  <span class="bp-security-row-sub">Add an extra layer of protection</span>
+                </div>
+                <label class="bp-toggle-switch" title="Two-factor authentication">
+                  <input type="checkbox" id="bp2faToggle">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ============ COMMUNICATION PREFERENCES ============ -->
+          <div class="bp-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-sliders"></i> Communication Preferences</h2>
+            </div>
+
+            <div class="bp-pref-group">
+              <div class="bp-pref-row">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title">Order Updates</span>
+                  <span class="bp-pref-sub">Shipping, delivery and status changes</span>
+                </div>
+                <label class="bp-toggle-switch">
+                  <input type="checkbox" checked data-pref="order_updates">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="bp-pref-row">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title">Promotional Emails</span>
+                  <span class="bp-pref-sub">Sales, offers and marketplace news</span>
+                </div>
+                <label class="bp-toggle-switch">
+                  <input type="checkbox" checked data-pref="promotional_emails">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="bp-pref-row">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title">Price Drop Alerts</span>
+                  <span class="bp-pref-sub">When a wishlist item gets cheaper</span>
+                </div>
+                <label class="bp-toggle-switch">
+                  <input type="checkbox" checked data-pref="price_drop_alerts">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="bp-pref-row">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title">Wishlist Alerts</span>
+                  <span class="bp-pref-sub">Low stock on saved products</span>
+                </div>
+                <label class="bp-toggle-switch">
+                  <input type="checkbox" data-pref="wishlist_alerts">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="bp-pref-row">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title">Review Reminders</span>
+                  <span class="bp-pref-sub">Reminders to review delivered items</span>
+                </div>
+                <label class="bp-toggle-switch">
+                  <input type="checkbox" data-pref="review_reminders">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="bp-pref-row">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title">Newsletter</span>
+                  <span class="bp-pref-sub">Occasional roundups from MarketSphere</span>
+                </div>
+                <label class="bp-toggle-switch">
+                  <input type="checkbox" data-pref="newsletter">
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="bp-pref-row bp-pref-row-system">
+                <div class="bp-pref-copy">
+                  <span class="bp-pref-title"><i class="bi bi-shield-exclamation"></i> Security Alerts</span>
+                  <span class="bp-pref-sub">Sign-ins and account changes — always on</span>
+                </div>
+                <label class="bp-toggle-switch is-locked">
+                  <input type="checkbox" checked disabled>
+                  <span class="bp-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="bp-pref-channels">
+              <span class="bp-pref-channels-label">Preferred channels</span>
+              <div class="bp-pref-channel-chips">
+                <button type="button" class="bp-channel-chip is-active" data-channel="email"><i class="bi bi-envelope"></i> Email</button>
+                <button type="button" class="bp-channel-chip is-active" data-channel="in_app"><i class="bi bi-app-indicator"></i> In-App</button>
+                <button type="button" class="bp-channel-chip" data-channel="push"><i class="bi bi-phone-vibrate"></i> Push</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn bp-btn-primary bp-pref-save-btn" id="bpSavePrefsBtn">Save Preferences</button>
+          </div>
+
+          <!-- ============ NOTIFICATIONS PREVIEW ============ -->
+          <div class="bp-card" id="bpNotifications">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-bell"></i> Notifications</h2>
+              {% if notifications_unread_count or notifications %}
+                <span class="bp-unread-pill">{{ notifications_unread_count|default:'3' }} unread</span>
+              {% endif %}
+            </div>
+
+            <ul class="bp-notification-list">
+              {% for notification in notifications %}
+                <li class="bp-notification-row {% if not notification.is_read %}is-unread{% endif %}">
+                  <span class="bp-notification-icon"><i class="bi {{ notification.icon|default:'bi-info-circle' }}"></i></span>
+                  <div class="bp-notification-copy">
+                    <p class="bp-notification-title">{{ notification.title }}</p>
+                    <p class="bp-notification-message">{{ notification.message }}</p>
+                    <time>{{ notification.created_at|timesince }} ago</time>
+                  </div>
+                </li>
+              {% empty %}
+                <li class="bp-notification-row is-unread">
+                  <span class="bp-notification-icon"><i class="bi bi-truck"></i></span>
+                  <div class="bp-notification-copy">
+                    <p class="bp-notification-title">Order delivered</p>
+                    <p class="bp-notification-message">Your order has been delivered.</p>
+                    <time>2 hours ago</time>
+                  </div>
+                </li>
+                <li class="bp-notification-row is-unread">
+                  <span class="bp-notification-icon"><i class="bi bi-heart"></i></span>
+                  <div class="bp-notification-copy">
+                    <p class="bp-notification-title">Price drop</p>
+                    <p class="bp-notification-message">Price dropped on an item in your wishlist.</p>
+                    <time>1 day ago</time>
+                  </div>
+                </li>
+                <li class="bp-notification-row">
+                  <span class="bp-notification-icon"><i class="bi bi-shop"></i></span>
+                  <div class="bp-notification-copy">
+                    <p class="bp-notification-title">Seller application approved</p>
+                    <p class="bp-notification-message">Your seller application was approved.</p>
+                    <time>3 days ago</time>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+
+            <a href="#" class="bp-view-all-link bp-view-all-block">View Notifications <i class="bi bi-arrow-right"></i></a>
+          </div>
+
+          <!-- ============ HELP & SUPPORT ============ -->
+          <div class="bp-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title"><i class="bi bi-life-preserver"></i> Help & Support</h2>
+            </div>
+
+            <div class="bp-support-links">
+              <a href="#" class="bp-support-link"><i class="bi bi-question-circle"></i> Help Center</a>
+              <a href="#" class="bp-support-link"><i class="bi bi-headset"></i> Contact Support</a>
+              <a href="#" class="bp-support-link"><i class="bi bi-ticket-detailed"></i> My Support Requests</a>
+              <a href="#" class="bp-support-link"><i class="bi bi-flag"></i> Report a Problem</a>
+              <a href="#" class="bp-support-link"><i class="bi bi-patch-question"></i> FAQ</a>
+            </div>
+          </div>
+
+          <!-- ============ DANGER ZONE ============ -->
+          <div class="bp-card bp-danger-card">
+            <div class="bp-card-head">
+              <h2 class="bp-card-title bp-danger-title"><i class="bi bi-exclamation-octagon"></i> Account Management</h2>
+            </div>
+
+            <div class="bp-danger-row">
+              <div class="bp-danger-copy">
+                <span class="bp-danger-row-title">Deactivate Account</span>
+                <span class="bp-danger-row-sub">Temporarily hide your account. You can reactivate anytime by logging in.</span>
+              </div>
+              <button type="button" class="btn bp-btn-danger-outline" data-bs-toggle="modal" data-bs-target="#bpDeactivateModal">Deactivate</button>
+            </div>
+
+            <div class="bp-danger-row">
+              <div class="bp-danger-copy">
+                <span class="bp-danger-row-title">Delete Account</span>
+                <span class="bp-danger-row-sub">Permanently remove your account and associated data.</span>
+              </div>
+              <button type="button" class="btn bp-btn-danger" data-bs-toggle="modal" data-bs-target="#bpDeleteAccountModal">Delete</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODAL: EDIT PROFILE ================= -->
+  <div class="modal fade bp-modal" id="bpEditProfileModal" tabindex="-1" aria-labelledby="bpEditProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpEditProfileModalLabel"><i class="bi bi-pencil-square"></i> Edit Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="bp-avatar-editor">
+            <div class="bp-avatar-editor-preview" id="bpAvatarPreviewWrap">
+              {% if request.user.profile_image_url %}
+                <img src="{{ request.user.profile_image_url }}" alt="Current profile photo" id="bpAvatarPreviewImg">
+              {% else %}
+                <span class="bp-avatar-editor-fallback" id="bpAvatarPreviewFallback">
+                  {{ request.user.first_name|slice:':1'|upper|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}
+                </span>
+                <img src="" alt="Current profile photo" id="bpAvatarPreviewImg" hidden>
+              {% endif %}
+            </div>
+
+            <div class="bp-avatar-editor-actions">
+              <label for="bpAvatarUploadInput" class="btn bp-btn-outline bp-avatar-upload-label">
+                <i class="bi bi-upload"></i> Upload Photo
+              </label>
+              <input type="file" id="bpAvatarUploadInput" accept="image/png,image/jpeg,image/webp" hidden>
+              <button type="button" class="btn bp-btn-outline-danger" id="bpAvatarRemoveBtn">
+                <i class="bi bi-trash"></i> Remove
+              </button>
+            </div>
+            <p class="bp-avatar-hint">JPG, PNG or WEBP. Max 5 MB.</p>
+          </div>
+
+          <div class="row g-3 mt-1">
+            <div class="col-md-6 col-12">
+              <label for="bpFirstNameInput" class="form-label">First Name</label>
+              <input type="text" class="form-control" id="bpFirstNameInput" value="{{ request.user.first_name|default:'' }}" placeholder="e.g. Ayesha" required>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpLastNameInput" class="form-label">Last Name</label>
+              <input type="text" class="form-control" id="bpLastNameInput" value="{{ request.user.last_name|default:'' }}" placeholder="e.g. Khan" required>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpUsernameInput" class="form-label">Username</label>
+              <input type="text" class="form-control" id="bpUsernameInput" value="{{ request.user.username|default:'' }}" required>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpPhoneInput" class="form-label">Phone Number</label>
+              <input type="text" class="form-control" id="bpPhoneInput" value="{{ request.user.contact|default:'' }}" placeholder="+92 300 1234567">
+            </div>
+
+            <div class="col-12">
+              <label for="bpEmailInput" class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="bpEmailInput" value="{{ request.user.email|default:'' }}" placeholder="you@example.com" required>
+              <span class="bp-field-hint"><i class="bi bi-info-circle"></i> Changing your email may require re-verification.</span>
+            </div>
+          </div>
+
+          {% comment %} <p class="bp-modal-note">
+            <i class="bi bi-info-circle"></i> Saving profile changes isn't connected to the backend yet — this is a preview of the experience.
+          </p> {% endcomment %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn bp-btn-primary" id="bpSaveProfileBtn" data-url="{% url 'update_my_profile' %}">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ADD / EDIT ADDRESS ================= -->
+  <div class="modal fade bp-modal" id="bpAddressModal" tabindex="-1" aria-labelledby="bpAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpAddressModalLabel"><i class="bi bi-geo-alt"></i> <span id="bpAddressModalTitle">Add New Address</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="bpAddressIdInput" value="">
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="bpAddressTypeInput" class="form-label">Address Type</label>
+              <select class="form-select" id="bpAddressTypeInput">
+                <option value="home">Home</option>
+                <option value="office">Office</option>
+                <option value="business">Business</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpAddrFullNameInput" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="bpAddrFullNameInput" placeholder="e.g. Ayesha Khan" required>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpAddrPhoneInput" class="form-label">Phone Number</label>
+              <input type="text" class="form-control" id="bpAddrPhoneInput" placeholder="+92 300 1234567" required>
+            </div>
+
+            <div class="col-12">
+              <label for="bpAddrLine1Input" class="form-label">Address Line 1</label>
+              <input type="text" class="form-control" id="bpAddrLine1Input" placeholder="House No. 123, Street 4" required>
+            </div>
+
+            <div class="col-12">
+              <label for="bpAddrLine2Input" class="form-label">Address Line 2 <span class="bp-optional-tag">(optional)</span></label>
+              <input type="text" class="form-control" id="bpAddrLine2Input" placeholder="Apartment, floor, landmark">
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpAddrCityInput" class="form-label">City</label>
+              <input type="text" class="form-control" id="bpAddrCityInput" placeholder="e.g. Lahore" required>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label for="bpAddrPostalInput" class="form-label">Postal Code</label>
+              <input type="text" class="form-control" id="bpAddrPostalInput" placeholder="e.g. 54000" required>
+            </div>
+
+            <div class="col-12">
+              <label class="bp-checkbox-row">
+                <input type="checkbox" id="bpAddrDefaultInput">
+                <span>Set as my default address</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn bp-btn-primary" id="bpSaveAddressBtn"   data-save-url="{% url 'save-address' %}" data-update-url="{% url 'update_user_address' %}">Save Address</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: VIEW ADDRESS ================= -->
+  <div class="modal fade bp-modal" id="bpViewAddressModal" tabindex="-1" aria-labelledby="bpViewAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpViewAddressModalLabel"><i class="bi bi-geo-alt"></i> Address Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="bp-view-address-grid" id="bpViewAddressBody">
+            <!-- populated by JS from the clicked address card's data attributes -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DELETE ADDRESS CONFIRM ================= -->
+  <div class="modal fade bp-modal bp-modal-confirm" id="bpDeleteAddressModal" tabindex="-1" aria-labelledby="bpDeleteAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpDeleteAddressModalLabel"><i class="bi bi-exclamation-triangle"></i> Remove Address</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>Are you sure you want to remove this address? This action cannot be undone.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn bp-btn-danger" id="bpConfirmDeleteAddressBtn" data-url="{% url 'delete_user_address' %}">Remove Address</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CHANGE PASSWORD ================= -->
+  <div class="modal fade bp-modal" id="bpChangePasswordModal" tabindex="-1" aria-labelledby="bpChangePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpChangePasswordModalLabel"><i class="bi bi-key"></i> Change Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="bpCurrentPasswordInput" class="form-label">Current Password</label>
+            <div class="bp-password-field">
+              <input type="password" class="form-control" id="bpCurrentPasswordInput" required>
+              <button type="button" class="bp-password-toggle" data-target="bpCurrentPasswordInput" aria-label="Show password"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="bpNewPasswordInput" class="form-label">New Password</label>
+            <div class="bp-password-field">
+              <input type="password" class="form-control" id="bpNewPasswordInput" required>
+              <button type="button" class="bp-password-toggle" data-target="bpNewPasswordInput" aria-label="Show password"><i class="bi bi-eye"></i></button>
+            </div>
+            <div class="bp-password-strength-track">
+              <div class="bp-password-strength-fill" id="bpPasswordStrengthFill"></div>
+            </div>
+            <span class="bp-password-strength-label" id="bpPasswordStrengthLabel">Password strength</span>
+          </div>
+
+          <div class="mb-2">
+            <label for="bpConfirmPasswordInput" class="form-label">Confirm New Password</label>
+            <div class="bp-password-field">
+              <input type="password" class="form-control" id="bpConfirmPasswordInput" required>
+              <button type="button" class="bp-password-toggle" data-target="bpConfirmPasswordInput" aria-label="Show password"><i class="bi bi-eye"></i></button>
+            </div>
+            <span class="bp-field-error" id="bpPasswordMatchError" hidden>Passwords do not match.</span>
+          </div>
+
+          <ul class="bp-password-requirements" id="bpPasswordRequirements">
+            <li data-rule="length"><i class="bi bi-circle"></i> At least 8 characters</li>
+            <li data-rule="upper"><i class="bi bi-circle"></i> One uppercase letter</li>
+            <li data-rule="lower"><i class="bi bi-circle"></i> One lowercase letter</li>
+            <li data-rule="number"><i class="bi bi-circle"></i> One number</li>
+            <li data-rule="special"><i class="bi bi-circle"></i> One special character</li>
+          </ul>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn bp-btn-primary" id="bpSavePasswordBtn" data-url="{% url "change_password" %}">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: MANAGE SESSIONS ================= -->
+  <div class="modal fade bp-modal" id="bpSessionsModal" tabindex="-1" aria-labelledby="bpSessionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpSessionsModalLabel"><i class="bi bi-laptop"></i> Active Sessions</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <ul class="bp-session-list">
+            <li class="bp-session-row">
+              <span class="bp-session-icon"><i class="bi bi-laptop"></i></span>
+              <div class="bp-session-copy">
+                <span class="bp-session-device">This Device — Chrome on Windows</span>
+                <span class="bp-session-meta">Khanewal, Punjab • Active now</span>
+              </div>
+              <span class="bp-session-current">Current</span>
+            </li>
+            <li class="bp-session-row">
+              <span class="bp-session-icon"><i class="bi bi-phone"></i></span>
+              <div class="bp-session-copy">
+                <span class="bp-session-device">MarketSphere App — Android</span>
+                <span class="bp-session-meta">Lahore, Punjab • 2 days ago</span>
+              </div>
+              <button type="button" class="btn bp-btn-outline-danger bp-session-revoke-btn">Sign Out</button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DEACTIVATE ACCOUNT ================= -->
+  <div class="modal fade bp-modal bp-modal-confirm" id="bpDeactivateModal" tabindex="-1" aria-labelledby="bpDeactivateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpDeactivateModalLabel"><i class="bi bi-power"></i> Deactivate Account</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>Your account and store history will be hidden from other buyers. You can reactivate at any time simply by logging back in.</p>
+          <p class="bp-modal-note"><i class="bi bi-info-circle"></i> This does not delete any of your data.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn bp-btn-danger-outline" id="bpConfirmDeactivateBtn">Deactivate My Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DELETE ACCOUNT ================= -->
+  <div class="modal fade bp-modal bp-modal-confirm" id="bpDeleteAccountModal" tabindex="-1" aria-labelledby="bpDeleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bpDeleteAccountModalLabel"><i class="bi bi-exclamation-octagon"></i> Delete Account</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="bp-danger-warning"><i class="bi bi-exclamation-triangle-fill"></i> This action may permanently remove your account and associated data. This cannot be undone.</p>
+
+          <div class="mb-3">
+            <label for="bpDeleteConfirmInput" class="form-label">Type <strong>DELETE</strong> to confirm</label>
+            <input type="text" class="form-control" id="bpDeleteConfirmInput" placeholder="DELETE" autocomplete="off">
+          </div>
+
+          <label class="bp-checkbox-row">
+            <input type="checkbox" id="bpDeleteAckCheckbox">
+            <span>I understand this action is permanent and cannot be reversed.</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn bp-btn-danger" id="bpConfirmDeleteAccountBtn" disabled>Delete My Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="bp-toast-container" id="bpToastContainer" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'profile.js' %}"></script>
+{% endblock %}

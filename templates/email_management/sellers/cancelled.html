@@ -1,0 +1,56 @@
+{% extends "email_management/base.html" %}
+
+{% block title %}Order Cancelled — MarketSphere{% endblock %}
+
+{% block content %}
+
+<h1>Order Cancelled</h1>
+
+<p>Hello {{ recipient_name }},</p>
+
+<p>
+    An order for your store has been cancelled.
+</p>
+
+<div class="info-card">
+    <div class="info-row">
+        <span>Order Number</span>
+        <strong>#{{ order.order_number }}</strong>
+    </div>
+
+
+<div class="info-row">
+    <span>Customer</span>
+    <strong>{{ order.shipping_name }}</strong>
+</div>
+
+<div class="info-row">
+    <span>Order Total</span>
+    <strong>{{ order.total }}</strong>
+</div>
+
+{% if cancellation_reason %}
+<div class="info-row">
+    <span>Cancellation Reason</span>
+    <strong>{{ cancellation_reason }}</strong>
+</div>
+{% endif %}
+
+
+</div>
+
+<p>
+    Please review the order details and take any necessary action regarding
+    inventory, fulfillment, or other store operations.
+</p>
+
+<div class="button-container">
+    <a href="{{ order_url }}" class="button">
+        View Order
+    </a>
+</div>
+
+<p>
+    Thank you for selling with MarketSphere.
+</p>
+{% endblock %}
