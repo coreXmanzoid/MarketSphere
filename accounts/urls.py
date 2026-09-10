@@ -7,6 +7,34 @@ urlpatterns = [
     path("seller-signup/", views.seller_signup_view, name="seller-signup"),
     path("seller-account/", views.seller_account, name="seller-account"),
     path("profile/", views.profile_view, name="profile"),
+    path("profile/2fa/", views.profile_2fa_redirect, name="profile_2fa_redirect"),
+    # Keep allauth's named MFA endpoints on MarketSphere's custom views. These
+    # paths must appear before allauth.urls in config.urls.
+    path(
+        "2fa/authenticate/",
+        views.MarketSphereMFAAuthenticateView.as_view(),
+        name="mfa_authenticate",
+    ),
+    path(
+        "2fa/reauthenticate/",
+        views.MarketSphereMFAReauthenticateView.as_view(),
+        name="mfa_reauthenticate",
+    ),
+    path(
+        "profile/2fa/activate/",
+        views.ProfileActivateTOTPView.as_view(),
+        name="profile_activate_totp",
+    ),
+    path(
+        "profile/2fa/deactivate/",
+        views.ProfileDeactivateTOTPView.as_view(),
+        name="profile_deactivate_totp",
+    ),
+    path(
+        "profile/2fa/recovery/",
+        views.ProfileViewRecoveryCodesView.as_view(),
+        name="profile_2fa_recovery",
+    ),
     path(
         "profile/update/",
         views.update_my_profile_view,
@@ -74,6 +102,11 @@ urlpatterns = [
         "update-seller-profile/",
         views.update_seller_profile,
         name="update_seller_profile",
+    ),
+    path(
+        "preferences/update/",
+        views.update_user_preferences,
+        name="update_user_preferences",
     ),
     path(
         "<int:seller_id>/update-store/",

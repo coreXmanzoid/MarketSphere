@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify your sign in • MarketSphere{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'profile_2fa.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="bp2fa-section">
+    <div class="container">
+      <div class="bp2fa-wrap">
+        <div class="bp2fa-card">
+          <div class="bp2fa-card-icon"><i class="bi bi-shield-lock"></i></div>
+          <h1 class="bp2fa-title">Verify your sign in</h1>
+          <p class="bp2fa-subtitle">Enter the 6-digit code from your authenticator app to continue.</p>
+
+          {% if form.non_field_errors %}
+            <div class="bp2fa-alert bp2fa-alert-error"><i class="bi bi-exclamation-triangle-fill"></i><div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div></div>
+          {% endif %}
+
+          <form method="post" class="bp2fa-form">
+            {% csrf_token %}
+            <div class="bp2fa-code-field {% if form.code.errors %}has-error{% endif %}">
+              <label for="{{ form.code.id_for_label }}" class="bp2fa-code-label">Authenticator or recovery code</label>
+              <input type="text" name="{{ form.code.html_name }}" id="{{ form.code.id_for_label }}" class="bp2fa-code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="8" autofocus required />
+              {% for error in form.code.errors %}<p class="bp2fa-field-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="bp2fa-actions">
+              <button type="submit" class="btn bp2fa-btn-primary"><i class="bi bi-check2-circle bg-transparent"></i> Verify</button>
+            </div>
+          </form>
+
+          {% if request.user.is_authenticated %}
+            <div class="bp2fa-actions">
+              <a href="{% url 'mfa_reauthenticate' %}?next={{ request.get_full_path|urlencode }}" class="btn bp2fa-btn-secondary">
+                <i class="bi bi-shield-check"></i> Reauthenticate another way
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

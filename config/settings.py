@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "allauth.mfa",
 
     "products",
     "orders",
@@ -55,7 +56,6 @@ INSTALLED_APPS = [
     "admin_panel",
     "notifications",
 ]
-
 
 # -------------------------------------------------------------------
 # MIDDLEWARE
@@ -193,6 +193,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
@@ -243,3 +244,22 @@ MEDIA_ROOT = BASE_DIR / "media"
 # -------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# -------------------------------------------------------------------
+# MULTI-FACTOR AUTHENTICATION
+# -------------------------------------------------------------------
+
+MFA_SUPPORTED_TYPES = [
+    "totp",
+    "recovery_codes",
+]
+
+MFA_TOTP_ISSUER = "MarketSphere"
+MFA_TOTP_DIGITS = 6
+MFA_TOTP_PERIOD = 30
+MFA_TOTP_TOLERANCE = 0
+
+MFA_RECOVERY_CODE_COUNT = 10
+MFA_RECOVERY_CODE_DIGITS = 8
+MFA_RECOVERY_CODES_SHOW_ONCE = True

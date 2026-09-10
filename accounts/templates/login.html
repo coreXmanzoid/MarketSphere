@@ -15,15 +15,22 @@
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                            </div>
+                        {% endif %}
                         <div class="mb-3">
                             <label for="identifier" class="form-label">Username/Email</label>
                             <input type="text" class="form-control" id="identifier" name="identifier"
-                                placeholder="Cristy/cristy@gmail.com" required>
+                                placeholder="Cristy/cristy@gmail.com" value="{{ form.login.value|default:'' }}" required>
+                            {% for error in form.login.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password"
                                 placeholder="3qi(l_kiA&b" required>
+                            {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                         </div>
 
                         <div class="d-flex">

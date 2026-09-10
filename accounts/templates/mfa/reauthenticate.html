@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirm your identity • MarketSphere{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'profile_2fa.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="bp2fa-section">
+    <div class="container">
+      <div class="bp2fa-wrap">
+        <div class="bp2fa-card">
+          <div class="bp2fa-card-icon"><i class="bi bi-shield-check"></i></div>
+          <h1 class="bp2fa-title">Confirm your identity</h1>
+          <p class="bp2fa-subtitle">For your security, enter your password before changing two-factor authentication.</p>
+          {% if form.non_field_errors %}<div class="bp2fa-alert bp2fa-alert-error"><i class="bi bi-exclamation-triangle-fill"></i><div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div></div>{% endif %}
+          <form method="post" class="bp2fa-form">
+            {% csrf_token %}
+            <div class="bp2fa-code-field {% if form.password.errors %}has-error{% endif %}">
+              <label for="{{ form.password.id_for_label }}" class="bp2fa-code-label">Password</label>
+              <input type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}" class="form-control" autocomplete="current-password" autofocus required />
+              {% for error in form.password.errors %}<p class="bp2fa-field-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="bp2fa-actions"><button type="submit" class="btn bp2fa-btn-primary">Continue</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

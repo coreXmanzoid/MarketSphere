@@ -1,0 +1,847 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Help & Support • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'help_support.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="hs-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Help &amp; Support</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ================= HERO / SEARCH ================= -->
+  <section class="hs-hero-section">
+    <div class="container">
+      <div class="hs-hero-inner">
+        <span class="section-label"><i class="bi bi-life-preserver"></i> Help &amp; Support</span>
+        <h1 class="hs-hero-title">How can we help you today?</h1>
+        <p class="hs-hero-subtitle">Find answers, get help with your orders, or contact our support team.</p>
+
+        <div class="hs-search-box">
+          <i class="bi bi-search hs-search-icon" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="hsSearchInput"
+            class="hs-search-input"
+            placeholder="Search for help with orders, payments, returns..."
+            autocomplete="off"
+            aria-label="Search Help & Support"
+          />
+          <button type="button" class="hs-search-clear d-none" id="hsSearchClear" aria-label="Clear search">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="hs-hero-tags">
+          <span class="hs-hero-tags-label">Popular:</span>
+          <button type="button" class="hs-tag-btn" data-hs-quick-search="track my order">Track my order</button>
+          <button type="button" class="hs-tag-btn" data-hs-quick-search="refund">Refund status</button>
+          <button type="button" class="hs-tag-btn" data-hs-quick-search="password">Reset password</button>
+          <button type="button" class="hs-tag-btn" data-hs-quick-search="cancel order">Cancel an order</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SEARCH RESULTS PANEL (hidden until user types) ================= -->
+  <section class="hs-section hs-search-results-section d-none" id="hsSearchResultsSection">
+    <div class="container">
+      <div class="hs-section-head">
+        <h2 class="hs-section-title">Search Results</h2>
+        <p class="hs-section-subtitle" id="hsSearchResultsMeta">Showing results for "<span id="hsSearchQueryLabel"></span>"</p>
+      </div>
+
+      <div class="hs-search-results-list" id="hsSearchResultsList"></div>
+
+      <!-- No results empty state -->
+      <div class="hs-empty-state d-none" id="hsNoResultsState">
+        <div class="hs-empty-icon"><i class="bi bi-search"></i></div>
+        <h3 class="hs-empty-title">No results found</h3>
+        <p class="hs-empty-desc">We couldn't find anything matching your search. Try a different term, or reach out to our team directly.</p>
+        <button type="button" class="btn btn-hero-primary hs-empty-btn" data-bs-toggle="modal" data-bs-target="#hsContactModal">
+          <i class="bi bi-headset"></i> Contact Support
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN HELP CONTENT (hidden while searching) ================= -->
+  <div id="hsMainContent">
+
+    <!-- ================= QUICK HELP ================= -->
+    <section class="hs-section">
+      <div class="container">
+        <div class="hs-section-head">
+          <h2 class="hs-section-title">Quick Help</h2>
+          <p class="hs-section-subtitle">Jump straight to the topics buyers ask about most.</p>
+        </div>
+
+        <div class="hs-quick-grid">
+          <a href="#hsTopicOrders" class="hs-quick-card">
+            <span class="hs-quick-icon"><i class="bi bi-truck"></i></span>
+            <span class="hs-quick-body">
+              <span class="hs-quick-title">Orders &amp; Delivery</span>
+              <span class="hs-quick-desc">Track orders, delivery status, estimated delivery, cancelled orders.</span>
+            </span>
+            <i class="bi bi-chevron-right hs-quick-arrow"></i>
+          </a>
+
+          <a href="#hsTopicReturns" class="hs-quick-card">
+            <span class="hs-quick-icon"><i class="bi bi-arrow-return-left"></i></span>
+            <span class="hs-quick-body">
+              <span class="hs-quick-title">Returns &amp; Refunds</span>
+              <span class="hs-quick-desc">Return eligibility, refund status, damaged products.</span>
+            </span>
+            <i class="bi bi-chevron-right hs-quick-arrow"></i>
+          </a>
+
+          <a href="#hsTopicPayments" class="hs-quick-card">
+            <span class="hs-quick-icon"><i class="bi bi-credit-card"></i></span>
+            <span class="hs-quick-body">
+              <span class="hs-quick-title">Payments</span>
+              <span class="hs-quick-desc">Payment methods, failed payments, payment status.</span>
+            </span>
+            <i class="bi bi-chevron-right hs-quick-arrow"></i>
+          </a>
+
+          <a href="#hsTopicAccount" class="hs-quick-card">
+            <span class="hs-quick-icon"><i class="bi bi-shield-check"></i></span>
+            <span class="hs-quick-body">
+              <span class="hs-quick-title">Account &amp; Security</span>
+              <span class="hs-quick-desc">Password, email, verification, two-factor authentication.</span>
+            </span>
+            <i class="bi bi-chevron-right hs-quick-arrow"></i>
+          </a>
+
+          <a href="#hsTopicSellers" class="hs-quick-card">
+            <span class="hs-quick-icon"><i class="bi bi-shop"></i></span>
+            <span class="hs-quick-body">
+              <span class="hs-quick-title">Products &amp; Sellers</span>
+              <span class="hs-quick-desc">Product issues, seller information, product availability.</span>
+            </span>
+            <i class="bi bi-chevron-right hs-quick-arrow"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BROWSE HELP TOPICS ================= -->
+    <section class="hs-section hs-section-alt">
+      <div class="container">
+        <div class="hs-section-head">
+          <h2 class="hs-section-title">Browse Help Topics</h2>
+          <p class="hs-section-subtitle">Explore help articles organized by category.</p>
+        </div>
+
+        <div class="hs-topics-grid" id="hsTopicsGrid">
+
+          <a href="#" class="hs-topic-card" id="hsTopicOrders" data-hs-search-text="orders tracking cancellations order status delivery questions">
+            <span class="hs-topic-icon"><i class="bi bi-box-seam"></i></span>
+            <span class="hs-topic-name">Orders</span>
+            <span class="hs-topic-desc">Tracking, cancellations, order status and delivery questions.</span>
+            <span class="hs-topic-count">12 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" data-hs-search-text="shipping delivery estimated delivery courier tracking number">
+            <span class="hs-topic-icon"><i class="bi bi-truck"></i></span>
+            <span class="hs-topic-name">Shipping &amp; Delivery</span>
+            <span class="hs-topic-desc">Delivery timelines, couriers, and shipment tracking.</span>
+            <span class="hs-topic-count">8 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" id="hsTopicReturns" data-hs-search-text="returns refunds exchange damaged product refund status">
+            <span class="hs-topic-icon"><i class="bi bi-arrow-return-left"></i></span>
+            <span class="hs-topic-name">Returns &amp; Refunds</span>
+            <span class="hs-topic-desc">Eligibility, timelines, and refund status.</span>
+            <span class="hs-topic-count">10 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" id="hsTopicPayments" data-hs-search-text="payments failed payment payment methods billing">
+            <span class="hs-topic-icon"><i class="bi bi-credit-card"></i></span>
+            <span class="hs-topic-name">Payments</span>
+            <span class="hs-topic-desc">Payment methods, failed transactions, and billing.</span>
+            <span class="hs-topic-count">7 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" id="hsTopicAccount" data-hs-search-text="account profile password email verification two factor security">
+            <span class="hs-topic-icon"><i class="bi bi-person-gear"></i></span>
+            <span class="hs-topic-name">Account &amp; Profile</span>
+            <span class="hs-topic-desc">Login, password resets, and profile details.</span>
+            <span class="hs-topic-count">9 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" data-hs-search-text="cart wishlist saved items checkout">
+            <span class="hs-topic-icon"><i class="bi bi-heart"></i></span>
+            <span class="hs-topic-name">Cart &amp; Wishlist</span>
+            <span class="hs-topic-desc">Saved items, cart issues, and checkout help.</span>
+            <span class="hs-topic-count">5 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" data-hs-search-text="products availability description sizing quality">
+            <span class="hs-topic-icon"><i class="bi bi-box"></i></span>
+            <span class="hs-topic-name">Products</span>
+            <span class="hs-topic-desc">Product details, availability, and quality concerns.</span>
+            <span class="hs-topic-count">6 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" id="hsTopicSellers" data-hs-search-text="sellers seller store contact seller marketplace">
+            <span class="hs-topic-icon"><i class="bi bi-shop"></i></span>
+            <span class="hs-topic-name">Sellers</span>
+            <span class="hs-topic-desc">Seller information, contacting a store, and disputes.</span>
+            <span class="hs-topic-count">6 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" data-hs-search-text="reviews ratings product feedback">
+            <span class="hs-topic-icon"><i class="bi bi-star"></i></span>
+            <span class="hs-topic-name">Reviews</span>
+            <span class="hs-topic-desc">Writing, editing, and reporting reviews.</span>
+            <span class="hs-topic-count">4 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" data-hs-search-text="notifications alerts email preferences">
+            <span class="hs-topic-icon"><i class="bi bi-bell"></i></span>
+            <span class="hs-topic-name">Notifications</span>
+            <span class="hs-topic-desc">Managing alerts and notification preferences.</span>
+            <span class="hs-topic-count">3 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-topic-card" data-hs-search-text="other general questions miscellaneous">
+            <span class="hs-topic-icon"><i class="bi bi-three-dots"></i></span>
+            <span class="hs-topic-name">Other</span>
+            <span class="hs-topic-desc">Anything else you'd like to ask us about.</span>
+            <span class="hs-topic-count">5 articles</span>
+            <i class="bi bi-chevron-right hs-topic-arrow"></i>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= POPULAR HELP / ARTICLES ================= -->
+    <section class="hs-section">
+      <div class="container">
+        <div class="hs-section-head">
+          <h2 class="hs-section-title">Popular Help</h2>
+          <p class="hs-section-subtitle">The most helpful articles, picked from real customer questions.</p>
+        </div>
+
+        <div class="hs-articles-list" id="hsArticlesList">
+
+          <a href="#" class="hs-article-row" data-hs-search-text="how can i track my order tracking">
+            <span class="hs-article-icon"><i class="bi bi-geo-alt"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">How can I track my order?</span>
+              <span class="hs-article-desc">Find your tracking number and see live delivery status.</span>
+            </span>
+            <span class="hs-article-tag">Orders</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="how do i cancel an order cancellation">
+            <span class="hs-article-icon"><i class="bi bi-x-circle"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">How do I cancel an order?</span>
+              <span class="hs-article-desc">Cancel eligible orders before they're shipped.</span>
+            </span>
+            <span class="hs-article-tag">Orders</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="how do i request a return returns">
+            <span class="hs-article-icon"><i class="bi bi-arrow-return-left"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">How do I request a return?</span>
+              <span class="hs-article-desc">Start a return for eligible items within the return window.</span>
+            </span>
+            <span class="hs-article-tag">Returns</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="when will i receive my refund refund timeline">
+            <span class="hs-article-icon"><i class="bi bi-cash-coin"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">When will I receive my refund?</span>
+              <span class="hs-article-desc">Typical refund timelines by payment method.</span>
+            </span>
+            <span class="hs-article-tag">Refunds</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="what should i do if my order hasn't arrived delayed">
+            <span class="hs-article-icon"><i class="bi bi-hourglass-split"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">What should I do if my order hasn't arrived?</span>
+              <span class="hs-article-desc">Steps to take when a delivery is running late.</span>
+            </span>
+            <span class="hs-article-tag">Delivery</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="how can i change my account information profile">
+            <span class="hs-article-icon"><i class="bi bi-person-lines-fill"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">How can I change my account information?</span>
+              <span class="hs-article-desc">Update your name, email, phone number, and address.</span>
+            </span>
+            <span class="hs-article-tag">Account</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="how do i reset my password">
+            <span class="hs-article-icon"><i class="bi bi-key"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">How do I reset my password?</span>
+              <span class="hs-article-desc">Recover access to your account in a few steps.</span>
+            </span>
+            <span class="hs-article-tag">Security</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+          <a href="#" class="hs-article-row" data-hs-search-text="how does wishlist work">
+            <span class="hs-article-icon"><i class="bi bi-heart"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">How does the wishlist work?</span>
+              <span class="hs-article-desc">Save items for later and get notified about price drops.</span>
+            </span>
+            <span class="hs-article-tag">Wishlist</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FAQ ================= -->
+    <section class="hs-section hs-section-alt" id="hsFaqSection">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4 col-12">
+            <div class="hs-faq-intro">
+              <span class="section-label"><i class="bi bi-patch-question"></i> FAQ</span>
+              <h2 class="hs-section-title mb-2">Frequently Asked Questions</h2>
+              <p class="hs-section-subtitle">Quick answers to the questions buyers ask us the most.</p>
+
+              <p class="hs-faq-still-need">
+                Still need help?
+                <a href="#" data-bs-toggle="modal" data-bs-target="#hsContactModal">Contact our support team</a>
+                directly.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-lg-8 col-12">
+            <div class="hs-accordion" id="hsFaqAccordion">
+
+              <div class="hs-accordion-item" data-hs-search-text="how can i track my order">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq1">
+                  <span>How can I track my order?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq1">
+                  <p>Go to <strong>My Orders</strong> and open the order you'd like to track. You'll see the current status, courier details, and tracking number if one is available.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="can i cancel my order">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq2">
+                  <span>Can I cancel my order?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq2">
+                  <p>You can cancel an order as long as it hasn't been shipped yet. Open the order from <strong>My Orders</strong> and select <strong>Cancel Order</strong>. Once shipped, you'll need to request a return instead.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="how do returns work">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq3">
+                  <span>How do returns work?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq3">
+                  <p>Most items can be returned within the seller's stated return window. Start a return from the order details page, choose a reason, and follow the prompts to arrange pickup or drop-off.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="how long do refunds take">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq4">
+                  <span>How long do refunds take?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq4">
+                  <p>Refunds are typically processed within 3–7 business days after the returned item is received and inspected. The time it takes to appear in your account depends on your bank or payment provider.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="what happens if my product arrives damaged">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq5">
+                  <span>What happens if my product arrives damaged?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq5">
+                  <p>We're sorry about that. Please report the issue within 48 hours of delivery using <strong>Report a Problem</strong> below, and attach a photo if you can. We'll arrange a replacement or refund.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="how can i change my password">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq6">
+                  <span>How can I change my password?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq6">
+                  <p>Go to <strong>Account Settings &rarr; Security</strong> and select <strong>Change Password</strong>. If you're signed in with Google or Facebook, password changes are managed through that provider instead.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="how do i update my delivery address">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq7">
+                  <span>How do I update my delivery address?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq7">
+                  <p>You can manage saved addresses from your account's <strong>Addresses</strong> section. Note that an address on an order already placed can only be changed before the seller ships it.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="how can i contact a seller">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq8">
+                  <span>How can I contact a seller?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq8">
+                  <p>Open the product page or your order details and look for the <strong>Contact Seller</strong> option. For unresolved issues, you can also raise it with MarketSphere support directly.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="what happens when an order is cancelled">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq9">
+                  <span>What happens when an order is cancelled?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq9">
+                  <p>Any payment already collected is refunded to your original payment method, and the seller is notified automatically. You'll see the updated status reflected on the order right away.</p>
+                </div>
+              </div>
+
+              <div class="hs-accordion-item" data-hs-search-text="how do i report a problem">
+                <button type="button" class="hs-accordion-trigger" aria-expanded="false" aria-controls="hsFaq10">
+                  <span>How do I report a problem?</span>
+                  <span class="hs-accordion-icon"><i class="bi bi-plus"></i></span>
+                </button>
+                <div class="hs-accordion-panel" id="hsFaq10">
+                  <p>Use the <strong>Report a Problem</strong> action further down this page. Choose a category, add details and an attachment if relevant, and our team will follow up.</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- No FAQ results empty state -->
+            <div class="hs-empty-state hs-empty-state-compact d-none" id="hsNoFaqResultsState">
+              <div class="hs-empty-icon"><i class="bi bi-patch-question"></i></div>
+              <h3 class="hs-empty-title">No matching questions</h3>
+              <p class="hs-empty-desc">Try a different search term, or contact our team for a direct answer.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= NEED MORE HELP ================= -->
+    <section class="hs-section" id="hsNeedHelpSection">
+      <div class="container">
+        <div class="hs-section-head">
+          <h2 class="hs-section-title">Can't find what you're looking for?</h2>
+          <p class="hs-section-subtitle">Tell us what happened and we'll help you sort it out.</p>
+        </div>
+
+        <div class="hs-support-grid">
+          <button type="button" class="hs-support-card" data-bs-toggle="modal" data-bs-target="#hsReportModal">
+            <span class="hs-support-icon hs-support-icon-warning"><i class="bi bi-flag"></i></span>
+            <span class="hs-support-title">Report a Problem</span>
+            <span class="hs-support-desc">Something wrong with an order, product, payment, or seller? Let us know.</span>
+            <span class="hs-support-cta">Report an issue <i class="bi bi-arrow-right"></i></span>
+          </button>
+
+          <button type="button" class="hs-support-card" data-bs-toggle="modal" data-bs-target="#hsContactModal">
+            <span class="hs-support-icon hs-support-icon-accent"><i class="bi bi-headset"></i></span>
+            <span class="hs-support-title">Contact Support</span>
+            <span class="hs-support-desc">Have a general question? Reach our support team directly.</span>
+            <span class="hs-support-cta">Send a message <i class="bi bi-arrow-right"></i></span>
+          </button>
+
+          <a href="#hsRequestsSection" class="hs-support-card">
+            <span class="hs-support-icon hs-support-icon-success"><i class="bi bi-ticket-perforated"></i></span>
+            <span class="hs-support-title">My Support Requests</span>
+            <span class="hs-support-desc">Check the status of problems and questions you've already sent us.</span>
+            <span class="hs-support-cta">View requests <i class="bi bi-arrow-right"></i></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MY SUPPORT REQUESTS ================= -->
+    <section class="hs-section hs-section-alt" id="hsRequestsSection">
+      <div class="container">
+        <div class="hs-card">
+          <div class="hs-card-head">
+            <h2 class="hs-card-title"><i class="bi bi-ticket-perforated"></i> My Support Requests</h2>
+            <a href="#" class="hs-view-all-link">View all support requests <i class="bi bi-arrow-right"></i></a>
+          </div>
+
+          <div class="hs-requests-list" id="hsRequestsList">
+
+            <!-- request.id / request.subject / request.category / request.created_at / request.status / request.last_update -->
+            <div class="hs-request-row" data-bs-toggle="modal" data-bs-target="#hsRequestDetailsModal"
+                 data-request-id="SR-10482"
+                 data-request-subject="Order #MS-1048 hasn't arrived yet"
+                 data-request-category="Delivery Issue"
+                 data-request-created="Aug 28, 2026"
+                 data-request-updated="Sep 2, 2026"
+                 data-request-status="in-progress"
+                 data-request-message="My order #MS-1048 was marked as shipped 6 days ago but the tracking hasn't updated since. Could someone check with the courier?">
+              <span class="hs-request-icon"><i class="bi bi-truck"></i></span>
+              <span class="hs-request-body">
+                <span class="hs-request-title">Order #MS-1048 hasn't arrived yet</span>
+                <span class="hs-request-meta">SR-10482 &middot; Delivery Issue &middot; Opened Aug 28, 2026</span>
+              </span>
+              <span class="hs-status-badge hs-status-in-progress"><i class="bi bi-arrow-repeat"></i> In Progress</span>
+              <i class="bi bi-chevron-right hs-request-arrow"></i>
+            </div>
+
+            <div class="hs-request-row" data-bs-toggle="modal" data-bs-target="#hsRequestDetailsModal"
+                 data-request-id="SR-10417"
+                 data-request-subject="Refund not received for returned item"
+                 data-request-category="Payment Issue"
+                 data-request-created="Aug 19, 2026"
+                 data-request-updated="Aug 25, 2026"
+                 data-request-status="open"
+                 data-request-message="I returned an item two weeks ago and the seller confirmed receipt, but I haven't seen the refund reflect on my card statement yet.">
+              <span class="hs-request-icon"><i class="bi bi-cash-coin"></i></span>
+              <span class="hs-request-body">
+                <span class="hs-request-title">Refund not received for returned item</span>
+                <span class="hs-request-meta">SR-10417 &middot; Payment Issue &middot; Opened Aug 19, 2026</span>
+              </span>
+              <span class="hs-status-badge hs-status-open"><i class="bi bi-circle-fill"></i> Open</span>
+              <i class="bi bi-chevron-right hs-request-arrow"></i>
+            </div>
+
+            <div class="hs-request-row" data-bs-toggle="modal" data-bs-target="#hsRequestDetailsModal"
+                 data-request-id="SR-10289"
+                 data-request-subject="Wrong item received in order #MS-0991"
+                 data-request-category="Order Issue"
+                 data-request-created="Jul 30, 2026"
+                 data-request-updated="Aug 3, 2026"
+                 data-request-status="resolved"
+                 data-request-message="I received a different color of the product I ordered. Support arranged a free replacement and it arrived correctly on Aug 3.">
+              <span class="hs-request-icon"><i class="bi bi-box-seam"></i></span>
+              <span class="hs-request-body">
+                <span class="hs-request-title">Wrong item received in order #MS-0991</span>
+                <span class="hs-request-meta">SR-10289 &middot; Order Issue &middot; Opened Jul 30, 2026</span>
+              </span>
+              <span class="hs-status-badge hs-status-resolved"><i class="bi bi-check-circle-fill"></i> Resolved</span>
+              <i class="bi bi-chevron-right hs-request-arrow"></i>
+            </div>
+
+            <div class="hs-request-row" data-bs-toggle="modal" data-bs-target="#hsRequestDetailsModal"
+                 data-request-id="SR-10201"
+                 data-request-subject="Can't enable two-factor authentication"
+                 data-request-category="Account Issue"
+                 data-request-created="Jul 12, 2026"
+                 data-request-updated="Jul 14, 2026"
+                 data-request-status="resolved"
+                 data-request-message="The QR code for authenticator setup wasn't loading. Support walked me through using the manual setup key instead and it worked.">
+              <span class="hs-request-icon"><i class="bi bi-shield-lock"></i></span>
+              <span class="hs-request-body">
+                <span class="hs-request-title">Can't enable two-factor authentication</span>
+                <span class="hs-request-meta">SR-10201 &middot; Account Issue &middot; Opened Jul 12, 2026</span>
+              </span>
+              <span class="hs-status-badge hs-status-resolved"><i class="bi bi-check-circle-fill"></i> Resolved</span>
+              <i class="bi bi-chevron-right hs-request-arrow"></i>
+            </div>
+
+          </div>
+
+          <!-- Empty state for no support requests (hidden by default; toggle d-none classes to preview) -->
+          <div class="hs-empty-state hs-empty-state-compact d-none" id="hsNoRequestsState">
+            <div class="hs-empty-icon"><i class="bi bi-ticket-perforated"></i></div>
+            <h3 class="hs-empty-title">No Support Requests</h3>
+            <p class="hs-empty-desc">You haven't contacted our support team yet.</p>
+            <button type="button" class="btn btn-hero-primary hs-empty-btn" data-bs-toggle="modal" data-bs-target="#hsContactModal">
+              <i class="bi bi-headset"></i> Contact Support
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SUPPORT FOOTER ================= -->
+    <section class="hs-support-footer">
+      <div class="container">
+        <div class="hs-support-footer-inner">
+          <div class="hs-support-footer-copy">
+            <h3><i class="bi bi-headset"></i> Still stuck?</h3>
+            <p>Our support team typically responds within 24 hours.</p>
+          </div>
+
+          <div class="hs-support-footer-contacts">
+            <span class="hs-support-footer-item"><i class="bi bi-envelope"></i> support@marketsphere.com</span>
+            <span class="hs-support-footer-item"><i class="bi bi-telephone"></i> +92 300 1234567</span>
+            <span class="hs-support-footer-item"><i class="bi bi-clock"></i> Mon–Sat, 9am–9pm</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /#hsMainContent -->
+
+  <!-- ================= REPORT A PROBLEM MODAL ================= -->
+  <div class="modal fade hs-modal" id="hsReportModal" tabindex="-1" aria-labelledby="hsReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="hsReportModalLabel"><i class="bi bi-flag"></i> Report a Problem</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <form id="hsReportForm" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6 col-12">
+                <label for="hsReportCategory" class="form-label">Problem Category</label>
+                <select class="form-select" id="hsReportCategory" required>
+                  <option value="" selected disabled>Select a category</option>
+                  <option value="order">Order Issue</option>
+                  <option value="delivery">Delivery Issue</option>
+                  <option value="payment">Payment Issue</option>
+                  <option value="product">Product Issue</option>
+                  <option value="seller">Seller Issue</option>
+                  <option value="account">Account Issue</option>
+                  <option value="technical">Technical Issue</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <label for="hsReportOrder" class="form-label">Related Order <span class="hs-optional-label">(optional)</span></label>
+                <select class="form-select" id="hsReportOrder">
+                  <option value="" selected>None</option>
+                  <option value="MS-1048">#MS-1048 &middot; Aug 27, 2026</option>
+                  <option value="MS-0991">#MS-0991 &middot; Jul 29, 2026</option>
+                  <option value="MS-0965">#MS-0965 &middot; Jul 10, 2026</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <label for="hsReportProduct" class="form-label">Related Product <span class="hs-optional-label">(optional)</span></label>
+                <input type="text" class="form-control" id="hsReportProduct" placeholder="e.g. Wireless Headphones" />
+              </div>
+
+              <div class="col-md-6 col-12">
+                <label for="hsReportSubject" class="form-label">Subject</label>
+                <input type="text" class="form-control" id="hsReportSubject" placeholder="Briefly describe the issue" required />
+              </div>
+
+              <div class="col-12">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label for="hsReportDescription" class="form-label mb-0">Description</label>
+                  <span class="hs-char-counter" id="hsReportCharCounter">0 / 600</span>
+                </div>
+                <textarea class="form-control" id="hsReportDescription" rows="4" maxlength="600" placeholder="Tell us exactly what happened..." required></textarea>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Attachment <span class="hs-optional-label">(optional)</span></label>
+
+                <label for="hsReportAttachmentInput" class="hs-attachment-dropzone" id="hsReportDropzone">
+                  <i class="bi bi-cloud-arrow-up"></i>
+                  <span class="hs-attachment-dropzone-text">Click to upload or drag a screenshot / photo here</span>
+                  <span class="hs-attachment-dropzone-helper">PNG, JPG, or PDF up to 10 MB</span>
+                </label>
+                <input type="file" id="hsReportAttachmentInput" accept="image/*,.pdf" hidden />
+
+                <div class="hs-attachment-preview d-none" id="hsReportAttachmentPreview">
+                  <i class="bi bi-paperclip"></i>
+                  <span class="hs-attachment-file-name" id="hsReportAttachmentName"></span>
+                  <button type="button" class="hs-attachment-remove" id="hsReportAttachmentRemove" aria-label="Remove attachment">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <p class="hs-modal-note">
+              <i class="bi bi-info-circle"></i> This form is a preview — submitting a problem report isn't connected to our support system yet.
+            </p>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn hs-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-hero-primary" style="height: 40px !important;" id="hsReportSubmitBtn">
+            <i class="bi bi-send"></i> Submit Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONTACT SUPPORT MODAL ================= -->
+  <div class="modal fade hs-modal" id="hsContactModal" tabindex="-1" aria-labelledby="hsContactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="hsContactModalLabel"><i class="bi bi-headset"></i> Contact Support</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <form id="hsContactForm" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6 col-12">
+                <label for="hsContactCategory" class="form-label">Category</label>
+                <select class="form-select" id="hsContactCategory" required>
+                  <option value="" selected disabled>Select a category</option>
+                  <option value="general">General Question</option>
+                  <option value="order">Order Question</option>
+                  <option value="payment">Payment Question</option>
+                  <option value="account">Account Question</option>
+                  <option value="feedback">Feedback / Suggestion</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <label for="hsContactOrder" class="form-label">Related Order <span class="hs-optional-label">(optional)</span></label>
+                <select class="form-select" id="hsContactOrder">
+                  <option value="" selected>None</option>
+                  <option value="MS-1048">#MS-1048 &middot; Aug 27, 2026</option>
+                  <option value="MS-0991">#MS-0991 &middot; Jul 29, 2026</option>
+                  <option value="MS-0965">#MS-0965 &middot; Jul 10, 2026</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label for="hsContactSubject" class="form-label">Subject</label>
+                <input type="text" class="form-control" id="hsContactSubject" placeholder="What's this about?" required />
+              </div>
+
+              <div class="col-12">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label for="hsContactMessage" class="form-label mb-0">Message</label>
+                  <span class="hs-char-counter" id="hsContactCharCounter">0 / 500</span>
+                </div>
+                <textarea class="form-control" id="hsContactMessage" rows="4" maxlength="500" placeholder="How can we help?" required></textarea>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label d-block">Preferred Contact Method</label>
+
+                <div class="hs-contact-method-group">
+                  <label class="hs-contact-method">
+                    <input type="radio" name="hsContactMethod" value="email" checked />
+                    <span><i class="bi bi-envelope"></i> Email</span>
+                  </label>
+
+                  <label class="hs-contact-method">
+                    <input type="radio" name="hsContactMethod" value="in-app" />
+                    <span><i class="bi bi-chat-dots"></i> In-App Response</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <p class="hs-modal-note">
+              <i class="bi bi-info-circle"></i> This form is a preview — sending a message isn't connected to our support system yet.
+            </p>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn hs-modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-hero-primary" style="height: 40px !important;" id="hsContactSubmitBtn">
+            <i class="bi bi-send"></i> Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= REQUEST DETAILS MODAL ================= -->
+  <div class="modal fade hs-modal" id="hsRequestDetailsModal" tabindex="-1" aria-labelledby="hsRequestDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="hsRequestDetailsModalLabel"><i class="bi bi-ticket-perforated"></i> Support Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="hs-request-detail-head">
+            <h4 id="hsRequestDetailSubject">—</h4>
+            <span class="hs-status-badge" id="hsRequestDetailStatus">—</span>
+          </div>
+
+          <div class="hs-request-detail-grid">
+            <div class="hs-request-detail-item">
+              <span class="hs-info-label">Request ID</span>
+              <span class="hs-info-value" id="hsRequestDetailId">—</span>
+            </div>
+
+            <div class="hs-request-detail-item">
+              <span class="hs-info-label">Category</span>
+              <span class="hs-info-value" id="hsRequestDetailCategory">—</span>
+            </div>
+
+            <div class="hs-request-detail-item">
+              <span class="hs-info-label">Created</span>
+              <span class="hs-info-value" id="hsRequestDetailCreated">—</span>
+            </div>
+
+            <div class="hs-request-detail-item">
+              <span class="hs-info-label">Last Update</span>
+              <span class="hs-info-value" id="hsRequestDetailUpdated">—</span>
+            </div>
+          </div>
+
+          <div class="hs-request-detail-message">
+            <span class="hs-info-label">Message</span>
+            <p id="hsRequestDetailMessage">—</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn hs-modal-cancel-btn" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'help_support.js' %}"></script>
+{% endblock %}

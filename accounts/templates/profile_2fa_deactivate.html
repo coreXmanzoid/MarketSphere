@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Turn Off Two-Factor Authentication • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'profile_2fa.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="bp2fa-section">
+    <div class="container">
+      <a href="{% url 'profile' %}" class="bp2fa-back-link"><i class="bi bi-arrow-left"></i> Back to Profile</a>
+
+      <div class="bp2fa-wrap">
+        <div class="bp2fa-card">
+          <div class="bp2fa-card-icon bp2fa-card-icon-danger"><i class="bi bi-shield-exclamation"></i></div>
+
+          <h1 class="bp2fa-title">Turn off two-factor authentication?</h1>
+          <p class="bp2fa-subtitle">Two-factor authentication is currently protecting your account. Turning it off means signing in will only require your password — anyone who gets your password alone could then access your account.</p>
+
+          {% if form.non_field_errors %}
+            <div class="bp2fa-alert bp2fa-alert-error">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <div>
+                {% for error in form.non_field_errors %}
+                  <p>{{ error }}</p>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <div class="bp2fa-alert bp2fa-alert-warning">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <div>
+                <strong>This will reduce your account's protection.</strong>
+                <p>You can always turn two-factor authentication back on later from your profile.</p>
+              </div>
+            </div>
+          {% endif %}
+
+          <form method="post" action="{% url 'profile_deactivate_totp' %}" class="bp2fa-form" id="bp2faDeactivateForm">
+            {% csrf_token %}
+
+            <div class="bp2fa-actions">
+              <a href="{% url 'profile' %}" class="btn bp2fa-btn-secondary">Keep it on</a>
+              <button type="submit" class="btn bp2fa-btn-danger" id="bp2faDeactivateBtn">
+                <i class="bi bi-shield-slash"></i> Deactivate Two-Factor Authentication
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'profile_2fa.js' %}"></script>
+{% endblock %}

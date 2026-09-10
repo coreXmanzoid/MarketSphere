@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
-from django.contrib.auth import login, logout
+from django.contrib.auth import logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 import json
+from allauth.account.forms import LoginForm
+from allauth.core.exceptions import ImmediateHttpResponse
 
 from accounts.seller_pdf import export_seller_profile_snapshot
 from .decorators import verified_seller, verified_user, only_seller
@@ -19,37 +20,29 @@ from . import services
 
 
 def login_view(request):
+    # Use allauth's LoginForm even though the page is custom.  Calling
+    # django.contrib.auth.login() directly skips allauth's login stages,
+    # including the MFA challenge for users with TOTP enabled.
+    form_data = None
     if request.method == "POST":
-        identifier = request.POST.get("identifier").lower()
-        password = request.POST.get("password")
-        remember_me = request.POST.get("remember")
+        identifier = (request.POST.get("identifier") or "").strip().lower()
+        form_data = request.POST.copy()
+        form_data["login"] = identifier
 
-        user = services.get_user_by_identifier(identifier)
-        if not user:
-            messages.error(request, "Invalid Credentials.")
-            return redirect("login")
+    form = LoginForm(request=request, data=form_data)
+    if request.method == "POST" and form.is_valid():
+        valid_status, message = validator.validate_account_status(form.user)
+        if not valid_status:
+            form.add_error(None, message)
+        else:
+            try:
+                # This returns the normal redirect or allauth's MFA-stage
+                # response.  It must not be replaced with a direct login().
+                return form.login(request, redirect_url=settings.LOGIN_REDIRECT_URL)
+            except ImmediateHttpResponse as exc:
+                return exc.response
 
-        authenticated_user = authenticate(
-            request, username=user.username, password=password
-        )
-        if not authenticated_user:
-            messages.error(request, "Invalid Credentials.")
-            return redirect("login")
-
-        validate_account_status, message = validator.validate_account_status(
-            authenticated_user
-        )
-        if not validate_account_status:
-            messages.error(request, message)
-            return redirect("login")
-
-        login(request, authenticated_user)
-        if not remember_me:
-            request.session.set_expiry(0)
-
-        return redirect(settings.LOGIN_REDIRECT_URL)
-
-    return render(request, "login.html")
+    return render(request, "login.html", {"form": form})
 
 
 def signup_view(request):
@@ -229,6 +222,119 @@ def seller_account(request):
     }
 
     return render(request, "seller_account.html", context)
+
+from django.shortcuts import redirect
+from allauth.mfa.utils import is_mfa_enabled
+
+
+@login_required
+def profile_2fa_redirect(request):
+    if is_mfa_enabled(request.user):
+        return redirect("profile_deactivate_totp")
+
+    return redirect("profile_activate_totp")
+
+
+# ==============================================================================
+# BUYER PROFILE — TWO-FACTOR AUTHENTICATION (custom UI over allauth.mfa)
+# ==============================================================================
+#
+# These three views are thin wrappers around allauth's own TOTP / recovery-
+# codes views. They exist ONLY to:
+#   1. render MarketSphere-branded templates instead of allauth's defaults,
+#   2. keep the redirect chain inside MarketSphere's own named URLs.
+#
+# Everything security-relevant — TOTP secret generation, code validation,
+# reauthentication enforcement, recovery-code generation/masking — is left
+# entirely to allauth's forms/flows and is NOT reimplemented here.
+from django.urls import reverse, reverse_lazy
+from django.http import HttpResponseRedirect
+from allauth.mfa.totp.views import ActivateTOTPView, DeactivateTOTPView
+from allauth.mfa.recovery_codes.views import ViewRecoveryCodesView
+from allauth.mfa.base.views import AuthenticateView, ReauthenticateView
+
+
+class MarketSphereMFAAuthenticateView(AuthenticateView):
+    """Use the branded MFA sign-in challenge for allauth's MFA stage."""
+
+    template_name = "mfa/authenticate.html"
+
+
+class MarketSphereMFAReauthenticateView(ReauthenticateView):
+    """Use the branded identity confirmation page for protected actions."""
+
+    template_name = "mfa/reauthenticate.html"
+
+
+class ProfileActivateTOTPView(ActivateTOTPView):
+    """
+    Custom-templated TOTP activation.
+
+    QR code, manual secret, and code validation all come from allauth's
+    ActivateTOTPForm/get_context_data() (totp_svg_data_uri, form.secret,
+    form.code) — this class only swaps the template and success routing.
+    """
+
+    template_name = "profile_2fa_activate.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+
+        # allauth's own dispatch() redirects here if TOTP is already
+        # active. Keep the user on MarketSphere's own deactivation page
+        # instead of allauth's stock one.
+        if (
+            isinstance(response, HttpResponseRedirect)
+            and response.url == reverse("mfa_deactivate_totp")
+        ):
+            return redirect("profile_deactivate_totp")
+
+        return response
+
+    def get_success_url(self):
+        # `did_generate_recovery_codes` is set in ActivateTOTPView.form_valid().
+        # Recovery codes are auto-generated by allauth only the FIRST time
+        # TOTP is activated for a user — this is what makes the mandatory
+        # recovery-codes step actually mandatory instead of skippable.
+        if self.did_generate_recovery_codes:
+            return reverse("profile_2fa_recovery")
+
+        return reverse("profile")
+
+
+class ProfileDeactivateTOTPView(DeactivateTOTPView):
+    """Custom-templated TOTP deactivation confirmation."""
+
+    template_name = "profile_2fa_deactivate.html"
+    success_url = reverse_lazy("profile")
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+
+        # allauth's own dispatch() redirects here if TOTP isn't active.
+        # The profile toggle only ever links here when it IS active, but
+        # guard the edge case (e.g. a stale tab) by staying in our UI.
+        if (
+            isinstance(response, HttpResponseRedirect)
+            and response.url == reverse("mfa_activate_totp")
+        ):
+            return redirect("profile_activate_totp")
+
+        return response
+
+
+class ProfileViewRecoveryCodesView(ViewRecoveryCodesView):
+    """
+    Custom-templated recovery-codes display.
+
+    The one-time "show once" masking behaviour driven by
+    MFA_RECOVERY_CODES_SHOW_ONCE lives entirely in allauth's
+    view_recovery_codes() flow (see ViewRecoveryCodesView.get_context_data).
+    This class only swaps the template so that behaviour is reused, not
+    reimplemented.
+    """
+
+    template_name = "profile_2fa_recovery.html"
 
 
 @login_required
@@ -663,3 +769,48 @@ def update_seller_document(request):
         response["uploaded_at"] = document.uploaded_at.strftime("%b %d, %Y")
 
     return JsonResponse(response)
+
+@login_required
+@require_POST
+def update_user_preferences(request):
+    try:
+        data = json.loads(request.body or "{}")
+
+        preferences = services.update_user_preferences(
+            user=request.user,
+            data=data,
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Preferences saved successfully.",
+            "preferences": {
+                "order_updates": preferences.order_updates,
+                "promotional_emails": preferences.promotional_emails,
+                "price_drop_alerts": preferences.price_drop_alerts,
+                "wishlist_alerts": preferences.wishlist_alerts,
+                "review_reminders": preferences.review_reminders,
+                "newsletter": preferences.newsletter,
+                "email_notifications": preferences.email_notifications,
+                "in_app_notifications": preferences.in_app_notifications,
+                "push_notifications": preferences.push_notifications,
+            },
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid request data.",
+        }, status=400)
+
+    except ValueError as error:
+        return JsonResponse({
+            "success": False,
+            "message": str(error),
+        }, status=400)
+
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "message": "Something went wrong. Please try again.",
+        }, status=500)

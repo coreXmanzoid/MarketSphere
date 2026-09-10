@@ -1,0 +1,492 @@
+/* =========================================================
+   MARKETSPHERE — TWO-FACTOR AUTHENTICATION (Activate / Recovery
+   Codes / Deactivate) PAGE STYLES
+
+   Shared by profile_2fa_activate.html, profile_2fa_recovery.html
+   and profile_2fa_deactivate.html — one flow, one page-scoped
+   prefix (`bp2fa-`) per project convention. Reuses the same
+   design tokens as seller_account.css / login.css (accent
+   #9D6638, headings #4E220F, background #F7F1DE) so the flow
+   feels like part of the Buyer Profile, not a separate system.
+   ========================================================= */
+
+:root {
+    --bp2fa-accent: #9D6638;
+    --bp2fa-accent-dark: #4E220F;
+    --bp2fa-success: #4f7d54;
+    --bp2fa-warning: #b7802b;
+    --bp2fa-danger: #b54b3b;
+    --bp2fa-muted: #B0BA99;
+    --bp2fa-border: #D9D2C4;
+}
+
+.bp2fa-section {
+    padding: 32px 0 64px;
+    background-color: var(--background-color);
+}
+
+.bp2fa-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+    font-size: 13.5px;
+    font-weight: 600 !important;
+    color: var(--bp2fa-accent) !important;
+}
+
+.bp2fa-back-link i {
+    background-color: transparent;
+}
+
+.bp2fa-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.bp2fa-card {
+    width: 100%;
+    max-width: 640px;
+    background-color: #F7F1DE;
+    border: 1.5px solid var(--bp2fa-accent);
+    border-radius: 16px;
+    padding: 36px 32px;
+}
+
+.bp2fa-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(157, 102, 56, 0.12);
+    margin-bottom: 18px;
+}
+
+.bp2fa-card-icon i {
+    font-size: 26px;
+    color: var(--bp2fa-accent);
+    background-color: transparent;
+}
+
+.bp2fa-card-icon-success {
+    background-color: rgba(79, 125, 84, 0.14);
+}
+
+.bp2fa-card-icon-success i {
+    color: var(--bp2fa-success);
+}
+
+.bp2fa-card-icon-danger {
+    background-color: rgba(181, 75, 59, 0.13);
+}
+
+.bp2fa-card-icon-danger i {
+    color: var(--bp2fa-danger);
+}
+
+.bp2fa-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--headings);
+    margin-bottom: 10px;
+}
+
+.bp2fa-subtitle {
+    font-size: 14.5px;
+    color: #4f7d54;
+    line-height: 1.6;
+    margin-bottom: 22px;
+}
+
+/* ================= ALERTS ================= */
+.bp2fa-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+}
+
+.bp2fa-alert i {
+    background-color: transparent;
+    font-size: 16px;
+    margin-top: 1px;
+    flex: 0 0 auto;
+}
+
+.bp2fa-alert p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.bp2fa-alert strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 14px;
+}
+
+.bp2fa-alert-warning {
+    background-color: rgba(183, 128, 43, 0.1);
+    border: 1px solid rgba(183, 128, 43, 0.28);
+    color: var(--bp2fa-accent-dark);
+}
+
+.bp2fa-alert-warning i {
+    color: var(--bp2fa-warning);
+}
+
+.bp2fa-alert-error {
+    background-color: rgba(181, 75, 59, 0.08);
+    border: 1px solid rgba(181, 75, 59, 0.25);
+    color: var(--bp2fa-accent-dark);
+}
+
+.bp2fa-alert-error i {
+    color: var(--bp2fa-danger);
+}
+
+.bp2fa-alert-error p {
+    color: var(--bp2fa-danger);
+    font-weight: 600;
+}
+
+/* ================= ACTIVATION STEPS ================= */
+.bp2fa-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.bp2fa-step {
+    padding-top: 22px;
+    border-top: 1px solid var(--bp2fa-border);
+}
+
+.bp2fa-step:first-child {
+    padding-top: 0;
+    border-top: none;
+}
+
+.bp2fa-step-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.bp2fa-step-num {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background-color: var(--bp2fa-accent);
+    color: #F7F1DE;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bp2fa-step-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--headings);
+    margin: 0;
+}
+
+.bp2fa-step-desc {
+    font-size: 13.5px;
+    color: var(--bp2fa-muted);
+    margin: 0 0 16px 34px;
+}
+
+/* ================= QR CODE ================= */
+.bp2fa-qr-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 16px 34px;
+    padding: 18px;
+    background-color: #ffffff;
+    border: 1px solid var(--bp2fa-border);
+    border-radius: 12px;
+    max-width: 240px;
+}
+
+.bp2fa-qr-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.bp2fa-manual-entry {
+    margin: 0 0 4px 34px;
+}
+
+.bp2fa-manual-entry summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bp2fa-accent);
+    margin-bottom: 10px;
+}
+
+.bp2fa-secret-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.bp2fa-secret-value {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    background-color: #F7F1DE;
+    border: 1.5px solid var(--bp2fa-accent);
+    border-radius: 4px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--bp2fa-accent-dark);
+    word-break: break-all;
+}
+
+.bp2fa-copy-btn {
+    flex: 0 0 auto;
+    width: 38px !important;
+    height: 38px;
+    border-radius: 6px !important;
+    background-color: rgba(157, 102, 56, 0.1) !important;
+    color: var(--bp2fa-accent) !important;
+    border: 1.5px solid var(--bp2fa-accent) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    transition: 0.2s ease;
+}
+
+.bp2fa-copy-btn i {
+    background-color: transparent;
+    font-size: 14px;
+}
+
+.bp2fa-copy-btn:hover {
+    background-color: var(--bp2fa-accent) !important;
+    color: #F7F1DE !important;
+}
+
+.bp2fa-copy-btn.is-copied {
+    background-color: var(--bp2fa-success) !important;
+    border-color: var(--bp2fa-success) !important;
+    color: #F7F1DE !important;
+}
+
+.bp2fa-manual-help {
+    font-size: 12px;
+    color: var(--bp2fa-muted);
+    margin: 0 0 0 34px;
+}
+
+/* ================= CODE INPUT ================= */
+.bp2fa-form {
+    margin: 0 0 0 34px;
+}
+
+.bp2fa-code-field {
+    margin-bottom: 20px;
+}
+
+.bp2fa-code-label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--bp2fa-muted);
+    margin-bottom: 8px;
+}
+
+.bp2fa-code-input {
+    width: 100% !important;
+    max-width: 220px;
+    padding: 12px 14px !important;
+    font-size: 24px !important;
+    font-weight: 700;
+    letter-spacing: 8px;
+    text-align: center;
+    color: var(--bp2fa-accent-dark) !important;
+    background-color: #F7F1DE !important;
+    border: 2px solid var(--bp2fa-accent) !important;
+    border-radius: 6px !important;
+}
+
+.bp2fa-code-field.has-error .bp2fa-code-input {
+    border-color: var(--bp2fa-danger) !important;
+}
+
+.bp2fa-field-error {
+    margin-top: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--bp2fa-danger);
+}
+
+/* ================= RECOVERY CODES ================= */
+.bp2fa-codes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.bp2fa-code-chip {
+    display: block;
+    text-align: center;
+    padding: 12px 8px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--bp2fa-accent-dark);
+    background-color: #F7F1DE;
+    border: 1.5px dashed var(--bp2fa-accent);
+    border-radius: 8px;
+}
+
+.bp2fa-copy-codes-btn {
+    width: auto !important;
+    margin-bottom: 22px;
+}
+
+.bp2fa-ack-row {
+    padding-top: 18px;
+    border-top: 1px solid var(--bp2fa-border);
+    margin-bottom: 22px;
+}
+
+.bp2fa-ack-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--headings);
+    cursor: pointer;
+}
+
+.bp2fa-ack-label input[type="checkbox"] {
+    accent-color: var(--bp2fa-accent);
+    width: 16px;
+    height: 16px;
+}
+
+/* ================= ACTIONS ================= */
+.bp2fa-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bp2fa-btn-primary,
+.bp2fa-btn-secondary,
+.bp2fa-btn-danger {
+    width: auto !important;
+    padding: 11px 22px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    border-radius: 4px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.bp2fa-btn-primary {
+    background-color: var(--bp2fa-accent) !important;
+    color: #F7F1DE !important;
+    border: 2px solid var(--bp2fa-accent) !important;
+}
+
+.bp2fa-btn-primary:hover {
+    background-color: #F7F1DE !important;
+    color: var(--bp2fa-accent) !important;
+}
+
+.bp2fa-btn-primary.is-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.bp2fa-btn-secondary {
+    background-color: transparent !important;
+    color: var(--bp2fa-accent-dark) !important;
+    border: 1.5px solid var(--bp2fa-border) !important;
+}
+
+.bp2fa-btn-secondary:hover {
+    background-color: var(--bp2fa-border) !important;
+    color: var(--bp2fa-accent-dark) !important;
+}
+
+.bp2fa-btn-danger {
+    background-color: var(--bp2fa-danger) !important;
+    color: #F7F1DE !important;
+    border: 2px solid var(--bp2fa-danger) !important;
+}
+
+.bp2fa-btn-danger:hover {
+    background-color: #F7F1DE !important;
+    color: var(--bp2fa-danger) !important;
+}
+
+.bp2fa-btn-primary.is-loading,
+.bp2fa-btn-secondary.is-loading,
+.bp2fa-btn-danger.is-loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.bp2fa-spin {
+    animation: bp2faSpin 0.8s linear infinite;
+}
+
+@keyframes bp2faSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 767.98px) {
+    .bp2fa-card {
+        padding: 26px 20px;
+    }
+
+    .bp2fa-title {
+        font-size: 22px;
+    }
+
+    .bp2fa-step-desc,
+    .bp2fa-qr-wrap,
+    .bp2fa-manual-entry,
+    .bp2fa-manual-help,
+    .bp2fa-form {
+        margin-left: 0;
+    }
+
+    .bp2fa-codes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bp2fa-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .bp2fa-actions .btn {
+        width: 100% !important;
+    }
+}

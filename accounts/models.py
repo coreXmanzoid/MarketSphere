@@ -85,6 +85,32 @@ class User(AbstractUser):
         default=AccountStatus.UNVERIFIED,
     )
 
+class UserPreferences(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="preferences",
+    )
+
+    order_updates = models.BooleanField(default=True)
+    promotional_emails = models.BooleanField(default=True)
+    price_drop_alerts = models.BooleanField(default=True)
+    wishlist_alerts = models.BooleanField(default=True)
+    low_stock_alerts = models.BooleanField(default=True)
+    review_reminders = models.BooleanField(default=True)
+    newsletter = models.BooleanField(default=True)
+
+    security_alerts = models.BooleanField(default=True, editable=False)
+
+    email_notifications = models.BooleanField(default=True)
+    in_app_notifications = models.BooleanField(default=True)
+    push_notifications = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Preferences for {self.user.username}"
 
 from django.conf import settings
 from django.db import models

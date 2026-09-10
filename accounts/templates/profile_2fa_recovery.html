@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Save Your Recovery Codes • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'profile_2fa.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="bp2fa-section">
+    <div class="container">
+      <div class="bp2fa-wrap">
+        <div class="bp2fa-card">
+
+          {% if can_view_codes %}
+            <div class="bp2fa-card-icon bp2fa-card-icon-success"><i class="bi bi-patch-check"></i></div>
+
+            <h1 class="bp2fa-title">Two-factor authentication is on</h1>
+            <p class="bp2fa-subtitle">Save these recovery codes somewhere safe. If you ever lose access to your authenticator app, each code can be used once to sign in instead of your 6-digit code.</p>
+
+            <div class="bp2fa-alert bp2fa-alert-warning">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <div>
+                <strong>This is the only time these codes will be shown.</strong>
+                <p>MarketSphere won't display them again after you leave this page — store them in a password manager or print them and keep them somewhere secure.</p>
+              </div>
+            </div>
+
+            <div class="bp2fa-codes-grid" id="bp2faCodesGrid">
+              {% for code in unused_codes %}
+                <span class="bp2fa-code-chip">{{ code }}</span>
+              {% endfor %}
+            </div>
+
+            <button type="button" class="btn bp2fa-btn-secondary bp2fa-copy-codes-btn" id="bp2faCopyCodesBtn" data-codes="{% for code in unused_codes %}{{ code }}{% if not forloop.last %},{% endif %}{% endfor %}">
+              <i class="bi bi-clipboard"></i> Copy all codes
+            </button>
+
+            <div class="bp2fa-ack-row">
+              <label class="bp2fa-ack-label">
+                <input type="checkbox" id="bp2faSavedCheckbox" />
+                I have saved my recovery codes
+              </label>
+            </div>
+
+            <div class="bp2fa-actions">
+              <a href="{% url 'profile' %}" class="btn bp2fa-btn-primary is-disabled" id="bp2faDoneBtn" aria-disabled="true">
+                <i class="bi bi-check2-circle"></i> Done
+              </a>
+            </div>
+
+          {% else %}
+            <div class="bp2fa-card-icon"><i class="bi bi-eye-slash"></i></div>
+
+            <h1 class="bp2fa-title">Recovery codes already viewed</h1>
+            <p class="bp2fa-subtitle">For your security, MarketSphere only shows your recovery codes once, right after they're generated. If you didn't save them, you'll need new ones from your account settings.</p>
+
+            <div class="bp2fa-actions">
+              <a href="{% url 'profile' %}" class="btn bp2fa-btn-primary">
+                <i class="bi bi-arrow-left"></i> Back to Profile
+              </a>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'profile_2fa.js' %}"></script>
+{% endblock %}

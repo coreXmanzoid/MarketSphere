@@ -6,18 +6,19 @@
 {% endblock %}
 
 {% block css %}
-  <link rel="stylesheet" href="{% static 'css/home.css' %}">
-  <link rel="stylesheet" href="{% static 'profile.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'profile.css' %}" />
 {% endblock %}
 
 {% block content %}
-
   <!-- ================= BREADCRUMB ================= -->
   <section class="bp-breadcrumb-wrap">
     <div class="container">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
-          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
           <li class="breadcrumb-item active" aria-current="page">My Profile</li>
         </ol>
       </nav>
@@ -33,15 +34,11 @@
         <div class="bp-hero-main">
           <div class="bp-hero-avatar-wrap">
             {% if request.user.profile_image_url %}
-              <img src="{{ request.user.profile_image_url }}" alt="{{ request.user.username }}" class="bp-hero-avatar">
+              <img src="{{ request.user.profile_image_url }}" alt="{{ request.user.username }}" class="bp-hero-avatar" />
             {% else %}
-              <span class="bp-hero-avatar bp-hero-avatar-fallback">
-                {{ request.user.first_name|slice:':1'|upper|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}
-              </span>
+              <span class="bp-hero-avatar bp-hero-avatar-fallback">{{ request.user.first_name|slice:':1'|upper|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}</span>
             {% endif %}
-            <button type="button" class="bp-avatar-edit-btn" id="bpAvatarEditBtn" aria-label="Change profile photo">
-              <i class="bi bi-camera-fill"></i>
-            </button>
+            <button type="button" class="bp-avatar-edit-btn" id="bpAvatarEditBtn" aria-label="Change profile photo"><i class="bi bi-camera-fill"></i></button>
           </div>
 
           <div class="bp-hero-details">
@@ -88,15 +85,11 @@
         </div>
 
         <div class="bp-hero-actions">
-          <button type="button" class="btn bp-btn-primary" id="bpEditProfileBtn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">
-            <i class="bi bi-pencil-square"></i> Edit Profile
-          </button>
+          <button type="button" class="btn bp-btn-primary" id="bpEditProfileBtn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal"><i class="bi bi-pencil-square"></i> Edit Profile</button>
           {% if request.user.account_status == 'UNVERIFIED' %}
             <form method="post" action="{% url 'resend_verification_email' %}" class="d-inline">
               {% csrf_token %}
-              <button type="submit" class="btn bp-btn-outline">
-                <i class="bi bi-shield-check"></i> Verify Email
-              </button>
+              <button type="submit" class="btn bp-btn-outline"><i class="bi bi-shield-check"></i> Verify Email</button>
             </form>
           {% else %}
             <span class="bp-verified-inline"><i class="bi bi-check-circle-fill"></i> Email verified</span>
@@ -116,14 +109,30 @@
         </button>
 
         <ul class="bp-nav-list" id="bpNavList">
-          <li><a href="#bpTop" class="bp-nav-link is-active" data-bp-nav><i class="bi bi-person-circle"></i> My Profile</a></li>
-          <li><a href="{% url 'orders' %}" class="bp-nav-link" data-bp-nav><i class="bi bi-bag-check"></i> My Orders</a></li>
-          <li><a href="#bpAddresses" class="bp-nav-link" data-bp-nav><i class="bi bi-geo-alt"></i> Addresses</a></li>
-          <li><a href="{% url 'wishlist' %}" class="bp-nav-link" data-bp-nav><i class="bi bi-heart"></i> Wishlist</a></li>
-          <li><a href="#" class="bp-nav-link bp-nav-soon" data-bp-coming-soon><i class="bi bi-star"></i> Reviews</a></li>
-          <li><a href="#bpNotifications" class="bp-nav-link" data-bp-nav><i class="bi bi-bell"></i> Notifications</a></li>
-          <li><a href="#bpSecurity" class="bp-nav-link" data-bp-nav><i class="bi bi-shield-lock"></i> Security</a></li>
-          <li><a href="#" class="bp-nav-link bp-nav-soon" data-bp-coming-soon><i class="bi bi-gear"></i> Settings</a></li>
+          <li>
+            <a href="#bpTop" class="bp-nav-link is-active" data-bp-nav><i class="bi bi-person-circle"></i> My Profile</a>
+          </li>
+          <li>
+            <a href="{% url 'orders' %}" class="bp-nav-link" data-bp-nav><i class="bi bi-bag-check"></i> My Orders</a>
+          </li>
+          <li>
+            <a href="#bpAddresses" class="bp-nav-link" data-bp-nav><i class="bi bi-geo-alt"></i> Addresses</a>
+          </li>
+          <li>
+            <a href="{% url 'wishlist' %}" class="bp-nav-link" data-bp-nav><i class="bi bi-heart"></i> Wishlist</a>
+          </li>
+          <li>
+            <a href="#" class="bp-nav-link bp-nav-soon" data-bp-coming-soon><i class="bi bi-star"></i> Reviews</a>
+          </li>
+          <li>
+            <a href="#bpNotifications" class="bp-nav-link" data-bp-nav><i class="bi bi-bell"></i> Notifications</a>
+          </li>
+          <li>
+            <a href="#bpSecurity" class="bp-nav-link" data-bp-nav><i class="bi bi-shield-lock"></i> Security</a>
+          </li>
+          <li>
+            <a href="#" class="bp-nav-link bp-nav-soon" data-bp-coming-soon><i class="bi bi-gear"></i> Settings</a>
+          </li>
         </ul>
       </nav>
     </div>
@@ -133,10 +142,8 @@
   <section class="bp-section">
     <div class="container">
       <div class="row g-4">
-
         <!-- ================= MAIN COLUMN ================= -->
         <div class="col-lg-8 col-12 bp-main-col">
-
           <!-- ============ PROFILE OVERVIEW ============ -->
           <div class="bp-card bp-overview-card">
             <div class="bp-card-head">
@@ -192,9 +199,7 @@
           <div class="bp-card">
             <div class="bp-card-head">
               <h2 class="bp-card-title"><i class="bi bi-person-vcard"></i> Personal Information</h2>
-              <button type="button" class="btn bp-edit-btn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">
-                <i class="bi bi-pencil-square"></i> Edit
-              </button>
+              <button type="button" class="btn bp-edit-btn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal"><i class="bi bi-pencil-square"></i> Edit</button>
             </div>
 
             <div class="bp-info-grid">
@@ -266,9 +271,7 @@
               </div>
             {% endif %}
 
-            <button type="button" class="btn bp-btn-outline bp-completion-btn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">
-              Complete Profile
-            </button>
+            <button type="button" class="btn bp-btn-outline bp-completion-btn" data-bs-toggle="modal" data-bs-target="#bpEditProfileModal">Complete Profile</button>
           </div>
 
           <!-- ============ RECENT ORDERS ============ -->
@@ -312,27 +315,23 @@
           <div class="bp-card" id="bpAddresses">
             <div class="bp-card-head">
               <h2 class="bp-card-title"><i class="bi bi-geo-alt"></i> Saved Addresses</h2>
-              <button type="button" class="btn bp-edit-btn" id="bpAddAddressBtn" data-bs-toggle="modal" data-bs-target="#bpAddressModal">
-                <i class="bi bi-plus-lg"></i> Add New Address
-              </button>
+              <button type="button" class="btn bp-edit-btn" id="bpAddAddressBtn" data-bs-toggle="modal" data-bs-target="#bpAddressModal"><i class="bi bi-plus-lg"></i> Add New Address</button>
             </div>
 
             <div class="bp-address-grid">
               {% for address in addresses %}
-                <div class="bp-address-card {% if address.is_default %}is-default{% endif %}"
-                     data-address-id="{{ address.id }}"
-                     data-full-name="{{ address.full_name }}"
-                     data-phone="{{ address.phone }}"
-                     data-address-line1 ="{{ address.address_line_1 }}"
-                     data-address-line2 ="{{ address.address_line_2 }}"
-                     data-city="{{ address.city }}"
-                     data-postal-code="{{ address.postal_code }}"
-                     data-address-type="{{ address.address_type }}"
-                     data-is-default="{{ address.is_default|yesno:'true,false' }}">
-
+                <div class="bp-address-card {% if address.is_default %}is-default{% endif %}" data-address-id="{{ address.id }}" data-full-name="{{ address.full_name }}" data-phone="{{ address.phone }}" data-address-line1="{{ address.address_line_1 }}" data-address-line2="{{ address.address_line_2 }}" data-city="{{ address.city }}" data-postal-code="{{ address.postal_code }}" data-address-type="{{ address.address_type }}" data-is-default="{{ address.is_default|yesno:'true,false' }}">
                   <div class="bp-address-card-top">
                     <span class="bp-address-type-badge bp-address-type-{{ address.address_type }}">
-                      {% if address.address_type == 'home' %}<i class="bi bi-house-door"></i>{% elif address.address_type == 'office' %}<i class="bi bi-building"></i>{% elif address.address_type == 'business' %}<i class="bi bi-shop"></i>{% else %}<i class="bi bi-geo"></i>{% endif %}
+                      {% if address.address_type == 'home' %}
+                        <i class="bi bi-house-door"></i>
+                      {% elif address.address_type == 'office' %}
+                        <i class="bi bi-building"></i>
+                      {% elif address.address_type == 'business' %}
+                        <i class="bi bi-shop"></i>
+                      {% else %}
+                        <i class="bi bi-geo"></i>
+                      {% endif %}
                       {{ address.get_address_type_display }}
                     </span>
                     {% if address.is_default %}
@@ -341,9 +340,13 @@
                   </div>
 
                   <h3 class="bp-address-name">{{ address.full_name }}</h3>
-                  <p class="bp-address-phone"><i class="bi bi-telephone"></i> {{ address.phone }}</p>
+                  <p class="bp-address-phone">
+                    <i class="bi bi-telephone"></i> {{ address.phone }}
+                  </p>
                   <p class="bp-address-lines">
-                    {{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}<br>
+                    {{ address.address_line_1 }}{% if address.address_line_2 %}
+                      , {{ address.address_line_2 }}
+                    {% endif %}<br />
                     {{ address.city }}, {{ address.postal_code }}
                   </p>
 
@@ -383,15 +386,10 @@
             <div class="bp-wishlist-grid">
               {% for item in wishlist_items %}
                 <div class="bp-wishlist-product-card" data-product-slug="{{ item.product.slug }}">
-
                   <div class="bp-wishlist-product-image">
-
                     {% with primary_image=item.product.primary_image %}
                       {% if primary_image and primary_image.image %}
-                        <img
-                          src="{{ primary_image.image.url }}"
-                          alt="{{ primary_image.alt_text|default:item.product.name }}"
-                        >
+                        <img src="{{ primary_image.image.url }}" alt="{{ primary_image.alt_text|default:item.product.name }}" />
                       {% else %}
                         <div class="product-image-placeholder">
                           <i class="bi bi-image"></i>
@@ -400,66 +398,33 @@
                     {% endwith %}
 
                     {% if item.product.discount_percentage %}
-                      <span class="bp-discount-badge">
-                        -{{ item.product.discount_percentage }}%
-                      </span>
+                      <span class="bp-discount-badge">-{{ item.product.discount_percentage }}%</span>
                     {% endif %}
 
-                    <button
-                      type="button"
-                      class="bp-wishlist-remove-btn"
-                      title="Remove from wishlist"
-                      data-product-id="{{ item.product.id }}"
-                      data-url="{% url 'toggle_wishlist' product_slug=item.product.slug %}"
-                    >
-                      <i class="bi bi-heart-fill"></i>
-                    </button>
-
+                    <button type="button" class="bp-wishlist-remove-btn" title="Remove from wishlist" data-product-id="{{ item.product.id }}" data-url="{% url 'toggle_wishlist' product_slug=item.product.slug %}"><i class="bi bi-heart-fill"></i></button>
                   </div>
 
                   <div class="bp-wishlist-product-body">
-
                     {% if item.product.brand %}
-                      <span class="bp-wishlist-brand">
-                        {{ item.product.brand.name }}
-                      </span>
+                      <span class="bp-wishlist-brand">{{ item.product.brand.name }}</span>
                     {% endif %}
 
-                    <h3 class="bp-wishlist-product-name">
-                      {{ item.product.name }}
-                    </h3>
+                    <h3 class="bp-wishlist-product-name">{{ item.product.name }}</h3>
 
                     <div class="bp-wishlist-price-row">
-
                       {% if item.product.discount_price %}
-                        <span class="bp-wishlist-price">
-                          Rs. {{ item.product.discount_price|floatformat:0 }}
-                        </span>
+                        <span class="bp-wishlist-price">Rs. {{ item.product.discount_price|floatformat:0 }}</span>
 
-                        <span class="bp-wishlist-original-price">
-                          Rs. {{ item.product.price|floatformat:0 }}
-                        </span>
+                        <span class="bp-wishlist-original-price">Rs. {{ item.product.price|floatformat:0 }}</span>
                       {% else %}
-                        <span class="bp-wishlist-price">
-                          Rs. {{ item.product.price|floatformat:0 }}
-                        </span>
+                        <span class="bp-wishlist-price">Rs. {{ item.product.price|floatformat:0 }}</span>
                       {% endif %}
-
                     </div>
 
-                    <a
-                      href="{% url 'product' item.product.slug %}"
-                      class="btn bp-btn-outline bp-wishlist-view-btn"
-                    >
-                      View Product
-                    </a>
-
+                    <a href="{% url 'product' item.product.slug %}" class="btn bp-btn-outline bp-wishlist-view-btn">View Product</a>
                   </div>
-
                 </div>
-
               {% empty %}
-
                 <div class="bp-empty-state bp-empty-state-full">
                   <i class="bi bi-heart"></i>
                   <h3>Your Wishlist is Empty</h3>
@@ -494,12 +459,10 @@
               {% endfor %}
             </ul>
           </div>
-
         </div>
 
         <!-- ================= SIDEBAR COLUMN ================= -->
         <div class="col-lg-4 col-12 bp-side-col">
-
           <!-- ============ SECURITY & ACCOUNT ============ -->
           <div class="bp-card" id="bpSecurity">
             <div class="bp-card-head">
@@ -519,7 +482,11 @@
                 <div class="bp-security-row-copy">
                   <span class="bp-security-row-title"><i class="bi bi-envelope-check"></i> Email Verification</span>
                   <span class="bp-security-row-sub">
-                    {% if request.user.account_status == 'VERIFIED' %}Your email is verified{% else %}Verification needed{% endif %}
+                    {% if request.user.account_status == 'VERIFIED' %}
+                      Your email is verified
+                    {% else %}
+                      Verification needed
+                    {% endif %}
                   </span>
                 </div>
                 {% if request.user.account_status == 'VERIFIED' %}
@@ -554,8 +521,13 @@
                   <span class="bp-security-row-sub">Add an extra layer of protection</span>
                 </div>
                 <label class="bp-toggle-switch" title="Two-factor authentication">
-                  <input type="checkbox" id="bp2faToggle">
-                  <span class="bp-toggle-slider"></span>
+                    <input
+                        type="checkbox"
+                        id="bp2faToggle"
+                        {% if two_factor_enabled %}checked{% endif %}
+                        data-2fa-url="{% url 'profile_2fa_redirect' %}"
+                    >
+                    <span class="bp-toggle-slider"></span>
                 </label>
               </li>
             </ul>
@@ -574,7 +546,7 @@
                   <span class="bp-pref-sub">Shipping, delivery and status changes</span>
                 </div>
                 <label class="bp-toggle-switch">
-                  <input type="checkbox" checked data-pref="order_updates">
+                  <input type="checkbox" {% if request.user.preferences.order_updates %}checked{% endif %} data-pref="order_updates" />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -585,7 +557,7 @@
                   <span class="bp-pref-sub">Sales, offers and marketplace news</span>
                 </div>
                 <label class="bp-toggle-switch">
-                  <input type="checkbox" checked data-pref="promotional_emails">
+                  <input type="checkbox" {% if request.user.preferences.promotional_emails %}checked{% endif %} data-pref="promotional_emails" />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -596,7 +568,7 @@
                   <span class="bp-pref-sub">When a wishlist item gets cheaper</span>
                 </div>
                 <label class="bp-toggle-switch">
-                  <input type="checkbox" checked data-pref="price_drop_alerts">
+                  <input type="checkbox" {% if request.user.preferences.price_drop_alerts %}checked{% endif %} data-pref="price_drop_alerts" />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -607,7 +579,7 @@
                   <span class="bp-pref-sub">Low stock on saved products</span>
                 </div>
                 <label class="bp-toggle-switch">
-                  <input type="checkbox" data-pref="wishlist_alerts">
+                  <input type="checkbox" {% if request.user.preferences.wishlist_alerts %}checked{% endif %} data-pref="wishlist_alerts" />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -618,7 +590,7 @@
                   <span class="bp-pref-sub">Reminders to review delivered items</span>
                 </div>
                 <label class="bp-toggle-switch">
-                  <input type="checkbox" data-pref="review_reminders">
+                  <input type="checkbox" {% if request.user.preferences.review_reminders %}checked{% endif %} data-pref="review_reminders" />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -629,7 +601,7 @@
                   <span class="bp-pref-sub">Occasional roundups from MarketSphere</span>
                 </div>
                 <label class="bp-toggle-switch">
-                  <input type="checkbox" data-pref="newsletter">
+                  <input type="checkbox" {% if request.user.preferences.newsletter %}checked{% endif %} data-pref="newsletter" />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -640,7 +612,7 @@
                   <span class="bp-pref-sub">Sign-ins and account changes — always on</span>
                 </div>
                 <label class="bp-toggle-switch is-locked">
-                  <input type="checkbox" checked disabled>
+                  <input type="checkbox" checked disabled />
                   <span class="bp-toggle-slider"></span>
                 </label>
               </div>
@@ -649,13 +621,20 @@
             <div class="bp-pref-channels">
               <span class="bp-pref-channels-label">Preferred channels</span>
               <div class="bp-pref-channel-chips">
-                <button type="button" class="bp-channel-chip is-active" data-channel="email"><i class="bi bi-envelope"></i> Email</button>
-                <button type="button" class="bp-channel-chip is-active" data-channel="in_app"><i class="bi bi-app-indicator"></i> In-App</button>
-                <button type="button" class="bp-channel-chip" data-channel="push"><i class="bi bi-phone-vibrate"></i> Push</button>
+                <button type="button" class="bp-channel-chip {% if request.user.preferences.email_notifications %}is-active{% endif %}" data-channel="email"><i class="bi bi-envelope"></i> Email</button>
+                <button type="button" class="bp-channel-chip {% if request.user.preferences.in_app_notifications %}is-active{% endif %}" data-channel="in_app"><i class="bi bi-app-indicator"></i> In-App</button>
+                <button type="button" class="bp-channel-chip {% if request.user.preferences.push_notifications %}is-active{% endif %}" data-channel="push"><i class="bi bi-phone-vibrate"></i> Push</button>
               </div>
             </div>
 
-            <button type="button" class="btn bp-btn-primary bp-pref-save-btn" id="bpSavePrefsBtn">Save Preferences</button>
+            <button
+                type="button"
+                class="btn bp-btn-primary bp-pref-save-btn"
+                id="bpSavePrefsBtn"
+                data-url="{% url 'update_user_preferences' %}"
+            >
+                Save Preferences
+            </button>
           </div>
 
           <!-- ============ NOTIFICATIONS PREVIEW ============ -->
@@ -745,7 +724,6 @@
               <button type="button" class="btn bp-btn-danger" data-bs-toggle="modal" data-bs-target="#bpDeleteAccountModal">Delete</button>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -764,23 +742,17 @@
           <div class="bp-avatar-editor">
             <div class="bp-avatar-editor-preview" id="bpAvatarPreviewWrap">
               {% if request.user.profile_image_url %}
-                <img src="{{ request.user.profile_image_url }}" alt="Current profile photo" id="bpAvatarPreviewImg">
+                <img src="{{ request.user.profile_image_url }}" alt="Current profile photo" id="bpAvatarPreviewImg" />
               {% else %}
-                <span class="bp-avatar-editor-fallback" id="bpAvatarPreviewFallback">
-                  {{ request.user.first_name|slice:':1'|upper|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}
-                </span>
-                <img src="" alt="Current profile photo" id="bpAvatarPreviewImg" hidden>
+                <span class="bp-avatar-editor-fallback" id="bpAvatarPreviewFallback">{{ request.user.first_name|slice:':1'|upper|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}</span>
+                <img src="" alt="Current profile photo" id="bpAvatarPreviewImg" hidden />
               {% endif %}
             </div>
 
             <div class="bp-avatar-editor-actions">
-              <label for="bpAvatarUploadInput" class="btn bp-btn-outline bp-avatar-upload-label">
-                <i class="bi bi-upload"></i> Upload Photo
-              </label>
-              <input type="file" id="bpAvatarUploadInput" accept="image/png,image/jpeg,image/webp" hidden>
-              <button type="button" class="btn bp-btn-outline-danger" id="bpAvatarRemoveBtn">
-                <i class="bi bi-trash"></i> Remove
-              </button>
+              <label for="bpAvatarUploadInput" class="btn bp-btn-outline bp-avatar-upload-label"><i class="bi bi-upload"></i> Upload Photo</label>
+              <input type="file" id="bpAvatarUploadInput" accept="image/png,image/jpeg,image/webp" hidden />
+              <button type="button" class="btn bp-btn-outline-danger" id="bpAvatarRemoveBtn"><i class="bi bi-trash"></i> Remove</button>
             </div>
             <p class="bp-avatar-hint">JPG, PNG or WEBP. Max 5 MB.</p>
           </div>
@@ -788,27 +760,27 @@
           <div class="row g-3 mt-1">
             <div class="col-md-6 col-12">
               <label for="bpFirstNameInput" class="form-label">First Name</label>
-              <input type="text" class="form-control" id="bpFirstNameInput" value="{{ request.user.first_name|default:'' }}" placeholder="e.g. Ayesha" required>
+              <input type="text" class="form-control" id="bpFirstNameInput" value="{{ request.user.first_name|default:'' }}" placeholder="e.g. Ayesha" required />
             </div>
 
             <div class="col-md-6 col-12">
               <label for="bpLastNameInput" class="form-label">Last Name</label>
-              <input type="text" class="form-control" id="bpLastNameInput" value="{{ request.user.last_name|default:'' }}" placeholder="e.g. Khan" required>
+              <input type="text" class="form-control" id="bpLastNameInput" value="{{ request.user.last_name|default:'' }}" placeholder="e.g. Khan" required />
             </div>
 
             <div class="col-md-6 col-12">
               <label for="bpUsernameInput" class="form-label">Username</label>
-              <input type="text" class="form-control" id="bpUsernameInput" value="{{ request.user.username|default:'' }}" required>
+              <input type="text" class="form-control" id="bpUsernameInput" value="{{ request.user.username|default:'' }}" required />
             </div>
 
             <div class="col-md-6 col-12">
               <label for="bpPhoneInput" class="form-label">Phone Number</label>
-              <input type="text" class="form-control" id="bpPhoneInput" value="{{ request.user.contact|default:'' }}" placeholder="+92 300 1234567">
+              <input type="text" class="form-control" id="bpPhoneInput" value="{{ request.user.contact|default:'' }}" placeholder="+92 300 1234567" />
             </div>
 
             <div class="col-12">
               <label for="bpEmailInput" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="bpEmailInput" value="{{ request.user.email|default:'' }}" placeholder="you@example.com" required>
+              <input type="email" class="form-control" id="bpEmailInput" value="{{ request.user.email|default:'' }}" placeholder="you@example.com" required />
               <span class="bp-field-hint"><i class="bi bi-info-circle"></i> Changing your email may require re-verification.</span>
             </div>
           </div>
@@ -836,7 +808,7 @@
         </div>
 
         <div class="modal-body">
-          <input type="hidden" id="bpAddressIdInput" value="">
+          <input type="hidden" id="bpAddressIdInput" value="" />
 
           <div class="row g-3">
             <div class="col-12">
@@ -851,37 +823,37 @@
 
             <div class="col-md-6 col-12">
               <label for="bpAddrFullNameInput" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="bpAddrFullNameInput" placeholder="e.g. Ayesha Khan" required>
+              <input type="text" class="form-control" id="bpAddrFullNameInput" placeholder="e.g. Ayesha Khan" required />
             </div>
 
             <div class="col-md-6 col-12">
               <label for="bpAddrPhoneInput" class="form-label">Phone Number</label>
-              <input type="text" class="form-control" id="bpAddrPhoneInput" placeholder="+92 300 1234567" required>
+              <input type="text" class="form-control" id="bpAddrPhoneInput" placeholder="+92 300 1234567" required />
             </div>
 
             <div class="col-12">
               <label for="bpAddrLine1Input" class="form-label">Address Line 1</label>
-              <input type="text" class="form-control" id="bpAddrLine1Input" placeholder="House No. 123, Street 4" required>
+              <input type="text" class="form-control" id="bpAddrLine1Input" placeholder="House No. 123, Street 4" required />
             </div>
 
             <div class="col-12">
               <label for="bpAddrLine2Input" class="form-label">Address Line 2 <span class="bp-optional-tag">(optional)</span></label>
-              <input type="text" class="form-control" id="bpAddrLine2Input" placeholder="Apartment, floor, landmark">
+              <input type="text" class="form-control" id="bpAddrLine2Input" placeholder="Apartment, floor, landmark" />
             </div>
 
             <div class="col-md-6 col-12">
               <label for="bpAddrCityInput" class="form-label">City</label>
-              <input type="text" class="form-control" id="bpAddrCityInput" placeholder="e.g. Lahore" required>
+              <input type="text" class="form-control" id="bpAddrCityInput" placeholder="e.g. Lahore" required />
             </div>
 
             <div class="col-md-6 col-12">
               <label for="bpAddrPostalInput" class="form-label">Postal Code</label>
-              <input type="text" class="form-control" id="bpAddrPostalInput" placeholder="e.g. 54000" required>
+              <input type="text" class="form-control" id="bpAddrPostalInput" placeholder="e.g. 54000" required />
             </div>
 
             <div class="col-12">
               <label class="bp-checkbox-row">
-                <input type="checkbox" id="bpAddrDefaultInput">
+                <input type="checkbox" id="bpAddrDefaultInput" />
                 <span>Set as my default address</span>
               </label>
             </div>
@@ -890,7 +862,7 @@
 
         <div class="modal-footer">
           <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn bp-btn-primary" id="bpSaveAddressBtn"   data-save-url="{% url 'save-address' %}" data-update-url="{% url 'update_user_address' %}">Save Address</button>
+          <button type="button" class="btn bp-btn-primary" id="bpSaveAddressBtn" data-save-url="{% url 'save-address' %}" data-update-url="{% url 'update_user_address' %}">Save Address</button>
         </div>
       </div>
     </div>
@@ -952,7 +924,7 @@
           <div class="mb-3">
             <label for="bpCurrentPasswordInput" class="form-label">Current Password</label>
             <div class="bp-password-field">
-              <input type="password" class="form-control" id="bpCurrentPasswordInput" required>
+              <input type="password" class="form-control" id="bpCurrentPasswordInput" required />
               <button type="button" class="bp-password-toggle" data-target="bpCurrentPasswordInput" aria-label="Show password"><i class="bi bi-eye"></i></button>
             </div>
           </div>
@@ -960,7 +932,7 @@
           <div class="mb-3">
             <label for="bpNewPasswordInput" class="form-label">New Password</label>
             <div class="bp-password-field">
-              <input type="password" class="form-control" id="bpNewPasswordInput" required>
+              <input type="password" class="form-control" id="bpNewPasswordInput" required />
               <button type="button" class="bp-password-toggle" data-target="bpNewPasswordInput" aria-label="Show password"><i class="bi bi-eye"></i></button>
             </div>
             <div class="bp-password-strength-track">
@@ -972,24 +944,34 @@
           <div class="mb-2">
             <label for="bpConfirmPasswordInput" class="form-label">Confirm New Password</label>
             <div class="bp-password-field">
-              <input type="password" class="form-control" id="bpConfirmPasswordInput" required>
+              <input type="password" class="form-control" id="bpConfirmPasswordInput" required />
               <button type="button" class="bp-password-toggle" data-target="bpConfirmPasswordInput" aria-label="Show password"><i class="bi bi-eye"></i></button>
             </div>
             <span class="bp-field-error" id="bpPasswordMatchError" hidden>Passwords do not match.</span>
           </div>
 
           <ul class="bp-password-requirements" id="bpPasswordRequirements">
-            <li data-rule="length"><i class="bi bi-circle"></i> At least 8 characters</li>
-            <li data-rule="upper"><i class="bi bi-circle"></i> One uppercase letter</li>
-            <li data-rule="lower"><i class="bi bi-circle"></i> One lowercase letter</li>
-            <li data-rule="number"><i class="bi bi-circle"></i> One number</li>
-            <li data-rule="special"><i class="bi bi-circle"></i> One special character</li>
+            <li data-rule="length">
+              <i class="bi bi-circle"></i> At least 8 characters
+            </li>
+            <li data-rule="upper">
+              <i class="bi bi-circle"></i> One uppercase letter
+            </li>
+            <li data-rule="lower">
+              <i class="bi bi-circle"></i> One lowercase letter
+            </li>
+            <li data-rule="number">
+              <i class="bi bi-circle"></i> One number
+            </li>
+            <li data-rule="special">
+              <i class="bi bi-circle"></i> One special character
+            </li>
           </ul>
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn bp-btn-outline" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn bp-btn-primary" id="bpSavePasswordBtn" data-url="{% url "change_password" %}">Update Password</button>
+          <button type="button" class="btn bp-btn-primary" id="bpSavePasswordBtn" data-url="{% url 'change_password' %}">Update Password</button>
         </div>
       </div>
     </div>
@@ -1043,7 +1025,9 @@
 
         <div class="modal-body">
           <p>Your account and store history will be hidden from other buyers. You can reactivate at any time simply by logging back in.</p>
-          <p class="bp-modal-note"><i class="bi bi-info-circle"></i> This does not delete any of your data.</p>
+          <p class="bp-modal-note">
+            <i class="bi bi-info-circle"></i> This does not delete any of your data.
+          </p>
         </div>
 
         <div class="modal-footer">
@@ -1064,15 +1048,17 @@
         </div>
 
         <div class="modal-body">
-          <p class="bp-danger-warning"><i class="bi bi-exclamation-triangle-fill"></i> This action may permanently remove your account and associated data. This cannot be undone.</p>
+          <p class="bp-danger-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i> This action may permanently remove your account and associated data. This cannot be undone.
+          </p>
 
           <div class="mb-3">
             <label for="bpDeleteConfirmInput" class="form-label">Type <strong>DELETE</strong> to confirm</label>
-            <input type="text" class="form-control" id="bpDeleteConfirmInput" placeholder="DELETE" autocomplete="off">
+            <input type="text" class="form-control" id="bpDeleteConfirmInput" placeholder="DELETE" autocomplete="off" />
           </div>
 
           <label class="bp-checkbox-row">
-            <input type="checkbox" id="bpDeleteAckCheckbox">
+            <input type="checkbox" id="bpDeleteAckCheckbox" />
             <span>I understand this action is permanent and cannot be reversed.</span>
           </label>
         </div>
@@ -1087,7 +1073,6 @@
 
   <!-- ================= TOAST CONTAINER ================= -->
   <div class="bp-toast-container" id="bpToastContainer" aria-live="polite"></div>
-
 {% endblock %}
 
 {% block js %}

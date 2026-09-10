@@ -1635,8 +1635,19 @@
     }
 
     /* =========================================================
+       2FA URL
+       ========================================================= */
+    const twoFactorToggle = document.getElementById("bp2faToggle");
+
+    if (twoFactorToggle) {
+        twoFactorToggle.addEventListener("change", function () {
+            window.location.href = this.dataset["2faUrl"];
+        });
+    }
+    /* =========================================================
        COMMUNICATION PREFERENCES
        ========================================================= */
+
     function initPreferenceToggles() {
         document.querySelectorAll(".bp-channel-chip").forEach(function (chip) {
             chip.addEventListener("click", function () {
@@ -1645,18 +1656,103 @@
         });
 
         const saveBtn = document.getElementById("bpSavePrefsBtn");
-        if (saveBtn) {
-            saveBtn.addEventListener("click", function () {
-                setButtonLoading(saveBtn, true, "Saving...");
 
-                window.setTimeout(function () {
-                    setButtonLoading(saveBtn, false);
-                    window.bpShowToast("Preferences saved.", "success");
-                }, 700);
-            });
+        if (!saveBtn) {
+            return;
         }
-    }
 
+        saveBtn.addEventListener("click", async function () {
+            const preferenceInputs = document.querySelectorAll(
+                'input[type="checkbox"][data-pref]'
+            );
+
+            const preferences = {};
+
+            preferenceInputs.forEach(function (input) {
+                preferences[input.dataset.pref] = input.checked;
+            });
+
+            const channels = {};
+
+            document.querySelectorAll(".bp-channel-chip[data-channel]").forEach(
+                function (chip) {
+                    channels[chip.dataset.channel] =
+                        chip.classList.contains("is-active");
+                }
+            );
+
+            const payload = {
+                preferences: preferences,
+                channels: channels
+            };
+
+            const endpoint = saveBtn.dataset.url;
+
+            if (!endpoint) {
+                window.bpShowToast(
+                    "Preferences save endpoint is not configured.",
+                    "error"
+                );
+                return;
+            }
+
+            const csrfToken = document.querySelector(
+                "[name=csrfmiddlewaretoken]"
+            )?.value;
+
+            if (!csrfToken) {
+                window.bpShowToast(
+                    "Security token is missing. Please refresh the page.",
+                    "error"
+                );
+                return;
+            }
+
+            setButtonLoading(saveBtn, true, "Saving...");
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                let data;
+
+                try {
+                    data = await response.json();
+                } catch (error) {
+                    throw new Error(
+                        "The server returned an unexpected response."
+                    );
+                }
+
+                if (!response.ok || !data.success) {
+                    throw new Error(
+                        data.message || "Unable to save your preferences."
+                    );
+                }
+
+                window.bpShowToast(
+                    data.message || "Preferences saved.",
+                    "success"
+                );
+
+            } catch (error) {
+                window.bpShowToast(
+                    error.message || "Unable to save your preferences.",
+                    "error"
+                );
+            } finally {
+                setButtonLoading(saveBtn, false);
+            }
+        });
+    }
     /* =========================================================
        DANGER ZONE — DEACTIVATE / DELETE ACCOUNT
        ========================================================= */

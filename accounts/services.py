@@ -47,10 +47,9 @@ def create_user(user):
     transaction.on_commit(lambda: send_welcome_email(new_user))
     return new_user
 
+
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-
-
 
 
 def change_user_password(user, current_password, new_password, confirm_password):
@@ -67,7 +66,9 @@ def change_user_password(user, current_password, new_password, confirm_password)
         raise ValueError("Your current password is incorrect.")
 
     if user.check_password(new_password):
-        raise ValueError("Your new password must be different from your current password.")
+        raise ValueError(
+            "Your new password must be different from your current password."
+        )
 
     if new_password != confirm_password:
         raise ValueError("New password and confirmation don't match.")
@@ -136,10 +137,10 @@ def change_account_state(user_id, state):
     user.account_status = state
     user.save(update_fields=["account_status"])
 
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from allauth.account.models import EmailAddress
-
 
 User = get_user_model()
 
@@ -166,10 +167,7 @@ def update_buyer_profile(
         if not username:
             errors["username"] = ["Username is required."]
         elif (
-            User.objects
-            .filter(username__iexact=username)
-            .exclude(pk=user.pk)
-            .exists()
+            User.objects.filter(username__iexact=username).exclude(pk=user.pk).exists()
         ):
             errors["username"] = ["This username is already taken."]
 
@@ -188,16 +186,13 @@ def update_buyer_profile(
 
             if email_changed:
                 email_in_use = (
-                    EmailAddress.objects
-                    .filter(email__iexact=email)
+                    EmailAddress.objects.filter(email__iexact=email)
                     .exclude(user=user)
                     .exists()
                 )
 
                 if email_in_use:
-                    errors["email"] = [
-                        "This email address is already in use."
-                    ]
+                    errors["email"] = ["This email address is already in use."]
 
     if errors:
         return False, "Please correct the errors.", None, False, errors
@@ -242,9 +237,7 @@ def update_buyer_profile(
         if not created:
             email_address.primary = True
             email_address.verified = False
-            email_address.save(
-                update_fields=["primary", "verified"]
-            )
+            email_address.save(update_fields=["primary", "verified"])
 
         user.account_status = User.AccountStatus.UNVERIFIED
         user.save(update_fields=["account_status"])
@@ -258,15 +251,16 @@ def update_buyer_profile(
     message = (
         "Profile updated successfully."
         if not email_changed
-        else "Your email address was changed. "
-             "Please verify your new email address."
+        else "Your email address was changed. " "Please verify your new email address."
     )
 
     return True, message, user, email_changed, {}
 
+
 # ==============================================================================
 # ADDRESS SERVICES
 # ==============================================================================
+
 
 def save_user_address(user, address_data):
     address_id = address_data.get("addressId")
@@ -341,11 +335,7 @@ def update_user_address(user, data):
     is_default = data.get("isDefault") is True
 
     if is_default:
-        Address.objects.filter(
-            user=user
-        ).exclude(
-            id=user_address.id
-        ).update(
+        Address.objects.filter(user=user).exclude(id=user_address.id).update(
             is_default=False
         )
 
@@ -353,6 +343,7 @@ def update_user_address(user, data):
     user_address.save()
 
     return user_address
+
 
 @transaction.atomic
 def delete_user_address(user, data):
@@ -460,6 +451,7 @@ def request_application_changes_service(application_id, requested_changes, notes
     transaction.on_commit(lambda: send_seller_rejected_email(application, notes))
     return application
 
+
 @transaction.atomic
 def approve_seller_application_service(application_id):
     application = SellerApplication.objects.select_related(
@@ -479,9 +471,7 @@ def approve_seller_application_service(application_id):
     )
 
     seller.status = Seller.Status.VERIFIED
-    seller.save(
-        update_fields=["status"]
-    )
+    seller.save(update_fields=["status"])
 
     transaction.on_commit(
         lambda seller=seller: send_seller_verified_email(seller),
@@ -489,6 +479,7 @@ def approve_seller_application_service(application_id):
     )
 
     return application
+
 
 @transaction.atomic
 def delete_seller_account_service(seller_id):
@@ -1136,7 +1127,9 @@ def get_buyer_dashboard_stats(user):
 
     total_orders = len(orders)
     completed_orders = sum(
-        1 for order in orders if _order_status_value(order) in ("delivered", "completed")
+        1
+        for order in orders
+        if _order_status_value(order) in ("delivered", "completed")
     )
     cancelled_orders = sum(
         1 for order in orders if _order_status_value(order) == "cancelled"
@@ -1201,12 +1194,13 @@ def calculate_buyer_profile_completion(user):
         "is_complete": percentage == 100,
     }
 
+
 from products.models import WishlistItem
+
 
 def get_buyer_wishlist_preview(user, limit=4):
     return list(
-        WishlistItem.objects
-        .filter(user=user)
+        WishlistItem.objects.filter(user=user)
         .select_related(
             "product",
             "product__brand",
@@ -1215,6 +1209,8 @@ def get_buyer_wishlist_preview(user, limit=4):
             "product__images",
         )[:limit]
     )
+
+
 def get_buyer_recent_activity(user, limit=6):
     """ASSUMPTION: there is no activity/audit-log model in the codebase
     yet. Once one exists (e.g. an AccountActivity model related to
@@ -1249,10 +1245,14 @@ def get_buyer_notifications(user, limit=5):
     return [], 0
 
 
+from allauth.mfa.models import Authenticator
+
+
 def get_buyer_profile_context(user):
     """Orchestrator for the buyer profile / my account page. Gathers
     everything the template needs into a single context dict so the
     view itself can stay a thin wrapper."""
+
     notifications, notifications_unread_count = get_buyer_notifications(user)
 
     return {
@@ -1265,4 +1265,65 @@ def get_buyer_profile_context(user):
         "activities": get_buyer_recent_activity(user),
         "notifications": notifications,
         "notifications_unread_count": notifications_unread_count,
+        "two_factor_enabled": Authenticator.objects.filter(
+            user=user,
+            type=Authenticator.Type.TOTP,
+        ).exists(),
     }
+
+from django.db import transaction
+
+from .models import UserPreferences
+
+
+@transaction.atomic
+def update_user_preferences(user, data):
+    preferences_data = data.get("preferences", {})
+    channels_data = data.get("channels", {})
+
+    if not isinstance(preferences_data, dict):
+        raise ValueError("Invalid preferences data.")
+
+    if not isinstance(channels_data, dict):
+        raise ValueError("Invalid notification channels data.")
+
+    preferences, created = UserPreferences.objects.get_or_create(
+        user=user
+    )
+
+    preference_fields = {
+        "order_updates",
+        "promotional_emails",
+        "price_drop_alerts",
+        "wishlist_alerts",
+        "review_reminders",
+        "newsletter",
+    }
+
+    channel_fields = {
+        "email": "email_notifications",
+        "in_app": "in_app_notifications",
+        "push": "push_notifications",
+    }
+
+    for field in preference_fields:
+        if field in preferences_data:
+            value = preferences_data[field]
+
+            if not isinstance(value, bool):
+                raise ValueError(f"Invalid value for {field}.")
+
+            setattr(preferences, field, value)
+
+    for channel_key, field in channel_fields.items():
+        if channel_key in channels_data:
+            value = channels_data[channel_key]
+
+            if not isinstance(value, bool):
+                raise ValueError(f"Invalid value for {channel_key}.")
+
+            setattr(preferences, field, value)
+
+    preferences.save()
+
+    return preferences

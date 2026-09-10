@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Set Up Two-Factor Authentication • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'profile_2fa.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="bp2fa-section">
+    <div class="container">
+      <a href="{% url 'profile' %}" class="bp2fa-back-link"><i class="bi bi-arrow-left"></i> Back to Profile</a>
+
+      <div class="bp2fa-wrap">
+        <div class="bp2fa-card">
+          <div class="bp2fa-card-icon"><i class="bi bi-shield-lock"></i></div>
+
+          <h1 class="bp2fa-title">Set up two-factor authentication</h1>
+          <p class="bp2fa-subtitle">Two-factor authentication adds a second step to signing in. After your password, you'll also enter a 6-digit code from an authenticator app on your phone — so even if someone gets your password, they still can't get into your account.</p>
+
+          {% if form.non_field_errors %}
+            <div class="bp2fa-alert bp2fa-alert-error">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <div>
+                {% for error in form.non_field_errors %}
+                  <p>{{ error }}</p>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="bp2fa-steps">
+            <!-- STEP 1: SCAN -->
+            <div class="bp2fa-step">
+              <div class="bp2fa-step-head">
+                <span class="bp2fa-step-num">1</span>
+                <h2 class="bp2fa-step-title">Scan the QR code</h2>
+              </div>
+              <p class="bp2fa-step-desc">Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this code.</p>
+
+              <div class="bp2fa-qr-wrap">
+                <img src="{{ totp_svg_data_uri }}" alt="Two-factor authentication QR code" class="bp2fa-qr-image" />
+              </div>
+
+              <details class="bp2fa-manual-entry">
+                <summary>Can't scan the code? Enter it manually</summary>
+                <div class="bp2fa-secret-row">
+                  <code class="bp2fa-secret-value" id="bp2faSecretValue">{{ form.secret }}</code>
+                  <button type="button" class="bp2fa-copy-btn" id="bp2faCopySecretBtn" data-secret="{{ form.secret }}" aria-label="Copy secret key">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+                <p class="bp2fa-manual-help">Add this key to your authenticator app as a "time-based" or "TOTP" key. You can keep it somewhere safe to reinstall your authenticator app later.</p>
+              </details>
+            </div>
+
+            <!-- STEP 2: VERIFY -->
+            <div class="bp2fa-step">
+              <div class="bp2fa-step-head">
+                <span class="bp2fa-step-num">2</span>
+                <h2 class="bp2fa-step-title">Enter the 6-digit code</h2>
+              </div>
+              <p class="bp2fa-step-desc">Type the current code shown in your authenticator app to confirm it's set up correctly.</p>
+
+              <form method="post" action="{% url 'profile_activate_totp' %}" class="bp2fa-form" id="bp2faActivateForm" novalidate>
+                {% csrf_token %}
+
+                <div class="bp2fa-code-field {% if form.code.errors %}has-error{% endif %}">
+                  <label for="{{ form.code.id_for_label }}" class="bp2fa-code-label">Authenticator code</label>
+                  <input
+                    type="text"
+                    name="{{ form.code.html_name }}"
+                    id="{{ form.code.id_for_label }}"
+                    class="bp2fa-code-input"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="000000"
+                    maxlength="6"
+                    value="{{ form.code.value|default:'' }}"
+                    autofocus
+                  />
+                  {% if form.code.errors %}
+                    <p class="bp2fa-field-error">
+                      {% for error in form.code.errors %}{{ error }}{% endfor %}
+                    </p>
+                  {% endif %}
+                </div>
+
+                <div class="bp2fa-actions">
+                  <a href="{% url 'profile' %}" class="btn bp2fa-btn-secondary">Cancel</a>
+                  <button type="submit" class="btn bp2fa-btn-primary" id="bp2faActivateBtn">
+                    <i class="bi bi-check2-circle"></i> Activate
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'profile_2fa.js' %}"></script>
+{% endblock %}
