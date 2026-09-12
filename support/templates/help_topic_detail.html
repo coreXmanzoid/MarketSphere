@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ topic.name }} Help â€¢ MarketSphere{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/help_support.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="hs-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'help-support' %}">Help &amp; Support</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ topic.name }}</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <section class="hs-hero-section">
+    <div class="container">
+      <div class="hs-hero-inner">
+        <span class="section-label"><i class="bi bi-life-preserver"></i> Help Topic</span>
+        <h1 class="hs-hero-title">{{ topic.name }}</h1>
+        <p class="hs-hero-subtitle">{{ topic.description }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="hs-section">
+    <div class="container">
+      <div class="hs-section-head">
+        <h2 class="hs-section-title">{{ topic.name }} Help</h2>
+        <p class="hs-section-subtitle">Find answers to common questions in this topic.</p>
+      </div>
+
+      <div class="hs-articles-list">
+        {% for article in articles %}
+          <!-- article.slug -->
+          <a href="{% url 'help-article' slug=article.slug %}" class="hs-article-row">
+            <span class="hs-article-icon"><i class="bi bi-file-earmark-text"></i></span>
+            <span class="hs-article-body">
+              <span class="hs-article-title">{{ article.title }}</span>
+              <span class="hs-article-desc">{{ article.description }}</span>
+            </span>
+            <span class="hs-article-tag">{{ article.category }}</span>
+            <i class="bi bi-chevron-right hs-article-arrow"></i>
+          </a>
+        {% empty %}
+          <div class="hs-empty-state">
+            <div class="hs-empty-icon"><i class="bi bi-journal-text"></i></div>
+            <h3 class="hs-empty-title">More articles coming soon</h3>
+            <p class="hs-empty-desc">We are preparing helpful answers for this topic. Contact our support team if you need help now.</p>
+            <a href="{% url 'help-support' %}#hsContactModal" class="btn btn-hero-primary">Back to Help &amp; Support</a>
+          </div>
+        {% endfor %}
+      </div>
+
+      <p class="mt-4"><a href="{% url 'help-support' %}"><i class="bi bi-arrow-left"></i> Back to Help &amp; Support</a></p>
+    </div>
+  </section>
+{% endblock %}

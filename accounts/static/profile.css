@@ -1440,6 +1440,11 @@
     background-color: rgba(157, 102, 56, 0.08);
 }
 
+.bp-support-link:focus-visible {
+    outline: 2px solid var(--bp-accent);
+    outline-offset: 2px;
+}
+
 .bp-support-link i {
     background-color: transparent;
     color: var(--bp-accent);

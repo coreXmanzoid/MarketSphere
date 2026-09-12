@@ -1,0 +1,1028 @@
+{
+  "topics": {
+    "orders": {
+      "title": "Orders",
+      "description": "Manage your purchases, tracking, and cancellations.",
+      "article_count": 12
+    },
+    "shipping": {
+      "title": "Shipping & Delivery",
+      "description": "Information on shipping methods, times, and rates.",
+      "article_count": 8
+    },
+    "returns": {
+      "title": "Returns & Refunds",
+      "description": "Learn how to return items and get your money back.",
+      "article_count": 10
+    },
+    "payments": {
+      "title": "Payments",
+      "description": "Secure payment methods, billing, and promotions.",
+      "article_count": 7
+    },
+    "account": {
+      "title": "Account & Profile",
+      "description": "Manage your personal information and security settings.",
+      "article_count": 9
+    },
+    "cart-wishlist": {
+      "title": "Cart & Wishlist",
+      "description": "Managing your shopping cart and saved items.",
+      "article_count": 5
+    },
+    "products": {
+      "title": "Products",
+      "description": "Details about product authenticity, stock, and warranties.",
+      "article_count": 6
+    },
+    "sellers": {
+      "title": "Sellers",
+      "description": "Communicating with sellers and understanding their policies.",
+      "article_count": 6
+    },
+    "reviews": {
+      "title": "Reviews",
+      "description": "How to leave, edit, and manage your product reviews.",
+      "article_count": 4
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage your email, SMS, and push notification preferences.",
+      "article_count": 3
+    },
+    "other": {
+      "title": "Other",
+      "description": "Terms, policies, and contacting support.",
+      "article_count": 5
+    }
+  },
+  "articles": {
+    "track-my-order": {
+      "title": "How can I track my order?",
+      "topic": "orders",
+      "description": "Learn how to find your tracking number and follow your package's journey.",
+      "content": [
+        {
+          "heading": "Where is my order?",
+          "paragraphs": [
+            "We know you're excited to receive your MarketSphere order! Once a seller ships your item, you can track its progress directly from your account. Most sellers provide tracking details within 1-3 business days of your purchase."
+          ]
+        },
+        {
+          "heading": "How to find your tracking number",
+          "paragraphs": [
+            "You can easily locate your tracking information in your dashboard."
+          ],
+          "steps": [
+            "Log in to your MarketSphere account.",
+            "Click on 'My Account' and select 'Order History'.",
+            "Find the order you want to track and click 'View Details'.",
+            "Look for the 'Tracking Number' under the shipping section."
+          ],
+          "tip": "If the tracking number is a link, you can click it to go directly to the shipping carrier's website."
+        },
+        {
+          "heading": "Tracking as a guest",
+          "paragraphs": [
+            "If you checked out as a guest, you won't have an order history dashboard. Instead, check the email you used during checkout. We always send a shipping confirmation email that contains your tracking link."
+          ],
+          "warning": "Check your spam or junk folder if you don't see the shipping confirmation email in your primary inbox."
+        }
+      ]
+    },
+    "cancel-an-order": {
+      "title": "How do I cancel an order?",
+      "topic": "orders",
+      "description": "Find out how to cancel a recent purchase before it ships.",
+      "content": [
+        {
+          "heading": "The cancellation window",
+          "paragraphs": [
+            "Because our sellers work hard to ship items quickly, there is usually a short window to cancel an order. You can typically cancel your order with no questions asked as long as the seller hasn't marked the item as 'Shipped'."
+          ]
+        },
+        {
+          "heading": "Steps to cancel your order",
+          "paragraphs": [
+            "If your order hasn't shipped yet, follow these steps to request a cancellation:"
+          ],
+          "steps": [
+            "Navigate to 'My Account' and click on 'Order History'.",
+            "Locate the order you wish to cancel.",
+            "Click 'Cancel Order' next to the item.",
+            "Select a reason for the cancellation and confirm."
+          ]
+        },
+        {
+          "heading": "What if it's too late?",
+          "paragraphs": [
+            "If the 'Cancel Order' button is missing, the seller has already shipped your item. You will need to wait for it to arrive and request a return."
+          ],
+          "tip": "You can message the seller directly to see if they can intercept the package, though this isn't guaranteed."
+        }
+      ]
+    },
+    "order-hasnt-arrived": {
+      "title": "What should I do if my order hasn't arrived?",
+      "topic": "orders",
+      "description": "Troubleshoot missing packages and delayed deliveries.",
+      "content": [
+        {
+          "heading": "Verify your delivery window",
+          "paragraphs": [
+            "First, check the estimated delivery date in your confirmation email. Shipping times vary depending on the seller's location. It's normal for packages to occasionally arrive a day or two late."
+          ]
+        },
+        {
+          "heading": "Check with neighbors",
+          "paragraphs": [
+            "If the tracking shows 'Delivered' but you don't have the package, carriers sometimes leave boxes in hidden spots. Check side doors, porches, and with neighbors."
+          ]
+        },
+        {
+          "heading": "Contacting the seller",
+          "paragraphs": [
+            "If it has been 48 hours since the package was marked delivered, reach out to the seller via your Order History page."
+          ],
+          "warning": "If the seller is unresponsive after 3 days, contact MarketSphere Support to open a buyer protection claim."
+        }
+      ]
+    },
+    "order-history": {
+      "title": "How to view your order history",
+      "topic": "orders",
+      "description": "Find records of your past purchases and invoices.",
+      "content": [
+        {
+          "heading": "Accessing Past Orders",
+          "paragraphs": ["Log in and navigate to 'Order History' in your dashboard to view all past and current orders, download invoices, and reorder items."]
+        }
+      ]
+    },
+    "modify-order": {
+      "title": "Can I modify my order?",
+      "topic": "orders",
+      "description": "Learn if you can add or remove items after checking out.",
+      "content": [
+        {
+          "heading": "Making Changes",
+          "paragraphs": ["Once an order is placed, items cannot be added or removed. If you need to make changes, please cancel the order immediately and place a new one."]
+        }
+      ]
+    },
+    "missing-items": {
+      "title": "An item is missing from my order",
+      "topic": "orders",
+      "description": "What to do if your package arrives without everything you ordered.",
+      "content": [
+        {
+          "heading": "Partial Shipments",
+          "paragraphs": ["Some sellers ship items in separate packages. Check your tracking details to see if multiple boxes were dispatched. If not, contact the seller to report the missing item."]
+        }
+      ]
+    },
+    "wrong-item": {
+      "title": "I received the wrong item",
+      "topic": "orders",
+      "description": "Steps to take if the seller sent the incorrect product.",
+      "content": [
+        {
+          "heading": "Reporting an Error",
+          "paragraphs": ["If you received an item you didn't order, contact the seller within 7 days and include a photo of the incorrect item to arrange an exchange."]
+        }
+      ]
+    },
+    "guest-checkout": {
+      "title": "Can I check out as a guest?",
+      "topic": "orders",
+      "description": "Learn about buying on MarketSphere without an account.",
+      "content": [
+        {
+          "heading": "Guest Purchasing",
+          "paragraphs": ["Yes, you can check out as a guest. However, creating an account makes it easier to track orders, manage returns, and save payment methods."]
+        }
+      ]
+    },
+    "pre-orders": {
+      "title": "How do pre-orders work?",
+      "topic": "orders",
+      "description": "Understanding timelines for pre-order merchandise.",
+      "content": [
+        {
+          "heading": "Pre-order Timelines",
+          "paragraphs": ["When you buy a pre-order item, the estimated shipping date will be listed on the product page. You will be charged at the time of purchase to reserve your item."]
+        }
+      ]
+    },
+    "bulk-orders": {
+      "title": "Placing bulk orders",
+      "topic": "orders",
+      "description": "How to purchase large quantities from a seller.",
+      "content": [
+        {
+          "heading": "Wholesale and Bulk",
+          "paragraphs": ["If you wish to order more than 10 of a specific item, message the seller beforehand. They may offer bulk discounts or need to verify stock levels."]
+        }
+      ]
+    },
+    "gift-orders": {
+      "title": "Sending an order as a gift",
+      "topic": "orders",
+      "description": "Hiding prices and adding gift messages.",
+      "content": [
+        {
+          "heading": "Gift Options",
+          "paragraphs": ["Select 'This is a gift' at checkout to hide the price on the packing slip. You can also include a custom message for the recipient."]
+        }
+      ]
+    },
+    "order-status": {
+      "title": "What does my order status mean?",
+      "topic": "orders",
+      "description": "Definitions for Processing, Shipped, and Delivered.",
+      "content": [
+        {
+          "heading": "Status Definitions",
+          "paragraphs": ["'Processing' means the seller is packing your item. 'Shipped' means the carrier has it. 'Delivered' means the package has arrived at your address."]
+        }
+      ]
+    },
+    "shipping-rates": {
+      "title": "How are shipping rates calculated?",
+      "topic": "shipping",
+      "description": "Understand how sellers set their shipping prices.",
+      "content": [
+        {
+          "heading": "Shipping Costs",
+          "paragraphs": ["Shipping rates are determined by individual sellers based on the package weight, dimensions, and the delivery destination."]
+        }
+      ]
+    },
+    "delivery-times": {
+      "title": "Estimated delivery times",
+      "topic": "shipping",
+      "description": "How long it takes for a package to arrive.",
+      "content": [
+        {
+          "heading": "Delivery Estimates",
+          "paragraphs": ["Standard domestic shipping usually takes 3-7 business days. Delivery dates are estimates provided by the carrier and are not guaranteed."]
+        }
+      ]
+    },
+    "international-shipping": {
+      "title": "Do you ship internationally?",
+      "topic": "shipping",
+      "description": "Information on cross-border shopping and customs.",
+      "content": [
+        {
+          "heading": "Global Shipping",
+          "paragraphs": ["Many of our sellers ship worldwide. If international shipping is available, it will be an option during checkout. Buyers are responsible for any customs duties."]
+        }
+      ]
+    },
+    "change-address": {
+      "title": "Can I change my shipping address?",
+      "topic": "shipping",
+      "description": "Updating your address after an order is placed.",
+      "content": [
+        {
+          "heading": "Address Corrections",
+          "paragraphs": ["If your order hasn't shipped, contact the seller immediately to request an address change. Once shipped, the address cannot be altered."]
+        }
+      ]
+    },
+    "carriers": {
+      "title": "Which shipping carriers are used?",
+      "topic": "shipping",
+      "description": "Common carriers used by MarketSphere sellers.",
+      "content": [
+        {
+          "heading": "Carrier Selection",
+          "paragraphs": ["Sellers choose their preferred carriers, typically USPS, UPS, or FedEx. The carrier for your order will be noted in your shipping confirmation email."]
+        }
+      ]
+    },
+    "expedited": {
+      "title": "Expedited and overnight shipping",
+      "topic": "shipping",
+      "description": "Upgrading your shipping speed.",
+      "content": [
+        {
+          "heading": "Faster Delivery",
+          "paragraphs": ["If a seller offers expedited shipping, you can select it at checkout for an additional fee. Processing times still apply before the item ships."]
+        }
+      ]
+    },
+    "free-shipping": {
+      "title": "How do I get free shipping?",
+      "topic": "shipping",
+      "description": "Finding items with no delivery fees.",
+      "content": [
+        {
+          "heading": "Free Shipping Filters",
+          "paragraphs": ["You can filter search results to show only items with 'Free Shipping'. Some sellers also offer free shipping if you spend over a certain amount in their shop."]
+        }
+      ]
+    },
+    "weekend": {
+      "title": "Do you deliver on weekends?",
+      "topic": "shipping",
+      "description": "Carrier policies regarding Saturday and Sunday delivery.",
+      "content": [
+        {
+          "heading": "Weekend Delivery",
+          "paragraphs": ["Weekend delivery depends on the carrier. USPS often delivers on Saturdays, while UPS and FedEx standard services usually deliver Monday through Friday."]
+        }
+      ]
+    },
+    "request-a-return": {
+      "title": "How do I request a return?",
+      "topic": "returns",
+      "description": "Step-by-step instructions on returning an item.",
+      "content": [
+        {
+          "heading": "Our return policy guidelines",
+          "paragraphs": [
+            "Most items can be returned within 30 days of delivery. The item must be unused, in its original packaging, and in the same condition you received it."
+          ],
+          "warning": "Personalized goods and digital downloads cannot be returned unless they arrived defective."
+        },
+        {
+          "heading": "How to start a return request",
+          "paragraphs": [
+            "Initiating a return is easy through your dashboard."
+          ],
+          "steps": [
+            "Go to 'My Account' and select 'Order History'.",
+            "Find the item and click 'Return Item'.",
+            "Choose a reason and upload photos if damaged.",
+            "Submit the request for the seller to review."
+          ]
+        },
+        {
+          "heading": "Shipping your item back",
+          "paragraphs": [
+            "Once approved, you'll receive a printable label. Attach it to your package and drop it off at the carrier."
+          ],
+          "tip": "Always ask the carrier for a drop-off receipt as proof of return."
+        }
+      ]
+    },
+    "receive-my-refund": {
+      "title": "When will I receive my refund?",
+      "topic": "returns",
+      "description": "Understand the timeline for getting your money back.",
+      "content": [
+        {
+          "heading": "The refund timeline",
+          "paragraphs": [
+            "If you canceled before shipping, refunds are processed immediately. For returns, the seller must inspect the item first."
+          ]
+        },
+        {
+          "heading": "Original payment methods",
+          "paragraphs": [
+            "Once issued, bank processing times apply."
+          ],
+          "steps": [
+            "Credit/Debit Cards: 3–5 business days.",
+            "PayPal: Within 24 hours.",
+            "Store Credit: Instantly."
+          ]
+        },
+        {
+          "heading": "Why is my refund delayed?",
+          "paragraphs": [
+            "Delays usually occur if the bank is processing over a weekend, or if the return package is still in transit to the seller."
+          ]
+        }
+      ]
+    },
+    "return-policy": {
+      "title": "Standard return policy",
+      "topic": "returns",
+      "description": "MarketSphere's baseline rules for returns.",
+      "content": [
+        {
+          "heading": "30-Day Window",
+          "paragraphs": ["Buyers have 30 days from the delivery date to initiate a return. Items must be in original condition unless reported damaged upon arrival."]
+        }
+      ]
+    },
+    "return-shipping": {
+      "title": "Who pays for return shipping?",
+      "topic": "returns",
+      "description": "Understanding return postage costs.",
+      "content": [
+        {
+          "heading": "Return Costs",
+          "paragraphs": ["If the item is defective or incorrect, the seller covers return shipping. If you simply changed your mind, the cost of the return label will be deducted from your refund."]
+        }
+      ]
+    },
+    "exchange": {
+      "title": "Can I exchange an item?",
+      "topic": "returns",
+      "description": "How to swap an item for a different size or color.",
+      "content": [
+        {
+          "heading": "Exchanges",
+          "paragraphs": ["Currently, the best way to exchange an item is to return the original for a refund and place a new order for the desired size or color."]
+        }
+      ]
+    },
+    "damaged": {
+      "title": "My item arrived damaged",
+      "topic": "returns",
+      "description": "What to do if your item was broken in transit.",
+      "content": [
+        {
+          "heading": "Damaged Goods",
+          "paragraphs": ["Take clear photos of the damaged item and the shipping box. Submit a return request immediately and upload the photos to ensure a full refund."]
+        }
+      ]
+    },
+    "non-returnable": {
+      "title": "Non-returnable items",
+      "topic": "returns",
+      "description": "Items that are exempt from the standard return policy.",
+      "content": [
+        {
+          "heading": "Final Sale Items",
+          "paragraphs": ["Perishable goods, custom/personalized products, intimates, and digital downloads are final sale and cannot be returned."]
+        }
+      ]
+    },
+    "return-status": {
+      "title": "Checking your return status",
+      "topic": "returns",
+      "description": "How to track a return package.",
+      "content": [
+        {
+          "heading": "Tracking Returns",
+          "paragraphs": ["You can track your return package using the tracking number on the return label provided to you. Once the seller receives it, they have 48 hours to issue the refund."]
+        }
+      ]
+    },
+    "packaging": {
+      "title": "How to package a return",
+      "topic": "returns",
+      "description": "Ensuring your return arrives safely.",
+      "content": [
+        {
+          "heading": "Safe Packing",
+          "paragraphs": ["Always use the original box if possible. Secure the item with bubble wrap or paper to prevent it from shifting during transit."]
+        }
+      ]
+    },
+    "return-label": {
+      "title": "I can't print my return label",
+      "topic": "returns",
+      "description": "What to do if you don't have a printer.",
+      "content": [
+        {
+          "heading": "Label Alternatives",
+          "paragraphs": ["If you don't have a printer, many carriers (like UPS and USPS) allow you to scan a QR code from your phone at the drop-off location, and they will print the label for you."]
+        }
+      ]
+    },
+    "methods": {
+      "title": "Accepted payment methods",
+      "topic": "payments",
+      "description": "Ways to pay on MarketSphere.",
+      "content": [
+        {
+          "heading": "Payment Options",
+          "paragraphs": ["We accept all major credit and debit cards (Visa, Mastercard, Amex), PayPal, and Apple Pay. We use secure encryption to protect your data."]
+        }
+      ]
+    },
+    "failed": {
+      "title": "Why did my payment fail?",
+      "topic": "payments",
+      "description": "Troubleshooting declined transactions.",
+      "content": [
+        {
+          "heading": "Declined Payments",
+          "paragraphs": ["Payments often fail due to incorrect billing addresses, expired cards, or anti-fraud blocks by your bank. Try re-entering your details or contacting your bank."]
+        }
+      ]
+    },
+    "security": {
+      "title": "Is my credit card information secure?",
+      "topic": "payments",
+      "description": "How we protect your financial data.",
+      "content": [
+        {
+          "heading": "Payment Security",
+          "paragraphs": ["Yes. MarketSphere uses industry-standard SSL encryption and partners with Stripe for payment processing. We do not store your full credit card number on our servers."]
+        }
+      ]
+    },
+    "store-credit": {
+      "title": "How to use store credit",
+      "topic": "payments",
+      "description": "Applying your balance to a purchase.",
+      "content": [
+        {
+          "heading": "Using Your Balance",
+          "paragraphs": ["If you have store credit, it will automatically apply to your cart at checkout. You can pay any remaining balance with your credit card."]
+        }
+      ]
+    },
+    "promo": {
+      "title": "How to use promo codes",
+      "topic": "payments",
+      "description": "Applying discounts to your order.",
+      "content": [
+        {
+          "heading": "Applying Codes",
+          "paragraphs": ["Enter your promo code in the 'Discount Code' box at checkout and click 'Apply'. Note that most codes cannot be stacked."]
+        }
+      ]
+    },
+    "tax": {
+      "title": "Why was I charged sales tax?",
+      "topic": "payments",
+      "description": "Understanding local tax requirements.",
+      "content": [
+        {
+          "heading": "Sales Tax",
+          "paragraphs": ["MarketSphere is required by law to collect sales tax on orders shipping to jurisdictions that mandate it. The tax rate is based on the delivery address."]
+        }
+      ]
+    },
+    "currency": {
+      "title": "Currency conversion and fees",
+      "topic": "payments",
+      "description": "Shopping in different currencies.",
+      "content": [
+        {
+          "heading": "Display Currency",
+          "paragraphs": ["All prices are displayed in USD by default. If your payment method uses a different currency, your bank will determine the exchange rate and may charge a conversion fee."]
+        }
+      ]
+    },
+    "change-account-information": {
+      "title": "How can I change my account information?",
+      "topic": "account",
+      "description": "Update your name, email, addresses, and payment methods.",
+      "content": [
+        {
+          "heading": "How to update your personal details",
+          "paragraphs": [
+            "An accurate profile ensures you receive your order notifications."
+          ],
+          "steps": [
+            "Log in and navigate to 'Account Settings'.",
+            "Click on 'Personal Information'.",
+            "Edit the fields you wish to change.",
+            "Click 'Save Changes'."
+          ]
+        },
+        {
+          "heading": "Changing your email address",
+          "paragraphs": [
+            "To change your email, go to 'Login & Security'. After entering your new email, we will send a verification link to confirm."
+          ],
+          "warning": "You will need your current password to authorize an email change."
+        }
+      ]
+    },
+    "reset-my-password": {
+      "title": "How do I reset my password?",
+      "topic": "account",
+      "description": "Regain access if you've forgotten your password.",
+      "content": [
+        {
+          "heading": "Requesting a reset link",
+          "paragraphs": [
+            "To get a secure password reset link, follow these instructions:"
+          ],
+          "steps": [
+            "Go to the MarketSphere Login page.",
+            "Click 'Forgot Password?'.",
+            "Enter your email address and click 'Send Reset Link'."
+          ],
+          "tip": "Password reset links expire after 30 minutes for your security."
+        },
+        {
+          "heading": "Didn't receive the email?",
+          "paragraphs": [
+            "Check your spam folder and ensure you entered the exact email address used for registration."
+          ]
+        }
+      ]
+    },
+    "create": {
+      "title": "How to create an account",
+      "topic": "account",
+      "description": "Signing up for MarketSphere.",
+      "content": [
+        {
+          "heading": "Registration",
+          "paragraphs": ["Click 'Sign Up' in the top right corner. Enter your email and a strong password, or sign up quickly using your Google or Apple account."]
+        }
+      ]
+    },
+    "delete": {
+      "title": "How do I delete my account?",
+      "topic": "account",
+      "description": "Permanently removing your profile and data.",
+      "content": [
+        {
+          "heading": "Account Deletion",
+          "paragraphs": ["Go to 'Account Settings', scroll to the bottom, and click 'Delete Account'. This action is permanent and cannot be undone."]
+        }
+      ]
+    },
+    "2fa": {
+      "title": "Setting up two-factor authentication",
+      "topic": "account",
+      "description": "Adding an extra layer of security.",
+      "content": [
+        {
+          "heading": "Enabling 2FA",
+          "paragraphs": ["Protect your account by navigating to 'Login & Security' and enabling 2FA. You will receive a text message code every time you log in from a new device."]
+        }
+      ]
+    },
+    "email-prefs": {
+      "title": "Managing email preferences",
+      "topic": "account",
+      "description": "Choosing which emails you receive.",
+      "content": [
+        {
+          "heading": "Email Subscriptions",
+          "paragraphs": ["Go to 'Notifications' in your settings to toggle off promotional emails. You cannot unsubscribe from transactional emails like order confirmations."]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Profile privacy settings",
+      "topic": "account",
+      "description": "Controlling what others see.",
+      "content": [
+        {
+          "heading": "Public Profiles",
+          "paragraphs": ["By default, your profile is private. If you leave reviews, your chosen Display Name will be public. You can change your Display Name in your settings."]
+        }
+      ]
+    },
+    "linked": {
+      "title": "Managing linked accounts",
+      "topic": "account",
+      "description": "Connecting Google or Apple logins.",
+      "content": [
+        {
+          "heading": "Social Logins",
+          "paragraphs": ["You can link or unlink third-party logins in the 'Security' section. This allows you to log in without a password."]
+        }
+      ]
+    },
+    "download-data": {
+      "title": "How to download your data",
+      "topic": "account",
+      "description": "Requesting a copy of your personal data.",
+      "content": [
+        {
+          "heading": "Data Requests",
+          "paragraphs": ["Under GDPR and CCPA guidelines, you can request a file of all your data by going to 'Privacy Settings' and clicking 'Request Data Export'."]
+        }
+      ]
+    },
+    "wishlist-work": {
+      "title": "How does the wishlist work?",
+      "topic": "cart-wishlist",
+      "description": "Discover how to save your favorite items for later.",
+      "content": [
+        {
+          "heading": "Adding items to your wishlist",
+          "paragraphs": [
+            "Saving an item is incredibly simple. When you're looking at a product you like, just look for the little heart icon."
+          ],
+          "steps": [
+            "Navigate to any product page.",
+            "Click the 'Heart' icon next to the 'Add to Cart' button.",
+            "The heart will turn solid brown."
+          ],
+          "tip": "Items in your wishlist are not reserved. If an item has low stock, it might sell out!"
+        },
+        {
+          "heading": "Moving items to your cart",
+          "paragraphs": [
+            "Open your wishlist and click the 'Add to Cart' button directly beneath the product to purchase it."
+          ]
+        }
+      ]
+    },
+    "edit-cart": {
+      "title": "How to edit your shopping cart",
+      "topic": "cart-wishlist",
+      "description": "Changing quantities or removing items.",
+      "content": [
+        {
+          "heading": "Updating the Cart",
+          "paragraphs": ["Click the cart icon to view your items. Use the +/- buttons to change the quantity, or click 'Remove' to take an item out of your cart."]
+        }
+      ]
+    },
+    "save-later": {
+      "title": "Using 'Save for Later'",
+      "topic": "cart-wishlist",
+      "description": "Moving items out of your active cart.",
+      "content": [
+        {
+          "heading": "Save for Later",
+          "paragraphs": ["Not ready to buy? Click 'Save for Later' beneath a cart item. It will move to a separate list below your cart so you can purchase it easily in the future."]
+        }
+      ]
+    },
+    "share": {
+      "title": "Can I share my wishlist?",
+      "topic": "cart-wishlist",
+      "description": "Sending your saved items to friends.",
+      "content": [
+        {
+          "heading": "Sharing Lists",
+          "paragraphs": ["Yes, you can make your wishlist public in its settings. Once public, you can copy the URL and send it to friends and family for gift ideas."]
+        }
+      ]
+    },
+    "cart-errors": {
+      "title": "Why did my cart empty itself?",
+      "topic": "cart-wishlist",
+      "description": "Troubleshooting cart issues.",
+      "content": [
+        {
+          "heading": "Session Expiration",
+          "paragraphs": ["If you are browsing as a guest, your cart may clear if you close your browser. Log in to your account to ensure your cart is saved across devices."]
+        }
+      ]
+    },
+    "size": {
+      "title": "How do I find my size?",
+      "topic": "products",
+      "description": "Using seller size guides.",
+      "content": [
+        {
+          "heading": "Size Charts",
+          "paragraphs": ["Sellers provide custom size charts on their apparel listings. Always refer to the specific item's size guide in the image gallery or description, as sizing varies between brands."]
+        }
+      ]
+    },
+    "availability": {
+      "title": "How to check product availability",
+      "topic": "products",
+      "description": "Knowing if an item is ready to ship.",
+      "content": [
+        {
+          "heading": "Stock Status",
+          "paragraphs": ["Product pages indicate if an item is in stock. If stock is low, you will see a 'Only X left' warning near the Add to Cart button."]
+        }
+      ]
+    },
+    "out-of-stock": {
+      "title": "Will an out-of-stock item return?",
+      "topic": "products",
+      "description": "Restock notifications.",
+      "content": [
+        {
+          "heading": "Restocks",
+          "paragraphs": ["If an item is sold out, you can click 'Notify me when available' to receive an email alert if the seller restocks the product."]
+        }
+      ]
+    },
+    "authenticity": {
+      "title": "Product authenticity guarantees",
+      "topic": "products",
+      "description": "Our commitment to genuine items.",
+      "content": [
+        {
+          "heading": "Zero Tolerance Policy",
+          "paragraphs": ["MarketSphere prohibits the sale of counterfeit goods. If you suspect an item is inauthentic, please report it immediately."]
+        }
+      ]
+    },
+    "report-item": {
+      "title": "How to report a listing",
+      "topic": "products",
+      "description": "Flagging inappropriate or fake items.",
+      "content": [
+        {
+          "heading": "Reporting",
+          "paragraphs": ["Scroll to the bottom of any product page and click 'Report this item'. Select a reason (e.g., counterfeit, prohibited item) and our Trust & Safety team will investigate."]
+        }
+      ]
+    },
+    "warranties": {
+      "title": "Do products come with a warranty?",
+      "topic": "products",
+      "description": "Understanding seller guarantees.",
+      "content": [
+        {
+          "heading": "Warranties",
+          "paragraphs": ["Warranties are provided at the discretion of the seller or the original manufacturer. Check the product description to see if a warranty is included."]
+        }
+      ]
+    },
+    "contact": {
+      "title": "How do I contact a seller?",
+      "topic": "sellers",
+      "description": "Sending a message to a shop.",
+      "content": [
+        {
+          "heading": "Messaging Sellers",
+          "paragraphs": ["You can message a seller by clicking the 'Contact Seller' button on their shop profile or directly from your Order History page regarding a specific purchase."]
+        }
+      ]
+    },
+    "ratings": {
+      "title": "How seller ratings work",
+      "topic": "sellers",
+      "description": "Understanding shop feedback scores.",
+      "content": [
+        {
+          "heading": "Seller Feedback",
+          "paragraphs": ["A seller's rating is an average of all reviews left by verified buyers. Reading reviews is a great way to gauge a seller's reliability and item quality."]
+        }
+      ]
+    },
+    "report": {
+      "title": "How to report a seller",
+      "topic": "sellers",
+      "description": "Escalating bad behavior to MarketSphere.",
+      "content": [
+        {
+          "heading": "Reporting Shops",
+          "paragraphs": ["If a seller is abusive, attempting to take transactions off-platform, or scamming, click the 'Report Shop' button on their storefront to notify our moderation team."]
+        }
+      ]
+    },
+    "become-seller": {
+      "title": "How to become a seller",
+      "topic": "sellers",
+      "description": "Start your own shop on MarketSphere.",
+      "content": [
+        {
+          "heading": "Selling on MarketSphere",
+          "paragraphs": ["Scroll to the footer and click 'Sell with Us'. You'll need to fill out an application, provide identity verification, and link a bank account to receive payouts."]
+        }
+      ]
+    },
+    "policies": {
+      "title": "Where to find a seller's policies",
+      "topic": "sellers",
+      "description": "Reviewing shop-specific rules.",
+      "content": [
+        {
+          "heading": "Shop Policies",
+          "paragraphs": ["Every seller has a 'Policies' tab on their storefront detailing their specific shipping timelines and whether they accept custom orders."]
+        }
+      ]
+    },
+    "dispute": {
+      "title": "MarketSphere dispute resolution",
+      "topic": "sellers",
+      "description": "When MarketSphere steps in.",
+      "content": [
+        {
+          "heading": "Buyer Protection",
+          "paragraphs": ["If you cannot resolve an issue with a seller directly after 48 hours, you can escalate the issue to MarketSphere Support for mediation and potential refunds."]
+        }
+      ]
+    },
+    "write": {
+      "title": "How to write a review",
+      "topic": "reviews",
+      "description": "Sharing your feedback on a purchase.",
+      "content": [
+        {
+          "heading": "Leaving Feedback",
+          "paragraphs": ["After your item is delivered, go to your Order History and click 'Leave a Review'. You can rate the item from 1 to 5 stars and leave written feedback."]
+        }
+      ]
+    },
+    "edit": {
+      "title": "Can I edit or delete a review?",
+      "topic": "reviews",
+      "description": "Modifying your past feedback.",
+      "content": [
+        {
+          "heading": "Updating Reviews",
+          "paragraphs": ["Yes. Go to your public profile to see your past reviews. You can edit or delete a review up to 60 days after it was originally posted."]
+        }
+      ]
+    },
+    "guidelines": {
+      "title": "Review guidelines and rules",
+      "topic": "reviews",
+      "description": "What is and isn't allowed in reviews.",
+      "content": [
+        {
+          "heading": "Review Rules",
+          "paragraphs": ["Reviews must be about the product itself. Reviews containing profanity, personal information, or complaints about shipping carriers (which the seller cannot control) may be removed."]
+        }
+      ]
+    },
+    "photos": {
+      "title": "Uploading photos to a review",
+      "topic": "reviews",
+      "description": "Adding images to your feedback.",
+      "content": [
+        {
+          "heading": "Photo Reviews",
+          "paragraphs": ["When writing a review, click the camera icon to upload up to 3 photos of the item. This helps other buyers see what the product looks like in real life."]
+        }
+      ]
+    },
+    "push": {
+      "title": "Managing push notifications",
+      "topic": "notifications",
+      "description": "App alerts for orders and messages.",
+      "content": [
+        {
+          "heading": "App Settings",
+          "paragraphs": ["If you use our mobile app, you can toggle push notifications for order updates and new seller messages in the app's settings menu."]
+        }
+      ]
+    },
+    "sms": {
+      "title": "How to opt into SMS text alerts",
+      "topic": "notifications",
+      "description": "Getting delivery updates via text.",
+      "content": [
+        {
+          "heading": "Text Alerts",
+          "paragraphs": ["During checkout, you can check the box to receive SMS updates about your delivery. Standard messaging rates apply."]
+        }
+      ]
+    },
+    "stop-emails": {
+      "title": "How to stop promotional emails",
+      "topic": "notifications",
+      "description": "Unsubscribing from marketing.",
+      "content": [
+        {
+          "heading": "Unsubscribing",
+          "paragraphs": ["Click the 'Unsubscribe' link at the bottom of any marketing email, or update your preferences in the 'Notifications' section of your account settings."]
+        }
+      ]
+    },
+    "tos": {
+      "title": "Terms of Service",
+      "topic": "other",
+      "description": "The rules for using MarketSphere.",
+      "content": [
+        {
+          "heading": "Our Terms",
+          "paragraphs": ["Our Terms of Service govern your use of the platform. By creating an account, you agree to abide by our community guidelines and buying/selling rules."]
+        }
+      ]
+    },
+    "privacy-policy": {
+      "title": "Privacy Policy",
+      "topic": "other",
+      "description": "How we handle your data.",
+      "content": [
+        {
+          "heading": "Data Privacy",
+          "paragraphs": ["We take your privacy seriously. Our Privacy Policy outlines what data we collect, how it is used to improve your experience, and who we share it with."]
+        }
+      ]
+    },
+    "cookie": {
+      "title": "Cookie Policy",
+      "topic": "other",
+      "description": "Information about web trackers.",
+      "content": [
+        {
+          "heading": "Cookies",
+          "paragraphs": ["MarketSphere uses cookies to keep you logged in and personalize your shopping experience. You can manage cookie preferences via your browser settings."]
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Accessibility Statement",
+      "topic": "other",
+      "description": "Our commitment to digital accessibility.",
+      "content": [
+        {
+          "heading": "Web Accessibility",
+          "paragraphs": ["MarketSphere strives to make our platform accessible to everyone. We actively test our site against WCAG guidelines. If you encounter barriers, please let us know."]
+        }
+      ]
+    },
+    "contact-us": {
+      "title": "Contact MarketSphere Support",
+      "topic": "other",
+      "description": "How to reach our customer service team.",
+      "content": [
+        {
+          "heading": "Get in Touch",
+          "paragraphs": ["Need more help? You can reach our support team via live chat in the bottom right corner of the screen, or by emailing support@marketsphere.com."]
+        }
+      ]
+    }
+  }
+}

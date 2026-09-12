@@ -694,11 +694,11 @@
             </div>
 
             <div class="bp-support-links">
-              <a href="#" class="bp-support-link"><i class="bi bi-question-circle"></i> Help Center</a>
-              <a href="#" class="bp-support-link"><i class="bi bi-headset"></i> Contact Support</a>
-              <a href="#" class="bp-support-link"><i class="bi bi-ticket-detailed"></i> My Support Requests</a>
-              <a href="#" class="bp-support-link"><i class="bi bi-flag"></i> Report a Problem</a>
-              <a href="#" class="bp-support-link"><i class="bi bi-patch-question"></i> FAQ</a>
+              <a href="{% url 'help-support' %}" class="bp-support-link"><i class="bi bi-question-circle"></i> Help Center</a>
+              <a href="{% url 'help-support' %}#hsContactModal" class="bp-support-link"><i class="bi bi-headset"></i> Contact Support</a>
+              <a href="{% url 'help-support' %}#hsRequestsSection" class="bp-support-link"><i class="bi bi-ticket-detailed"></i> My Support Requests</a>
+              <a href="{% url 'help-support' %}#hsReportModal" class="bp-support-link"><i class="bi bi-flag"></i> Report a Problem</a>
+              <a href="{% url 'help-support' %}#hsFaqSection" class="bp-support-link"><i class="bi bi-patch-question"></i> FAQ</a>
             </div>
           </div>
 

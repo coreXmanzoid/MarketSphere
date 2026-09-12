@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ article.title }} â€¢ MarketSphere{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/help_support.css' %}" />
+{% endblock %}
+
+{% block content %}
+  <section class="hs-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'help-support' %}">Help &amp; Support</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ article.title }}</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <section class="hs-section">
+    <div class="container">
+      <article class="hs-card hs-article-detail-card">
+        <span class="section-label"><i class="bi bi-file-earmark-text"></i> {{ article.category }}</span>
+        <h1 class="hs-section-title mt-3">{{ article.title }}</h1>
+        <p class="hs-section-subtitle">{{ article.description }}</p>
+
+        <div class="hs-article-content mt-4">
+          {% for section in article.content %}
+            <section class="hs-article-section">
+              <h2>{{ section.heading }}</h2>
+              {% for paragraph in section.paragraphs %}
+                <p>{{ paragraph }}</p>
+              {% endfor %}
+
+              {% if section.steps %}
+                <ol class="hs-article-steps">
+                  {% for step in section.steps %}
+                    <li>{{ step }}</li>
+                  {% endfor %}
+                </ol>
+              {% endif %}
+
+              {% if section.tip %}
+                <div class="hs-article-tip">
+                  <i class="bi bi-lightbulb" aria-hidden="true"></i>
+                  <span><strong>Tip:</strong> {{ section.tip }}</span>
+                </div>
+              {% endif %}
+
+              {% if section.warning %}
+                <div class="hs-article-tip hs-article-warning">
+                  <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                  <span><strong>Important:</strong> {{ section.warning }}</span>
+                </div>
+              {% endif %}
+            </section>
+          {% endfor %}
+        </div>
+
+        <p class="mt-4 mb-0"><a href="{% url 'help-support' %}"><i class="bi bi-arrow-left"></i> Back to Help &amp; Support</a></p>
+      </article>
+    </div>
+  </section>
+{% endblock %}

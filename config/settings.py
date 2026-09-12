@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "seller_dashboard",
     "admin_panel",
     "notifications",
+    "support",
 ]
 
 # -------------------------------------------------------------------

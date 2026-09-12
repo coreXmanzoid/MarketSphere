@@ -4,7 +4,9 @@ from django.contrib.auth import logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.http import Http404
 import json
+from pathlib import Path
 from allauth.account.forms import LoginForm
 from allauth.core.exceptions import ImmediateHttpResponse
 
@@ -60,7 +62,7 @@ def signup_view(request):
             return redirect("signup")
 
         if validator.validate_username(user["username"]) == False:
-            messages.error(request, "Email Already Exists.")
+            messages.error(request, "Username Already Exists.")
             return redirect("signup")
 
         if validator.validate_password(user["password"]) == False:

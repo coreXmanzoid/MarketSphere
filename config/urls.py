@@ -28,6 +28,7 @@ urlpatterns = [
     path("seller/", include("seller_dashboard.urls")),
     path("admin-db/", include("admin_panel.urls")),
     path("notifications/", include("notifications.urls")),
+    path("support/", include("support.urls"))
 ]
 
 
