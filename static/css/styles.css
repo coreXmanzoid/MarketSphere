@@ -628,13 +628,22 @@ footer {
 
     h5,
     h3 {
-
-        color: #B0BA99 !important;
+        font-weight: 600;
+        font-size: 16px;
+        margin-top: 10px;
+        color: #4E220F !important;
     }
 
     img {
         width: 250px;
         height: 200px
+    }
+    .nav-item a {
+        color: #4E220F !important;
+        font-weight: 500 !important;
+        font-size: 13.8px;
+        opacity: 0.8;
+        border: none !important;
     }
 
     text-align: center;

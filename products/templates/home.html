@@ -44,7 +44,7 @@
             <div class="hero-shape hero-shape-1"></div>
             <div class="hero-shape hero-shape-2"></div>
             <div class="hero-image-icon">
-              <img src="{% static 'images/logo.png' %}" class="img-fluid" />
+              <img src="{{ marketplace.marketplace_logo.url }}" class="img-fluid" />
             </div>
             <div class="floating-card floating-card-1">
               <i class="bi bi-truck"></i>
@@ -86,6 +86,7 @@
   </section>
 
   <!-- ================= FEATURED PRODUCTS ================= -->
+  {% if show_featured_products %}
   <section class="products-section" id="featured-products">
     <div class="container">
       <div class="section-heading section-heading-row">
@@ -169,6 +170,33 @@
       </div>
     </div>
   </section>
+  {% endif %}
+
+  {% if show_featured_sellers %}
+  <section class="categories-section" id="featured-sellers">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-label">Trusted Shops</span>
+        <h2>Featured Sellers</h2>
+        <p>Discover shops from our verified seller community</p>
+      </div>
+      <div class="row g-4">
+        {% for seller in featured_sellers %}
+          <div class="col-lg-2 col-md-4 col-6">
+            <a href="{% url 'search' %}?category={{ seller.slug }}" class="category-card" style="--bg-image: url('{% if seller.store_banner %}{{ seller.store_banner.url }}{% endif %}');">
+              <div class="category-card-icon">
+                <i><img class="img-fluid rounded-circle" src="{{ seller.store_logo.url }}" alt=""></i>
+              </div>
+              <h6>{{ seller.store_name }}</h6>
+            </a>
+          </div>
+        {% empty %}
+          <p class="text-muted">No featured sellers are available yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
   <!-- ================= PROMOTIONAL BANNER ================= -->
   <section class="promo-banner">
@@ -178,7 +206,7 @@
           <span class="section-label section-label-light">Limited Time</span>
           <h2>Season End Sale — Up to 50% Off</h2>
           <p>Grab your favorite items before they're gone. New deals added every day.</p>
-          <a href="#featured-products" class="btn btn-hero-primary">Shop The Sale</a>
+          <a href="{% if show_featured_products %}#featured-products{% else %}{% url 'search' %}{% endif %}" class="btn btn-hero-primary">Shop The Sale</a>
         </div>
         <div class="promo-banner-visual">
           {% comment %} <i class="bi bi-bag-check-fill"></i> {% endcomment %}
@@ -271,6 +299,7 @@
   </section>
 
   <!-- ================= POPULAR BRANDS ================= -->
+  {% if show_featured_brands %}
   <section class="categories-section" id="categories">
     <div class="container">
       <div class="section-heading">
@@ -298,6 +327,7 @@
       </div>
     </div>
   </section>
+  {% endif %}
 
   <!-- ================= WHY CHOOSE US ================= -->
   <section class="why-us-section">

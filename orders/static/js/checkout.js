@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 fullName: document.querySelector('input[name="full_name"]').value,
                 email: document.querySelector('input[name="email"]').value,
                 phone: document.querySelector('input[name="phone"]').value,
-                notes: document.getElementById("coOrderNotes").value,
+                notes: document.getElementById("coOrderNotes")?.value || "",
             };
 
             fetch("/order/place-order/", {

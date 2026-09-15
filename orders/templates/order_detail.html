@@ -233,9 +233,9 @@
 
           <!-- ============ ACTIONS (desktop, left column) ============ -->
           <div class="od-actions-row od-actions-row-desktop">
-            <button type="button" class="btn od-action-btn od-action-cancel" id="odCancelOrderBtn" {% if order.status in 'cancelled delivered shipped' %}disabled{% endif %}>
+            {% if checkout_settings.allow_cancellation %}<button type="button" class="btn od-action-btn od-action-cancel" id="odCancelOrderBtn" {% if order.status in 'cancelled delivered shipped' %}disabled{% endif %}>
               <i class="bi bi-x-circle"></i> Cancel Order
-            </button>
+            </button>{% endif %}
             <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtn" data-order-number="{{ order.order_number }}">
               <i class="bi bi-download"></i> Download Invoice
             </button>
@@ -300,9 +300,9 @@
               <button type="button" class="btn od-action-btn od-action-invoice" id="odDownloadInvoiceBtnMobile" data-order-number="{{ order.order_number }}">
                 <i class="bi bi-download"></i> Download Invoice
               </button>
-              <button type="button" class="btn od-action-btn od-action-cancel h-25" id="odCancelOrderBtnMobile" {% if order.status == 'cancelled' or order.status == 'completed' %}disabled{% endif %}>
+              {% if checkout_settings.allow_cancellation %}<button type="button" class="btn od-action-btn od-action-cancel h-25" id="odCancelOrderBtnMobile" {% if order.status == 'cancelled' or order.status == 'completed' %}disabled{% endif %}>
                 <i class="bi bi-x-circle"></i> Cancel Order
-              </button>
+              </button>{% endif %}
             </div>
 
             <div class="od-trust-row">

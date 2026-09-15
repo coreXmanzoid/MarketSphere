@@ -2,18 +2,41 @@ from django.shortcuts import render
 from . import services
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db.models import Count
+from accounts.models import Seller
+from admin_panel.marketplace import get_marketplace_settings
 
 
 # Create your views here.
 def home(request):
+    marketplace_settings = get_marketplace_settings()
     categories = services.get_all_categories()
-    brands = services.get_all_brands()
-    featured_products = services.get_featured_products()
+    brands = (
+        services.get_all_brands().filter(is_featured=True)
+        if marketplace_settings.featured_brands
+        else services.get_all_brands().none()
+    )
+    featured_products = (
+        services.get_featured_products()
+        if marketplace_settings.featured_products
+        else services.get_featured_products().none()
+    )
+    featured_sellers = (
+        Seller.objects.filter(status=Seller.Status.VERIFIED)
+        .annotate(order_count=Count("orders"))
+        .order_by("-order_count", "-created_at")[:8]
+        if marketplace_settings.featured_sellers
+        else Seller.objects.none()
+    )
     new_products = services.get_new_products()
     context = {
         "categories": categories,
         "brands": brands,
         "featured_products": featured_products,
+        "featured_sellers": featured_sellers,
+        "show_featured_products": marketplace_settings.featured_products,
+        "show_featured_brands": marketplace_settings.featured_brands,
+        "show_featured_sellers": marketplace_settings.featured_sellers,
         "new_products": new_products,
         "wishlist_ids": services.get_wishlist_ids(request.user),
     }
@@ -43,6 +66,8 @@ def search(request):
     new_arrivals = request.GET.get("new_arrivals") == "1"
     if featured:
         base_products = base_products.filter(is_featured=True)
+        if not get_marketplace_settings().featured_products:
+            base_products = base_products.none()
         q = "Featured Products"
     if new_arrivals:
         base_products = base_products.order_by("-created_at")

@@ -744,3 +744,20 @@ def admin_context(request):
             "security_caption": security_caption,
         }
     }
+
+
+# admin_panel/context_processors.py
+
+from admin_panel.marketplace import get_marketplace_settings
+from admin_panel.checkout import get_checkout_settings
+from admin_panel.services import get_store_settings
+
+
+def marketplace(request):
+    store_settings = get_store_settings()
+
+    return {
+        "marketplace": store_settings,
+        "marketplace_settings": get_marketplace_settings(),
+        "checkout_settings": get_checkout_settings(),
+    }

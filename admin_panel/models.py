@@ -275,6 +275,22 @@ class NotificationSettings(SingletonModel):
         return "Notification Settings"
 
 
+class AdminSettingsData(SingletonModel):
+    """Persistent storage for settings that do not have a dedicated model yet.
+
+    The settings screen intentionally exposes a wider configuration surface than
+    the typed models above. Keeping those values in one JSON document lets the
+    screen save every field without introducing dozens of mostly-unused columns.
+    Core sections are still mirrored to their typed models by the settings API.
+    """
+
+    data = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Admin Settings Data"
+
+
 class AdminAuditLog(models.Model):
     admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,

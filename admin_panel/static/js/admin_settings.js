@@ -1,7 +1,7 @@
 /* =========================================================================
    MARKETSPHERE ADMIN — SETTINGS (settings.js)
-   Frontend-only interaction layer for admin_panel/templates/settings/index.html.
-   Vanilla JS, IIFE-scoped. No fetch/AJAX, no backend calls. JavaScript here
+   Interaction layer for admin_panel/templates/admin_settings.html.
+   Vanilla JS, IIFE-scoped. Saves through the admin settings endpoint.
    NEVER generates settings markup — every section, card, field and table
    row already exists in the Django template. This file only enhances
    interaction: section switching, dirty-state tracking, toggles, modals,
@@ -129,22 +129,78 @@
     });
 
     /* =====================================================================
-       12. SAVE / RESET (loading state + simulated success)
+       12. SAVE / RESET
        ===================================================================== */
-    function runSave(button, sectionLabel) {
+    function csrfToken() {
+        var match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : "";
+    }
+
+    function applyBackendValues() {
+        var dataNode = qs("#setBackendData");
+        if (!dataNode) return;
+        var data;
+        try { data = JSON.parse(dataNode.textContent || "{}"); } catch (e) { return; }
+        qsa("[data-set-form]").forEach(function (form) {
+            var panel = form.closest(".set-panel");
+            var section = panel && panel.getAttribute("data-set-panel");
+            var values = data[section] || {};
+            qsa("[data-set-track][name]", form).forEach(function (field) {
+                if (!Object.prototype.hasOwnProperty.call(values, field.name)) return;
+                var value = values[field.name];
+                if (field.type === "checkbox") field.checked = value === true || value === "true" || value === 1 || value === "1";
+                else if (field.type !== "file") field.value = value == null ? "" : value;
+            });
+        });
+    }
+
+    function formPayload(form, sectionName) {
+        var payload = new FormData(form);
+        var booleanFields = [];
+        qsa('input[type="checkbox"][data-set-track][name]', form).forEach(function (field) {
+            payload.delete(field.name);
+            payload.append(field.name, field.checked ? "true" : "false");
+            booleanFields.push(field.name);
+        });
+        payload.append("__section", sectionName);
+        payload.append("__boolean_fields", JSON.stringify(booleanFields));
+        return payload;
+    }
+
+    function runSave(button, sectionName) {
         if (!button || button.classList.contains("is-loading")) return;
+
+        var panel = button.closest(".set-panel");
+        var form = panel ? qs("[data-set-form]", panel) : null;
+        if (!form || !sectionName) return;
 
         var originalHTML = button.innerHTML;
         button.classList.add("is-loading");
         button.disabled = true;
         button.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3.5-7.1"></path></svg> Saving\u2026';
 
-        window.setTimeout(function () {
+        fetch(window.location.href, {
+            method: "POST",
+            body: formPayload(form, sectionName),
+            headers: { "X-CSRFToken": csrfToken(), "X-Requested-With": "XMLHttpRequest" },
+            credentials: "same-origin"
+        }).then(function (response) {
+            return response.json().then(function (body) {
+                if (!response.ok || !body.ok) throw new Error(body.error || "Unable to save settings.");
+                return body;
+            });
+        }).then(function () {
+            clearDirty(sectionName);
             button.classList.remove("is-loading");
-            button.disabled = dirtySections.size === 0 && button === headerSaveBtn;
+            button.disabled = false;
             button.innerHTML = originalHTML;
             showToast("Settings saved successfully.", "success");
-        }, 700);
+        }).catch(function (error) {
+            button.classList.remove("is-loading");
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            showToast(error.message || "Unable to save settings.", "error");
+        });
     }
 
     qsa("[data-set-save-section]").forEach(function (btn) {
@@ -152,16 +208,18 @@
         btn.addEventListener("click", function () {
             var panel = btn.closest(".set-panel");
             var sectionName = panel ? panel.getAttribute("data-set-panel") : null;
-            runSave(btn);
-            if (sectionName) clearDirty(sectionName);
+            runSave(btn, sectionName);
         });
     });
 
     if (headerSaveBtn) {
         headerSaveBtn.addEventListener("click", function () {
-            runSave(headerSaveBtn);
-            dirtySections.clear();
-            updateUnsavedUI();
+            var sections = Array.from(dirtySections);
+            sections.forEach(function (sectionName) {
+                var panel = qs('.set-panel[data-set-panel="' + sectionName + '"]');
+                var saveBtn = panel ? qs("[data-set-save-section]", panel) : null;
+                if (saveBtn) runSave(saveBtn, sectionName);
+            });
         });
     }
 
@@ -229,6 +287,8 @@
             showToast("Changes discarded.", "info");
         });
     }
+
+    applyBackendValues();
 
     /* =====================================================================
        7. DISCARD-ON-NAVIGATE CONFIRMATION

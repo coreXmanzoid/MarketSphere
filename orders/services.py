@@ -1,9 +1,10 @@
 from collections import defaultdict
 import logging
+import re
 from decimal import Decimal
 from uuid import uuid4
 from calendar import monthrange
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db import transaction
 from django.db.models import Prefetch, Sum, Count, F, Q, IntegerField
@@ -16,6 +17,8 @@ from django.utils.dateparse import parse_date
 from accounts.models import Address
 from products.models import CartItem, Product
 from products.services import get_or_create_cart
+from admin_panel.marketplace import get_marketplace_settings
+from admin_panel.checkout import get_checkout_settings
 
 from .models import Order, OrderItem
 from notifications.emails.orders import (
@@ -35,6 +38,26 @@ CANCELABLE_ORDER_STATUSES = (
     Order.Status.CONFIRMED,
     Order.Status.PROCESSING,
 )
+
+
+def _format_order_number(order_format):
+    """Expand the configured order number format into a concrete value."""
+    value = order_format or "MS-{YYYY}{#####}"
+    value = value.replace("{YYYY}", timezone.localtime().strftime("%Y"))
+
+    def replace_sequence(match):
+        length = len(match.group(1))
+        return str(uuid4().int)[-length:].zfill(length)
+
+    return re.sub(r"\{(#+)\}", replace_sequence, value)[:64]
+
+
+def _new_order_number(order_format):
+    for _ in range(5):
+        order_number = _format_order_number(order_format)
+        if not Order.objects.filter(order_number=order_number).exists():
+            return order_number
+    return uuid4().hex[:12].upper()
 
 from notifications.models import Notification
 from notifications.services.notifications import (
@@ -90,6 +113,20 @@ def place_order(
     if not cart_items.exists():
         raise ValueError("Your cart is empty.")
 
+    marketplace_settings = get_marketplace_settings()
+    checkout_settings = get_checkout_settings()
+    seller_ids = set(cart_items.values_list("product__seller_id", flat=True))
+    if (
+        (not marketplace_settings.multi_seller_orders or not checkout_settings.split_orders)
+        and len(seller_ids) > 1
+    ):
+        raise ValueError(
+            "Orders containing products from multiple sellers are currently unavailable."
+        )
+
+    if checkout_settings.require_email and not (email or getattr(user, "email", "")):
+        raise ValueError("An email address is required to place an order.")
+
     address = get_object_or_404(
         Address,
         id=address_id,
@@ -103,6 +140,9 @@ def place_order(
     )
     email = email or user.email
     phone = phone or address.phone or user.contact
+
+    if checkout_settings.require_phone and not phone:
+        raise ValueError("A phone number is required to place an order.")
 
     items_by_seller = defaultdict(list)
 
@@ -123,20 +163,25 @@ def place_order(
         order = Order.objects.create(
             user=user,
             seller_id=seller_id,
-            order_number=uuid4().hex[:12].upper(),
+            order_number=_new_order_number(checkout_settings.order_number_format),
+            status=(
+                Order.Status.CONFIRMED
+                if checkout_settings.auto_confirm_orders
+                else Order.Status.PENDING
+            ),
             shipping_name=full_name,
             shipping_phone=phone,
             shipping_address=address.address_line_1,
             shipping_city=address.city,
             shipping_postal_code=address.postal_code,
-            buyer_notes=notes,
+            buyer_notes=notes if checkout_settings.allow_order_notes else "",
         )
 
         for item in items:
             product = item.product
             price = product.discount_price or product.price
 
-            if product.stock_quantity < item.quantity:
+            if product.stock_quantity < item.quantity and not checkout_settings.backorders:
                 raise ValueError(
                     f"Only {product.stock_quantity} units of "
                     f"'{product.name}' are available."
@@ -146,7 +191,7 @@ def place_order(
             order_subtotal += item_total
 
             previous_stock = product.stock_quantity
-            product.stock_quantity -= item.quantity
+            product.stock_quantity = max(0, product.stock_quantity - item.quantity)
             product.status = (
                 Product.Status.OUT_OF_STOCK
                 if product.stock_quantity == 0
@@ -166,6 +211,18 @@ def place_order(
                     quantity=item.quantity,
                     total=item_total,
                 )
+            )
+
+        if order_subtotal < checkout_settings.min_checkout_amount:
+            raise ValueError(
+                f"The minimum checkout amount is {checkout_settings.min_checkout_amount}."
+            )
+        if (
+            marketplace_settings.max_order_amount
+            and order_subtotal > marketplace_settings.max_order_amount
+        ):
+            raise ValueError(
+                f"The maximum order amount is {marketplace_settings.max_order_amount}."
             )
 
         OrderItem.objects.bulk_create(pending_order_items)
@@ -249,9 +306,20 @@ def get_user_order(user, order_number):
 
 @transaction.atomic
 def cancel_user_order(user, order_number):
+    checkout_settings = get_checkout_settings()
+    if not checkout_settings.allow_cancellation:
+        return False
+
     order = get_user_order(user, order_number)
 
     if order.status not in CANCELABLE_ORDER_STATUSES:
+        return False
+
+    cancellation_window = checkout_settings.cancellation_window
+    if (
+        cancellation_window <= 0
+        or timezone.now() > order.created_at + timedelta(hours=cancellation_window)
+    ):
         return False
 
     order.status = Order.Status.CANCELLED
@@ -525,6 +593,9 @@ def update_order_status(seller, order_number, status):
     return 1
 
 def update_seller_note(seller, order_number, note):
+    if not get_checkout_settings().allow_seller_notes:
+        return False
+
     order = Order.objects.filter(
         order_number=order_number, 
         seller=seller

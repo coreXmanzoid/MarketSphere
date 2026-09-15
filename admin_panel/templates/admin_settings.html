@@ -18,6 +18,7 @@
 
 {% block content %}
 <div class="set-page" id="setPage" data-active-section="overview">
+  {{ settings_payload|json_script:"setBackendData" }}
 
   <!-- ================= 1. HEADER ================= -->
   <header class="set-header set-reveal">
@@ -318,7 +319,7 @@
                   <span class="set-upload-placeholder" id="setLogoPlaceholder" {% if marketplace_logo_url %}style="display:none;"{% endif %}><i class="bi bi-image"></i></span>
                 </div>
                 <div class="set-upload-actions">
-                  <label class="set-btn set-btn-secondary set-btn-sm set-upload-btn">Upload<input type="file" accept="image/*" class="set-file-input" data-set-preview-target="setLogoPreviewImg" data-set-placeholder-target="setLogoPlaceholder" hidden /></label>
+                  <label class="set-btn set-btn-secondary set-btn-sm set-upload-btn">Upload<input type="file" name="marketplace_logo" accept="image/*" class="set-file-input" data-set-preview-target="setLogoPreviewImg" data-set-placeholder-target="setLogoPlaceholder" hidden /></label>
                   <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-remove-preview="setLogoPreviewImg" data-set-placeholder-target="setLogoPlaceholder">Remove</button>
                 </div>
               </div>
@@ -329,7 +330,7 @@
                   <span class="set-upload-placeholder" id="setFaviconPlaceholder" {% if marketplace_favicon_url %}style="display:none;"{% endif %}><i class="bi bi-app"></i></span>
                 </div>
                 <div class="set-upload-actions">
-                  <label class="set-btn set-btn-secondary set-btn-sm set-upload-btn">Upload<input type="file" accept="image/*" class="set-file-input" data-set-preview-target="setFaviconPreviewImg" data-set-placeholder-target="setFaviconPlaceholder" hidden /></label>
+                  <label class="set-btn set-btn-secondary set-btn-sm set-upload-btn">Upload<input type="file" name="marketplace_favicon" accept="image/*" class="set-file-input" data-set-preview-target="setFaviconPreviewImg" data-set-placeholder-target="setFaviconPlaceholder" hidden /></label>
                   <button type="button" class="set-btn set-btn-ghost set-btn-sm" data-set-remove-preview="setFaviconPreviewImg" data-set-placeholder-target="setFaviconPlaceholder">Remove</button>
                 </div>
               </div>

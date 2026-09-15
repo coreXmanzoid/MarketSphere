@@ -28,7 +28,7 @@
           <div class="row align-items-center">
             <!-- Logo -->
             <div class="col-lg-2 col-md-3 col-12 text-center text-lg-start mb-3 mb-lg-0">
-              <a href="/" class="text-decoration-none"><h2 class="m-0 app-logo"><img src="{% static 'images/logo-icon.png' %}" class="img-fluid" /> MarketSphere</h2></a>
+              <a href="/" class="text-decoration-none"><h2 class="m-0 app-logo"><img src="{% static 'images/logo-icon.png' %}" class="img-fluid" /> {{ marketplace.marketplace_name }}</h2></a>
             </div>
 
             <!-- Search -->
@@ -48,7 +48,9 @@
                 <div class="d-flex justify-content-lg-end justify-content-center guest-buttons">
                   <a href="{% url 'login' %}" class="btn me-2" style="background-color: #F7F1DE; color: #B0BA99;">Login</a>
 
-                  <a href="{% url 'signup' %}" class="btn">Sign Up</a>
+                  {% if marketplace_settings.buyer_registration %}
+                    <a href="{% url 'signup' %}" class="btn">Sign Up</a>
+                  {% endif %}
                 </div>
               </div>
             {% else %}
@@ -186,11 +188,13 @@
                           </a>
                         {% endif %}
                       {% else %}
+                        {% if marketplace_settings.seller_registration %}
                         <a class="dropdown-item ms-notification-item" href="{% url 'seller-signup' %}">
                           <div class="ms-notification-copy">
                             <h3>Apply for Seller Account</h3>
                           </div>
                         </a>
+                        {% endif %}
                       {% endif %}
 
                       <a class="dropdown-item ms-notification-item" href="{% url 'logout' %}">
@@ -278,7 +282,7 @@
               </li>
 
               <li class="nav-item">
-                <a class="nav-link" href="#">Contact</a>
+                <a class="nav-link" href="{% url "help-support" %}">Contact</a>
               </li>
             </ul>
           </div>
@@ -354,7 +358,9 @@
           <div class="row">
             <!-- Logo & About -->
             <div class="col-lg-4 col-md-6 mb-4">
-              <a href="/" class="text-decoration-none"><img src="{% static 'images/logo.png' %}" class="img-fluid" /></a>
+              <a href="/" class="text-decoration-none">
+                {% if marketplace.marketplace_logo %}<img src="{{ marketplace.marketplace_logo.url }}" class="img-fluid" />{% else %}<span class="app-logo">MarketSphere</span>{% endif %}
+              </a>
             </div>
 
             <!-- Customer -->
@@ -363,7 +369,7 @@
 
               <ul class="nav flex-column">
                 <li class="nav-item">
-                  <a href="#" class="nav-link p-0 text-secondary">My Account</a>
+                  <a href="{% url "profile" %}" class="nav-link p-0 text-secondary">My Account</a>
                 </li>
 
                 <li class="nav-item mt-2">
@@ -371,7 +377,7 @@
                 </li>
 
                 <li class="nav-item mt-2">
-                  <a href="#" class="nav-link p-0 text-secondary">Wishlist</a>
+                  <a href="{% url 'wishlist' %}" class="nav-link p-0 text-secondary">Wishlist</a>
                 </li>
 
                 <li class="nav-item mt-2">
@@ -413,7 +419,7 @@
                 </li>
 
                 <li class="nav-item mt-2">
-                  <a href="#" class="nav-link p-0 text-secondary">Contact Us</a>
+                  <a href="{% url "help-support" %}" class="nav-link p-0 text-secondary">Contact Us</a>
                 </li>
 
                 <li class="nav-item mt-2">
@@ -434,14 +440,14 @@
             <div class="col-lg-2 col-md-6 mb-4">
               <h5 class="mb-3">Follow Us</h5>
 
-              <div class="d-flex gap-3">
-                <a href="#" class="text-dark fs-4"><i class="bi bi-facebook"></i></a>
+              <div class="nav-item d-flex flex-column gap-3">
+                <a href="{{ marketplace.social_facebook }}" class="text-dark fs-4"><i class="bi bi-facebook"></i></a>
 
-                <a href="#" class="text-dark fs-4"><i class="bi bi-instagram"></i></a>
+                <a href="{{ marketplace.social_instagram }}" class="text-dark fs-4"><i class="bi bi-instagram"></i></a>
 
-                <a href="#" class="text-dark fs-4"><i class="bi bi-twitter-x"></i></a>
+                <a href="{{ marketplace.social_twitter }}" class="text-dark fs-4"><i class="bi bi-twitter-x"></i></a>
 
-                <a href="#" class="text-dark fs-4"><i class="bi bi-linkedin"></i></a>
+                <a href="{{ marketplace.social_linkedin }}" class="text-dark fs-4"><i class="bi bi-linkedin"></i></a>
               </div>
             </div>
           </div>

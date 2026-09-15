@@ -1,0 +1,600 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {{ promotion.title }} • MarketSphere
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/search_results.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/promotion_detail.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+  <!-- ================= BREADCRUMB ================= -->
+  <section class="pd-breadcrumb-wrap">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'search' %}">Promotions</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ promotion.title }}</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       PROMOTION HERO
+       Reusable for any promotion: Summer Sale, Eid Sale, Black
+       Friday, Flash Sale, etc. Content comes entirely from the
+       `promotion` context object and the is_upcoming/is_active/
+       is_ended flags — nothing here is Summer-Sale specific.
+       ========================================================= -->
+  <section
+    class="promod-hero{% if is_ended %} promod-hero-ended{% elif is_upcoming %} promod-hero-upcoming{% endif %}"
+    {% if promotion.banner_image %}style="--promod-hero-image: url('{{ promotion.banner_image }}');"{% endif %}
+  >
+    <div class="container">
+      <div class="promod-hero-inner{% if not promotion.banner_image %} promod-hero-inner-no-image{% endif %}">
+        <div class="promod-hero-content">
+          {% if is_ended %}
+            <span class="promod-hero-label promod-hero-label-ended"><i class="bi bi-hourglass-bottom"></i> Promotion Ended</span>
+          {% elif is_upcoming %}
+            <span class="promod-hero-label promod-hero-label-upcoming"><i class="bi bi-stars"></i> Coming Soon</span>
+          {% else %}
+            <span class="promod-hero-label"><i class="bi bi-lightning-charge-fill"></i> {{ promotion.label|default:"Limited-Time Offer" }}</span>
+          {% endif %}
+
+          <h1 class="promod-hero-title">{{ promotion.title }}</h1>
+
+          {% if promotion.discount_text %}
+            <p class="promod-hero-discount">{{ promotion.discount_text }}</p>
+          {% endif %}
+
+          {% if promotion.description %}
+            <p class="promod-hero-desc">{{ promotion.description }}</p>
+          {% endif %}
+
+          {% if is_ended %}
+            <p class="promod-hero-status"><i class="bi bi-info-circle"></i> This promotion has ended, but new deals are added all the time.</p>
+            <div class="promod-hero-actions">
+              <a href="{% url 'search' %}" class="btn btn-hero-primary">Shop All Products <i class="bi bi-arrow-right"></i></a>
+            </div>
+
+          {% elif is_upcoming %}
+            {% if promotion.start_at %}
+              <div class="promod-countdown" id="promodCountdown" data-target="{{ promotion.start_at|date:'c' }}">
+                <span class="promod-countdown-label">Starts In</span>
+                <div class="promod-countdown-units">
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="days">--</span><span class="promod-countdown-unit-label">Days</span></div>
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="hours">--</span><span class="promod-countdown-unit-label">Hrs</span></div>
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="minutes">--</span><span class="promod-countdown-unit-label">Min</span></div>
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="seconds">--</span><span class="promod-countdown-unit-label">Sec</span></div>
+                </div>
+              </div>
+            {% endif %}
+            <div class="promod-hero-actions">
+              <button type="button" class="btn btn-hero-secondary" id="promodRemindBtn"><i class="bi bi-bell"></i> Get Reminders</button>
+            </div>
+
+          {% else %}
+            {% if promotion.end_at %}
+              <div class="promod-countdown promod-countdown-active" id="promodCountdown" data-target="{{ promotion.end_at|date:'c' }}">
+                <span class="promod-countdown-label">Ends In</span>
+                <div class="promod-countdown-units">
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="days">--</span><span class="promod-countdown-unit-label">Days</span></div>
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="hours">--</span><span class="promod-countdown-unit-label">Hrs</span></div>
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="minutes">--</span><span class="promod-countdown-unit-label">Min</span></div>
+                  <div class="promod-countdown-unit"><span class="promod-countdown-value" data-unit="seconds">--</span><span class="promod-countdown-unit-label">Sec</span></div>
+                </div>
+              </div>
+            {% endif %}
+            <div class="promod-hero-actions">
+              <a href="#promodAllProducts" class="btn btn-hero-primary">Shop The Sale <i class="bi bi-arrow-right"></i></a>
+              {% if categories %}
+                <a href="#promodCategories" class="btn btn-hero-secondary">Explore Categories</a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+
+        {% if promotion.banner_image %}
+          <div class="promod-hero-visual">
+            <img src="{{ promotion.banner_image }}" alt="{{ promotion.title }}" class="promod-hero-image" />
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROMOTION HIGHLIGHTS ================= -->
+  {% if is_active %}
+    <section class="promod-highlights-section">
+      <div class="container">
+        <div class="promod-highlights-row">
+          <div class="promod-highlight-item">
+            <span class="promod-highlight-value">{{ product_count }}</span>
+            <span class="promod-highlight-label">Products on Sale</span>
+          </div>
+          {% if promotion.discount_text %}
+            <div class="promod-highlight-item">
+              <span class="promod-highlight-value">{{ promotion.discount_text }}</span>
+              <span class="promod-highlight-label">Discount</span>
+            </div>
+          {% endif %}
+          {% if categories %}
+            <div class="promod-highlight-item">
+              <span class="promod-highlight-value">{{ categories|length }}</span>
+              <span class="promod-highlight-label">Categories</span>
+            </div>
+          {% endif %}
+          {% if brands %}
+            <div class="promod-highlight-item">
+              <span class="promod-highlight-value">{{ brands|length }}+</span>
+              <span class="promod-highlight-label">Participating Brands</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ================= SHOP THE SALE (CATEGORIES) ================= -->
+  {% if is_active and categories %}
+    <section class="categories-section promod-categories-section" id="promodCategories">
+      <div class="container">
+        <div class="section-heading-row">
+          <div>
+            <span class="section-label">Browse</span>
+            <h2>Shop the Sale</h2>
+            <p>Jump straight to the categories included in this promotion.</p>
+          </div>
+        </div>
+
+        <div class="promod-category-scroll">
+          {% for category in categories %}
+            <a
+              href="?category={{ category.slug }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+              class="promod-category-chip{% if category.slug in selected_categories %} is-active{% endif %}"
+            >
+              {% if category.icon %}<i class="{{ category.icon }}"></i>{% endif %}
+              <span>{{ category.name }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ================= FEATURED DEALS ================= -->
+  {% if is_active and featured_products %}
+    <section class="products-section promod-featured-section">
+      <div class="container">
+        <div class="section-heading section-heading-row">
+          <div>
+            <span class="section-label">Curated</span>
+            <h2>Featured Deals</h2>
+            <p>Some of the best offers in this promotion.</p>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          {% for product in featured_products %}
+            <div class="col-lg-3 col-md-4 col-6">
+              <div class="product-card">
+                <div class="product-card-media">
+                  <div class="product-badges">
+                    {% if product.discount_price %}
+                      <span class="badge-discount">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                  </div>
+
+                  <button
+                    class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                    type="button"
+                    data-product-slug="{{ product.slug }}"
+                    aria-label="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+                  >
+                    <i class="bi bi-heart"></i>
+                  </button>
+
+                  {% if product.category %}
+                    <span class="product-category-badge">({{ product.category.name }})</span>
+                  {% endif %}
+
+                  <a href="{% url 'product' product.slug %}" class="product-image-placeholder">
+                    {% if product.primary_image %}
+                      <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" />
+                    {% else %}
+                      <i class="bi bi-image"></i>
+                    {% endif %}
+                  </a>
+                </div>
+
+                <div class="product-card-body">
+                  {% if product.brand %}
+                    <span class="product-brand">{{ product.brand.name }}</span>
+                  {% else %}
+                    <span class="product-brand">NO BRAND</span>
+                  {% endif %}
+
+                  <a href="{% url 'product' product.slug %}" class="text-decoration-none">
+                    <h6 class="product-name">{{ product.name }}</h6>
+                  </a>
+
+                  <div class="product-price">
+                    {% if product.discount_price %}
+                      <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
+                      <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
+                    {% else %}
+                      <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
+                    {% endif %}
+                  </div>
+
+                  {% if product.stock_quantity <= 0 %}
+                    <span class="stock-badge out-of-stock">Out of Stock</span>
+                  {% elif product.stock_quantity <= 80 %}
+                    <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
+                  {% else %}
+                    <span class="stock-badge in-stock">In Stock</span>
+                  {% endif %}
+
+                  <button
+                    class="btn add-to-cart-btn w-100"
+                    {% if product.stock_quantity <= 0 %}disabled{% endif %}
+                    data-add-url="{% url 'add_to_cart' product.slug %}"
+                  >
+                    <i class="bi bi-cart4"></i> Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- =========================================================
+       ALL SALE PRODUCTS
+       Filters/sort/pagination reuse the same query-param
+       contract, CSS classes (filter-card, sorting-row,
+       search-product-grid, pagination, no-results-section) and
+       services.* helpers (filter_products/sort_products/
+       paginate_products) as the main search results page.
+       ========================================================= -->
+  <section class="search-results-section promod-shop-section" id="promodAllProducts">
+    <div class="container-fluid">
+      {% if is_ended %}
+        <div class="no-results-section">
+          <div class="no-results-icon"><i class="bi bi-hourglass-bottom"></i></div>
+          <h3>This promotion has ended</h3>
+          <p>Don't worry — there are always new deals waiting for you on MarketSphere.</p>
+          <a href="{% url 'search' %}" class="btn btn-hero-primary">Explore Current Deals</a>
+        </div>
+
+      {% elif is_upcoming %}
+        <div class="no-results-section">
+          <div class="no-results-icon"><i class="bi bi-stars"></i></div>
+          <h3>This sale hasn't started yet</h3>
+          <p>Check back once the countdown above ends to start shopping these deals.</p>
+          <a href="{% url 'home' %}" class="btn btn-hero-primary">Continue Shopping</a>
+        </div>
+
+      {% elif not has_any_products %}
+        <div class="no-results-section">
+          <div class="no-results-icon"><i class="bi bi-bag"></i></div>
+          <h3>No deals available yet</h3>
+          <p>There are currently no products available for this promotion.</p>
+          <a href="{% url 'home' %}" class="btn btn-hero-primary">Continue Shopping</a>
+        </div>
+
+      {% else %}
+        <div class="row gx-4">
+          <!-- ================= MOBILE FILTER TRIGGER ================= -->
+          <div class="col-12 d-lg-none mb-3">
+            <button class="btn filter-toggle-btn w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#promodFilterOffcanvas" aria-controls="promodFilterOffcanvas">
+              <i class="bi bi-funnel"></i> Filters
+            </button>
+          </div>
+
+          <!-- ================= SIDEBAR (DESKTOP) ================= -->
+          <aside class="col-lg-3 d-none d-lg-block filters-sidebar">
+            <form method="GET">
+              {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}" />{% endif %}
+
+              {% if categories %}
+                <div class="filter-card card mb-3">
+                  <div class="card-header"><h6><i class="bi bi-grid"></i> Categories</h6></div>
+                  <div class="card-body">
+                    {% for category in categories %}
+                      <div class="form-check filter-check">
+                        <input class="form-check-input" type="checkbox" name="category" value="{{ category.slug }}" id="pcat-{{ category.slug }}" {% if category.slug in selected_categories %}checked{% endif %} />
+                        <label class="form-check-label" for="pcat-{{ category.slug }}">{{ category.name }}</label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if brands %}
+                <div class="filter-card card mb-3">
+                  <div class="card-header"><h6><i class="bi bi-tags"></i> Brand</h6></div>
+                  <div class="card-body">
+                    {% for brand in brands %}
+                      <div class="form-check filter-check">
+                        <input class="form-check-input" type="checkbox" name="brand" value="{{ brand.slug }}" id="pbrand-{{ brand.slug }}" {% if brand.slug in selected_brands %}checked{% endif %} />
+                        <label class="form-check-label" for="pbrand-{{ brand.slug }}">{{ brand.name }}</label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+
+              <div class="filter-card card mb-3">
+                <div class="card-header"><h6><i class="bi bi-box-seam"></i> Availability</h6></div>
+                <div class="card-body">
+                  <div class="form-check filter-check">
+                    <input class="form-check-input" type="checkbox" name="availability" value="in_stock" id="pavail-in" {% if "in_stock" in selected_availability %}checked{% endif %} />
+                    <label class="form-check-label" for="pavail-in">In Stock</label>
+                  </div>
+                  <div class="form-check filter-check">
+                    <input class="form-check-input" type="checkbox" name="availability" value="out_of_stock" id="pavail-out" {% if "out_of_stock" in selected_availability %}checked{% endif %} />
+                    <label class="form-check-label" for="pavail-out">Out of Stock</label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-hero-primary w-100 mb-2">Apply Filters</button>
+              <a href="{{ request.path }}" class="btn clear-filters-btn w-100"><i class="bi bi-x-circle"></i> Clear Filters</a>
+            </form>
+          </aside>
+
+          <!-- ================= PRODUCT RESULTS ================= -->
+          <div class="col-lg-9">
+            <div class="sorting-row d-flex flex-wrap align-items-center justify-content-between mb-4">
+              <span class="results-count"><strong>{{ paginator.count }}</strong> Deals Found</span>
+
+              <form method="GET" class="d-flex align-items-center gap-2">
+                {% for cat in selected_categories %}<input type="hidden" name="category" value="{{ cat }}" />{% endfor %}
+                {% for b in selected_brands %}<input type="hidden" name="brand" value="{{ b }}" />{% endfor %}
+                {% for a in selected_availability %}<input type="hidden" name="availability" value="{{ a }}" />{% endfor %}
+
+                <label for="promodSortBy" class="mb-0 sort-label">Sort By</label>
+                <select class="form-select sort-select" id="promodSortBy" name="sort" onchange="this.form.submit()">
+                  <option value="newest" {% if request.GET.sort == 'newest' or not request.GET.sort %}selected{% endif %}>Newest</option>
+                  <option value="price_low_high" {% if request.GET.sort == 'price_low_high' %}selected{% endif %}>Price: Low to High</option>
+                  <option value="price_high_low" {% if request.GET.sort == 'price_high_low' %}selected{% endif %}>Price: High to Low</option>
+                  <option value="popularity" {% if request.GET.sort == 'popularity' %}selected{% endif %}>Popularity</option>
+                </select>
+              </form>
+            </div>
+
+            {% if products %}
+              <div class="row g-4 search-product-grid">
+                {% for product in products %}
+                  <div class="col-lg-4 col-md-6 col-6">
+                    <div class="product-card">
+                      <div class="product-card-media">
+                        <div class="product-badges">
+                          {% if product.discount_price %}
+                            <span class="badge-discount">-{{ product.discount_percentage }}%</span>
+                          {% endif %}
+                        </div>
+
+                        <button
+                          class="wishlist-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                          type="button"
+                          data-product-slug="{{ product.slug }}"
+                          aria-label="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+                        >
+                          <i class="bi bi-heart"></i>
+                        </button>
+
+                        {% if product.category %}
+                          <span class="product-category-badge">({{ product.category.name }})</span>
+                        {% endif %}
+
+                        <a href="{% url 'product' product.slug %}" class="product-image-placeholder">
+                          {% if product.primary_image %}
+                            <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" />
+                          {% else %}
+                            <i class="bi bi-image"></i>
+                          {% endif %}
+                        </a>
+                      </div>
+
+                      <div class="product-card-body">
+                        {% if product.brand %}
+                          <span class="product-brand">{{ product.brand.name }}</span>
+                        {% else %}
+                          <span class="product-brand">NO BRAND</span>
+                        {% endif %}
+
+                        <a href="{% url 'product' product.slug %}" class="text-decoration-none">
+                          <h6 class="product-name">{{ product.name }}</h6>
+                        </a>
+
+                        <div class="product-price">
+                          {% if product.discount_price %}
+                            <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
+                            <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
+                          {% else %}
+                            <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
+                          {% endif %}
+                        </div>
+
+                        {% if product.stock_quantity <= 0 %}
+                          <span class="stock-badge out-of-stock">Out of Stock</span>
+                        {% elif product.stock_quantity <= 80 %}
+                          <span class="stock-badge low-stock">Only {{ product.stock_quantity }} left</span>
+                        {% else %}
+                          <span class="stock-badge in-stock">In Stock</span>
+                        {% endif %}
+
+                        <button
+                          class="btn add-to-cart-btn w-100"
+                          {% if product.stock_quantity <= 0 %}disabled{% endif %}
+                          data-add-url="{% url 'add_to_cart' product.slug %}"
+                        >
+                          <i class="bi bi-cart4"></i> Add to Cart
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+
+              <!-- ================= PAGINATION ================= -->
+              <nav aria-label="Promotion results pagination" class="search-pagination-wrap{% if paginator.num_pages <= 1 %} d-none{% endif %}">
+                <ul class="pagination justify-content-center">
+                  <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a
+                      class="page-link"
+                      href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}"
+                      {% if not page_obj.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}
+                    >
+                      <i class="bi bi-chevron-left"></i> Previous
+                    </a>
+                  </li>
+
+                  {% for num in paginator.page_range %}
+                    <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                      <a class="page-link" href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={{ num }}">{{ num }}</a>
+                    </li>
+                  {% endfor %}
+
+                  <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a
+                      class="page-link"
+                      href="?{{ pagination_query.urlencode }}{% if pagination_query %}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}"
+                      {% if not page_obj.has_next %}tabindex="-1" aria-disabled="true"{% endif %}
+                    >
+                      Next <i class="bi bi-chevron-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            {% else %}
+              <div class="no-results-section">
+                <div class="no-results-icon"><i class="bi bi-search"></i></div>
+                <h3>No matching deals</h3>
+                <p>Try changing or clearing your filters.</p>
+                <a href="{{ request.path }}" class="btn btn-hero-primary">Clear Filters</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ================= MOBILE FILTER OFFCANVAS ================= -->
+        <div class="offcanvas offcanvas-start filter-offcanvas" tabindex="-1" id="promodFilterOffcanvas" aria-labelledby="promodFilterOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="promodFilterOffcanvasLabel"><i class="bi bi-funnel"></i> Filters</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <form method="GET">
+              {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}" />{% endif %}
+
+              {% if categories %}
+                <div class="filter-card card mb-3">
+                  <div class="card-header"><h6><i class="bi bi-grid"></i> Categories</h6></div>
+                  <div class="card-body">
+                    {% for category in categories %}
+                      <div class="form-check filter-check">
+                        <input class="form-check-input" type="checkbox" name="category" value="{{ category.slug }}" id="m-pcat-{{ category.slug }}" {% if category.slug in selected_categories %}checked{% endif %} />
+                        <label class="form-check-label" for="m-pcat-{{ category.slug }}">{{ category.name }}</label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if brands %}
+                <div class="filter-card card mb-3">
+                  <div class="card-header"><h6><i class="bi bi-tags"></i> Brand</h6></div>
+                  <div class="card-body">
+                    {% for brand in brands %}
+                      <div class="form-check filter-check">
+                        <input class="form-check-input" type="checkbox" name="brand" value="{{ brand.slug }}" id="m-pbrand-{{ brand.slug }}" {% if brand.slug in selected_brands %}checked{% endif %} />
+                        <label class="form-check-label" for="m-pbrand-{{ brand.slug }}">{{ brand.name }}</label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+
+              <div class="filter-card card mb-3">
+                <div class="card-header"><h6><i class="bi bi-box-seam"></i> Availability</h6></div>
+                <div class="card-body">
+                  <div class="form-check filter-check">
+                    <input class="form-check-input" type="checkbox" name="availability" value="in_stock" id="m-pavail-in" {% if "in_stock" in selected_availability %}checked{% endif %} />
+                    <label class="form-check-label" for="m-pavail-in">In Stock</label>
+                  </div>
+                  <div class="form-check filter-check">
+                    <input class="form-check-input" type="checkbox" name="availability" value="out_of_stock" id="m-pavail-out" {% if "out_of_stock" in selected_availability %}checked{% endif %} />
+                    <label class="form-check-label" for="m-pavail-out">Out of Stock</label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-hero-primary w-100 mb-2">Apply Filters</button>
+              <a href="{{ request.path }}" class="btn clear-filters-btn w-100">Clear Filters</a>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ================= TRUST / REASSURANCE ================= -->
+  {% if not is_ended %}
+    <section class="why-us-section promod-trust-section">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="why-us-card">
+              <div class="why-us-icon"><i class="bi bi-shield-check"></i></div>
+              <h5>Secure Shopping</h5>
+              <p>Shop confidently across verified MarketSphere sellers.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="why-us-card">
+              <div class="why-us-icon"><i class="bi bi-grid"></i></div>
+              <h5>Multiple Categories</h5>
+              <p>Discover deals across the marketplace.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="why-us-card">
+              <div class="why-us-icon"><i class="bi bi-arrow-repeat"></i></div>
+              <h5>Easy Returns</h5>
+              <p>Return eligible products according to our return policy.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FINAL CTA ================= -->
+    <section class="newsletter-section promod-final-cta">
+      <div class="container">
+        <div class="newsletter-inner">
+          <h2>Don't Miss The Deals</h2>
+          <p>Explore more products across MarketSphere.</p>
+          <a href="{% url 'home' %}" class="btn btn-hero-primary">Continue Shopping <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'js/promotion_detail.js' %}"></script>
+{% endblock %}

@@ -2610,6 +2610,10 @@ from .models import (
     NotificationSettings,
     AdminAuditLog,
 )
+from .marketplace import invalidate_marketplace_settings_cache
+from .checkout import invalidate_checkout_settings_cache
+
+MARKETPLACE_ONLINE_CACHE_KEY = "marketplace_settings:marketplace_online"
 
 
 PLATFORM_SETTINGS_CACHE_KEY = "platform_settings"
@@ -2641,6 +2645,8 @@ def get_platform_settings():
 
 def invalidate_platform_settings_cache():
     cache.delete(PLATFORM_SETTINGS_CACHE_KEY)
+    invalidate_marketplace_settings_cache()
+    invalidate_checkout_settings_cache()
 
 
 def serialize_setting_value(value):
@@ -2719,3 +2725,33 @@ def log_audit_event(
         new_value=new_value,
         ip_address=ip_address,
     )
+
+
+# admin_panel/services/settings.py
+
+from admin_panel.models import (
+    StoreSettings,
+    MarketplaceSettings,
+    CheckoutSettings,
+    CatalogSettings,
+)
+
+
+def get_store_settings():
+    return StoreSettings.load()
+
+
+def get_marketplace_settings():
+    from .marketplace import get_marketplace_settings as get_cached_marketplace_settings
+
+    return get_cached_marketplace_settings()
+
+
+def get_checkout_settings():
+    from .checkout import get_checkout_settings as get_cached_checkout_settings
+
+    return get_cached_checkout_settings()
+
+
+def get_catalog_settings():
+    return CatalogSettings.load()

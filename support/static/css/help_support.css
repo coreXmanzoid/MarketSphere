@@ -551,7 +551,8 @@
 .hs-accordion-panel p {
     margin: 0;
     font-size: 13.5px;
-    color: #4f7d54;
+    color: #B0BA99;
+    opacity: 0.9 !important;
     line-height: 1.6;
 }
 

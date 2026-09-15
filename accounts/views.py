@@ -13,10 +13,12 @@ from allauth.core.exceptions import ImmediateHttpResponse
 from accounts.seller_pdf import export_seller_profile_snapshot
 from .decorators import verified_seller, verified_user, only_seller
 from django.http import JsonResponse
+from django.utils import timezone
 
 User = get_user_model()
 from . import validator
 from . import services
+from admin_panel.marketplace import get_marketplace_settings
 
 # Create your views here.
 
@@ -48,6 +50,10 @@ def login_view(request):
 
 
 def signup_view(request):
+    if not get_marketplace_settings().buyer_registration:
+        messages.info(request, "Buyer registration is currently unavailable.")
+        return redirect("home")
+
     if request.method == "POST":
         user = {
             "first_name": request.POST.get("first_name"),
@@ -84,6 +90,11 @@ def signup_view(request):
 @login_required
 @verified_user
 def seller_signup_view(request):
+    marketplace_settings = get_marketplace_settings()
+    if not marketplace_settings.seller_registration:
+        messages.info(request, "Seller registration is currently unavailable.")
+        return redirect("home")
+
     print(request.POST)
     print(request.FILES)
     if request.method == "POST":
@@ -92,6 +103,12 @@ def seller_signup_view(request):
             request.POST,
             request.FILES,
         )
+        if not marketplace_settings.seller_approval_required:
+            seller.status = seller.Status.VERIFIED
+            seller.save(update_fields=["status"])
+            seller.application.status = seller.application.Status.APPROVED
+            seller.application.reviewed_at = timezone.now()
+            seller.application.save(update_fields=["status", "reviewed_at"])
         return redirect("seller-account")
     return render(request, "seller_signup.html")
 

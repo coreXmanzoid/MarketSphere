@@ -11,11 +11,27 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.db import IntegrityError, transaction
+from django.db.models import Model
+from django.db.models.fields.files import FieldFile
 from django.core.exceptions import ValidationError
 from products.models import Brand, Category
 import json
 import csv
 from django.utils.text import slugify
+from django.core import serializers
+from django.core.files.storage import default_storage
+from django.core.serializers.json import DjangoJSONEncoder
+from .models import (
+    AdminAuditLog,
+    AdminSettingsData,
+    CatalogSettings,
+    CheckoutSettings,
+    MarketplaceSettings,
+    NotificationSettings,
+    StoreSettings,
+)
+from decimal import Decimal, InvalidOperation
+import json
 
 # Create your views here.
 def dashboard(request):
@@ -147,8 +163,150 @@ def payment_management(request):
     return render(request, "sales/payments/payment_management.html")
 
 
+SETTINGS_SECTION_MODELS = {
+    "general": StoreSettings,
+    "marketplace": MarketplaceSettings,
+    "orders": CheckoutSettings,
+    "catalog": CatalogSettings,
+    "notifications": NotificationSettings,
+}
+
+
+def _json_value(value):
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, FieldFile):
+        try:
+            return value.url
+        except ValueError:
+            return ""
+    return value
+
+
+def _model_values(instance):
+    return {
+        field.name: _json_value(getattr(instance, field.name))
+        for field in instance._meta.fields
+        if field.name not in {"id", "updated_at"}
+    }
+
+
+def _settings_payload():
+    stored = AdminSettingsData.load().data or {}
+    payload = dict(stored)
+    for section, model_class in SETTINGS_SECTION_MODELS.items():
+        values = dict(payload.get(section, {}))
+        values.update(_model_values(model_class.load()))
+        payload[section] = values
+    return payload
+
+
+def _client_ip(request):
+    return request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip() or request.META.get("REMOTE_ADDR")
+
+
+def _post_value(value, field_name, boolean_fields):
+    if field_name in boolean_fields:
+        return str(value).lower() in {"1", "true", "yes", "on"}
+    return value
+
+
+@require_http_methods(["GET", "POST"])
 def admin_settings(request):
-    return render(request, "admin_settings.html")
+    if request.method == "GET":
+        payload = _settings_payload()
+        context = {key: value for section in payload.values() for key, value in section.items()}
+        store = StoreSettings.load()
+        context.update({
+            "marketplace_logo_url": store.marketplace_logo.url if store.marketplace_logo else "",
+            "marketplace_favicon_url": store.marketplace_favicon.url if store.marketplace_favicon else "",
+            "settings_payload": payload,
+            "audit_log_entries": [
+                {
+                    "category": entry.section,
+                    "admin_name": entry.admin.get_full_name() or entry.admin.username if entry.admin else "System",
+                    "action": entry.action,
+                    "setting_name": entry.setting_name,
+                    "old_value": entry.old_value,
+                    "new_value": entry.new_value,
+                    "created_at": entry.timestamp,
+                    "ip_address": entry.ip_address,
+                }
+                for entry in AdminAuditLog.objects.select_related("admin")[:100]
+            ],
+        })
+        return render(request, "admin_settings.html", context)
+
+    section = request.POST.get("__section", "").strip()
+    if not section:
+        return JsonResponse({"ok": False, "error": "A settings section is required."}, status=400)
+
+    try:
+        boolean_fields = set(json.loads(request.POST.get("__boolean_fields", "[]")))
+    except (TypeError, ValueError):
+        boolean_fields = set()
+
+    values = {
+        key: _post_value(value, key, boolean_fields)
+        for key, value in request.POST.items()
+        if not key.startswith("__")
+    }
+    for key, uploaded in request.FILES.items():
+        if uploaded:
+            values[key] = uploaded
+
+    with transaction.atomic():
+        settings_data = AdminSettingsData.load()
+        all_data = dict(settings_data.data or {})
+        section_data = dict(all_data.get(section, {}))
+        model_class = SETTINGS_SECTION_MODELS.get(section)
+        model_instance = model_class.load() if model_class else None
+
+        if model_instance:
+            model_field_names = {field.name for field in model_instance._meta.fields}
+            for key, raw_value in values.items():
+                if key not in model_field_names or key in {"id", "updated_at"}:
+                    continue
+                field = model_instance._meta.get_field(key)
+                try:
+                    if key in request.FILES:
+                        converted = raw_value
+                    elif field.get_internal_type() == "BooleanField":
+                        converted = bool(raw_value)
+                    elif field.get_internal_type() in {"IntegerField", "PositiveIntegerField", "PositiveSmallIntegerField"}:
+                        converted = int(raw_value or 0)
+                    elif field.get_internal_type() == "DecimalField":
+                        converted = Decimal(raw_value or 0)
+                    else:
+                        converted = raw_value
+                    old_value = getattr(model_instance, key)
+                    if old_value != converted:
+                        services.log_audit_event(
+                            admin=request.user if request.user.is_authenticated else None,
+                            action="Updated",
+                            section=section,
+                            setting_name=key,
+                            old_value=str(_json_value(old_value)),
+                            new_value=str(_json_value(converted)),
+                            ip_address=_client_ip(request),
+                        )
+                    setattr(model_instance, key, converted)
+                except (ValueError, InvalidOperation, TypeError):
+                    return JsonResponse({"ok": False, "error": f"Invalid value for {key}."}, status=400)
+            model_instance.save()
+
+        for key, value in values.items():
+            if key in request.FILES:
+                section_data[key] = _json_value(getattr(model_instance, key)) if model_instance and hasattr(model_instance, key) else ""
+            else:
+                section_data[key] = _json_value(value)
+        all_data[section] = section_data
+        settings_data.data = all_data
+        settings_data.save()
+
+        services.invalidate_platform_settings_cache()
+
+    return JsonResponse({"ok": True, "section": section, "settings": _settings_payload().get(section, {})})
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods

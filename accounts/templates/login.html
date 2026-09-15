@@ -58,7 +58,9 @@
                             </a>
                         </div>
                         <small class="form-text text-muted">
-                            Don't have an account? <a href="{% url 'signup' %}">Register here</a>
+                            {% if marketplace_settings.buyer_registration %}
+                                Don't have an account? <a href="{% url 'signup' %}">Register here</a>
+                            {% endif %}
                         </small>
 
                     </form>

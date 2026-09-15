@@ -4,7 +4,8 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse, FileResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 
 from accounts import services as account_service
 from accounts.models import Seller
@@ -13,6 +14,7 @@ from products import services as cart_service
 from . import services as order_service
 from .invoice import generate_invoice
 from .models import Order
+from admin_panel.checkout import get_checkout_settings
 from .packing_slip import generate_packing_slip
 from .shipping_label import generate_shipping_label
 
@@ -42,6 +44,13 @@ def order(request, order_number):
 
 
 def checkout(request):
+    if not request.user.is_authenticated:
+        if not get_checkout_settings().guest_checkout:
+            messages.info(request, "Please sign in before checking out.")
+            return redirect("login")
+        messages.info(request, "Guest checkout is not available until an account is created.")
+        return redirect("signup")
+
     addresses = account_service.get_user_addresses(request.user)
     cart = cart_service.get_user_cart(request.user)
     context = {

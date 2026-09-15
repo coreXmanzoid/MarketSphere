@@ -119,13 +119,13 @@
               <div class="col-md-4 col-12">
                 <label for="coContactEmail" class="form-label">Email Address</label>
                 <!-- Prefilled with request.user.email by Django -->
-                <input type="email" class="form-control" id="coContactEmail" name="email" value="{{ request.user.email }}" required />
+                <input type="email" class="form-control" id="coContactEmail" name="email" value="{{ request.user.email }}" {% if checkout_settings.require_email %}required{% endif %} />
               </div>
 
               <div class="col-md-4 col-12">
                 <label for="coContactPhone" class="form-label">Phone Number</label>
                 <!-- Prefilled with request.user.contact by Django -->
-                <input type="tel" class="form-control" id="coContactPhone" name="phone" value="{{ request.user.contact }}" required />
+                <input type="tel" class="form-control" id="coContactPhone" name="phone" value="{{ request.user.contact }}" {% if checkout_settings.require_phone %}required{% endif %} />
               </div>
             </div>
           </div>
@@ -184,13 +184,13 @@
           </div>
 
           <!-- ============ ORDER NOTES ============ -->
-          <div class="co-card">
+          {% if checkout_settings.allow_order_notes %}<div class="co-card">
             <div class="co-card-head">
               <h2 class="co-card-title"><i class="bi bi-chat-square-text"></i> Order Notes</h2>
             </div>
 
             <textarea class="form-control co-notes-textarea" id="coOrderNotes" name="order_notes" rows="4" placeholder="Write delivery instructions (optional)"></textarea>
-          </div>
+          </div>{% endif %}
         </div>
 
         <!-- ================= RIGHT COLUMN (~35%) ================= -->

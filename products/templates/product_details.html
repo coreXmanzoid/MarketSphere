@@ -104,7 +104,7 @@
                 <i class="bi bi-star-half"></i>
               </span>
               <!-- Review count will be rendered here by Django -->
-              <a href="#pdReviews" class="pd-rating-count">(214 reviews)</a>
+              {% if marketplace_settings.buyer_reviews %}<a href="#pdReviews" class="pd-rating-count">(214 reviews)</a>{% endif %}
               {% if product.sku %}
                 <span class="pd-rating-divider">|</span>
                 <span class="pd-sku-inline"><!-- SKU will be rendered here by Django -->SKU: {{ product.sku }}</span>
@@ -346,7 +346,7 @@
             </div>
 
             <div class="pdp-seller-meta">
-              <span><strong>4.8</strong> ★ Seller Rating</span>
+              {% if marketplace_settings.seller_reviews %}<span><strong>4.8</strong> ★ Seller Rating</span>{% endif %}
               <span><strong>{{ product.seller.products.count|add:-1 }}+</strong> Products</span>
               <span><strong>&lt; 1 hr</strong> Response Time</span>
               <span>Member since <strong>{{ product.seller.created_at|date:'Y' }}</strong></span>
@@ -421,7 +421,7 @@
             <button class="nav-link" id="pdp-tab-specs-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-specs" type="button" role="tab" aria-controls="pdp-tab-specs" aria-selected="false">Specifications</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="pdp-tab-reviews-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-reviews" type="button" role="tab" aria-controls="pdp-tab-reviews" aria-selected="false">Reviews (214)</button>
+            {% if marketplace_settings.buyer_reviews %}<button class="nav-link" id="pdp-tab-reviews-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-reviews" type="button" role="tab" aria-controls="pdp-tab-reviews" aria-selected="false">Reviews (214)</button>{% endif %}
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="pdp-tab-shipping-btn" data-bs-toggle="tab" data-bs-target="#pdp-tab-shipping" type="button" role="tab" aria-controls="pdp-tab-shipping" aria-selected="false">Shipping &amp; Returns</button>
@@ -497,6 +497,7 @@
           </div>
 
           <!-- ============ REVIEWS ============ -->
+          {% if marketplace_settings.buyer_reviews %}
           <div class="tab-pane fade" id="pdp-tab-reviews" role="tabpanel" aria-labelledby="pdp-tab-reviews-btn">
             <div class="pdp-reviews-summary">
               <!-- Average Rating: will render product.average_rating -->
@@ -648,6 +649,7 @@
               <button type="button" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
             </div>
           </div>
+          {% endif %}
 
           <!-- ============ SHIPPING & RETURNS ============ -->
           <div class="tab-pane fade" id="pdp-tab-shipping" role="tabpanel" aria-labelledby="pdp-tab-shipping-btn">

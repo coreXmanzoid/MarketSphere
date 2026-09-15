@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from accounts.models import Seller
+from admin_panel.marketplace import get_marketplace_settings
 from orders.models import Order, OrderItem
 from notifications.services.notifications import schedule_low_stock_event
 from .models import Category, Brand, Product, WishlistItem, Cart, CartItem, ProductImage
@@ -40,7 +41,7 @@ def get_all_categories():
 
 
 def get_all_brands():
-    brands = Brand.objects.filter(is_active=True)
+    brands = Brand.objects.filter(is_active=True).all()
     return brands
 
 
@@ -229,6 +230,7 @@ def create_product(user, post_data, files):
     collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
 
+    marketplace_settings = get_marketplace_settings()
     product = Product.objects.create(
         seller=seller,
         category=category,
@@ -244,7 +246,12 @@ def create_product(user, post_data, files):
         stock_quantity=post_data["stock_quantity"],
         min_stock_level=post_data["min_stock_level"],
         weight=nullable(post_data.get("weight")),
-        status=Product.Status.PENDING,
+        status=(
+            Product.Status.PENDING
+            if marketplace_settings.product_approval_required
+            else Product.Status.PUBLISHED
+        ),
+        is_approved=not marketplace_settings.product_approval_required,
         is_featured=post_data.get("is_featured") == "true",
     )
 
@@ -348,6 +355,12 @@ def edit_product(seller, product, post_data, files):
     product.weight = nullable(post_data.get("weight"))
     product.is_featured = post_data.get("is_featured") == "true"
     product.status = post_data.get("visibility")
+    if (
+        get_marketplace_settings().product_approval_required
+        and product.status == Product.Status.PUBLISHED
+    ):
+        product.status = Product.Status.PENDING
+        product.is_approved = False
 
     product.save()
     schedule_low_stock_event(product, previous_stock, product.stock_quantity)
