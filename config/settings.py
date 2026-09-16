@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "admin_panel",
     "notifications",
     "support",
+    "promotions",
 ]
 
 # -------------------------------------------------------------------

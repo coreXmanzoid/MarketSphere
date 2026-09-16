@@ -386,18 +386,85 @@
                 </div>
                 <span class="pf-field-hint">Tags improve internal search and related-product matching.</span>
               </div>
-
+                            
               <div class="pf-field">
-                <label for="pfCollections" class="pf-label pf-label-static">Collections <span class="pf-optional">(optional)</span></label>
-                <div class="pf-select-wrap">
-                  <select id="pfCollections" name="collections" class="pf-select" multiple>
-                    <option value="summer-sale">Summer Sale</option>
-                    <option value="new-arrivals">New Arrivals</option>
-                    <option value="staff-picks">Staff Picks</option>
-                  </select>
-                </div>
-                <span class="pf-field-hint">Hold Ctrl / Cmd to select multiple collections.</span>
+                  <label class="pf-label pf-label-static">
+                      Promotions
+                      <span class="pf-optional">(optional)</span>
+                  </label>
+                  <span class="pf-field-hint" style="display: block; margin-bottom: 15px;">
+                      Select the promotions where you want this product to participate and set the promotional price.
+                  </span>
+
+                  <div class="promotions-grid">
+                      {% for promotion in available_promotions %}
+                          <div class="promo-card">
+                              <!-- Top Section: Title & Status -->
+                              <div class="promo-header">
+                                  <h4 class="promo-title">{{ promotion.name }}</h4>
+                                  <span class="promo-status 
+                                      {% if promotion.is_running %}status-active
+                                      {% elif promotion.is_upcoming %}status-upcoming
+                                      {% else %}status-default{% endif %}">
+                                      {% if promotion.is_running %}Active
+                                      {% elif promotion.is_upcoming %}Upcoming
+                                      {% else %}{{ promotion.get_status_display }}{% endif %}
+                                  </span>
+                              </div>
+
+                              <!-- Middle Section: Details -->
+                              <div class="promo-details">
+                                  {% if promotion.maximum_discount_percentage %}
+                                      <div>Up to {{ promotion.maximum_discount_percentage }}% Off</div>
+                                  {% endif %}
+                                  <div>{{ promotion.start_at|date:"M d, Y" }} &mdash; {{ promotion.end_at|date:"M d, Y" }}</div>
+                              </div>
+
+                              <hr class="promo-divider">
+
+                              <!-- Bottom Section: Checkbox & Price -->
+                              <div class="promo-actions">
+                                  <label class="promo-checkbox-label">
+                                      <input 
+                                          type="checkbox" 
+                                          name="promotions" 
+                                          value="{{ promotion.id }}" 
+                                          class="promo-checkbox"
+                                          onchange="togglePromoPrice(this, '{{ promotion.id }}')"
+                                          {% if promotion.id in selected_promotion_ids %}checked{% endif %}
+                                      >
+                                      Participate
+                                  </label>
+
+                                  <div id="price-wrapper-{{ promotion.id }}" class="promo-price-wrapper" 
+                                      style="{% if promotion.id not in selected_promotion_ids %}display: none;{% endif %}">
+                                      Promotion Price: 
+                                      <span style="font-weight: 500; margin-left: 4px;">[ Rs.</span>
+                                      
+                                      <!-- Dynamically sets the input name to include the ID so backend can retrieve it -->
+                                      <input 
+                                          type="number" 
+                                          step="0.01" 
+                                          min="0.01"
+                                          name="promotion_price_{{ promotion.id }}" 
+                                          class="promo-price-input" 
+                                          placeholder="e.g. 8000"
+                                          {% if promotion.id not in selected_promotion_ids %}disabled{% endif %}
+                                          
+                                          {% if promotion.selected_promotion_price %}value="{{ promotion.selected_promotion_price }}"{% endif %}
+                                      >
+                                      <span style="font-weight: 500;">]</span>
+                                  </div>
+                              </div>
+                          </div>
+                      {% empty %}
+                          <div class="promo-card" style="text-align: center; color: #6b7280; grid-column: 1 / -1;">
+                              No promotions are currently available.
+                          </div>
+                      {% endfor %}
+                  </div>
               </div>
+
             </div>
           </section>
 

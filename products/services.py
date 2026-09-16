@@ -17,6 +17,8 @@ from admin_panel.marketplace import get_marketplace_settings
 from orders.models import Order, OrderItem
 from notifications.services.notifications import schedule_low_stock_event
 from .models import Category, Brand, Product, WishlistItem, Cart, CartItem, ProductImage
+from promotions.services import sync_product_promotions
+from promotions.models import Promotion, PromotionProduct
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +194,7 @@ def nullable(value):
     return value
 
 
+@transaction.atomic
 def create_product(user, post_data, files):
     required_fields = {
         "name": "Product name",
@@ -227,7 +230,6 @@ def create_product(user, post_data, files):
 
     # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
-    collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
 
     marketplace_settings = get_marketplace_settings()
@@ -264,6 +266,8 @@ def create_product(user, post_data, files):
             alt_text=product.name,
         )
 
+    sync_product_promotions(seller, product, post_data.get("promotions", "[]"))
+
     return product
 
 
@@ -292,7 +296,6 @@ def save_draft(user, post_data, files):
 
     # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
-    collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
 
     product = Product.objects.create(
@@ -327,8 +330,10 @@ def save_draft(user, post_data, files):
     return product
 
 
+@transaction.atomic
 def edit_product(seller, product, post_data, files):
     previous_stock = Product.objects.only("stock_quantity").get(pk=product.pk).stock_quantity
+    previous_stock = int(previous_stock or 0)
     category_slug = nullable(post_data.get("category"))
     category = Category.objects.filter(slug=category_slug).first() if category_slug else None
 
@@ -337,7 +342,6 @@ def edit_product(seller, product, post_data, files):
 
     # Future implementation
     tags = json.loads(post_data.get("tags", "[]"))
-    collections = json.loads(post_data.get("collections", "[]"))
     dimensions = json.loads(post_data.get("dimensions", "{}"))
 
     product.category = category
@@ -348,10 +352,14 @@ def edit_product(seller, product, post_data, files):
     product.description = nullable(post_data.get("description")) or ""
     product.sku = nullable(post_data.get("sku"))
     product.barcode = nullable(post_data.get("barcode"))
-    product.price = nullable(post_data.get("price"))
-    product.discount_price = nullable(post_data.get("discount_price"))
-    product.stock_quantity = nullable(post_data.get("stock_quantity")) or 0
-    product.min_stock_level = nullable(post_data.get("min_stock_level")) or 5
+    price = nullable(post_data.get("price"))
+    discount_price = nullable(post_data.get("discount_price"))
+    product.price = Decimal(str(price)) if price is not None else None
+    product.discount_price = (
+        Decimal(str(discount_price)) if discount_price is not None else None
+    )
+    product.stock_quantity = int(nullable(post_data.get("stock_quantity")) or 0)
+    product.min_stock_level = int(nullable(post_data.get("min_stock_level")) or 5)
     product.weight = nullable(post_data.get("weight"))
     product.is_featured = post_data.get("is_featured") == "true"
     product.status = post_data.get("visibility")
@@ -393,6 +401,14 @@ def edit_product(seller, product, post_data, files):
         if first_image:
             first_image.is_primary = True
             first_image.save(update_fields=["is_primary"])
+
+    sync_product_promotions(
+        seller,
+        product,
+        post_data.get("promotions", "[]")
+        if product.status != Product.Status.DRAFT
+        else [],
+    )
 
     return product
 
@@ -668,7 +684,15 @@ def filter_products(products, category_slugs=None, brand_slugs=None, max_price=N
 
 
 def sort_products(products, sort_value):
-    effective_price = Coalesce("discount_price", "price")
+    return sort_products_by_price(products, sort_value)
+
+
+def sort_products_by_price(products, sort_value, price_field=None):
+    effective_price = (
+        Coalesce(price_field, "discount_price", "price")
+        if price_field
+        else Coalesce("discount_price", "price")
+    )
 
     if sort_value == "price_low_high":
         return products.order_by(effective_price)
@@ -752,13 +776,141 @@ def get_or_create_cart(user):
     return cart
 
 
-def add_to_cart(user, product_slug):
-    product = get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED)
+def _promotion_product_for_purchase(product, promotion_product_id=None):
+    if not promotion_product_id:
+        return None
+    try:
+        promotion_product_id = int(promotion_product_id)
+    except (TypeError, ValueError):
+        raise ValueError("Invalid promotion context.")
+    try:
+        promotion_product = PromotionProduct.objects.select_related(
+            "promotion", "product", "product__seller"
+        ).get(id=promotion_product_id, product=product)
+    except PromotionProduct.DoesNotExist:
+        raise ValueError("This product is not part of the selected promotion.")
+
+    now = timezone.now()
+    promotion = promotion_product.promotion
+    if not (
+        promotion.status == Promotion.Status.ACTIVE
+        and promotion.start_at <= now < promotion.end_at
+    ):
+        raise ValueError("This promotion is no longer available.")
+    if product.status != Product.Status.PUBLISHED:
+        raise ValueError("This product is no longer available.")
+    if not product.seller or product.seller.status != Seller.Status.VERIFIED:
+        raise ValueError("This seller is not currently verified.")
+    if not product.price or promotion_product.promotion_price >= product.price:
+        raise ValueError("This promotion price is no longer valid.")
+    return promotion_product
+
+
+def get_promotion_product_for_purchase(product, promotion_product_id):
+    return _promotion_product_for_purchase(product, promotion_product_id)
+
+
+def get_cart_item_pricing(cart_item, refresh_promotion=True):
+    """Return authoritative money values for one cart line."""
+    product = cart_item.product
+    original_price = Decimal(product.price or "0.00")
+    promotion_ended = False
+    promotion_product = cart_item.promotion_product
+
+    if promotion_product:
+        try:
+            promotion_product = _promotion_product_for_purchase(
+                product, promotion_product.id
+            )
+        except ValueError:
+            promotion_product = None
+            promotion_ended = True
+            if refresh_promotion:
+                cart_item.promotion_product = None
+                cart_item.save(update_fields=["promotion_product", "updated_at"])
+
+    effective_price = (
+        Decimal(promotion_product.promotion_price)
+        if promotion_product
+        else Decimal(product.discount_price or product.price or "0.00")
+    )
+    quantity = int(cart_item.quantity or 0)
+    discount_per_unit = (
+        max(Decimal("0.00"), original_price - effective_price)
+        if promotion_product
+        else Decimal("0.00")
+    )
+    return {
+        "original_price": original_price,
+        "effective_price": effective_price,
+        "discount_per_unit": discount_per_unit,
+        "discount_amount": discount_per_unit * quantity,
+        "quantity": quantity,
+        "line_subtotal": effective_price * quantity,
+        "promotion_ended": promotion_ended,
+        "promotion_product": promotion_product,
+        "is_promotion": bool(promotion_product),
+    }
+
+
+def get_cart_totals(user):
     cart = get_or_create_cart(user)
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={"quantity": 1})
+    items = cart.items.select_related(
+        "product", "product__seller", "promotion_product__promotion"
+    )
+    original_subtotal = Decimal("0.00")
+    discount = Decimal("0.00")
+    payable_subtotal = Decimal("0.00")
+    pricing = []
+    promotion_ended = False
+    for item in items:
+        line = get_cart_item_pricing(item)
+        item.pricing = line
+        original_subtotal += (
+            line["original_price"] if line["is_promotion"] else line["effective_price"]
+        ) * line["quantity"]
+        discount += line["discount_amount"]
+        payable_subtotal += line["line_subtotal"]
+        promotion_ended = promotion_ended or line["promotion_ended"]
+        pricing.append((item, line))
+    return {
+        "original_subtotal": original_subtotal,
+        "discount": discount,
+        "subtotal": payable_subtotal,
+        "total": payable_subtotal,
+        "pricing": pricing,
+        "promotion_ended": promotion_ended,
+    }
+
+
+def add_to_cart(user, product_slug, promotion_product_id=None, quantity=1):
+    product = get_object_or_404(
+        Product.objects.select_related("seller"),
+        slug=product_slug,
+        status=Product.Status.PUBLISHED,
+    )
+    try:
+        quantity = int(quantity)
+    except (TypeError, ValueError):
+        raise ValueError("Quantity must be a positive number.")
+    if quantity < 1:
+        raise ValueError("Quantity must be a positive number.")
+    promotion_product = _promotion_product_for_purchase(product, promotion_product_id)
+    if product.stock_quantity < quantity:
+        raise ValueError(f"Only {product.stock_quantity} units of '{product.name}' are available.")
+    cart = get_or_create_cart(user)
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        product=product,
+        promotion_product=promotion_product,
+        defaults={"quantity": quantity},
+    )
 
     if not created:
-        cart_item.quantity = (cart_item.quantity or 0) + 1
+        next_quantity = (cart_item.quantity or 0) + quantity
+        if product.stock_quantity < next_quantity:
+            raise ValueError(f"Only {product.stock_quantity} units of '{product.name}' are available.")
+        cart_item.quantity = next_quantity
         cart_item.save()
     return cart_item
 
@@ -814,15 +966,13 @@ def update_quantity(user, product_slug, quantity):
 
 def increment_quantity(user, product_slug):
     cart = get_or_create_cart(user)
-    cart_item, created = CartItem.objects.get_or_create(
-        cart=cart,
-        product=get_object_or_404(Product, slug=product_slug, status=Product.Status.PUBLISHED),
-        defaults={"quantity": 1},
-    )
-
-    if not created:
-        cart_item.quantity = (cart_item.quantity or 0) + 1
-        cart_item.save()
+    cart_item = CartItem.objects.filter(cart=cart, product__slug=product_slug).first()
+    if not cart_item:
+        return add_to_cart(user, product_slug)
+    if cart_item.product.stock_quantity < (cart_item.quantity or 0) + 1:
+        raise ValueError(f"Only {cart_item.product.stock_quantity} units of '{cart_item.product.name}' are available.")
+    cart_item.quantity = (cart_item.quantity or 0) + 1
+    cart_item.save(update_fields=["quantity", "updated_at"])
     return cart_item
 
 
@@ -848,17 +998,11 @@ def clear_cart(user):
 
 
 def cart_total(user):
-    cart = get_or_create_cart(user)
-    items = CartItem.objects.filter(cart=cart).select_related("product")
-    total = Decimal("0.00")
-    for item in items:
-        price = getattr(item.product, "discount_price", None) or getattr(item.product, "price", Decimal("0.00"))
-        total += Decimal(price) * Decimal(item.quantity or 0)
-    return total
+    return get_cart_totals(user)["total"]
 
 
 def cart_subtotal(user):
-    return cart_total(user)
+    return get_cart_totals(user)["original_subtotal"]
 
 
 def cart_count(user):
@@ -869,7 +1013,9 @@ def cart_count(user):
 def get_user_cart(user):
     if not getattr(user, "is_authenticated", False):
         return None
-    cart = Cart.objects.filter(user=user).prefetch_related("items__product").first()
+    cart = Cart.objects.filter(user=user).prefetch_related(
+        "items__product", "items__promotion_product__promotion"
+    ).first()
     return cart
 
 

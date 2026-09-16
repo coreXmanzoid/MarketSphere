@@ -76,10 +76,11 @@ Shopping Cart • MarketSphere
         </div>
 
         <div class="cart-items-list" id="cartItemsList">
+          {% if promotion_ended %}<div class="alert alert-warning">A promotion ended, so the affected item price was updated.</div>{% endif %}
           {% for item in cart.items.all %}
           <!-- ================= CART ITEM: individual product row rendered from cart.items queryset by Django ================= -->
           <div class="cart-item-card" data-cart-item data-item-id="{{ item.id }}" data-product-slug="{% url 'product' item.product.slug %}"
-            data-unit-price="{{ item.product.discount_price|default:item.product.price }}" data-quantity="{{ item.quantity }}" data-max-quantity="{{ item.product.stock_quantity }}"
+            data-unit-price="{{ item.pricing.effective_price }}" data-quantity="{{ item.quantity }}" data-max-quantity="{{ item.product.stock_quantity }}"
             data-update-url="{% url 'update_quantity' item.product.slug %}"
             data-increment-url="{% url 'increment_quantity' item.product.slug %}"
             data-decrement-url="{% url 'decrement_quantity' item.product.slug %}"
@@ -117,12 +118,12 @@ Shopping Cart • MarketSphere
 
               <div class="cart-item-bottom-row">
                 <div class="cart-item-price-block">
-                  {% if item.product.discount_price %}
-                  <span class="cart-item-price-current">Rs. {{ item.product.discount_price|floatformat:0 }}</span>
-                  <span class="cart-item-price-original">Rs. {{ item.product.price|floatformat:0 }}</span>
+                  {% if item.pricing.discount_amount %}
+                  <span class="cart-item-price-current">Rs. {{ item.pricing.effective_price|floatformat:0 }}</span>
+                  <span class="cart-item-price-original">Rs. {{ item.pricing.original_price|floatformat:0 }}</span>
+                  <span class="cart-item-price-save">You save Rs. {{ item.pricing.discount_per_unit|floatformat:0 }}</span>
                   {% else %}
-                  <span class="cart-item-price-current">Rs. {{ item.product.price|floatformat:0 }}</span>
-                  <span class="cart-item-price-original">Rs. {{ item.product.price|add:1 }}</span>
+                  <span class="cart-item-price-current">Rs. {{ item.pricing.effective_price|floatformat:0 }}</span>
                   {% endif %}
                 </div>
 
@@ -137,7 +138,7 @@ Shopping Cart • MarketSphere
                 <div class="cart-item-subtotal">
                   <span class="cart-item-subtotal-label">Subtotal</span>
                   <!-- Item subtotal will be recalculated live by cart.js; initial value rendered by Django -->
-                  <span class="cart-item-subtotal-value">Rs. {{ item.product.price|floatformat:0 }}</span>
+                  <span class="cart-item-subtotal-value">Rs. {{ item.pricing.line_subtotal|floatformat:0 }}</span>
                 </div>
               </div>
             </div>
@@ -166,7 +167,7 @@ Shopping Cart • MarketSphere
           <div class="cart-summary-row">
             <span>Subtotal</span>
             <!-- Subtotal will be recalculated live by cart.js; initial value rendered by Django -->
-            <span id="summarySubtotal">Rs. {{ subtotal|floatformat:0 }}</span>
+            <span id="summarySubtotal">Rs. {{ original_subtotal|floatformat:0 }}</span>
           </div>
 
           <div class="cart-summary-row">
@@ -179,7 +180,7 @@ Shopping Cart • MarketSphere
             <span id="summaryTax">Rs. {{ tax|default:"0"|floatformat:0 }}</span>
           </div>
 
-          <div class="cart-summary-row cart-summary-discount d-none" id="summaryDiscountRow">
+          <div class="cart-summary-row cart-summary-discount{% if not discount %} d-none{% endif %}" id="summaryDiscountRow">
             <span>Discount</span>
             <span id="summaryDiscount">- Rs. {{ discount|default:"0"|floatformat:0}}</span>
           </div>

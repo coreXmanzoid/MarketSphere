@@ -6,6 +6,11 @@ urlpatterns = [
     path("search", views.search, name="search"),
     path("product/<slug:product_slug>/", views.product, name="product"),
     path(
+        "promotions/<slug:promotion_slug>/products/<slug:product_slug>/",
+        views.product,
+        name="promotion_product",
+    ),
+    path(
         "seller/<int:seller_id>/export-products/",
         views.export_products_csv,
         name="export_products_csv",

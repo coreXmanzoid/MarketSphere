@@ -216,7 +216,7 @@
     display: flex;
     align-items: flex-start;
     gap: 14px;
-    background-color: #F7F1DE;
+    background-color: transparent !important;
     border: 1.5px solid var(--border-color);
     border-radius:2px;
     padding: 16px 18px;
@@ -378,7 +378,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    background-color: #F7F1DE;
+    background-color: transparent !important;
     border: 1.5px solid var(--border-color);
     border-radius: 2px;
     padding: 16px;

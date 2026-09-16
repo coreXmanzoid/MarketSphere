@@ -53,11 +53,19 @@ def checkout(request):
 
     addresses = account_service.get_user_addresses(request.user)
     cart = cart_service.get_user_cart(request.user)
+    totals = cart_service.get_cart_totals(request.user)
+    pricing_by_id = {item.id: pricing for item, pricing in totals["pricing"]}
+    for item in cart.items.all():
+        item.pricing = pricing_by_id[item.id]
+    if totals["promotion_ended"]:
+        messages.warning(request, "A promotion in your cart ended, so its price was updated.")
     context = {
         "addresses": addresses,
         "cart": cart,
-        "subtotal": cart_service.cart_subtotal(request.user),
-        "total": cart_service.cart_subtotal(request.user),
+        "subtotal": totals["original_subtotal"],
+        "discount": totals["discount"],
+        "total": totals["total"],
+        "cart_pricing": totals["pricing"],
     }
     return render(request, "checkout.html", context)
 

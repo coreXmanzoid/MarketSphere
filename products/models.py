@@ -105,20 +105,33 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class Product(TimeStampedModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         PUBLISHED = "published", "Published"
         HIDDEN = "hidden", "Hidden"
         OUT_OF_STOCK = "out_of_stock", "Out of Stock"
-        ARCHIVED = "archived", "Archived",
-        PENDING = "pending", "Pending",
-        REJECTED = "rejected", "Rejected",
-
+        ARCHIVED = (
+            "archived",
+            "Archived",
+        )
+        PENDING = (
+            "pending",
+            "Pending",
+        )
+        REJECTED = (
+            "rejected",
+            "Rejected",
+        )
 
     category = models.ForeignKey(
-        Category, on_delete=models.PROTECT, related_name="products",  null=True, blank=True
+        Category,
+        on_delete=models.PROTECT,
+        related_name="products",
+        null=True,
+        blank=True,
     )
 
     brand = models.ForeignKey(
@@ -155,6 +168,13 @@ class Product(TimeStampedModel):
     min_stock_level = models.PositiveIntegerField(default=5)
 
     weight = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+
+    promotions = models.ManyToManyField(
+        "promotions.Promotion",
+        through="promotions.PromotionProduct",
+        related_name="products",
+        blank=True,
+    )
 
     status = models.CharField(
         max_length=20,
@@ -269,6 +289,14 @@ class CartItem(models.Model):
         related_name="cart_items",
     )
 
+    promotion_product = models.ForeignKey(
+        "promotions.PromotionProduct",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cart_items",
+    )
+
     quantity = models.PositiveIntegerField(default=1)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -284,7 +312,13 @@ class CartItem(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["cart", "product"],
-                name="unique_cart_product",
+                condition=models.Q(promotion_product__isnull=True),
+                name="unique_cart_product_normal",
+            ),
+            models.UniqueConstraint(
+                fields=["cart", "product", "promotion_product"],
+                condition=models.Q(promotion_product__isnull=False),
+                name="unique_cart_product_promotion",
             )
         ]
 

@@ -16,7 +16,7 @@ from django.utils.dateparse import parse_date
 
 from accounts.models import Address
 from products.models import CartItem, Product
-from products.services import get_or_create_cart
+from products.services import get_or_create_cart, get_cart_item_pricing
 from admin_panel.marketplace import get_marketplace_settings
 from admin_panel.checkout import get_checkout_settings
 
@@ -106,8 +106,9 @@ def place_order(
 ):
     cart_items = (
         CartItem.objects
-        .select_related("product", "product__seller", "cart")
+        .select_related("product", "product__seller", "cart", "promotion_product__promotion")
         .filter(cart__user=user)
+        .select_for_update()
     )
 
     if not cart_items.exists():
@@ -158,6 +159,7 @@ def place_order(
 
     for seller_id, items in items_by_seller.items():
         order_subtotal = Decimal("0.00")
+        order_discount = Decimal("0.00")
         pending_order_items = []
 
         order = Order.objects.create(
@@ -178,8 +180,15 @@ def place_order(
         )
 
         for item in items:
-            product = item.product
-            price = product.discount_price or product.price
+            product = Product.objects.select_for_update().select_related("seller").get(
+                pk=item.product_id
+            )
+            item.product = product
+            pricing = get_cart_item_pricing(item)
+            price = pricing["effective_price"]
+
+            if product.status != Product.Status.PUBLISHED or not product.seller or product.seller.status != product.seller.Status.VERIFIED:
+                raise ValueError(f"'{product.name}' is no longer available for purchase.")
 
             if product.stock_quantity < item.quantity and not checkout_settings.backorders:
                 raise ValueError(
@@ -187,8 +196,11 @@ def place_order(
                     f"'{product.name}' are available."
                 )
 
-            item_total = price * item.quantity
-            order_subtotal += item_total
+            item_total = pricing["line_subtotal"]
+            order_subtotal += (
+                pricing["original_price"] if pricing["is_promotion"] else pricing["effective_price"]
+            ) * item.quantity
+            order_discount += pricing["discount_amount"]
 
             previous_stock = product.stock_quantity
             product.stock_quantity = max(0, product.stock_quantity - item.quantity)
@@ -230,6 +242,7 @@ def place_order(
         shipping_cost = Decimal("0.00")
         discount = Decimal("0.00")
         tax = Decimal("0.00")
+        discount = order_discount
         total = order_subtotal + shipping_cost + tax - discount
 
         order.subtotal = order_subtotal

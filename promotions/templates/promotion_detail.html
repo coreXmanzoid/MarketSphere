@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-  {{ promotion.title }} • MarketSphere
+  {{ promotion.name }} • MarketSphere
 {% endblock %}
 
 {% block css %}
@@ -20,7 +20,7 @@
         <ol class="breadcrumb mb-0">
           <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
           <li class="breadcrumb-item"><a href="{% url 'search' %}">Promotions</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{{ promotion.title }}</li>
+          <li class="breadcrumb-item active" aria-current="page">{{ promotion.name }}</li>
         </ol>
       </nav>
     </div>
@@ -35,27 +35,27 @@
        ========================================================= -->
   <section
     class="promod-hero{% if is_ended %} promod-hero-ended{% elif is_upcoming %} promod-hero-upcoming{% endif %}"
-    {% if promotion.banner_image %}style="--promod-hero-image: url('{{ promotion.banner_image }}');"{% endif %}
+    {% if promotion.banner %}style="--promod-hero-image: url('{{ promotion.banner.url }}');"{% endif %}
   >
-    <div class="container">
-      <div class="promod-hero-inner{% if not promotion.banner_image %} promod-hero-inner-no-image{% endif %}">
+    <div class="container bg-transparent">
+      <div class="promod-hero-inner{% if not promotion.banner %} promod-hero-inner-no-image{% endif %}">
         <div class="promod-hero-content">
           {% if is_ended %}
             <span class="promod-hero-label promod-hero-label-ended"><i class="bi bi-hourglass-bottom"></i> Promotion Ended</span>
           {% elif is_upcoming %}
             <span class="promod-hero-label promod-hero-label-upcoming"><i class="bi bi-stars"></i> Coming Soon</span>
           {% else %}
-            <span class="promod-hero-label"><i class="bi bi-lightning-charge-fill"></i> {{ promotion.label|default:"Limited-Time Offer" }}</span>
+            <span class="promod-hero-label"><i class="bi bi-lightning-charge-fill"></i> {{ promotion.badge_text|default:"Limited-Time Offer" }}</span>
           {% endif %}
 
-          <h1 class="promod-hero-title">{{ promotion.title }}</h1>
+          <h1 class="promod-hero-title">{{ promotion.name }}</h1>
 
           {% if promotion.discount_text %}
             <p class="promod-hero-discount">{{ promotion.discount_text }}</p>
           {% endif %}
 
-          {% if promotion.description %}
-            <p class="promod-hero-desc">{{ promotion.description }}</p>
+          {% if promotion.short_description %}
+            <p class="promod-hero-desc">{{ promotion.short_description }}</p>
           {% endif %}
 
           {% if is_ended %}
@@ -101,9 +101,9 @@
           {% endif %}
         </div>
 
-        {% if promotion.banner_image %}
+        {% if promotion.banner %}
           <div class="promod-hero-visual">
-            <img src="{{ promotion.banner_image }}" alt="{{ promotion.title }}" class="promod-hero-image" />
+            <img src="{{ promotion.thumbnail.url }}" alt="{{ promotion.name }}" class="promod-hero-image" />
           </div>
         {% endif %}
       </div>
@@ -170,7 +170,7 @@
   {% endif %}
 
   <!-- ================= FEATURED DEALS ================= -->
-  {% if is_active and featured_products %}
+  {% if is_active and featured_promotion_products %}
     <section class="products-section promod-featured-section">
       <div class="container">
         <div class="section-heading section-heading-row">
@@ -182,13 +182,14 @@
         </div>
 
         <div class="row g-4">
-          {% for product in featured_products %}
+          {% for promo_item in featured_promotion_products %}
+            {% with product=promo_item.product %}
             <div class="col-lg-3 col-md-4 col-6">
               <div class="product-card">
                 <div class="product-card-media">
                   <div class="product-badges">
-                    {% if product.discount_price %}
-                      <span class="badge-discount">-{{ product.discount_percentage }}%</span>
+                    {% if promo_item.discount_percentage > 0 %}
+                      <span class="badge-discount">-{{ promo_item.discount_percentage|floatformat:0 }}%</span>
                     {% endif %}
                   </div>
 
@@ -205,7 +206,7 @@
                     <span class="product-category-badge">({{ product.category.name }})</span>
                   {% endif %}
 
-                  <a href="{% url 'product' product.slug %}" class="product-image-placeholder">
+                    <a href="{% url 'promotion_product' promotion.slug product.slug %}" class="product-image-placeholder">
                     {% if product.primary_image %}
                       <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" />
                     {% else %}
@@ -221,17 +222,16 @@
                     <span class="product-brand">NO BRAND</span>
                   {% endif %}
 
-                  <a href="{% url 'product' product.slug %}" class="text-decoration-none">
+                  <a href="{% url 'promotion_product' promotion.slug product.slug %}" class="text-decoration-none">
                     <h6 class="product-name">{{ product.name }}</h6>
                   </a>
 
                   <div class="product-price">
-                    {% if product.discount_price %}
-                      <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
-                      <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
-                    {% else %}
-                      <span class="price-current">Rs. {{ product.price|floatformat:0 }}</span>
-                    {% endif %}
+                    <!-- Promotion price always wins here: PromotionProduct.promotion_price
+                         is the deal being advertised, regardless of the product's own
+                         (possibly separate) discount_price. -->
+                    <span class="price-current">Rs. {{ promo_item.promotion_price|floatformat:0 }}</span>
+                    <span class="price-original">Rs. {{ promo_item.original_price|floatformat:0 }}</span>
                   </div>
 
                   {% if product.stock_quantity <= 0 %}
@@ -245,13 +245,15 @@
                   <button
                     class="btn add-to-cart-btn w-100"
                     {% if product.stock_quantity <= 0 %}disabled{% endif %}
-                    data-add-url="{% url 'add_to_cart' product.slug %}"
+                    data-add-url="{% url 'add_to_cart' product.slug %}?promotion_product_id={{ promo_item.id }}"
+                    data-promotion-product-id="{{ promo_item.id }}"
                   >
                     <i class="bi bi-cart4"></i> Add to Cart
                   </button>
                 </div>
               </div>
             </div>
+            {% endwith %}
           {% endfor %}
         </div>
       </div>
@@ -380,7 +382,9 @@
                     <div class="product-card">
                       <div class="product-card-media">
                         <div class="product-badges">
-                          {% if product.discount_price %}
+                          {% if product.promo_price %}
+                            <span class="badge-discount">Sale Price</span>
+                          {% elif product.discount_price %}
                             <span class="badge-discount">-{{ product.discount_percentage }}%</span>
                           {% endif %}
                         </div>
@@ -398,7 +402,7 @@
                           <span class="product-category-badge">({{ product.category.name }})</span>
                         {% endif %}
 
-                        <a href="{% url 'product' product.slug %}" class="product-image-placeholder">
+                          <a href="{% url 'promotion_product' promotion.slug product.slug %}" class="product-image-placeholder">
                           {% if product.primary_image %}
                             <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" />
                           {% else %}
@@ -414,12 +418,18 @@
                           <span class="product-brand">NO BRAND</span>
                         {% endif %}
 
-                        <a href="{% url 'product' product.slug %}" class="text-decoration-none">
+                        <a href="{% url 'promotion_product' promotion.slug product.slug %}" class="text-decoration-none">
                           <h6 class="product-name">{{ product.name }}</h6>
                         </a>
 
                         <div class="product-price">
-                          {% if product.discount_price %}
+                          <!-- Promotion price wins over the product's own
+                               discount_price -- this is the price the
+                               promotion is actually advertising. -->
+                          {% if product.promo_price %}
+                            <span class="price-current">Rs. {{ product.promo_price|floatformat:0 }}</span>
+                            <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
+                          {% elif product.discount_price %}
                             <span class="price-current">Rs. {{ product.discount_price|floatformat:0 }}</span>
                             <span class="price-original">Rs. {{ product.price|floatformat:0 }}</span>
                           {% else %}
@@ -438,7 +448,7 @@
                         <button
                           class="btn add-to-cart-btn w-100"
                           {% if product.stock_quantity <= 0 %}disabled{% endif %}
-                          data-add-url="{% url 'add_to_cart' product.slug %}"
+                           data-add-url="{% url 'add_to_cart' product.slug %}?promotion_product_id={{ product.promotion_product_id }}"
                         >
                           <i class="bi bi-cart4"></i> Add to Cart
                         </button>

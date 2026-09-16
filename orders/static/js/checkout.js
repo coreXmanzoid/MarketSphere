@@ -291,15 +291,4 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         });
     }
-    // update subtotal of each product
-    const prices = document.querySelectorAll(".co-summary-item-price");
-
-    prices.forEach((item) => {
-        const quantity = Number(item.dataset.quantity);
-        const unitPrice = Number(item.dataset.unitPrice);
-
-        const total = quantity * unitPrice;
-
-        item.textContent = `Rs. ${total.toLocaleString()}`;
-    });
 });

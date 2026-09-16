@@ -336,7 +336,10 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.disabled = true;
 
             try {
-                const response = await fetch(btn.dataset.addUrl, {
+                const addUrl = new URL(btn.dataset.addUrl, window.location.origin);
+                const quantity = document.getElementById('pdQtyInput');
+                if (quantity) addUrl.searchParams.set('quantity', quantity.value || '1');
+                const response = await fetch(addUrl.toString(), {
                     method: "GET",
                     headers: {
                         "X-CSRFToken": getCookie("csrftoken"),

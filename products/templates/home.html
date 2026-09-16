@@ -198,23 +198,69 @@
   </section>
   {% endif %}
 
-  <!-- ================= PROMOTIONAL BANNER ================= -->
-  <section class="promo-banner">
-    <div class="container">
-      <div class="promo-banner-inner">
-        <div class="promo-banner-text guest-buttons">
-          <span class="section-label section-label-light">Limited Time</span>
-          <h2>Season End Sale — Up to 50% Off</h2>
-          <p>Grab your favorite items before they're gone. New deals added every day.</p>
-          <a href="{% if show_featured_products %}#featured-products{% else %}{% url 'search' %}{% endif %}" class="btn btn-hero-primary">Shop The Sale</a>
-        </div>
-        <div class="promo-banner-visual">
-          {% comment %} <i class="bi bi-bag-check-fill"></i> {% endcomment %}
-        </div>
-      </div>
-    </div>
-  </section>
 
+<!-- ================= PROMOTIONAL BANNER ================= -->
+
+  {% if homepage_promotion %}
+  <section class="promo-banner">
+      <div class="container">
+
+          <div class="promo-banner-inner">
+
+              <!-- Banner Content -->
+              <div class="promo-banner-text">
+
+                  <span class="section-label section-label-light">
+                      {% if homepage_promotion.short_description %}
+                          {{ homepage_promotion.short_description }}
+                      {% else %}
+                          Limited Time
+                      {% endif %}
+                  </span>
+
+                  <h2>
+                      {{ homepage_promotion.name }}
+                      {% if homepage_promotion.maximum_discount_percentage %}
+                          <span>
+                              — Up to {{ homepage_promotion.maximum_discount_percentage }}% Off
+                          </span>
+                      {% endif %}
+                  </h2>
+
+                  {% if homepage_promotion.description %}
+                      <p>
+                          {{ homepage_promotion.description }}
+                      </p>
+                  {% endif %}
+
+                  <a
+                      href="{% url 'promotion_detail' homepage_promotion.slug %}"
+                      class="btn btn-hero-primary"
+                  >
+                      Shop The Sale
+                  </a>
+
+              </div>
+
+
+              <!-- Banner Image -->
+              <div class="promo-banner-visual">
+
+                  {% if homepage_promotion.thumbnail %}
+                      <img
+                          src="{{ homepage_promotion.thumbnail.url }}"
+                          alt="{{ homepage_promotion.name }}"
+                          class="promo-banner-image"
+                      >
+                  {% endif %}
+
+              </div>
+
+          </div>
+
+      </div>
+  </section>
+  {% endif %}
   <!-- ================= NEW ARRIVALS ================= -->
   <section class="products-section">
     <div class="container">

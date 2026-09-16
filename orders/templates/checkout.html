@@ -241,7 +241,7 @@
                 <span id="coSummaryShipping">Rs. {{ shipping_cost|default:"0"}}</span>
               </div>
 
-              <div class="co-summary-row co-summary-discount-row d-none" id="coSummaryDiscountRow">
+              <div class="co-summary-row co-summary-discount-row{% if not discount %} d-none{% endif %}" id="coSummaryDiscountRow">
                 <span>Discount</span>
                 <!-- Discount amount will be rendered here by Django once a coupon is applied -->
                 <span id="coSummaryDiscount">- Rs. {{ discount|default:"0" }}</span>
@@ -263,7 +263,7 @@
             </div>
 
             <!-- ============ PLACE ORDER ============ -->
-            <button type="submit" class="btn btn-hero-primary co-place-order-btn" id="coPlaceOrderBtn"><i class="bi bi-lock-fill"></i> <span>Place Order</span></button>
+            <button type="submit" class="btn btn-hero-primary co-place-order-btn" id="coPlaceOrderBtn"><i class="bi bi-lock-fill"></i> <span class="bg-transparent">Place Order</span></button>
 
             <!-- ============ TRUST ROW ============ -->
             <div class="co-trust-row">

@@ -38,7 +38,9 @@
         <div class="col-lg-6 col-12">
           <div class="pd-gallery" id="pdGallery">
             <div class="pd-gallery-main" id="pdGalleryMain">
-              {% if product.discount_price %}
+              {% if promotion_product %}
+                <span class="badge-discount pd-gallery-badge">Save Rs. {{ promotion_product.savings_amount|floatformat:0 }}</span>
+              {% elif product.discount_price %}
                   <span class="badge-discount pd-gallery-badge">
                       -{{ product.discount_percentage }}%
                   </span>
@@ -115,7 +117,11 @@
             <div class="pd-price-block">
               <!-- Discounted / current price will be rendered here by Django -->
               <!-- Original price will be rendered here by Django (if discount_price set) -->
-              {% if product.discount_price %}
+              {% if promotion_product %}
+                <span class="pd-price-current">Rs. {{ promotion_product.promotion_price }}</span>
+                <span class="pd-price-original">Rs. {{ product.price }}</span>
+                <span class="pd-discount-badge">Save Rs. {{ promotion_product.savings_amount|floatformat:0 }}</span>
+              {% elif product.discount_price %}
                 <span class="pd-price-current">Rs. {{ product.discount_price }}</span>
                 <span class="pd-price-original">Rs. {{ product.price }}</span>
                 {% if product.discount_price %}
@@ -157,7 +163,7 @@
 
               <div class="pd-action-buttons">
                 <!-- Add to Cart: Django will wire this to cart logic -->
-                <button type="button" class="btn pd-btn-add-cart" id="pdAddToCartBtn" data-add-url="{% url 'add_to_cart' product_slug=product.slug %}"><i class="bi bi-cart4"></i> Add to Cart</button> <!-- Buy Now: Django will wire this to checkout logic -->
+                <button type="button" class="btn pd-btn-add-cart" id="pdAddToCartBtn" data-add-url="{% url 'add_to_cart' product_slug=product.slug %}{% if promotion_product %}?promotion_product_id={{ promotion_product.id }}{% endif %}"{% if promotion_product %} data-promotion-product-id="{{ promotion_product.id }}"{% endif %}><i class="bi bi-cart4"></i> Add to Cart</button> <!-- Buy Now: Django will wire this to checkout logic -->
                 <button type="button" class="btn pd-btn-buy-now" id="pdBuyNowBtn"><i class="bi bi-lightning-charge-fill"></i> Buy Now</button>
               </div>
 

@@ -1,0 +1,378 @@
+/* =========================================================
+   MARKETSPHERE — PROMOTION / SALE LANDING PAGE STYLES
+   Reusable for any promotion (Summer Sale, Eid Sale, Black
+   Friday, Flash Sale, etc.). Builds on global tokens
+   (static/css/styles.css) and reuses .filter-card / .sorting-
+   row / .search-product-grid / .no-results-section / .pagination
+   from search_results.css and .product-card / .why-us-card /
+   .newsletter-inner / .section-label from home.css.
+   All new classes are prefixed `promod-` (PROMOtion Detail) to
+   avoid colliding with the existing `.promo-banner` classes
+   already used on the homepage.
+   ========================================================= */
+
+:root {
+    --promod-accent: #9D6638;
+    --promod-accent-dark: #4E220F;
+    --promod-muted: #B0BA99;
+    --promod-success: #4f7d54;
+    --promod-warning: #b7802b;
+    --promod-danger: #b54b3b;
+}
+
+/* ================= HERO ================= */
+.promod-hero {
+    position: relative;
+    padding: 64px 0;
+    background: linear-gradient(120deg, #4E220F 0%, #9D6638 100%);
+    background-image: var(--promod-hero-image, none), linear-gradient(120deg, #4E220F 0%, #9D6638 100%);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.promod-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(78, 34, 15, 0.88) 0%, rgba(157, 102, 56, 0.72) 100%);
+    z-index: 0;
+}
+
+.promod-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+    flex-wrap: wrap;
+    background: none !important;
+    /* background: linear-gradient(120deg, #4E220F 0%, #9D6638 110%); */
+}
+
+.promod-hero-inner-no-image {
+    justify-content: flex-start;
+}
+
+.promod-hero-content {
+    max-width: 620px;
+    flex: 1 1 420px;
+    background-color: transparent !important;
+}
+
+.promod-hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(247, 241, 222, 0.16);
+    color: #F7F1DE;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 7px 16px;
+    border-radius: 30px;
+    margin-bottom: 18px;
+}
+
+.promod-hero-label i {
+    background-color: transparent;
+}
+
+.promod-hero-label-upcoming {
+    background-color: rgba(176, 186, 153, 0.28);
+}
+
+.promod-hero-label-ended {
+    background-color: rgba(0, 0, 0, 0.28);
+}
+
+.promod-hero-title {
+    font-size: 46px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #F7F1DE;
+    background-color: transparent !important;
+    margin-bottom: 14px;
+}
+
+.promod-hero-discount {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F7F1DE;
+    margin-bottom: 14px;
+    background-color: transparent !important;
+    letter-spacing: 0.2px;
+}
+
+.promod-hero-desc {
+    font-size: 16px;
+    color: rgba(247, 241, 222, 0.88);
+    max-width: 480px;
+    margin-bottom: 26px;
+    background-color: transparent !important;
+}
+
+.promod-hero-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    color: rgba(247, 241, 222, 0.92);
+    margin-bottom: 22px;
+}
+
+.promod-hero-status i {
+    background-color: transparent;
+}
+
+.promod-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 26px;
+    background-color: transparent !important;
+}
+
+.promod-hero-visual {
+    flex: 0 1 420px;
+    display: flex;
+    justify-content: center;
+}
+
+.promod-hero-image {
+    width: 100%;
+    max-width: 420px;
+    border: 3px solid #F7F1DE;
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+    transform: rotate(-4deg);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    transition: 0.3s ease;
+}
+.promod-hero-image:hover {
+    transform: rotate(0deg);
+    transition: 0.3s ease;
+}
+/* ================= COUNTDOWN ================= */
+.promod-countdown {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+    background-color: transparent !important;
+}
+
+.promod-countdown-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(247, 241, 222, 0.75);
+    background-color: transparent !important;
+}
+
+.promod-countdown-units {
+    display: flex;
+    gap: 10px;
+    background-color: transparent !important;
+}
+
+.promod-countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background-color: rgba(247, 241, 222, 0.12);
+    border: 1px solid rgba(247, 241, 222, 0.22);
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-width: 64px;
+}
+
+.promod-countdown-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #F7F1DE;
+    font-variant-numeric: tabular-nums;
+    background-color: transparent !important;
+}
+
+.promod-countdown-unit-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: rgba(247, 241, 222, 0.75);
+    background-color: transparent !important;
+}
+
+.promod-countdown.is-finished {
+    display: none;
+}
+
+/* ================= HIGHLIGHTS ================= */
+.promod-highlights-section {
+    padding: 26px 0;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.promod-highlights-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 48px;
+}
+
+.promod-highlight-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+}
+
+.promod-highlight-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--promod-accent-dark) !important;
+}
+
+.promod-highlight-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--promod-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* ================= CATEGORY SCROLL ================= */
+.promod-categories-section {
+    padding: 40px 0 10px;
+}
+
+.promod-category-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+}
+
+.promod-category-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.promod-category-scroll::-webkit-scrollbar-thumb {
+    background: var(--promod-accent);
+    border-radius: 10px;
+}
+
+.promod-category-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: transparent;
+    border: 1.5px solid var(--border-color)!important;
+    color: var(--promod-accent-dark) !important;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    white-space: nowrap;
+    transition: 0.2s ease;
+}
+
+.promod-category-chip i {
+    background-color: transparent;
+    color: var(--promod-accent);
+}
+
+.promod-category-chip:hover {
+    border-color: var(--promod-accent) !important;
+}
+
+.promod-category-chip.is-active {
+    background-color: var(--promod-accent) !important;
+    color: #F7F1DE !important;
+    border-color: var(--promod-accent) !important;
+    span {
+        background-color: var(--promod-accent) !important;
+    }
+}
+
+.promod-category-chip.is-active i {
+    color: #F7F1DE;
+}
+
+/* ================= FEATURED SECTION ================= */
+.promod-featured-section {
+    padding-top: 30px;
+}
+
+/* ================= SHOP SECTION ================= */
+.promod-shop-section {
+    padding: 40px 0 60px;
+}
+
+/* ================= TRUST / FINAL CTA ================= */
+.promod-trust-section {
+    padding-top: 20px;
+}
+
+.promod-final-cta {
+    padding-top: 10px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 991.98px) {
+    .promod-hero-title {
+        font-size: 36px;
+    }
+
+    .promod-hero-inner {
+        gap: 30px;
+    }
+
+    .promod-hero-visual {
+        flex-basis: 100%;
+        order: -1;
+    }
+
+    .promod-hero-image {
+        max-width: 1600px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .promod-hero {
+        padding: 44px 0;
+    }
+
+    .promod-hero-title {
+        font-size: 28px;
+    }
+
+    .promod-hero-discount {
+        font-size: 18px;
+    }
+
+    .promod-countdown-unit {
+        min-width: 52px;
+        padding: 8px 10px;
+    }
+
+    .promod-countdown-value {
+        font-size: 19px;
+    }
+
+    .promod-highlights-row {
+        gap: 26px;
+    }
+
+    .promod-hero-actions .btn {
+        width: 100% !important;
+    }
+}

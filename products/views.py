@@ -2,13 +2,16 @@ from django.shortcuts import render
 from . import services
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from accounts.models import Seller
 from admin_panel.marketplace import get_marketplace_settings
-
+from promotions.services import get_current_homepage_promotion
+from promotions.models import PromotionProduct
 
 # Create your views here.
 def home(request):
+    homepage_promotion = get_current_homepage_promotion()
     marketplace_settings = get_marketplace_settings()
     categories = services.get_all_categories()
     brands = (
@@ -39,6 +42,7 @@ def home(request):
         "show_featured_sellers": marketplace_settings.featured_sellers,
         "new_products": new_products,
         "wishlist_ids": services.get_wishlist_ids(request.user),
+        "homepage_promotion": homepage_promotion,
     }
     return render(request, "home.html", context)
 
@@ -163,8 +167,15 @@ def search_brands(request):
     return JsonResponse({"brands": data})
 
 
-def product(request, product_slug):
+def product(request, product_slug, promotion_slug=None):
     product = services.get_product_by_slug(product_slug)
+    promotion_product = None
+    if promotion_slug:
+        promotion_product = get_object_or_404(
+            PromotionProduct.objects.select_related("promotion", "product"),
+            promotion__slug=promotion_slug,
+            product=product,
+        )
     frequent_products = services.get_frequent_products(product)
     related_products = services.get_related_products(product)
     services.update_recently_viewed_products(request, product)
@@ -175,6 +186,7 @@ def product(request, product_slug):
 
     context = {
         "product": product,
+        "promotion_product": promotion_product,
         "frequent_products": frequent_products,
         "related_products": related_products,
         "recently_viewed_products": recently_viewed_products,
@@ -271,12 +283,20 @@ def export_products_csv(request, seller_id):
 @login_required
 def cart(request):
     cart = services.get_user_cart(request.user)
+    totals = services.get_cart_totals(request.user)
+    pricing_by_id = {item.id: pricing for item, pricing in totals["pricing"]}
+    for item in cart.items.all():
+        item.pricing = pricing_by_id[item.id]
 
     context = {
         "cart": cart,
         "cart_count": services.cart_count(request.user),
-        "subtotal": services.cart_subtotal(request.user),
-        "total": services.cart_total(request.user),
+        "subtotal": totals["subtotal"],
+        "total": totals["total"],
+        "original_subtotal": totals["original_subtotal"],
+        "discount": totals["discount"],
+        "cart_pricing": totals["pricing"],
+        "promotion_ended": totals["promotion_ended"],
     }
 
     return render(request, "cart.html", context)
@@ -284,15 +304,25 @@ def cart(request):
 
 @login_required
 def add_to_cart(request, product_slug):
-    cart_item = services.add_to_cart(request.user, product_slug)
+    try:
+        cart_item = services.add_to_cart(
+            request.user,
+            product_slug,
+            request.GET.get("promotion_product_id") or request.POST.get("promotion_product_id"),
+            request.GET.get("quantity") or request.POST.get("quantity") or 1,
+        )
+    except ValueError as exc:
+        return JsonResponse({"success": False, "message": str(exc)}, status=400)
+    totals = services.get_cart_totals(request.user)
 
     return JsonResponse(
         {
             "success": True,
             "quantity": cart_item.quantity,
             "cart_count": services.cart_count(request.user),
-            "subtotal": str(services.cart_subtotal(request.user)),
-            "total": str(services.cart_total(request.user)),
+            "subtotal": str(totals["subtotal"]),
+            "discount": str(totals["discount"]),
+            "total": str(totals["total"]),
         }
     )
 
@@ -343,7 +373,7 @@ def increment_quantity(request, product_slug):
         {
             "success": True,
             "quantity": cart_item.quantity,
-            "item_subtotal": str(cart_item.subtotal),
+            "item_subtotal": str(services.get_cart_item_pricing(cart_item)["line_subtotal"]),
             "cart_count": services.cart_count(request.user),
             "subtotal": str(services.cart_subtotal(request.user)),
             "total": str(services.cart_total(request.user)),
@@ -371,7 +401,7 @@ def decrement_quantity(request, product_slug):
             "success": True,
             "removed": False,
             "quantity": cart_item.quantity,
-            "item_subtotal": str(cart_item.subtotal),
+            "item_subtotal": str(services.get_cart_item_pricing(cart_item)["line_subtotal"]),
             "cart_count": services.cart_count(request.user),
             "subtotal": str(services.cart_subtotal(request.user)),
             "total": str(services.cart_total(request.user)),
@@ -406,7 +436,7 @@ def update_quantity(request, product_slug):
             "success": True,
             "removed": False,
             "quantity": cart_item.quantity,
-            "item_subtotal": str(cart_item.subtotal),
+            "item_subtotal": str(services.get_cart_item_pricing(cart_item)["line_subtotal"]),
             "cart_count": services.cart_count(request.user),
             "subtotal": str(services.cart_subtotal(request.user)),
             "total": str(services.cart_total(request.user)),
@@ -431,12 +461,14 @@ def clear_cart(request):
 @login_required
 def cart_data(request):
     cart = services.get_user_cart(request.user)
+    totals = services.get_cart_totals(request.user)
 
     return JsonResponse(
         {
             "cart": cart,
             "cart_count": services.cart_count(request.user),
-            "subtotal": str(services.cart_subtotal(request.user)),
-            "total": str(services.cart_total(request.user)),
+            "subtotal": str(totals["subtotal"]),
+            "discount": str(totals["discount"]),
+            "total": str(totals["total"]),
         }
     )

@@ -672,11 +672,20 @@ let deletedImageIds = [];
         };
 
 
-        // Collections -> Array
-        data.collections = Array.from(
-            document.getElementById("pfCollections").selectedOptions
-        ).map(option => option.value);
+        // Promotions -> selected promotion IDs + promotion prices
+        data.promotions = Array.from(
+            document.querySelectorAll(".promo-checkbox:checked")
+        ).map(checkbox => {
+            const promotionId = checkbox.value;
+            const priceInput = document.querySelector(
+                `input[name="promotion_price_${promotionId}"]`
+            );
 
+            return {
+                id: promotionId,
+                price: priceInput ? priceInput.value : ""
+            };
+        });
 
         // Tags -> Array
         data.tags = Array.from(
@@ -712,10 +721,11 @@ let deletedImageIds = [];
         updateButtons.forEach(function (btn) {
 
             if (!btn) return;
-            
+
             btn.addEventListener("click", async function () {
 
                 const product = getFormData();
+                if (!validatePromotionData(product.promotions)) return;
                 const formData = new FormData();
                 const productSlug = document.getElementById("pfSectionInfo").dataset.productSlug;
                 if (product.visibility === "published") {
@@ -733,7 +743,7 @@ let deletedImageIds = [];
 
                     if (
                         key === "tags" ||
-                        key === "collections" ||
+                        key === "promotions" ||
                         key === "dimensions" ||
                         key === "images"
                     ) {
@@ -745,7 +755,7 @@ let deletedImageIds = [];
 
                 // JSON fields
                 formData.append("tags", JSON.stringify(product.tags));
-                formData.append("collections", JSON.stringify(product.collections));
+                formData.append("promotions", JSON.stringify(product.promotions));
                 formData.append("dimensions", JSON.stringify(product.dimensions));
 
                 // Newly uploaded images
@@ -779,7 +789,7 @@ let deletedImageIds = [];
                         // Images were deleted successfully, clear the list
                         deletedImageIds = [];
 
-                        
+
                         window.location.reload();
                         simulateSave(btn, "Product updated");
 
@@ -807,6 +817,7 @@ let deletedImageIds = [];
             btn.addEventListener("click", async function () {
 
                 const product = getFormData();
+                if (!validatePromotionData(product.promotions)) return;
                 const formData = new FormData();
                 if (!product.name.trim()) {
                     showToast("Please enter a product name.");
@@ -818,7 +829,7 @@ let deletedImageIds = [];
 
                     if (
                         key === "tags" ||
-                        key === "collections" ||
+                        key === "promotions" ||
                         key === "dimensions" ||
                         key === "images"
                     ) {
@@ -830,7 +841,7 @@ let deletedImageIds = [];
 
                 // Append arrays & object as JSON
                 formData.append("tags", JSON.stringify(product.tags));
-                formData.append("collections", JSON.stringify(product.collections));
+                formData.append("promotions", JSON.stringify(product.promotions));
                 formData.append("dimensions", JSON.stringify(product.dimensions));
 
                 // Append images
@@ -880,6 +891,7 @@ let deletedImageIds = [];
                 }
 
                 const product = getFormData();
+                if (!validatePromotionData(product.promotions)) return;
 
                 const formData = new FormData();
 
@@ -888,7 +900,7 @@ let deletedImageIds = [];
 
                     if (
                         key === "tags" ||
-                        key === "collections" ||
+                        key === "promotions" ||
                         key === "dimensions" ||
                         key === "images"
                     ) {
@@ -900,7 +912,7 @@ let deletedImageIds = [];
 
                 // Append arrays & object as JSON
                 formData.append("tags", JSON.stringify(product.tags));
-                formData.append("collections", JSON.stringify(product.collections));
+                formData.append("promotions", JSON.stringify(product.promotions));
                 formData.append("dimensions", JSON.stringify(product.dimensions));
 
                 // Append images
@@ -1237,11 +1249,11 @@ document.addEventListener("click", function (e) {
 
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const removeDiscountBtn = document.getElementById('remove-discount');
 
     if (removeDiscountBtn) {
-        removeDiscountBtn.addEventListener('click', function(e) {
+        removeDiscountBtn.addEventListener('click', function (e) {
             e.preventDefault(); // Prevent default button behavior
 
             // 1. Get the slug from the button's data attribute
@@ -1272,31 +1284,57 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest' // Tells Django this is an AJAX request
                 }
             })
-            .then(response => {
-                // Parse the JSON response
-                return response.json().then(data => ({ status: response.status, body: data }));
-            })
-            .then(({ status, body }) => {
-                if (status === 200 && body.success !== false) {
-                    // Success handling
-                    showToast('Discount removed successfully!', "success");
-                    
-                    // You can update the UI here or simply reload the page to reflect changes
-                    document.getElementById("pfDiscountPrice").value = " "; 
-                } else {
-                    // Handled error from your JsonResponse (e.g., status 404)
-                    showToast(body.message || 'Failed to remove discount.', "error");
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                showToast('A network error occurred while removing the discount.', "error");
-            })
-            .finally(() => {
-                // Restore button state
-                this.innerText = originalText;
-                this.disabled = false;
-            });
+                .then(response => {
+                    // Parse the JSON response
+                    return response.json().then(data => ({ status: response.status, body: data }));
+                })
+                .then(({ status, body }) => {
+                    if (status === 200 && body.success !== false) {
+                        // Success handling
+                        showToast('Discount removed successfully!', "success");
+
+                        // You can update the UI here or simply reload the page to reflect changes
+                        document.getElementById("pfDiscountPrice").value = " ";
+                    } else {
+                        // Handled error from your JsonResponse (e.g., status 404)
+                        showToast(body.message || 'Failed to remove discount.', "error");
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showToast('A network error occurred while removing the discount.', "error");
+                })
+                .finally(() => {
+                    // Restore button state
+                    this.innerText = originalText;
+                    this.disabled = false;
+                });
         });
     }
 });
+
+function togglePromoPrice(checkbox, promotionId) {
+    const wrapper = document.getElementById(`price-wrapper-${promotionId}`);
+    const input = document.querySelector(`input[name="promotion_price_${promotionId}"]`);
+    if (!wrapper || !input) return;
+
+    wrapper.style.display = checkbox.checked ? "block" : "none";
+    input.disabled = !checkbox.checked;
+    input.required = checkbox.checked;
+    if (!checkbox.checked) input.value = "";
+}
+
+function validatePromotionData(promotions) {
+    for (const promotion of promotions) {
+        if (!promotion.id) {
+            showToast("A selected promotion is invalid.", "error");
+            return false;
+        }
+        const price = Number(promotion.price);
+        if (!promotion.price || !Number.isFinite(price) || price <= 0) {
+            showToast("Please enter a promotion price greater than zero.", "error");
+            return false;
+        }
+    }
+    return true;
+}

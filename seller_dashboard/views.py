@@ -14,6 +14,7 @@ from products.services import (
 from orders.services import get_user_order_for_seller, get_seller_orders, update_order_status
 from django.core.paginator import Paginator
 from products.models import Product
+from promotions.services import get_available_promotions_for_seller
 import json
 # Create your views here.
 
@@ -63,7 +64,10 @@ def add_product(request):
                 "product_id": product.id,
             }
         )
-    return render(request, "products/create.html")
+    return render(request, "products/create.html", {
+        "available_promotions": get_available_promotions_for_seller(request.user.seller_profile),
+        "selected_promotion_ids": [],
+    })
 
 
 def draft_product(request):
@@ -83,7 +87,10 @@ def draft_product(request):
                 "product_id": product.id,
             }
         )
-    return render(request, "products/create.html")
+    return render(request, "products/create.html", {
+        "available_promotions": get_available_promotions_for_seller(request.user.seller_profile),
+        "selected_promotion_ids": [],
+    })
 
 
 def edit_products(request, product_slug):
@@ -109,7 +116,17 @@ def edit_products(request, product_slug):
 
     context = {
         "product": product,
+        "available_promotions": get_available_promotions_for_seller(request.user.seller_profile),
+        "selected_promotion_ids": list(
+            product.promotion_products.values_list("promotion_id", flat=True)
+        ),
     }
+    selected_promotion_prices = {
+        relation.promotion_id: relation.promotion_price
+        for relation in product.promotion_products.all()
+    }
+    for promotion in context["available_promotions"]:
+        promotion.selected_promotion_price = selected_promotion_prices.get(promotion.id)
 
     return render(
         request,
